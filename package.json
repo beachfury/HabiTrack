@@ -1,0 +1,25 @@
+{
+  "name": "habitrack",
+  "version": "0.0.0",
+  "description": "HabiTrack monorepo (apps + packages)",
+  "main": "index.js",
+  "scripts": {
+    "format": "prettier -w \".\"",
+    "lint": "eslint .",
+    "check": "pnpm lint && pnpm format --check"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "packageManager": "pnpm@10.15.0",
+  "volta": {
+    "node": "22.18.0"
+  },
+  "devDependencies": {
+    "@eslint/js": "^9.34.0",
+    "eslint": "^9.34.0",
+    "prettier": "^3.6.2",
+    "typescript": "^5.9.2",
+    "typescript-eslint": "^8.40.0"
+  }
+}
