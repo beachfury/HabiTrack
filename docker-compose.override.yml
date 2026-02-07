@@ -1,0 +1,15 @@
+# docker-compose.override.yml
+# Place next to docker-compose.yml for LAN access
+
+services:
+  api:
+    environment:
+      # Force development mode - this disables secure cookies
+      - HABITRACK_ENV=development
+      - NODE_ENV=development
+      # Explicit cookie settings as backup
+      - HABITRACK_COOKIE_SECURE=false
+      - HABITRACK_SESSION_COOKIE_NAME=habitrack_sid
+      - HABITRACK_CSRF_COOKIE_NAME=habitrack_csrf
+      - HABITRACK_SESSION_TTL_MINUTES=480
+      - HABITRACK_SESSION_ROLLING=true

@@ -1,0 +1,116 @@
+# docker-compose.yml
+# HabiTrack - Docker Compose Configuration
+
+services:
+  # =============================================================================
+  # MariaDB Database
+  # =============================================================================
+  db:
+    image: mariadb:11
+    container_name: habitrack-db
+    restart: unless-stopped
+    environment:
+      MARIADB_ROOT_PASSWORD: ${DB_ROOT_PASSWORD:-habitrack_root_secret}
+      MARIADB_DATABASE: ${DB_NAME:-habitrack}
+      MARIADB_USER: ${DB_USER:-habitrack_app}
+      MARIADB_PASSWORD: ${DB_PASSWORD:-habitrack_secret}
+    volumes:
+      - habitrack-db-data:/var/lib/mysql
+      # Minimal init only (schema comes from API migrations)
+      - ./docker/db/init:/docker-entrypoint-initdb.d:ro
+    ports:
+      - '${DB_PORT:-3306}:3306'
+    healthcheck:
+      test: ['CMD', 'healthcheck.sh', '--connect', '--innodb_initialized']
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 30s
+    networks:
+      - habitrack-network
+
+  # =============================================================================
+  # HabiTrack API (Backend)
+  # =============================================================================
+  api:
+    build:
+      context: .
+      dockerfile: docker/api/Dockerfile
+    container_name: habitrack-api
+    restart: unless-stopped
+    depends_on:
+      db:
+        condition: service_healthy
+
+    # Run migrations first, then start API
+    command: sh -lc "node apps/api/scripts/migrate.js && tsx apps/api/src/server.ts"
+
+    environment:
+      # Core
+      HABITRACK_ENV: ${HABITRACK_ENV:-production}
+      HABITRACK_BASE_URL: ${HABITRACK_BASE_URL:-http://localhost:8080}
+      HABITRACK_ALLOWED_ORIGINS: ${HABITRACK_ALLOWED_ORIGINS:-http://localhost:8080,http://localhost:3000,http://localhost:5173}
+      HABITRACK_TRUSTED_PROXIES: ${HABITRACK_TRUSTED_PROXIES:-10.0.0.0/8,172.16.0.0/12,192.168.0.0/16}
+      HABITRACK_LOCAL_CIDRS: ${HABITRACK_LOCAL_CIDRS:-10.0.0.0/8,172.16.0.0/12,192.168.0.0/16,127.0.0.1/32}
+      HABITRACK_LOG_LEVEL: ${HABITRACK_LOG_LEVEL:-info}
+
+      # Database
+      HABITRACK_STORAGE_DRIVER: mariadb
+      HABITRACK_DB_HOST: db
+      HABITRACK_DB_PORT: 3306
+      HABITRACK_DB_NAME: ${DB_NAME:-habitrack}
+      HABITRACK_DB_USER: ${DB_USER:-habitrack_app}
+      HABITRACK_DB_PASSWORD: ${DB_PASSWORD:-habitrack_secret}
+      HABITRACK_DB_POOL_MIN: 1
+      HABITRACK_DB_POOL_MAX: 10
+
+      # Uploads
+      UPLOAD_DIR: /app/uploads
+
+      # Internal
+      PORT: 3000
+
+    volumes:
+      - habitrack-uploads:/app/uploads
+
+      # CRITICAL: expose migrations to the API container at the path migrate.js expects
+      - ./providers/storage-mariadb/migrations:/app/providers/storage-mariadb/migrations:ro
+
+    ports:
+      - '${API_PORT:-3000}:3000'
+    healthcheck:
+      test: ['CMD', 'wget', '-q', '--spider', 'http://localhost:3000/api/health']
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 10s
+    networks:
+      - habitrack-network
+
+  # =============================================================================
+  # HabiTrack Frontend (Web UI)
+  # =============================================================================
+  web:
+    profiles: ['web']
+    build:
+      context: .
+      dockerfile: docker/web/Dockerfile
+      args:
+        VITE_API_URL: ${VITE_API_URL:-/api}
+    container_name: habitrack-web
+    restart: unless-stopped
+    depends_on:
+      api:
+        condition: service_healthy
+    ports:
+      - '${WEB_PORT:-8080}:80'
+    networks:
+      - habitrack-network
+
+networks:
+  habitrack-network:
+    driver: bridge
+
+volumes:
+  habitrack-db-data:
+  habitrack-uploads:

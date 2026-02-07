@@ -1,0 +1,57 @@
+# =============================================================================
+# HabiTrack Docker Ignore
+# =============================================================================
+
+# Dependencies
+node_modules
+**/node_modules
+
+# Build outputs (we build fresh in Docker)
+dist
+**/dist
+build
+**/build
+
+# Development files
+.env
+.env.local
+.env.*.local
+*.log
+*.log.*
+
+# Git
+.git
+.gitignore
+
+# IDE
+.idea
+.vscode
+*.swp
+*.swo
+*~
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Test files
+coverage
+**/*.test.ts
+**/*.spec.ts
+__tests__
+
+# Documentation
+*.md
+!README.md
+docs
+
+# Docker (avoid recursive copy)
+docker-compose*.yml
+Dockerfile*
+
+# Misc
+.editorconfig
+.eslintrc*
+.prettierrc*
+#tsconfig*.json
+*.tsbuildinfo

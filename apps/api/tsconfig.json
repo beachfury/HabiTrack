@@ -1,0 +1,18 @@
+{
+  "extends": "../../tsconfig.json",
+  "compilerOptions": {
+    "outDir": "dist",
+    "declaration": false
+  },
+  "include": [
+    "src",
+    "scripts",
+    "__tests__",
+    "middleware",
+    "routes/chores/__tests__",
+    "routes/auth/__tests__",
+    "__tests__",
+    "__tests__",
+    "__tests__"
+  ]
+}
