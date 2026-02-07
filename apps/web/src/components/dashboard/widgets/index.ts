@@ -13,6 +13,7 @@ import { PaidChoresWidget } from './PaidChoresWidget';
 import { EarningsWidget } from './EarningsWidget';
 import { FamilyWidget } from './FamilyWidget';
 import { AnnouncementsWidget } from './AnnouncementsWidget';
+import { WeatherWidget } from './WeatherWidget';
 
 export {
   WelcomeWidget,
@@ -26,6 +27,7 @@ export {
   EarningsWidget,
   FamilyWidget,
   AnnouncementsWidget,
+  WeatherWidget,
 };
 
 // Widget component map for dynamic rendering
@@ -42,4 +44,5 @@ export const widgetComponents: Record<string, React.ComponentType<any>> = {
   'earnings': EarningsWidget,
   'family-members': FamilyWidget,
   'announcements': AnnouncementsWidget,
+  'weather': WeatherWidget,
 };

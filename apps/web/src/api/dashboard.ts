@@ -257,7 +257,7 @@ async function getDashboardData(): Promise<DashboardData> {
     choreLeaderboard: data.choreLeaderboard || [],
     availablePaidChores: data.paidChores || [],
     myEarnings: {
-      total: data.earnings || 0,
+      total: Number(data.earnings) || 0,
       pending: 0,
       thisWeek: 0,
     },

@@ -1,12 +1,15 @@
 # HabiTrack
 
-A self-hosted family household management app — chores, shopping, calendar, messaging, and more — built for a single household running on your own server.
+A self-hosted family household management app — chores, shopping, calendar, budgets, messaging, and more — built for a single household running on your own server.
 
 ## Features
 
+- **Dashboard** — Customizable drag-and-drop widgets showing events, chores, weather, leaderboards, and more
 - **Chores** — Templates, recurring schedules, per-member assignments, completion tracking with points and streaks, leaderboard
+- **Paid Chores** — Extra tasks kids can claim for money, with approval workflow
 - **Shopping** — Shared lists with categories, store tracking, price history, product catalog, member requests and admin approval
 - **Calendar** — Family calendar with multi-day events, per-member color coding, day-detail view
+- **Budgets** — Admin-only budget tracking for bills, expenses, and household spending (electric, water, fuel, insurance, etc.)
 - **Messaging** — Notifications, admin announcements, direct messages between family members
 - **Family Management** — Add/edit members, assign roles, set passwords and kiosk PINs
 - **Gamification** — Points for chore completion, adjustable by admins, leaderboard rankings
@@ -26,40 +29,420 @@ A self-hosted family household management app — chores, shopping, calendar, me
 | Container | Docker + Docker Compose                                           |
 | Monorepo  | pnpm workspaces                                                   |
 
-## Quick Start
+---
+
+## Server Deployment Guide
 
 ### Prerequisites
 
-- [Docker](https://www.docker.com/get-started) and Docker Compose
-- [Node.js](https://nodejs.org/) v18+ (for local dev only)
-- [pnpm](https://pnpm.io/) package manager (for local dev only)
+- A Linux server (Ubuntu 20.04+, Debian 11+, or similar)
+- [Docker](https://docs.docker.com/engine/install/) and [Docker Compose](https://docs.docker.com/compose/install/)
+- A domain name (optional, but recommended for HTTPS)
+- At least 1GB RAM and 10GB disk space
 
-### Running with Docker (recommended)
+### Step 1: Install Docker (if not installed)
 
 ```bash
-git clone https://github.com/yourusername/habitrack.git
-cd habitrack
-cp .env.example .env          # edit DB passwords, API_SECRET, etc.
-docker-compose up -d
+# Update system
+sudo apt update && sudo apt upgrade -y
+
+# Install Docker
+curl -fsSL https://get.docker.com -o get-docker.sh
+sudo sh get-docker.sh
+
+# Add your user to docker group (logout/login required)
+sudo usermod -aG docker $USER
+
+# Install Docker Compose plugin
+sudo apt install docker-compose-plugin -y
+
+# Verify installation
+docker --version
+docker compose version
 ```
 
-On first launch the API runs all migrations automatically. Open the app and complete the bootstrap wizard to create the admin account.
+### Step 2: Clone the Repository
+
+```bash
+cd /opt
+sudo git clone https://github.com/beachfury/HabiTrack.git habitrack
+sudo chown -R $USER:$USER habitrack
+cd habitrack
+```
+
+### Step 3: Configure Environment
+
+```bash
+# Copy the example environment file
+cp .env.example .env
+
+# Edit the configuration
+nano .env
+```
+
+**Important settings to change in `.env`:**
+
+```env
+# Database - CHANGE THESE PASSWORDS!
+DB_PASSWORD=your-secure-database-password
+DB_ROOT_PASSWORD=your-secure-root-password
+
+# API Security - CHANGE THESE!
+API_SECRET=generate-a-long-random-string-here
+SESSION_SECRET=generate-another-long-random-string
+
+# Your server's URL (use your domain or IP)
+CORS_ORIGIN=http://your-server-ip:3000
+VITE_API_URL=http://your-server-ip:3001/api
+VITE_API_BASE_URL=http://your-server-ip:3001
+```
+
+**Generate secure random strings:**
+
+```bash
+openssl rand -hex 32  # Run twice for API_SECRET and SESSION_SECRET
+```
+
+### Step 4: Start the Application
+
+```bash
+# Build and start all containers
+docker compose up -d
+
+# Check if containers are running
+docker compose ps
+
+# View logs
+docker compose logs -f
+```
+
+### Step 5: Initial Setup
+
+1. Open your browser and go to `http://your-server-ip:3000`
+2. Complete the bootstrap wizard to create your admin account
+3. Start adding family members!
+
+---
+
+## Production Deployment (with HTTPS)
+
+For production use with a domain name and SSL certificate:
+
+### Using Nginx as Reverse Proxy
+
+1. **Install Nginx and Certbot:**
+
+```bash
+sudo apt install nginx certbot python3-certbot-nginx -y
+```
+
+2. **Create Nginx configuration:**
+
+```bash
+sudo nano /etc/nginx/sites-available/habitrack
+```
+
+```nginx
+server {
+    listen 80;
+    server_name your-domain.com;
+
+    location / {
+        proxy_pass http://localhost:3000;
+        proxy_http_version 1.1;
+        proxy_set_header Upgrade $http_upgrade;
+        proxy_set_header Connection 'upgrade';
+        proxy_set_header Host $host;
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto $scheme;
+        proxy_cache_bypass $http_upgrade;
+    }
+
+    location /api {
+        proxy_pass http://localhost:3001;
+        proxy_http_version 1.1;
+        proxy_set_header Upgrade $http_upgrade;
+        proxy_set_header Connection 'upgrade';
+        proxy_set_header Host $host;
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto $scheme;
+        proxy_cache_bypass $http_upgrade;
+    }
+}
+```
+
+3. **Enable the site and get SSL certificate:**
+
+```bash
+sudo ln -s /etc/nginx/sites-available/habitrack /etc/nginx/sites-enabled/
+sudo nginx -t
+sudo systemctl reload nginx
+
+# Get SSL certificate
+sudo certbot --nginx -d your-domain.com
+```
+
+4. **Update your `.env` file:**
+
+```env
+CORS_ORIGIN=https://your-domain.com
+VITE_API_URL=https://your-domain.com/api
+VITE_API_BASE_URL=https://your-domain.com
+```
+
+5. **Rebuild and restart:**
+
+```bash
+docker compose down
+docker compose up -d --build
+```
+
+---
+
+## Managing the Application
+
+### Common Commands
+
+```bash
+# Start the application
+docker compose up -d
+
+# Stop the application
+docker compose down
+
+# View logs
+docker compose logs -f
+
+# View logs for specific service
+docker compose logs -f api
+docker compose logs -f web
+docker compose logs -f db
+
+# Restart a specific service
+docker compose restart api
+
+# Rebuild after code changes
+docker compose up -d --build
+
+# Check container status
+docker compose ps
+```
+
+### Updating HabiTrack
+
+```bash
+cd /opt/habitrack
+
+# Pull latest changes
+git pull
+
+# Rebuild and restart
+docker compose down
+docker compose up -d --build
+```
+
+### Database Backup
+
+```bash
+# Backup
+docker compose exec db mysqldump -u root -p habitrackdb > backup_$(date +%Y%m%d).sql
+
+# Restore
+docker compose exec -T db mysql -u root -p habitrackdb < backup_file.sql
+```
+
+### Troubleshooting
+
+**Container won't start:**
+
+```bash
+docker compose logs api  # Check for errors
+docker compose down
+docker compose up -d
+```
+
+**Database connection issues:**
+
+```bash
+# Check if database is ready
+docker compose exec db mysql -u habitrack -p -e "SELECT 1"
+```
+
+**Reset everything (WARNING: destroys all data):**
+
+```bash
+docker compose down -v  # Removes volumes too
+docker compose up -d
+```
+
+---
+
+## Unraid Installation
+
+### Option 1: Using Docker Compose (Recommended)
+
+1. **Install the Compose Manager plugin** from Community Applications (CA)
+
+2. **Create the stack directory:**
+   - Open Unraid terminal or SSH
+
+   ```bash
+   mkdir -p /mnt/user/appdata/habitrack
+   cd /mnt/user/appdata/habitrack
+   ```
+
+3. **Download the docker-compose file:**
+
+   ```bash
+   wget https://raw.githubusercontent.com/beachfury/HabiTrack/main/docker-compose.yml
+   wget https://raw.githubusercontent.com/beachfury/HabiTrack/main/.env.example -O .env
+   ```
+
+4. **Edit the environment file:**
+
+   ```bash
+   nano .env
+   ```
+
+   Change these values:
+
+   ```env
+   DB_PASSWORD=your-secure-password
+   DB_ROOT_PASSWORD=your-secure-root-password
+   API_SECRET=generate-a-long-random-string
+   SESSION_SECRET=generate-another-random-string
+   CORS_ORIGIN=http://YOUR-UNRAID-IP:3000
+   VITE_API_URL=http://YOUR-UNRAID-IP:3001/api
+   VITE_API_BASE_URL=http://YOUR-UNRAID-IP:3001
+   ```
+
+5. **Start the stack** in Compose Manager or run:
+
+   ```bash
+   docker-compose up -d
+   ```
+
+6. **Access HabiTrack** at `http://YOUR-UNRAID-IP:3000`
+
+### Option 2: Manual Docker Containers
+
+If you prefer to set up containers manually through the Unraid Docker UI:
+
+#### Container 1: MariaDB Database
+
+| Setting      | Value        |
+| ------------ | ------------ |
+| Name         | habitrack-db |
+| Repository   | mariadb:11   |
+| Network Type | Bridge       |
+| Port         | 3306 → 3306  |
+
+**Environment Variables:**
+| Variable | Value |
+|----------|-------|
+| MYSQL_ROOT_PASSWORD | your-secure-root-password |
+| MYSQL_DATABASE | habitrackdb |
+| MYSQL_USER | habitrack |
+| MYSQL_PASSWORD | your-secure-password |
+
+**Paths:**
+| Container Path | Host Path |
+|----------------|-----------|
+| /var/lib/mysql | /mnt/user/appdata/habitrack/db |
+
+#### Container 2: HabiTrack API
+
+| Setting      | Value                                  |
+| ------------ | -------------------------------------- |
+| Name         | habitrack-api                          |
+| Repository   | ghcr.io/beachfury/habitrack-api:latest |
+| Network Type | Bridge                                 |
+| Port         | 3001 → 3001                            |
+
+**Environment Variables:**
+| Variable | Value |
+|----------|-------|
+| DB_HOST | YOUR-UNRAID-IP |
+| DB_PORT | 3306 |
+| DB_NAME | habitrackdb |
+| DB_USER | habitrack |
+| DB_PASSWORD | your-secure-password |
+| API_SECRET | your-long-random-string |
+| SESSION_SECRET | another-random-string |
+| CORS_ORIGIN | http://YOUR-UNRAID-IP:3000 |
+
+#### Container 3: HabiTrack Web
+
+| Setting      | Value                                  |
+| ------------ | -------------------------------------- |
+| Name         | habitrack-web                          |
+| Repository   | ghcr.io/beachfury/habitrack-web:latest |
+| Network Type | Bridge                                 |
+| Port         | 3000 → 80                              |
+
+**Environment Variables:**
+| Variable | Value |
+|----------|-------|
+| VITE_API_URL | http://YOUR-UNRAID-IP:3001/api |
+| VITE_API_BASE_URL | http://YOUR-UNRAID-IP:3001 |
+
+### Data Persistence on Unraid
+
+Store your data in `/mnt/user/appdata/habitrack/`:
+
+```
+/mnt/user/appdata/habitrack/
+├── db/          # MariaDB data
+├── uploads/     # User uploads (avatars, logos)
+└── .env         # Environment configuration
+```
+
+### Using with Unraid's Reverse Proxy (SWAG/NPM)
+
+If you use SWAG or Nginx Proxy Manager:
+
+1. Point your domain to your Unraid IP
+2. Create a proxy host for HabiTrack
+3. Forward to `http://YOUR-UNRAID-IP:3000`
+4. Add a custom location for `/api` → `http://YOUR-UNRAID-IP:3001`
+5. Enable SSL
+
+---
+
+## Local Development
+
+### Prerequisites
+
+- [Node.js](https://nodejs.org/) v18+
+- [pnpm](https://pnpm.io/) package manager
+- Docker (for the database)
+
+### Setup
+
+```bash
+# Install dependencies
+pnpm install
+
+# Start MariaDB only
+docker compose up -d db
+
+# Start API (terminal 1)
+pnpm -F api dev
+
+# Start frontend (terminal 2)
+pnpm -F web dev
+```
+
+Migrations run automatically when the API starts.
 
 | Service  | Default URL           |
 | -------- | --------------------- |
 | Frontend | http://localhost:3000 |
 | API      | http://localhost:3001 |
 
-### Local Development
-
-```bash
-pnpm install                   # install all workspace deps
-docker-compose up -d db        # start MariaDB only
-pnpm -F api dev                # start API with ts-node (terminal 1)
-pnpm -F web dev                # start Vite dev server (terminal 2)
-```
-
-Migrations run automatically when the API starts.
+---
 
 ## Project Structure
 
@@ -68,269 +451,26 @@ habitrack/
 ├── apps/
 │   ├── api/                        # Express backend
 │   │   └── src/
-│   │       ├── routes/
-│   │       │   ├── admin/          # User creation, impersonation
-│   │       │   ├── auth/           # Login, register, PIN, password reset, onboard
-│   │       │   ├── calendar/       # Events CRUD
-│   │       │   ├── chores/         # Categories, templates, definitions, instances, assignments, stats
-│   │       │   ├── family/         # Member CRUD, password/PIN management
-│   │       │   ├── messages/       # Notifications, announcements, direct messages
-│   │       │   ├── settings/       # User prefs, household config
-│   │       │   └── shopping/       # Lists, catalog, stores, categories, suggestions, requests
+│   │       ├── routes/             # API endpoints
 │   │       ├── middleware/         # Error handler, request logger
-│   │       ├── services/          # Calendar reminders
-│   │       ├── notify/            # Email (SMTP) and dev notification providers
-│   │       ├── utils/             # Auth, validation, date, response helpers
-│   │       ├── types/             # Shared API types
-│   │       ├── router.ts          # All route registrations
-│   │       └── server.ts          # Express app entry point
+│   │       ├── services/           # Business logic
+│   │       └── server.ts           # Entry point
 │   └── web/                        # React frontend
 │       └── src/
-│           ├── api/               # Typed API client (auth, calendar, chores, family, messages, settings, shopping, upload)
-│           ├── components/
-│           │   ├── calendar/      # CalendarGrid, CalendarHeader, DayDetailModal, EventFormModal
-│           │   ├── chores/        # MyChoresView, AllChoresView, ManageView, LeaderboardView, modals
-│           │   ├── common/        # Alert, Avatar, Badge, Button, Card, ColorPicker, Input, Modal, Spinner
-│           │   ├── family/        # MemberCard, MemberFormModal, PasswordModal, PinModal
-│           │   ├── settings/      # AppearanceTab, HouseholdTab, ProfileTab, SecurityTab
-│           │   └── shopping/      # ShoppingListTab, CatalogTab, ManageTab, modals
-│           ├── context/           # AuthContext, ThemeContext
-│           ├── hooks/             # useClickOutside, useDebounce, useLocalStorage
-│           ├── pages/             # CalendarPage, ChoresPage, FamilyPage, HomePage, LoginPage, MessagesPage, SettingsPage, ShoppingPage, SetupPage, KioskLoginPage
-│           ├── types/             # TypeScript interfaces (api, calendar, chores, messages, shopping, user)
-│           └── utils/             # colors, format helpers
+│           ├── api/                # API client
+│           ├── components/         # UI components
+│           ├── pages/              # Page components
+│           └── context/            # React contexts
 ├── packages/                       # Shared workspace packages
-│   ├── core-config/               # Shared configuration
-│   ├── http/                      # HTTP utilities
-│   ├── http-contracts/            # API schemas (auth, bootstrap, chores, kiosk, permissions)
-│   ├── kiosk/                     # Kiosk mode utilities
-│   ├── net/                       # Network utilities
-│   ├── perm/                      # Permission engine + default role seeds
-│   └── session-store/             # Session store implementation
 ├── providers/
 │   └── storage-mariadb/
-│       └── migrations/            # Numbered SQL migrations (001–016)
-├── docker/
-│   ├── api/Dockerfile
-│   ├── web/Dockerfile + nginx.conf
-│   └── db/                        # MariaDB init scripts + config
-├── scripts/                       # Dev utilities (snapshot, cleanup)
+│       └── migrations/             # SQL migrations
+├── docker/                         # Dockerfiles
 ├── docker-compose.yml
-├── docker-compose.override.yml
-├── pnpm-workspace.yaml
 └── package.json
 ```
 
-## Database Migrations
-
-Migrations live in `providers/storage-mariadb/migrations/` and run in order on API startup.
-
-| #   | File                          | Description                                    |
-| --- | ----------------------------- | ---------------------------------------------- |
-| 001 | `core_settings_users.sql`     | Settings table, users table                    |
-| 002 | `auth_tables.sql`             | Credentials, sessions, login attempts          |
-| 003 | `permissions_security.sql`    | Permissions, audit log                         |
-| 004 | `notifications_messages.sql`  | Notification system                            |
-| 005 | `calendar_events.sql`         | Calendar events                                |
-| 006 | `chores_core.sql`             | Chore categories, templates, definitions       |
-| 007 | `chores_instances.sql`        | Chore instances, points, streaks               |
-| 008 | `achievements.sql`            | Gamification achievements                      |
-| 009 | `shopping.sql`                | Shopping lists, catalog, stores, price history |
-| 010 | `default_chore_templates.sql` | Seed: built-in chore templates                 |
-| 011 | `default_catalog_items.sql`   | Seed: common grocery catalog items             |
-| 012 | `color_swatches.sql`          | Color palette reference                        |
-| 013 | `fix_households_audit.sql`    | Schema fix for household/audit tables          |
-| 014 | `points_adjustments.sql`      | Admin point adjustment tracking                |
-| 015 | `direct_messages.sql`         | Direct messaging tables                        |
-| 016 | `messages_direct_columns.sql` | DM column additions                            |
-
-## API Routes
-
-All routes are prefixed with `/api`.
-
-### Auth
-
-| Method | Path                     | Auth | Description                     |
-| ------ | ------------------------ | ---- | ------------------------------- |
-| POST   | `/auth/login`            | —    | Dev/simple login                |
-| POST   | `/auth/creds/register`   | —    | Register with email + password  |
-| POST   | `/auth/creds/login`      | —    | Email + password login          |
-| POST   | `/auth/creds/change`     | ✓    | Change own password             |
-| POST   | `/auth/creds/forgot`     | —    | Request password reset email    |
-| POST   | `/auth/creds/reset`      | —    | Complete password reset         |
-| GET    | `/auth/pin/users`        | —    | List PIN-eligible users (kiosk) |
-| POST   | `/auth/pin/login`        | —    | Login with PIN                  |
-| POST   | `/auth/pin/verify`       | —    | Verify PIN                      |
-| GET    | `/auth/session`          | —    | Check session status            |
-| POST   | `/auth/logout`           | —    | Logout                          |
-| GET    | `/me`                    | ✓    | Get current user                |
-| POST   | `/auth/onboard/complete` | ✓    | Complete first-login onboarding |
-
-### Bootstrap
-
-| Method | Path                | Auth | Description                  |
-| ------ | ------------------- | ---- | ---------------------------- |
-| GET    | `/bootstrap/status` | —    | Check if app is bootstrapped |
-| POST   | `/bootstrap`        | —    | Initial setup                |
-| POST   | `/bootstrap/admin`  | —    | Create first admin account   |
-
-### Admin
-
-| Method | Path                         | Auth  | Description                |
-| ------ | ---------------------------- | ----- | -------------------------- |
-| POST   | `/admin/users`               | admin | Create user                |
-| POST   | `/admin/impersonate/:userId` | admin | Start impersonation        |
-| POST   | `/admin/impersonate/stop`    | ✓     | Stop impersonation         |
-| GET    | `/admin/impersonate/status`  | ✓     | Check impersonation status |
-
-### Settings
-
-| Method | Path                       | Auth  | Description                     |
-| ------ | -------------------------- | ----- | ------------------------------- |
-| GET    | `/settings/user`           | ✓     | Get user preferences            |
-| PUT    | `/settings/user`           | ✓     | Update user preferences         |
-| POST   | `/settings/password`       | ✓     | Change password (settings flow) |
-| POST   | `/settings/avatar`         | ✓     | Upload avatar                   |
-| DELETE | `/settings/avatar`         | ✓     | Remove avatar                   |
-| GET    | `/settings/household`      | admin | Get household settings          |
-| PUT    | `/settings/household`      | admin | Update household settings       |
-| POST   | `/settings/household/logo` | admin | Upload household logo           |
-| DELETE | `/settings/household/logo` | admin | Remove household logo           |
-
-### Family
-
-| Method | Path                           | Auth  | Description         |
-| ------ | ------------------------------ | ----- | ------------------- |
-| GET    | `/family/members`              | ✓     | List all members    |
-| GET    | `/family/members/:id`          | ✓     | Get single member   |
-| POST   | `/family/members`              | admin | Create member       |
-| PUT    | `/family/members/:id`          | admin | Update member       |
-| DELETE | `/family/members/:id`          | admin | Deactivate member   |
-| POST   | `/family/members/:id/password` | admin | Set member password |
-| POST   | `/family/members/:id/pin`      | admin | Set member PIN      |
-| DELETE | `/family/members/:id/pin`      | admin | Remove member PIN   |
-
-### Calendar
-
-| Method | Path                   | Auth | Description                       |
-| ------ | ---------------------- | ---- | --------------------------------- |
-| GET    | `/calendar/events`     | ✓    | List events (with date range)     |
-| GET    | `/calendar/users`      | ✓    | List users for calendar dropdowns |
-| POST   | `/calendar/events`     | ✓    | Create event                      |
-| PUT    | `/calendar/events/:id` | ✓    | Update event                      |
-| DELETE | `/calendar/events/:id` | ✓    | Delete event                      |
-
-### Chores
-
-| Method | Path                              | Auth  | Description                   |
-| ------ | --------------------------------- | ----- | ----------------------------- |
-| GET    | `/chores`                         | ✓     | List chore definitions        |
-| GET    | `/chores/:id`                     | ✓     | Get single chore              |
-| POST   | `/chores`                         | admin | Create chore                  |
-| PUT    | `/chores/:id`                     | admin | Update chore                  |
-| DELETE | `/chores/:id`                     | admin | Soft-delete chore             |
-| DELETE | `/chores/:id/hard`                | admin | Hard-delete chore             |
-| POST   | `/chores/:id/regenerate`          | admin | Regenerate instances          |
-| GET    | `/chores/categories`              | ✓     | List categories               |
-| POST   | `/chores/categories`              | admin | Create category               |
-| PATCH  | `/chores/categories/:id`          | admin | Update category               |
-| DELETE | `/chores/categories/:id`          | admin | Delete category               |
-| GET    | `/chores/templates`               | ✓     | List templates                |
-| GET    | `/chores/templates/:id`           | ✓     | Get template                  |
-| POST   | `/chores/templates`               | admin | Create template               |
-| PUT    | `/chores/templates/:id`           | admin | Update template               |
-| DELETE | `/chores/templates/:id`           | admin | Delete template               |
-| POST   | `/chores/templates/:id/apply`     | admin | Apply template → create chore |
-| GET    | `/chores/instances`               | ✓     | List instances                |
-| POST   | `/chores/instances/:id/complete`  | ✓     | Complete instance             |
-| POST   | `/chores/instances/:id/approve`   | admin | Approve completion            |
-| POST   | `/chores/instances/:id/reject`    | admin | Reject completion             |
-| POST   | `/chores/instances/:id/skip`      | admin | Skip instance                 |
-| POST   | `/chores/instances/:id/reassign`  | admin | Reassign instance             |
-| GET    | `/chores/stats`                   | ✓     | Get chore statistics          |
-| GET    | `/chores/leaderboard`             | ✓     | Get points leaderboard        |
-| POST   | `/chores/points/adjust`           | admin | Adjust member points          |
-| GET    | `/chores/assignments`             | admin | List assignments              |
-| DELETE | `/chores/assignments/:id`         | admin | Delete assignment             |
-| POST   | `/chores/assignments/bulk-delete` | admin | Bulk delete assignments       |
-
-### Shopping
-
-| Method | Path                                    | Auth  | Description              |
-| ------ | --------------------------------------- | ----- | ------------------------ |
-| GET    | `/shopping/list`                        | ✓     | Get shopping list        |
-| POST   | `/shopping/list`                        | ✓     | Add item to list         |
-| PUT    | `/shopping/list/:id`                    | ✓     | Update list item         |
-| DELETE | `/shopping/list/:id`                    | ✓     | Remove from list         |
-| POST   | `/shopping/list/:id/purchase`           | ✓     | Mark item purchased      |
-| GET    | `/shopping/catalog`                     | ✓     | List catalog items       |
-| GET    | `/shopping/catalog/:id`                 | ✓     | Get catalog item         |
-| GET    | `/shopping/catalog/:id/prices`          | ✓     | Get price history        |
-| POST   | `/shopping/catalog`                     | admin | Create catalog item      |
-| PUT    | `/shopping/catalog/:id`                 | admin | Update catalog item      |
-| DELETE | `/shopping/catalog/:id`                 | admin | Delete catalog item      |
-| POST   | `/shopping/catalog/:id/prices`          | ✓     | Record a price           |
-| GET    | `/shopping/categories`                  | ✓     | List shopping categories |
-| POST   | `/shopping/categories`                  | admin | Create category          |
-| PUT    | `/shopping/categories/:id`              | admin | Update category          |
-| DELETE | `/shopping/categories/:id`              | admin | Delete category          |
-| GET    | `/shopping/stores`                      | ✓     | List stores              |
-| POST   | `/shopping/stores`                      | admin | Create store             |
-| POST   | `/shopping/stores/request`              | ✓     | Request new store        |
-| GET    | `/shopping/stores/requests`             | admin | List store requests      |
-| POST   | `/shopping/stores/requests/:id/approve` | admin | Approve store            |
-| POST   | `/shopping/stores/requests/:id/deny`    | admin | Deny store               |
-| GET    | `/shopping/suggestions`                 | ✓     | Get smart suggestions    |
-| POST   | `/shopping/suggestions/:id/add`         | ✓     | Add suggestion to list   |
-| POST   | `/shopping/suggestions/add-all`         | ✓     | Add all suggestions      |
-| GET    | `/shopping/requests`                    | ✓     | List item requests       |
-| POST   | `/shopping/requests`                    | ✓     | Create item request      |
-| POST   | `/shopping/requests/:id/approve`        | admin | Approve request          |
-| POST   | `/shopping/requests/:id/deny`           | admin | Deny request             |
-| GET    | `/shopping/history`                     | ✓     | Purchase history         |
-| GET    | `/shopping/analytics`                   | ✓     | Spending analytics       |
-
-### Messages
-
-| Method | Path                               | Auth  | Description                        |
-| ------ | ---------------------------------- | ----- | ---------------------------------- |
-| GET    | `/messages`                        | ✓     | List notifications                 |
-| GET    | `/messages/unread-count`           | ✓     | Unread notification count          |
-| GET    | `/messages/unread-total`           | ✓     | Total unread (notifications + DMs) |
-| POST   | `/messages/:id/read`               | ✓     | Mark notification read             |
-| POST   | `/messages/read-all`               | ✓     | Mark all read                      |
-| DELETE | `/messages/:id`                    | ✓     | Delete notification                |
-| DELETE | `/messages`                        | ✓     | Delete all read                    |
-| GET    | `/messages/announcements`          | ✓     | List announcements                 |
-| POST   | `/messages/announcements`          | admin | Create announcement                |
-| POST   | `/messages/announcements/:id/read` | ✓     | Mark announcement read             |
-| DELETE | `/messages/announcements/:id`      | admin | Delete announcement                |
-| GET    | `/messages/conversations`          | ✓     | List DM conversations              |
-| GET    | `/messages/conversations/:userId`  | ✓     | Get conversation with user         |
-| POST   | `/messages/send`                   | ✓     | Send direct message                |
-| DELETE | `/messages/direct/:id`             | ✓     | Delete single DM                   |
-| DELETE | `/messages/conversations/:userId`  | ✓     | Delete conversation                |
-
-### Uploads
-
-| Method | Path                  | Auth  | Description             |
-| ------ | --------------------- | ----- | ----------------------- |
-| POST   | `/upload/avatar`      | ✓     | Upload user avatar      |
-| DELETE | `/upload/avatar`      | ✓     | Delete user avatar      |
-| POST   | `/upload/logo`        | admin | Upload household logo   |
-| POST   | `/upload/background`  | admin | Upload login background |
-| GET    | `/uploads`            | admin | List all uploads        |
-| DELETE | `/uploads/:id`        | admin | Delete upload           |
-| POST   | `/uploads/:id/select` | admin | Set upload as active    |
-
-### Other
-
-| Method | Path                   | Auth  | Description         |
-| ------ | ---------------------- | ----- | ------------------- |
-| GET    | `/permissions`         | admin | List permissions    |
-| PUT    | `/permissions`         | admin | Replace permissions |
-| POST   | `/permissions/refresh` | admin | Reload permissions  |
-| GET    | `/colors/*`            | —     | Color swatch API    |
+---
 
 ## Environment Variables
 
@@ -353,15 +493,35 @@ VITE_API_URL=http://localhost:3001/api
 VITE_API_BASE_URL=http://localhost:3001
 ```
 
+---
+
 ## User Roles
 
-| Role     | Description                                                             |
-| -------- | ----------------------------------------------------------------------- |
-| `admin`  | Full access — manage members, chores, shopping, settings, impersonation |
-| `member` | Standard access — own chores, shared lists, calendar, messaging         |
-| `kid`    | Limited access — own chores and events, can request items               |
-| `kiosk`  | PIN-only login for shared screens, display-only                         |
+| Role     | Description                                                            |
+| -------- | ---------------------------------------------------------------------- |
+| `admin`  | Full access — manage members, chores, shopping, budgets, settings      |
+| `member` | Standard access — own chores, shared lists, calendar, messaging        |
+| `kid`    | Limited access — own chores and events, can request items, paid chores |
+| `kiosk`  | PIN-only login for shared screens, display-only                        |
+
+---
+
+## Security Notice
+
+This application is designed to run on your **local home network**. If you expose it to the internet:
+
+- Always use HTTPS (SSL/TLS)
+- Use strong passwords
+- Keep the software updated
+- Consider using a VPN instead of exposing directly
+- The developer assumes no liability for security issues (see LICENSE)
+
+---
 
 ## License
 
-This project is licensed under the MIT License — see [LICENSE](LICENSE) for details.
+Copyright (c) 2025 BeachFury. All Rights Reserved.
+
+This software is proprietary. See [LICENSE](LICENSE) for full terms.
+
+**No warranty is provided. Use at your own risk.**

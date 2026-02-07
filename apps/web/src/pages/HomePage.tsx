@@ -16,10 +16,15 @@ function getWidgetProps(widgetId: string, data: DashboardData, currentUserId?: n
         userName: data.user?.displayName || 'User',
         todayStats: data.quickStats || { events: 0, chores: 0, shopping: 0 },
       };
-    case 'quick-stats':
+    case 'quick-stats': {
+      const stats = data.quickStats || { events: 0, chores: 0, shopping: 0, paidChores: 0 };
       return {
-        stats: data.quickStats || { events: 0, chores: 0, shopping: 0, paidChores: 0 },
+        eventsToday: stats.events,
+        choresDue: stats.chores,
+        shoppingItems: stats.shopping,
+        earnings: Number(data.myEarnings?.total) || 0,
       };
+    }
     case 'todays-events':
       return {
         events: data.todaysEvents || [],
@@ -40,6 +45,7 @@ function getWidgetProps(widgetId: string, data: DashboardData, currentUserId?: n
     case 'chore-leaderboard':
       return {
         leaderboard: data.choreLeaderboard || [],
+        currentUserId,
       };
     case 'shopping-list':
       return {
@@ -51,7 +57,7 @@ function getWidgetProps(widgetId: string, data: DashboardData, currentUserId?: n
       };
     case 'earnings':
       return {
-        earnings: data.myEarnings || { total: 0, pending: 0, thisWeek: 0 },
+        totalEarnings: Number(data.myEarnings?.total) || 0,
       };
     case 'family-members':
       return {
@@ -61,6 +67,10 @@ function getWidgetProps(widgetId: string, data: DashboardData, currentUserId?: n
     case 'announcements':
       return {
         announcements: data.announcements || [],
+      };
+    case 'weather':
+      return {
+        location: undefined, // Will use geolocation
       };
     default:
       return {};
