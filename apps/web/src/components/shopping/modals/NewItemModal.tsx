@@ -1,0 +1,340 @@
+// apps/web/src/components/shopping/modals/NewItemModal.tsx
+import { useState, useRef, useEffect } from 'react';
+import { X, Camera, RefreshCw, DollarSign, Trash2 } from 'lucide-react';
+import { shoppingApi } from '../../../api';
+import type { ShoppingCategory, ShoppingStore, CatalogItem } from '../../../types';
+
+interface NewItemModalProps {
+  categories: ShoppingCategory[];
+  stores: ShoppingStore[];
+  onClose: () => void;
+  onSubmit: (data: {
+    name: string;
+    brand?: string;
+    sizeText?: string;
+    categoryId?: number;
+    imageUrl?: string;
+    prices?: Array<{ storeId: number; price: number }>;
+  }) => void;
+  isAdmin: boolean;
+  // NEW: Optional editItem prop for edit mode
+  editItem?: CatalogItem | null;
+}
+
+export function NewItemModal({
+  categories,
+  stores,
+  onClose,
+  onSubmit,
+  isAdmin,
+  editItem,
+}: NewItemModalProps) {
+  // Determine if we're in edit mode
+  const isEditMode = !!editItem;
+
+  // Initialize state with editItem values if in edit mode
+  const [name, setName] = useState(editItem?.name || '');
+  const [brand, setBrand] = useState(editItem?.brand || '');
+  const [sizeText, setSizeText] = useState(editItem?.sizeText || '');
+  const [categoryId, setCategoryId] = useState<number | null>(editItem?.categoryId || null);
+  const [imageUrl, setImageUrl] = useState(editItem?.imageUrl || '');
+  const [prices, setPrices] = useState<Array<{ storeId: number; price: string }>>([]);
+  const [uploading, setUploading] = useState(false);
+  const [submitting, setSubmitting] = useState(false);
+  const fileInputRef = useRef<HTMLInputElement>(null);
+
+  // Load existing prices when editing
+  useEffect(() => {
+    if (editItem?.id) {
+      loadExistingPrices(editItem.id);
+    }
+  }, [editItem?.id]);
+
+  const loadExistingPrices = async (itemId: number) => {
+    try {
+      const data = await shoppingApi.getCatalogItemPrices(itemId);
+      if (data.prices && data.prices.length > 0) {
+        setPrices(
+          data.prices.map((p) => ({
+            storeId: p.storeId,
+            price: p.price?.toString() || '',
+          })),
+        );
+      }
+    } catch (err) {
+      console.error('Failed to load prices:', err);
+    }
+  };
+
+  const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    if (file.size > 2 * 1024 * 1024) {
+      alert('Image must be under 2MB');
+      return;
+    }
+    setUploading(true);
+    const reader = new FileReader();
+    reader.onload = async () => {
+      try {
+        const result = await shoppingApi.uploadImage(reader.result as string, file.type);
+        setImageUrl(result.imageKey);
+      } catch (err) {
+        alert('Failed to upload image');
+      }
+      setUploading(false);
+    };
+    reader.readAsDataURL(file);
+  };
+
+  const addPriceEntry = () => {
+    if (stores.length === 0) return;
+    const usedStores = new Set(prices.map((p) => p.storeId));
+    const availableStore = stores.find((s) => !usedStores.has(s.id));
+    if (availableStore) {
+      setPrices([...prices, { storeId: availableStore.id, price: '' }]);
+    }
+  };
+
+  const updatePrice = (index: number, field: 'storeId' | 'price', value: any) => {
+    const newPrices = [...prices];
+    newPrices[index] = { ...newPrices[index], [field]: value };
+    setPrices(newPrices);
+  };
+
+  const removePrice = (index: number) => {
+    setPrices(prices.filter((_, i) => i !== index));
+  };
+
+  const handleSubmit = async () => {
+    if (!name.trim()) {
+      alert('Item name is required');
+      return;
+    }
+    setSubmitting(true);
+    try {
+      await onSubmit({
+        name: name.trim(),
+        brand: brand || undefined,
+        sizeText: sizeText || undefined,
+        categoryId: categoryId || undefined,
+        imageUrl: imageUrl || undefined,
+        prices: prices
+          .filter((p) => p.price && parseFloat(p.price) > 0)
+          .map((p) => ({ storeId: p.storeId, price: parseFloat(p.price) })),
+      });
+    } finally {
+      setSubmitting(false);
+    }
+  };
+
+  // Dynamic title based on mode
+  const getTitle = () => {
+    if (isEditMode) return 'Edit Item';
+    if (isAdmin) return 'Add New Item';
+    return 'Request New Item';
+  };
+
+  // Dynamic button text based on mode
+  const getButtonText = () => {
+    if (submitting) return 'Saving...';
+    if (isEditMode) return 'Save Changes';
+    if (isAdmin) return 'Create Item';
+    return 'Submit Request';
+  };
+
+  return (
+    <div className="fixed inset-0 bg-black/50 flex items-end sm:items-center justify-center z-50">
+      <div className="bg-white dark:bg-gray-800 w-full sm:max-w-lg sm:rounded-2xl max-h-[90vh] overflow-hidden flex flex-col rounded-t-2xl">
+        <div className="p-4 border-b border-gray-100 dark:border-gray-700 flex items-center justify-between flex-shrink-0">
+          <h2 className="text-lg font-semibold text-gray-900 dark:text-white">{getTitle()}</h2>
+          <button
+            onClick={onClose}
+            className="p-1 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg"
+          >
+            <X size={20} />
+          </button>
+        </div>
+
+        <div className="flex-1 overflow-y-auto p-4 space-y-4">
+          {!isAdmin && !isEditMode && (
+            <div className="p-3 bg-blue-50 dark:bg-blue-900/20 rounded-xl text-sm text-blue-700 dark:text-blue-300">
+              Your request will be sent to an admin for approval.
+            </div>
+          )}
+
+          {/* Image */}
+          <div>
+            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+              Photo
+            </label>
+            <input
+              ref={fileInputRef}
+              type="file"
+              accept="image/*"
+              onChange={handleImageUpload}
+              className="hidden"
+            />
+            {imageUrl ? (
+              <div className="relative">
+                <img src={imageUrl} alt="" className="w-full h-32 object-cover rounded-xl" />
+                <button
+                  onClick={() => setImageUrl('')}
+                  className="absolute top-2 right-2 p-1 bg-red-500 text-white rounded-full"
+                >
+                  <X size={16} />
+                </button>
+              </div>
+            ) : (
+              <button
+                onClick={() => fileInputRef.current?.click()}
+                disabled={uploading}
+                className="w-full h-24 border-2 border-dashed border-gray-300 dark:border-gray-600 rounded-xl flex flex-col items-center justify-center gap-2 hover:border-orange-500 transition-colors"
+              >
+                {uploading ? (
+                  <RefreshCw size={24} className="animate-spin text-gray-400" />
+                ) : (
+                  <>
+                    <Camera size={24} className="text-gray-400" />
+                    <span className="text-sm text-gray-500">Upload photo</span>
+                  </>
+                )}
+              </button>
+            )}
+          </div>
+
+          {/* Name */}
+          <div>
+            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+              Name *
+            </label>
+            <input
+              type="text"
+              value={name}
+              onChange={(e) => setName(e.target.value)}
+              placeholder="e.g., Cheerios"
+              className="w-full px-3 py-2 border border-gray-200 dark:border-gray-700 rounded-xl bg-white dark:bg-gray-800"
+              required
+            />
+          </div>
+
+          {/* Brand */}
+          <div>
+            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+              Brand
+            </label>
+            <input
+              type="text"
+              value={brand}
+              onChange={(e) => setBrand(e.target.value)}
+              placeholder="e.g., General Mills"
+              className="w-full px-3 py-2 border border-gray-200 dark:border-gray-700 rounded-xl bg-white dark:bg-gray-800"
+            />
+          </div>
+
+          {/* Size */}
+          <div>
+            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+              Size/Package
+            </label>
+            <input
+              type="text"
+              value={sizeText}
+              onChange={(e) => setSizeText(e.target.value)}
+              placeholder="e.g., 18 oz"
+              className="w-full px-3 py-2 border border-gray-200 dark:border-gray-700 rounded-xl bg-white dark:bg-gray-800"
+            />
+          </div>
+
+          {/* Category */}
+          <div>
+            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+              Category
+            </label>
+            <select
+              value={categoryId || ''}
+              onChange={(e) => setCategoryId(e.target.value ? Number(e.target.value) : null)}
+              className="w-full px-3 py-2 border border-gray-200 dark:border-gray-700 rounded-xl bg-white dark:bg-gray-800"
+            >
+              <option value="">Select category...</option>
+              {categories.map((cat) => (
+                <option key={cat.id} value={cat.id}>
+                  {cat.name}
+                </option>
+              ))}
+            </select>
+          </div>
+
+          {/* Prices (Admin only) */}
+          {isAdmin && (
+            <div>
+              <div className="flex items-center justify-between mb-2">
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">
+                  Store Prices
+                </label>
+                <button
+                  onClick={addPriceEntry}
+                  disabled={prices.length >= stores.length}
+                  className="text-sm text-orange-600 hover:text-orange-700 disabled:opacity-50"
+                >
+                  + Add Store
+                </button>
+              </div>
+              {prices.map((p, i) => (
+                <div key={i} className="flex gap-2 mb-2">
+                  <select
+                    value={p.storeId}
+                    onChange={(e) => updatePrice(i, 'storeId', Number(e.target.value))}
+                    className="flex-1 px-3 py-2 border border-gray-200 dark:border-gray-700 rounded-xl bg-white dark:bg-gray-800 text-sm"
+                  >
+                    {stores.map((s) => (
+                      <option key={s.id} value={s.id}>
+                        {s.name}
+                      </option>
+                    ))}
+                  </select>
+                  <div className="relative w-24">
+                    <DollarSign
+                      size={16}
+                      className="absolute left-2 top-1/2 -translate-y-1/2 text-gray-400"
+                    />
+                    <input
+                      type="number"
+                      step="0.01"
+                      min="0"
+                      value={p.price}
+                      onChange={(e) => updatePrice(i, 'price', e.target.value)}
+                      placeholder="0.00"
+                      className="w-full pl-7 pr-2 py-2 border border-gray-200 dark:border-gray-700 rounded-xl text-sm bg-white dark:bg-gray-800"
+                    />
+                  </div>
+                  <button
+                    onClick={() => removePrice(i)}
+                    className="p-2 text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-lg"
+                  >
+                    <Trash2 size={16} />
+                  </button>
+                </div>
+              ))}
+              {prices.length === 0 && (
+                <p className="text-sm text-gray-400 italic">
+                  No prices yet. Click "+ Add Store" to add.
+                </p>
+              )}
+            </div>
+          )}
+        </div>
+
+        <div className="p-4 border-t border-gray-100 dark:border-gray-700 flex-shrink-0">
+          <button
+            onClick={handleSubmit}
+            disabled={!name.trim() || submitting}
+            className="w-full py-3 bg-orange-500 text-white rounded-xl font-medium hover:bg-orange-600 transition-colors disabled:opacity-50"
+          >
+            {getButtonText()}
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}

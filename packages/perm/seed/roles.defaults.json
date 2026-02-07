@@ -1,0 +1,65 @@
+{
+  "admin": [
+    {
+      "actionPattern": "*",
+      "effect": "allow"
+    }
+  ],
+  "member": [
+    {
+      "actionPattern": "calendar.*",
+      "effect": "allow"
+    },
+    {
+      "actionPattern": "chores.*",
+      "effect": "allow"
+    },
+    {
+      "actionPattern": "groceries.*",
+      "effect": "allow"
+    },
+    {
+      "actionPattern": "users.*",
+      "effect": "deny"
+    },
+    {
+      "actionPattern": "settings.*",
+      "effect": "deny"
+    }
+  ],
+  "kid": [
+    {
+      "actionPattern": "calendar.read",
+      "effect": "allow"
+    },
+    {
+      "actionPattern": "chores.read",
+      "effect": "allow"
+    },
+    {
+      "actionPattern": "chores.complete",
+      "effect": "allow"
+    },
+    {
+      "actionPattern": "chores.write",
+      "effect": "deny"
+    },
+    {
+      "actionPattern": "users.*",
+      "effect": "deny"
+    },
+    {
+      "actionPattern": "settings.*",
+      "effect": "deny"
+    }
+  ],
+  "kiosk": [
+    {
+      "actionPattern": "dashboard.read",
+      "effect": "allow",
+      "localOnly": true
+    },
+
+    { "actionPattern": "dashboard.read", "effect": "allow", "localOnly": true }
+  ]
+}

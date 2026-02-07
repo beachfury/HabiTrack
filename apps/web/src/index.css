@@ -1,0 +1,340 @@
+@import 'tailwindcss';
+
+/* ============================================
+   THEME SYSTEM CSS VARIABLES
+   ============================================ */
+:root {
+  /* Legacy accent color (backward compatible) */
+  --accent-color: #8b5cf6;
+  --accent-color-rgb: 139, 92, 246;
+
+  /* Layout */
+  --layout-type: sidebar-left;
+  --sidebar-width: 256px;
+  --header-height: 64px;
+  --nav-style: icons-text;
+
+  /* Colors - Light Mode Defaults */
+  --color-primary: #8b5cf6;
+  --color-primary-foreground: #ffffff;
+  --color-secondary: #f3f4f6;
+  --color-secondary-foreground: #1f2937;
+  --color-accent: #8b5cf6;
+  --color-accent-foreground: #ffffff;
+  --color-background: #ffffff;
+  --color-foreground: #1f2937;
+  --color-card: #ffffff;
+  --color-card-foreground: #1f2937;
+  --color-muted: #f3f4f6;
+  --color-muted-foreground: #6b7280;
+  --color-border: #e5e7eb;
+  --color-destructive: #ef4444;
+  --color-destructive-foreground: #ffffff;
+  --color-success: #22c55e;
+  --color-success-foreground: #ffffff;
+  --color-warning: #f59e0b;
+  --color-warning-foreground: #1f2937;
+
+  /* Typography */
+  --font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  --font-family-heading: var(--font-family);
+  --font-size-base: 16px;
+  --line-height: 1.5;
+
+  /* UI */
+  --radius-base: 0.5rem;
+  --radius-sm: calc(var(--radius-base) * 0.5);
+  --radius-md: var(--radius-base);
+  --radius-lg: calc(var(--radius-base) * 1.5);
+  --radius-xl: calc(var(--radius-base) * 2);
+  --shadow-base: 0 1px 2px rgba(0, 0, 0, 0.05);
+
+  /* Sidebar */
+  --sidebar-bg: var(--color-card);
+  --sidebar-text: var(--color-foreground);
+  --sidebar-image: none;
+  --sidebar-image-opacity: 30;
+  --sidebar-blur: 0px;
+
+  /* Page Background */
+  --page-bg: var(--color-background);
+  --page-bg-image: none;
+  --page-bg-pattern: none;
+}
+
+/* Dark Mode Defaults */
+.dark {
+  --color-primary: #a78bfa;
+  --color-primary-foreground: #1f2937;
+  --color-secondary: #374151;
+  --color-secondary-foreground: #f9fafb;
+  --color-accent: #a78bfa;
+  --color-accent-foreground: #1f2937;
+  --color-background: #111827;
+  --color-foreground: #f9fafb;
+  --color-card: #1f2937;
+  --color-card-foreground: #f9fafb;
+  --color-muted: #374151;
+  --color-muted-foreground: #9ca3af;
+  --color-border: #374151;
+  --color-destructive: #f87171;
+  --color-destructive-foreground: #1f2937;
+  --color-success: #4ade80;
+  --color-success-foreground: #1f2937;
+  --color-warning: #fbbf24;
+  --color-warning-foreground: #1f2937;
+
+  --sidebar-bg: var(--color-card);
+  --sidebar-text: var(--color-foreground);
+  --page-bg: var(--color-background);
+}
+
+/* Starry background effect - fades out toward bottom */
+.bg-stars {
+  background-image:
+    /* Dense stars at top */
+    radial-gradient(2px 2px at 20px 30px, white, transparent),
+    radial-gradient(1px 1px at 40px 70px, rgba(255, 255, 255, 0.9), transparent),
+    radial-gradient(2px 2px at 90px 20px, white, transparent),
+    radial-gradient(1px 1px at 160px 50px, rgba(255, 255, 255, 0.8), transparent),
+    radial-gradient(2px 2px at 230px 15px, white, transparent),
+    radial-gradient(1px 1px at 300px 60px, rgba(255, 255, 255, 0.9), transparent),
+    radial-gradient(2px 2px at 370px 35px, white, transparent),
+    radial-gradient(1px 1px at 450px 80px, rgba(255, 255, 255, 0.7), transparent),
+    radial-gradient(2px 2px at 520px 25px, white, transparent),
+    radial-gradient(1px 1px at 600px 55px, rgba(255, 255, 255, 0.8), transparent),
+    radial-gradient(2px 2px at 680px 40px, white, transparent),
+    radial-gradient(1px 1px at 750px 70px, rgba(255, 255, 255, 0.9), transparent),
+    radial-gradient(2px 2px at 50px 100px, rgba(255, 255, 255, 0.9), transparent),
+    radial-gradient(1px 1px at 120px 130px, rgba(255, 255, 255, 0.8), transparent),
+    radial-gradient(2px 2px at 200px 110px, rgba(255, 255, 255, 0.85), transparent),
+    radial-gradient(1px 1px at 280px 145px, rgba(255, 255, 255, 0.7), transparent),
+    radial-gradient(2px 2px at 350px 120px, rgba(255, 255, 255, 0.8), transparent),
+    radial-gradient(1px 1px at 420px 150px, rgba(255, 255, 255, 0.75), transparent),
+    radial-gradient(2px 2px at 500px 105px, rgba(255, 255, 255, 0.9), transparent),
+    radial-gradient(1px 1px at 580px 140px, rgba(255, 255, 255, 0.7), transparent),
+    radial-gradient(2px 2px at 660px 125px, rgba(255, 255, 255, 0.8), transparent),
+    radial-gradient(1px 1px at 730px 160px, rgba(255, 255, 255, 0.6), transparent),
+    /* Medium density - middle area */
+      radial-gradient(1px 1px at 80px 200px, rgba(255, 255, 255, 0.6), transparent),
+    radial-gradient(2px 2px at 180px 220px, rgba(255, 255, 255, 0.5), transparent),
+    radial-gradient(1px 1px at 270px 190px, rgba(255, 255, 255, 0.55), transparent),
+    radial-gradient(1px 1px at 380px 230px, rgba(255, 255, 255, 0.45), transparent),
+    radial-gradient(2px 2px at 480px 210px, rgba(255, 255, 255, 0.5), transparent),
+    radial-gradient(1px 1px at 560px 240px, rgba(255, 255, 255, 0.4), transparent),
+    radial-gradient(1px 1px at 650px 200px, rgba(255, 255, 255, 0.5), transparent),
+    radial-gradient(2px 2px at 720px 250px, rgba(255, 255, 255, 0.35), transparent),
+    /* Sparse/faint stars - lower area */
+      radial-gradient(1px 1px at 100px 300px, rgba(255, 255, 255, 0.3), transparent),
+    radial-gradient(1px 1px at 250px 320px, rgba(255, 255, 255, 0.2), transparent),
+    radial-gradient(1px 1px at 400px 290px, rgba(255, 255, 255, 0.25), transparent),
+    radial-gradient(1px 1px at 550px 330px, rgba(255, 255, 255, 0.15), transparent),
+    radial-gradient(1px 1px at 700px 310px, rgba(255, 255, 255, 0.2), transparent);
+  background-size: 800px 400px;
+  background-repeat: repeat-x;
+  background-position: top;
+  mask-image: linear-gradient(to bottom, black 0%, black 20%, transparent 50%);
+  -webkit-mask-image: linear-gradient(to bottom, black 0%, black 20%, transparent 50%);
+}
+
+/* Dark mode styles */
+.dark {
+  color-scheme: dark;
+}
+
+.dark body {
+  background-color: #111827;
+  color: #f9fafb;
+}
+
+.dark .bg-white {
+  background-color: #1f2937 !important;
+}
+
+.dark .bg-gray-50 {
+  background-color: #111827 !important;
+}
+
+.dark .bg-gray-100 {
+  background-color: #1f2937 !important;
+}
+
+.dark .border-gray-100,
+.dark .border-gray-200 {
+  border-color: #374151 !important;
+}
+
+.dark .text-gray-900 {
+  color: #f9fafb !important;
+}
+
+.dark .text-gray-700 {
+  color: #d1d5db !important;
+}
+
+.dark .text-gray-600 {
+  color: #9ca3af !important;
+}
+
+.dark .text-gray-500 {
+  color: #9ca3af !important;
+}
+
+.dark .text-gray-400 {
+  color: #6b7280 !important;
+}
+
+.dark .hover\:bg-gray-100:hover {
+  background-color: #374151 !important;
+}
+
+.dark .hover\:bg-gray-50:hover {
+  background-color: #1f2937 !important;
+}
+
+.dark input,
+.dark textarea,
+.dark select {
+  background-color: #374151 !important;
+  border-color: #4b5563 !important;
+  color: #f9fafb !important;
+}
+
+.dark input::placeholder,
+.dark textarea::placeholder {
+  color: #9ca3af !important;
+}
+
+.dark .shadow-sm {
+  box-shadow: 0 1px 2px 0 rgb(0 0 0 / 0.3) !important;
+}
+
+.dark .shadow-xl {
+  box-shadow:
+    0 20px 25px -5px rgb(0 0 0 / 0.4),
+    0 8px 10px -6px rgb(0 0 0 / 0.4) !important;
+}
+
+/* Accent color utilities */
+.bg-accent {
+  background-color: var(--accent-color);
+}
+
+.text-accent {
+  color: var(--accent-color);
+}
+
+.border-accent {
+  border-color: var(--accent-color);
+}
+
+.ring-accent {
+  --tw-ring-color: var(--accent-color);
+}
+
+.bg-accent-light {
+  background-color: rgba(var(--accent-color-rgb), 0.1);
+}
+
+.text-accent-dark {
+  color: var(--accent-color);
+  filter: brightness(0.8);
+}
+
+/* ============================================
+   THEME UTILITY CLASSES
+   ============================================ */
+
+/* Primary color utilities */
+.bg-primary {
+  background-color: var(--color-primary);
+}
+
+.text-primary {
+  color: var(--color-primary);
+}
+
+.border-primary {
+  border-color: var(--color-primary);
+}
+
+/* Card utilities */
+.bg-card {
+  background-color: var(--color-card);
+}
+
+.text-card-foreground {
+  color: var(--color-card-foreground);
+}
+
+/* Muted utilities */
+.bg-muted {
+  background-color: var(--color-muted);
+}
+
+.text-muted-foreground {
+  color: var(--color-muted-foreground);
+}
+
+/* Border utilities */
+.border-theme {
+  border-color: var(--color-border);
+}
+
+/* Destructive utilities */
+.bg-destructive {
+  background-color: var(--color-destructive);
+}
+
+.text-destructive {
+  color: var(--color-destructive);
+}
+
+/* Success utilities */
+.bg-success {
+  background-color: var(--color-success);
+}
+
+.text-success {
+  color: var(--color-success);
+}
+
+/* Warning utilities */
+.bg-warning {
+  background-color: var(--color-warning);
+}
+
+.text-warning {
+  color: var(--color-warning);
+}
+
+/* Border radius utilities */
+.rounded-theme {
+  border-radius: var(--radius-base);
+}
+
+.rounded-theme-sm {
+  border-radius: var(--radius-sm);
+}
+
+.rounded-theme-lg {
+  border-radius: var(--radius-lg);
+}
+
+.rounded-theme-xl {
+  border-radius: var(--radius-xl);
+}
+
+/* Shadow utilities */
+.shadow-theme {
+  box-shadow: var(--shadow-base);
+}
+
+/* Font utilities */
+.font-theme {
+  font-family: var(--font-family);
+}
+
+.font-theme-heading {
+  font-family: var(--font-family-heading);
+}

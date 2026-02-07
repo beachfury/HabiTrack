@@ -1,0 +1,24 @@
+services:
+  db:
+    image: ${MARIADB_IMAGE}
+    container_name: habitrack-db
+    restart: unless-stopped
+    environment:
+      MARIADB_ROOT_PASSWORD: ${MARIADB_ROOT_PASSWORD}
+      MARIADB_DATABASE: ${HABITRACK_DB}
+      MARIADB_USER: ${HABITRACK_APP_USER}
+      MARIADB_PASSWORD: ${HABITRACK_APP_PASSWORD}
+    ports:
+      - '3306:3306' # expose for local dev only
+    volumes:
+      - habitrack-db:/var/lib/mysql
+      - ./conf/99-habitrack.cnf:/etc/mysql/mariadb.conf.d/99-habitrack.cnf:ro
+    networks:
+      - habitrack-net
+
+volumes:
+  habitrack-db:
+
+networks:
+  habitrack-net:
+    name: habitrack-net

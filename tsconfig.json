@@ -6,6 +6,15 @@
     "strict": true,
     "resolveJsonModule": true,
     "esModuleInterop": true,
-    "skipLibCheck": true
+    "skipLibCheck": true,
+    "baseUrl": ".",
+    "paths": {
+      "@habitrack/net": ["packages/net/src", "packages/net/dist"],
+      "@habitrack/perm": ["packages/perm/src", "packages/perm/dist"],
+      "@habitrack/http": ["packages/http/src", "packages/http/dist"],
+      "@habitrack/kiosk": ["packages/kiosk/src", "packages/kiosk/dist"],
+      "@habitrack/http-contracts": ["packages/http-contracts/src", "packages/http-contracts/dist"],
+      "@habitrack/core-config": ["packages/core-config/src", "packages/core-config/dist"]
+    }
   }
 }

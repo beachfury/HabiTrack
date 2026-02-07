@@ -1,0 +1,14 @@
+[mysqld]
+# Character set + collation for full emoji support
+character-set-server = utf8mb4
+collation-server     = utf8mb4_general_ci
+
+# Strict mode (fail on bad/implicit values)
+sql_mode = STRICT_TRANS_TABLES,ERROR_FOR_DIVISION_BY_ZERO,NO_ENGINE_SUBSTITUTION
+
+# Timezone uniformity
+default_time_zone = +00:00
+
+# Small QoL hardening
+skip-name-resolve
+innodb_file_per_table = 1
