@@ -10,6 +10,7 @@ export * as family from './family';
 export * as settings from './settings';
 export * as messages from './messages';
 export * as admin from './admin';
+export * as meals from './meals';
 
 // Standalone routes
 export * as bootstrap from './bootstrap';

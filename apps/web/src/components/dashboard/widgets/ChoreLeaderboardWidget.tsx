@@ -21,52 +21,52 @@ export function ChoreLeaderboardWidget({ leaderboard = [], currentUserId }: Chor
   return (
     <div className="h-full flex flex-col">
       <div className="flex items-center justify-between mb-3">
-        <h3 className="font-semibold text-gray-900 dark:text-white flex items-center gap-2">
-          <Trophy size={18} className="text-yellow-500" />
+        <h3 className="font-semibold text-[var(--color-foreground)] flex items-center gap-2">
+          <Trophy size={18} className="text-[var(--color-warning)]" />
           This Week's Leaders
         </h3>
-        <Link to="/chores" className="text-sm text-blue-500 hover:text-blue-600">
+        <Link to="/chores" className="text-sm text-[var(--color-primary)] hover:opacity-80">
           View All
         </Link>
       </div>
 
       <div className="flex-1 overflow-y-auto space-y-2">
         {leaderboard.length === 0 ? (
-          <p className="text-sm text-gray-500 dark:text-gray-400 text-center py-4">
+          <p className="text-sm text-[var(--color-muted-foreground)] text-center py-4">
             No activity this week
           </p>
         ) : (
           leaderboard.map((entry, index) => (
             <div
               key={entry.id}
-              className={`flex items-center gap-3 p-2 rounded-lg ${
+              className={`flex items-center gap-3 p-2 rounded-[var(--widget-radius)] ${
                 entry.id === currentUserId
-                  ? 'bg-purple-50 dark:bg-purple-900/20'
-                  : 'bg-gray-50 dark:bg-gray-700/50'
+                  ? 'bg-[var(--color-primary)]/10'
+                  : 'bg-[var(--widget-bg)]'
               }`}
             >
               <div className="w-6 text-center">
                 {index < 3 ? (
                   <span className="text-lg">{medals[index]}</span>
                 ) : (
-                  <span className="text-sm text-gray-400">#{index + 1}</span>
+                  <span className="text-sm text-[var(--color-muted-foreground)]">#{index + 1}</span>
                 )}
               </div>
               <div
                 className="w-8 h-8 rounded-full flex items-center justify-center text-white text-sm font-medium"
-                style={{ backgroundColor: entry.color || '#8b5cf6' }}
+                style={{ backgroundColor: entry.color || 'var(--color-primary)' }}
               >
                 {entry.displayName.charAt(0).toUpperCase()}
               </div>
               <div className="flex-1 min-w-0">
-                <p className="text-sm font-medium text-gray-900 dark:text-white truncate">
+                <p className="text-sm font-medium text-[var(--color-foreground)] truncate">
                   {entry.displayName}
                   {entry.id === currentUserId && (
-                    <span className="ml-1 text-xs text-purple-500">(You)</span>
+                    <span className="ml-1 text-xs text-[var(--color-primary)]">(You)</span>
                   )}
                 </p>
               </div>
-              <div className="text-sm font-bold text-gray-900 dark:text-white">
+              <div className="text-sm font-bold text-[var(--color-foreground)]">
                 {entry.points} pts
               </div>
             </div>

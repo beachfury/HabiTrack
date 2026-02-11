@@ -24,35 +24,35 @@ export function TodaysEventsWidget({ events = [] }: TodaysEventsWidgetProps) {
   return (
     <div className="h-full flex flex-col">
       <div className="flex items-center justify-between mb-3">
-        <h3 className="font-semibold text-gray-900 dark:text-white flex items-center gap-2">
-          <Calendar size={18} className="text-blue-500" />
+        <h3 className="font-semibold text-[var(--color-foreground)] flex items-center gap-2">
+          <Calendar size={18} className="text-[var(--color-primary)]" />
           Today's Events
         </h3>
-        <Link to="/calendar" className="text-sm text-blue-500 hover:text-blue-600">
+        <Link to="/calendar" className="text-sm text-[var(--color-primary)] hover:opacity-80">
           View All
         </Link>
       </div>
 
       <div className="flex-1 overflow-y-auto space-y-2">
         {events.length === 0 ? (
-          <p className="text-sm text-gray-500 dark:text-gray-400 text-center py-4">
+          <p className="text-sm text-[var(--color-muted-foreground)] text-center py-4">
             No events today
           </p>
         ) : (
           events.map((event) => (
             <div
               key={event.id}
-              className="flex items-center gap-3 p-2 rounded-lg bg-gray-50 dark:bg-gray-700/50"
+              className="themed-widget flex items-center gap-3"
             >
               <div
                 className="w-1 h-8 rounded-full"
-                style={{ backgroundColor: event.color || '#8b5cf6' }}
+                style={{ backgroundColor: event.color || 'var(--color-primary)' }}
               />
               <div className="flex-1 min-w-0">
-                <p className="text-sm font-medium text-gray-900 dark:text-white truncate">
+                <p className="text-sm font-medium text-[var(--color-foreground)] truncate">
                   {event.title}
                 </p>
-                <p className="text-xs text-gray-500 dark:text-gray-400">
+                <p className="text-xs text-[var(--color-muted-foreground)]">
                   {event.allDay ? 'All day' : formatTime(event.startTime)}
                 </p>
               </div>

@@ -59,8 +59,10 @@ app.use(
 app.use(express.json({ limit: '10mb' }));
 app.use(cookieParser());
 
-// Serve uploaded files
-app.use('/uploads', express.static(process.env.UPLOAD_DIR || '/app/uploads'));
+// Serve uploaded files - use UPLOAD_DIR env var or fall back to local uploads folder
+const uploadDir = process.env.UPLOAD_DIR || path.join(process.cwd(), 'uploads');
+console.log(`[uploads] Serving static files from: ${uploadDir}`);
+app.use('/uploads', express.static(uploadDir));
 
 // =============================================================================
 // CSRF (for state-changing operations)

@@ -24,9 +24,10 @@ const UPLOAD_DIR = process.env.UPLOAD_DIR || '/app/uploads';
 const AVATAR_DIR = path.join(UPLOAD_DIR, 'avatars');
 const LOGO_DIR = path.join(UPLOAD_DIR, 'logos');
 const BACKGROUND_DIR = path.join(UPLOAD_DIR, 'backgrounds');
+const RECIPE_DIR = path.join(UPLOAD_DIR, 'recipes');
 
 // Create directories if they don't exist
-[AVATAR_DIR, LOGO_DIR, BACKGROUND_DIR].forEach((dir) => {
+[AVATAR_DIR, LOGO_DIR, BACKGROUND_DIR, RECIPE_DIR].forEach((dir) => {
   if (!fs.existsSync(dir)) {
     fs.mkdirSync(dir, { recursive: true });
   }
@@ -299,6 +300,154 @@ export async function uploadBackground(req: Request, res: Response) {
     return res.json({ success: true, backgroundUrl });
   } catch (err) {
     console.error('[uploadBackground] error', err);
+    return res.status(500).json({ error: { code: 'SERVER_ERROR' } });
+  }
+}
+
+// =============================================================================
+// POST /api/upload/recipe/:id
+// Upload recipe image
+// =============================================================================
+export async function uploadRecipeImage(req: Request, res: Response) {
+  const user = getUser(req);
+  if (!user) {
+    return res.status(401).json({ error: { code: 'AUTH_REQUIRED' } });
+  }
+
+  const recipeId = parseInt(req.params.id);
+  if (isNaN(recipeId)) {
+    return res.status(400).json({ error: { code: 'INVALID_INPUT', message: 'Invalid recipe ID' } });
+  }
+
+  try {
+    // Check if recipe exists and user has permission
+    const [recipe] = await q<Array<{ id: number; createdBy: number | null; imageUrl: string | null }>>(
+      'SELECT id, createdBy, imageUrl FROM recipes WHERE id = ? AND active = 1',
+      [recipeId],
+    );
+
+    if (!recipe) {
+      return res.status(404).json({ error: { code: 'NOT_FOUND', message: 'Recipe not found' } });
+    }
+
+    // Only admin or recipe creator can upload image
+    if (user.roleId !== 'admin' && recipe.createdBy !== user.id) {
+      return res.status(403).json({ error: { code: 'FORBIDDEN', message: 'You cannot edit this recipe' } });
+    }
+
+    if (!req.body || !req.body.image) {
+      return res.status(400).json({
+        error: { code: 'INVALID_INPUT', message: 'No image provided' },
+      });
+    }
+
+    const { image, mimeType } = req.body;
+
+    if (!ALLOWED_TYPES.includes(mimeType)) {
+      return res.status(400).json({
+        error: {
+          code: 'INVALID_INPUT',
+          message: 'Invalid image type. Allowed: JPEG, PNG, GIF, WebP',
+        },
+      });
+    }
+
+    // Decode base64 image
+    const base64Data = image.replace(/^data:image\/\w+;base64,/, '');
+    const buffer = Buffer.from(base64Data, 'base64');
+
+    if (buffer.length > MAX_SIZE) {
+      return res.status(400).json({
+        error: { code: 'INVALID_INPUT', message: 'Image too large. Maximum size is 5MB' },
+      });
+    }
+
+    // Generate unique filename
+    const ext = mimeType.split('/')[1];
+    const filename = `recipe-${recipeId}-${crypto.randomBytes(8).toString('hex')}.${ext}`;
+    const filepath = path.join(RECIPE_DIR, filename);
+
+    // Delete old recipe image if exists
+    if (recipe.imageUrl) {
+      const oldPath = path.join(UPLOAD_DIR, recipe.imageUrl.replace('/uploads/', ''));
+      if (fs.existsSync(oldPath)) {
+        fs.unlinkSync(oldPath);
+      }
+    }
+
+    // Save new image
+    fs.writeFileSync(filepath, buffer);
+
+    // Update database
+    const imageUrl = `/uploads/recipes/${filename}`;
+    await q('UPDATE recipes SET imageUrl = ? WHERE id = ?', [imageUrl, recipeId]);
+
+    await logAudit({
+      action: 'upload.recipe',
+      result: 'ok',
+      actorId: user.id,
+      details: { recipeId },
+    });
+
+    return res.json({ success: true, imageUrl });
+  } catch (err) {
+    console.error('[uploadRecipeImage] error', err);
+    return res.status(500).json({ error: { code: 'SERVER_ERROR' } });
+  }
+}
+
+// =============================================================================
+// DELETE /api/upload/recipe/:id
+// Delete recipe image
+// =============================================================================
+export async function deleteRecipeImage(req: Request, res: Response) {
+  const user = getUser(req);
+  if (!user) {
+    return res.status(401).json({ error: { code: 'AUTH_REQUIRED' } });
+  }
+
+  const recipeId = parseInt(req.params.id);
+  if (isNaN(recipeId)) {
+    return res.status(400).json({ error: { code: 'INVALID_INPUT', message: 'Invalid recipe ID' } });
+  }
+
+  try {
+    // Check if recipe exists and user has permission
+    const [recipe] = await q<Array<{ id: number; createdBy: number | null; imageUrl: string | null }>>(
+      'SELECT id, createdBy, imageUrl FROM recipes WHERE id = ? AND active = 1',
+      [recipeId],
+    );
+
+    if (!recipe) {
+      return res.status(404).json({ error: { code: 'NOT_FOUND', message: 'Recipe not found' } });
+    }
+
+    // Only admin or recipe creator can delete image
+    if (user.roleId !== 'admin' && recipe.createdBy !== user.id) {
+      return res.status(403).json({ error: { code: 'FORBIDDEN', message: 'You cannot edit this recipe' } });
+    }
+
+    // Delete old recipe image if exists
+    if (recipe.imageUrl) {
+      const oldPath = path.join(UPLOAD_DIR, recipe.imageUrl.replace('/uploads/', ''));
+      if (fs.existsSync(oldPath)) {
+        fs.unlinkSync(oldPath);
+      }
+    }
+
+    // Update database
+    await q('UPDATE recipes SET imageUrl = NULL WHERE id = ?', [recipeId]);
+
+    await logAudit({
+      action: 'upload.recipe.delete',
+      result: 'ok',
+      actorId: user.id,
+      details: { recipeId },
+    });
+
+    return res.json({ success: true });
+  } catch (err) {
+    console.error('[deleteRecipeImage] error', err);
     return res.status(500).json({ error: { code: 'SERVER_ERROR' } });
   }
 }

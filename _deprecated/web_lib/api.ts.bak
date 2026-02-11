@@ -1,0 +1,1328 @@
+// API client for communicating with the backend
+
+const API_BASE = import.meta.env.VITE_API_URL || '/api';
+
+interface ApiError {
+  code: string;
+  message?: string;
+}
+
+export interface CalendarEvent {
+  id: number;
+  title: string;
+  description: string | null;
+  start: string;
+  end: string | null;
+  allDay: boolean;
+  color: string | null;
+  eventColor?: string | null;
+  location: string | null;
+  createdBy: number;
+  createdByName?: string;
+  assignedTo: number | null;
+  assignedToName?: string | null;
+}
+
+export interface CreateEventData {
+  title: string;
+  description?: string;
+  start: string;
+  end?: string;
+  allDay?: boolean;
+  color?: string;
+  location?: string;
+  assignedTo?: number;
+}
+
+export interface FamilyMember {
+  id: number;
+  displayName: string;
+  nickname: string | null;
+  email: string | null;
+  role: 'admin' | 'member' | 'kid';
+  color: string | null;
+  active: boolean;
+  hasPassword: boolean;
+  hasPin: boolean;
+  createdAt: string;
+}
+
+export interface CreateFamilyMemberData {
+  displayName: string;
+  nickname?: string;
+  email?: string;
+  role: 'admin' | 'member' | 'kid';
+  color?: string;
+  password?: string;
+  pin?: string;
+}
+
+export interface UserSettings {
+  id: number;
+  displayName: string;
+  nickname: string | null;
+  email: string | null;
+  color: string | null;
+  theme: 'light' | 'dark' | 'system';
+  accentColor: string | null;
+  avatarUrl: string | null;
+}
+
+export interface UploadedFile {
+  filename: string;
+  url: string;
+  size: number;
+  createdAt: string;
+}
+
+export interface HouseholdSettings {
+  name: string;
+  brandColor: string;
+  logoUrl: string | null;
+  loginBackground: 'gradient' | 'solid' | 'image';
+  loginBackgroundValue: string | null;
+  timezone: string;
+}
+
+export interface Message {
+  id: number;
+  type: 'chore' | 'calendar' | 'family' | 'system';
+  title: string;
+  body: string | null;
+  link: string | null;
+  relatedId: number | null;
+  relatedType: string | null;
+  isRead: boolean;
+  readAt: string | null;
+  createdAt: string;
+}
+
+export interface ChoreCategory {
+  id: number;
+  name: string;
+  icon: string | null;
+  color: string | null;
+  sortOrder: number;
+}
+
+export interface Chore {
+  id: number;
+  title: string;
+  description: string | null;
+  categoryId: number | null;
+  categoryName: string | null;
+  categoryIcon: string | null;
+  categoryColor: string | null;
+  difficulty: 'easy' | 'medium' | 'hard';
+  estimatedMinutes: number | null;
+  points: number;
+  recurrenceType: 'once' | 'daily' | 'weekly' | 'monthly' | 'yearly' | 'custom';
+  recurrenceInterval: number;
+  recurrenceDays: string | null;
+  dueTime: string | null;
+  assignmentMode: 'fixed' | 'rotating' | 'fair' | 'anyone';
+  assignedTo: number | null;
+  assignedToName: string | null;
+  requirePhoto: boolean;
+  requireApproval: boolean;
+  startDate: string;
+  endDate: string | null;
+  createdBy: number;
+  createdByName: string;
+}
+
+export interface ChoreInstance {
+  chore: any;
+  id: number;
+  choreId: number;
+  title: string;
+  description: string | null;
+  categoryId: number | null;
+  categoryName: string | null;
+  categoryIcon: string | null;
+  categoryColor: string | null;
+  difficulty: 'easy' | 'medium' | 'hard';
+  estimatedMinutes: number | null;
+  points: number;
+  dueDate: string;
+  dueTime: string | null;
+  assignedTo: number | null;
+  assignedToName: string | null;
+  assignedToColor: string | null;
+  status: 'pending' | 'completed' | 'approved' | 'skipped';
+  completedBy: number | null;
+  completedByName: string | null;
+  completedAt: string | null;
+  completionNotes: string | null;
+  photoUrl: string | null;
+  requirePhoto: boolean;
+  requireApproval: boolean;
+  pointsAwarded: number | null;
+  isOverdue: boolean;
+}
+
+export interface CreateChoreData {
+  title: string;
+  description?: string;
+  categoryId?: number;
+  difficulty?: 'easy' | 'medium' | 'hard';
+  estimatedMinutes?: number;
+  points?: number;
+  recurrenceType?: 'once' | 'daily' | 'weekly' | 'monthly' | 'yearly' | 'custom';
+  recurrenceInterval?: number;
+  recurrenceDays?: string;
+  dueTime?: string;
+  assignmentMode?: 'fixed' | 'rotating' | 'fair' | 'anyone';
+  assignedTo?: number;
+  requirePhoto?: boolean;
+  requireApproval?: boolean;
+  startDate?: string;
+  endDate?: string;
+}
+
+export interface ChoreTemplate {
+  id: number;
+  title: string;
+  description: string | null;
+  categoryId: number | null;
+  categoryName: string | null;
+  categoryColor: string | null;
+  difficulty: 'easy' | 'medium' | 'hard';
+  estimatedMinutes: number | null;
+  defaultPoints: number;
+  suggestedRecurrence: string | null;
+  suggestedDays: string | null;
+  requirePhoto: boolean;
+  requireApproval: boolean;
+  isSystem: boolean;
+}
+
+export interface LeaderboardEntry {
+  userId: number;
+  displayName: string;
+  nickname: string | null;
+  color: string | null;
+  avatarUrl: string | null;
+  totalPoints: number;
+  choresCompleted: number;
+}
+
+export interface ChoreStats {
+  totalPoints: number;
+  weekPoints: number;
+  choresCompleted: number;
+  currentStreak: number;
+  longestStreak: number;
+  achievements: Array<{
+    code: string;
+    name: string;
+    icon: string;
+    color: string;
+    earnedAt: string;
+  }>;
+}
+
+export interface Achievement {
+  id: number;
+  code: string;
+  name: string;
+  description: string;
+  icon: string;
+  color: string;
+  earned: boolean;
+  earnedAt: string | null;
+}
+
+export interface ShoppingCategory {
+  id: number;
+  name: string;
+}
+
+export interface ShoppingStore {
+  id: number;
+  name: string;
+}
+
+export interface CatalogItem {
+  id: number;
+  name: string;
+  brand: string | null;
+  sizeText: string | null;
+  categoryId: number | null;
+  categoryName: string | null;
+  imageUrl: string | null;
+  lowestPrice: number | null;
+  lowestPriceStore: string | null;
+  storePrice?: number | null;
+}
+
+export interface ShoppingListItem {
+  id: number;
+  catalogItemId: number;
+  storeId: number | null;
+  listType: 'need' | 'want';
+  quantity: number;
+  note: string | null;
+  status: 'active' | 'purchased';
+  purchasedToday: boolean;
+  itemName: string;
+  brand: string | null;
+  categoryName: string | null;
+  storeName: string | null;
+  storePrice: number | null;
+  lowestPrice: number | null;
+}
+
+export interface ShoppingRequest {
+  id: number;
+  requestType: 'need' | 'want';
+  status: 'pending' | 'approved' | 'denied';
+  name: string;
+  brand: string;
+  category: string;
+  imageKey: string;
+  requestedByName: string;
+  createdAt: string;
+}
+
+export interface Suggestion {
+  catalogItemId: number;
+  itemName: string;
+  brand: string | null;
+  confidence: 'high' | 'medium' | 'low';
+  reason: string;
+}
+
+class ApiClient {
+  [x: string]: any;
+  private csrfToken: string | null = null;
+
+  private async request<T>(endpoint: string, options: RequestInit = {}): Promise<T> {
+    const url = `${API_BASE}${endpoint}`;
+
+    const headers: HeadersInit = {
+      'Content-Type': 'application/json',
+      ...options.headers,
+    };
+
+    // Add CSRF token for non-GET requests
+    if (options.method && options.method !== 'GET' && this.csrfToken) {
+      (headers as Record<string, string>)['X-HabiTrack-CSRF'] = this.csrfToken;
+    }
+
+    const response = await fetch(url, {
+      ...options,
+      headers,
+      credentials: 'include', // Include cookies
+    });
+
+    if (!response.ok) {
+      const error = await response.json().catch(() => ({ error: { code: 'UNKNOWN' } }));
+      throw error.error as ApiError;
+    }
+
+    // Handle 204 No Content
+    if (response.status === 204) {
+      return {} as T;
+    }
+
+    return response.json();
+  }
+
+  async getCsrfToken(): Promise<string> {
+    const data = await this.request<{ token: string }>('/csrf');
+    this.csrfToken = data.token;
+    return data.token;
+  }
+
+  // Health check
+  async health(): Promise<{ ok: boolean }> {
+    return this.request('/health');
+  }
+
+  // Auth
+  async login(email: string, password: string): Promise<void> {
+    await this.getCsrfToken();
+    return this.request('/auth/creds/login', {
+      method: 'POST',
+      body: JSON.stringify({ email, secret: password }),
+    });
+  }
+
+  async logout(): Promise<void> {
+    return this.request('/auth/logout', { method: 'POST' });
+  }
+
+  async me(): Promise<{ user: { id: number; displayName: string; role: string } }> {
+    return this.request('/me');
+  }
+
+  // Kiosk
+  async kioskSummary(): Promise<unknown> {
+    return this.request('/kiosk/summary');
+  }
+
+  // Kiosk PIN Authentication
+  async getPinUsers(): Promise<{
+    users: Array<{
+      id: number;
+      displayName: string;
+      nickname: string | null;
+      color: string | null;
+      avatarUrl: string | null;
+    }>;
+  }> {
+    return this.request('/auth/pin/users');
+  }
+
+  async loginWithPin(
+    userId: number,
+    pin: string,
+  ): Promise<{
+    success: boolean;
+    user: { id: number; displayName: string; role: string };
+  }> {
+    await this.getCsrfToken();
+    return this.request('/auth/pin/login', {
+      method: 'POST',
+      body: JSON.stringify({ userId, pin }),
+    });
+  }
+
+  // Bootstrap
+  async getBootstrapStatus(): Promise<{ bootstrapped: boolean }> {
+    return this.request('/bootstrap/status');
+  }
+
+  async bootstrap(data: {
+    adminName: string;
+    adminEmail: string;
+    adminPassword: string;
+    householdName?: string;
+  }): Promise<void> {
+    await this.getCsrfToken();
+    return this.request('/bootstrap', {
+      method: 'POST',
+      body: JSON.stringify(data),
+    });
+  }
+
+  // Calendar
+  async getEvents(start: string, end: string): Promise<{ events: CalendarEvent[] }> {
+    return this.request(
+      `/calendar/events?start=${encodeURIComponent(start)}&end=${encodeURIComponent(end)}`,
+    );
+  }
+
+  async createEvent(event: CreateEventData): Promise<{ event: CalendarEvent }> {
+    await this.getCsrfToken();
+    return this.request('/calendar/events', {
+      method: 'POST',
+      body: JSON.stringify(event),
+    });
+  }
+
+  async updateEvent(id: number, event: Partial<CreateEventData>): Promise<void> {
+    await this.getCsrfToken();
+    return this.request(`/calendar/events/${id}`, {
+      method: 'PUT',
+      body: JSON.stringify(event),
+    });
+  }
+
+  async deleteEvent(id: number): Promise<void> {
+    await this.getCsrfToken();
+    return this.request(`/calendar/events/${id}`, {
+      method: 'DELETE',
+    });
+  }
+
+  async getCalendarUsers(): Promise<{
+    users: Array<{
+      id: number;
+      displayName: string;
+      nickname: string | null;
+      roleId: string;
+      color: string | null;
+    }>;
+  }> {
+    return this.request('/calendar/users');
+  }
+
+  // Chores
+  async getChoreCategories(): Promise<{ categories: ChoreCategory[] }> {
+    return this.request('/chores/categories');
+  }
+
+  async getChores(params?: {
+    categoryId?: number;
+    assignedTo?: number;
+  }): Promise<{ chores: Chore[] }> {
+    const query = new URLSearchParams();
+    if (params?.categoryId) query.set('categoryId', String(params.categoryId));
+    if (params?.assignedTo) query.set('assignedTo', String(params.assignedTo));
+    return this.request(`/chores?${query}`);
+  }
+
+  async createChore(data: CreateChoreData): Promise<{ choreId: number }> {
+    await this.getCsrfToken();
+    return this.request('/chores', {
+      method: 'POST',
+      body: JSON.stringify(data),
+    });
+  }
+
+  async updateChore(
+    choreId: number,
+    data: {
+      title?: string;
+      description?: string;
+      categoryId?: number;
+      difficulty?: 'easy' | 'medium' | 'hard';
+      points?: number;
+      estimatedMinutes?: number;
+      assignedTo?: number | null;
+      requireApproval?: boolean;
+    },
+  ): Promise<{ success: boolean }> {
+    const res = await fetch(`${API_BASE}/chores/${choreId}`, {
+      method: 'PATCH',
+      credentials: 'include',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(data),
+    });
+    if (!res.ok) {
+      const err = await res.json();
+      throw new Error(err.message || 'Failed to update chore');
+    }
+    return res.json();
+  }
+
+  async deleteChore(id: number): Promise<void> {
+    await this.getCsrfToken();
+    return this.request(`/chores/${id}`, { method: 'DELETE' });
+  }
+
+  async getChoreInstances(params?: {
+    startDate?: string;
+    endDate?: string;
+    assignedTo?: number;
+    status?: string;
+    mine?: boolean;
+  }): Promise<{ instances: ChoreInstance[] }> {
+    const query = new URLSearchParams();
+    if (params?.startDate) query.set('startDate', params.startDate);
+    if (params?.endDate) query.set('endDate', params.endDate);
+    if (params?.assignedTo) query.set('assignedTo', String(params.assignedTo));
+    if (params?.status) query.set('status', params.status);
+    if (params?.mine) query.set('mine', 'true');
+    return this.request(`/chores/instances?${query}`);
+  }
+
+  async completeChoreInstance(
+    id: number,
+    data?: { notes?: string; photoUrl?: string },
+  ): Promise<{
+    success: boolean;
+    status: string;
+    pointsAwarded: number | null;
+    bonusPoints: number;
+  }> {
+    await this.getCsrfToken();
+    return this.request(`/chores/instances/${id}/complete`, {
+      method: 'POST',
+      body: JSON.stringify(data || {}),
+    });
+  }
+
+  async approveChoreInstance(id: number): Promise<{ success: boolean; pointsAwarded: number }> {
+    await this.getCsrfToken();
+    return this.request(`/chores/instances/${id}/approve`, { method: 'POST' });
+  }
+
+  async rejectChoreInstance(id: number, reason?: string): Promise<{ success: boolean }> {
+    await this.getCsrfToken();
+    return this.request(`/chores/instances/${id}/reject`, {
+      method: 'POST',
+      body: JSON.stringify({ reason }),
+    });
+  }
+
+  async getChoreLeaderboard(
+    period?: 'week' | 'month' | 'all',
+  ): Promise<{ leaderboard: LeaderboardEntry[] }> {
+    const query = period ? `?period=${period}` : '';
+    return this.request(`/chores/leaderboard${query}`);
+  }
+
+  async getChoreStats(userId?: number): Promise<{ stats: ChoreStats }> {
+    const path = userId ? `/chores/stats/${userId}` : '/chores/stats';
+    return this.request(path);
+  }
+
+  async getChoreAchievements(): Promise<{ achievements: Achievement[] }> {
+    return this.request('/chores/achievements');
+  }
+
+  // Update a chore template (admin only)
+  async updateChoreTemplate(
+    templateId: number,
+    data: {
+      title?: string;
+      description?: string | null;
+      categoryId?: number | null;
+      difficulty?: 'easy' | 'medium' | 'hard';
+      defaultPoints?: number;
+      estimatedMinutes?: number | null;
+      suggestedRecurrence?: string | null;
+      suggestedDays?: string | null;
+      requirePhoto?: boolean;
+      requireApproval?: boolean;
+    },
+  ): Promise<{ template: ChoreTemplate }> {
+    await this.getCsrfToken();
+    return this.request(`/chores/templates/${templateId}`, {
+      method: 'PATCH',
+      body: JSON.stringify(data),
+    });
+  }
+
+  // Update a chore category (admin only)
+  async updateChoreCategory(
+    categoryId: number,
+    data: {
+      name?: string;
+      icon?: string | null;
+      color?: string | null;
+    },
+  ): Promise<{ category: ChoreCategory }> {
+    await this.getCsrfToken();
+    return this.request(`/chores/categories/${categoryId}`, {
+      method: 'PATCH',
+      body: JSON.stringify(data),
+    });
+  }
+
+  // Delete a chore category (admin only)
+  async deleteChoreCategory(categoryId: number): Promise<{ success: boolean }> {
+    await this.getCsrfToken();
+    return this.request(`/chores/categories/${categoryId}`, {
+      method: 'DELETE',
+    });
+  }
+
+  // Chore Templates
+  async getChoreTemplates(categoryId?: number): Promise<{ templates: ChoreTemplate[] }> {
+    const query = categoryId ? `?categoryId=${categoryId}` : '';
+    return this.request(`/chores/templates${query}`);
+  }
+
+  async createChoreTemplate(data: {
+    title: string;
+    description?: string;
+    categoryId?: number;
+    difficulty?: string;
+    estimatedMinutes?: number;
+    defaultPoints?: number;
+    suggestedRecurrence?: string;
+    suggestedDays?: string;
+    requirePhoto?: boolean;
+    requireApproval?: boolean;
+  }): Promise<{ templateId: number }> {
+    await this.getCsrfToken();
+    return this.request('/chores/templates', {
+      method: 'POST',
+      body: JSON.stringify(data),
+    });
+  }
+
+  // Admin chore management
+  async completeChoreForUser(
+    instanceId: number,
+    userId: number,
+    notes?: string,
+  ): Promise<{ success: boolean; pointsAwarded: number }> {
+    await this.getCsrfToken();
+    return this.request(`/chores/instances/${instanceId}/complete-for`, {
+      method: 'POST',
+      body: JSON.stringify({ userId, notes }),
+    });
+  }
+
+  async reassignChoreInstance(
+    instanceId: number,
+    userId: number | null,
+  ): Promise<{ success: boolean }> {
+    await this.getCsrfToken();
+    return this.request(`/chores/instances/${instanceId}/reassign`, {
+      method: 'PUT',
+      body: JSON.stringify({ userId }),
+    });
+  }
+
+  async hardDeleteChore(id: number): Promise<void> {
+    await this.getCsrfToken();
+    return this.request(`/chores/${id}/hard`, { method: 'DELETE' });
+  }
+
+  // Family Management
+  async getFamilyMembers(): Promise<{ members: FamilyMember[] }> {
+    return this.request('/family/members');
+  }
+
+  async createFamilyMember(data: CreateFamilyMemberData): Promise<{ member: FamilyMember }> {
+    await this.getCsrfToken();
+    return this.request('/family/members', {
+      method: 'POST',
+      body: JSON.stringify(data),
+    });
+  }
+
+  async updateFamilyMember(id: number, data: Partial<CreateFamilyMemberData>): Promise<void> {
+    await this.getCsrfToken();
+    return this.request(`/family/members/${id}`, {
+      method: 'PUT',
+      body: JSON.stringify(data),
+    });
+  }
+
+  async setMemberPassword(id: number, password: string): Promise<{ success: boolean }> {
+    await this.getCsrfToken();
+    return this.request(`/family/members/${id}/password`, {
+      method: 'POST',
+      body: JSON.stringify({ password }),
+    });
+  }
+
+  async setMemberPin(id: number, pin: string | null): Promise<{ success: boolean }> {
+    await this.getCsrfToken();
+    return this.request(`/family/members/${id}/pin`, {
+      method: 'POST',
+      body: JSON.stringify({ pin }),
+    });
+  }
+
+  async deleteFamilyMember(id: number): Promise<void> {
+    await this.getCsrfToken();
+    return this.request(`/family/members/${id}`, {
+      method: 'DELETE',
+    });
+  }
+
+  // Points management (admin)
+  async adjustUserPoints(
+    userId: number,
+    points: number,
+    reason?: string,
+  ): Promise<{ success: boolean; newTotal: number }> {
+    await this.getCsrfToken();
+    return this.request('/chores/points/adjust', {
+      method: 'POST',
+      body: JSON.stringify({ userId, points, reason }),
+    });
+  }
+
+  async resetUserPoints(userId: number): Promise<{ success: boolean }> {
+    await this.getCsrfToken();
+    return this.request('/chores/points/reset', {
+      method: 'POST',
+      body: JSON.stringify({ userId }),
+    });
+  }
+
+  async skipChoreInstance(instanceId: number): Promise<{ success: boolean }> {
+    await this.getCsrfToken();
+    return this.request(`/chores/instances/${instanceId}/skip`, {
+      method: 'POST',
+    });
+  }
+
+  async deleteChoreTemplate(templateId: number): Promise<void> {
+    await this.getCsrfToken();
+    return this.request(`/chores/templates/${templateId}`, {
+      method: 'DELETE',
+    });
+  }
+
+  async createChoreCategory(data: {
+    name: string;
+    icon?: string;
+    color?: string;
+  }): Promise<{ category: ChoreCategory }> {
+    await this.getCsrfToken();
+    return this.request('/chores/categories', {
+      method: 'POST',
+      body: JSON.stringify(data),
+    });
+  }
+
+  // Settings
+  async getUserSettings(): Promise<{ user: UserSettings }> {
+    return this.request('/settings/user');
+  }
+
+  async updateUserSettings(data: Partial<UserSettings>): Promise<{ success: boolean }> {
+    await this.getCsrfToken();
+    return this.request('/settings/user', {
+      method: 'PUT',
+      body: JSON.stringify(data),
+    });
+  }
+
+  async changePassword(
+    currentPassword: string,
+    newPassword: string,
+  ): Promise<{ success: boolean }> {
+    await this.getCsrfToken();
+    return this.request('/settings/user/password', {
+      method: 'POST',
+      body: JSON.stringify({ currentPassword, newPassword }),
+    });
+  }
+
+  async getHouseholdSettings(): Promise<{ household: HouseholdSettings }> {
+    return this.request('/settings/household');
+  }
+
+  async updateHouseholdSettings(data: Partial<HouseholdSettings>): Promise<{ success: boolean }> {
+    await this.getCsrfToken();
+    // Map frontend 'name' to backend 'householdName'
+    const payload: any = { ...data };
+    if ('name' in payload) {
+      payload.householdName = payload.name;
+      delete payload.name;
+    }
+    return this.request('/settings/household', {
+      method: 'PUT',
+      body: JSON.stringify(payload),
+    });
+  }
+
+  async uploadAvatar(
+    image: string,
+    mimeType: string,
+  ): Promise<{ success: boolean; avatarUrl: string }> {
+    await this.getCsrfToken();
+    return this.request('/upload/avatar', {
+      method: 'POST',
+      body: JSON.stringify({ image, mimeType }),
+    });
+  }
+
+  async deleteAvatar(): Promise<{ success: boolean }> {
+    await this.getCsrfToken();
+    return this.request('/upload/avatar', {
+      method: 'DELETE',
+    });
+  }
+
+  async uploadLogo(
+    image: string,
+    mimeType: string,
+  ): Promise<{ success: boolean; logoUrl: string }> {
+    await this.getCsrfToken();
+    return this.request('/upload/logo', {
+      method: 'POST',
+      body: JSON.stringify({ image, mimeType }),
+    });
+  }
+
+  async uploadBackground(
+    image: string,
+    mimeType: string,
+  ): Promise<{ success: boolean; backgroundUrl: string }> {
+    await this.getCsrfToken();
+    return this.request('/upload/background', {
+      method: 'POST',
+      body: JSON.stringify({ image, mimeType }),
+    });
+  }
+
+  async listUploads(type: 'logos' | 'backgrounds' | 'avatars'): Promise<{ files: UploadedFile[] }> {
+    return this.request(`/upload/list/${type}`);
+  }
+
+  async deleteUploadedFile(type: string, filename: string): Promise<{ success: boolean }> {
+    await this.getCsrfToken();
+    return this.request(`/upload/${type}/${filename}`, {
+      method: 'DELETE',
+    });
+  }
+
+  async selectUpload(type: 'logos' | 'backgrounds', url: string): Promise<{ success: boolean }> {
+    await this.getCsrfToken();
+    return this.request(`/upload/${type}/select`, {
+      method: 'POST',
+      body: JSON.stringify({ url }),
+    });
+  }
+
+  // Impersonation
+  async getImpersonationStatus(): Promise<{
+    impersonating: boolean;
+    originalAdmin?: { id: number; displayName: string };
+  }> {
+    return this.request('/admin/impersonate/status');
+  }
+
+  async startImpersonation(userId: number): Promise<{
+    success: boolean;
+    impersonating: { id: number; displayName: string; role: string };
+  }> {
+    await this.getCsrfToken();
+    return this.request(`/admin/impersonate/${userId}`, { method: 'POST' });
+  }
+
+  async stopImpersonation(): Promise<{
+    success: boolean;
+    user: { id: number; displayName: string; role: string };
+  }> {
+    await this.getCsrfToken();
+    return this.request('/admin/impersonate/stop', { method: 'POST' });
+  }
+
+  async getUsers(): Promise<{
+    users: Array<{
+      id: number;
+      displayName: string;
+      nickname: string | null;
+      roleId: string;
+      color: string | null;
+    }>;
+  }> {
+    return this.request('/calendar/users');
+  }
+
+  // =============================================================================
+  // SHOPPING - Categories
+  // =============================================================================
+
+  async getShoppingCategories(): Promise<{ categories: ShoppingCategory[] }> {
+    return this.request('/shopping/categories');
+  }
+
+  async createShoppingCategory(name: string): Promise<{ category: ShoppingCategory }> {
+    await this.getCsrfToken();
+    return this.request('/shopping/categories', {
+      method: 'POST',
+      body: JSON.stringify({ name }),
+    });
+  }
+
+  // =============================================================================
+  // SHOPPING - Stores
+  // =============================================================================
+
+  async getShoppingStores(): Promise<{ stores: ShoppingStore[] }> {
+    return this.request('/shopping/stores');
+  }
+
+  async createStore(name: string): Promise<{ store: ShoppingStore }> {
+    await this.getCsrfToken();
+    return this.request('/shopping/stores', {
+      method: 'POST',
+      body: JSON.stringify({ name }),
+    });
+  }
+
+  async requestStore(
+    name: string,
+  ): Promise<{ request: { id: number; name: string; status: string } }> {
+    await this.getCsrfToken();
+    return this.request('/shopping/stores/request', {
+      method: 'POST',
+      body: JSON.stringify({ name }),
+    });
+  }
+
+  async getStoreRequests(): Promise<{ requests: any[] }> {
+    return this.request('/shopping/stores/requests');
+  }
+
+  async approveStoreRequest(requestId: number): Promise<{ success: boolean }> {
+    await this.getCsrfToken();
+    return this.request(`/shopping/stores/requests/${requestId}/approve`, {
+      method: 'POST',
+    });
+  }
+
+  async denyStoreRequest(requestId: number): Promise<{ success: boolean }> {
+    await this.getCsrfToken();
+    return this.request(`/shopping/stores/requests/${requestId}/deny`, {
+      method: 'POST',
+    });
+  }
+
+  // =============================================================================
+  // SHOPPING - Catalog
+  // =============================================================================
+
+  async getCatalogItems(
+    search?: string | { categoryId?: number; storeId?: number; search?: string },
+  ): Promise<{ items: CatalogItem[] }> {
+    const searchParams = new URLSearchParams();
+    if (typeof search === 'string') {
+      if (search) searchParams.set('search', search);
+    } else if (search) {
+      if (search.categoryId) searchParams.set('categoryId', String(search.categoryId));
+      if (search.storeId) searchParams.set('storeId', String(search.storeId));
+      if (search.search) searchParams.set('search', search.search);
+    }
+    const query = searchParams.toString();
+    return this.request(`/shopping/catalog${query ? `?${query}` : ''}`);
+  }
+
+  async getCatalogItem(
+    itemId: number,
+  ): Promise<{ item: CatalogItem & { prices: any[]; purchases: any[] } }> {
+    return this.request(`/shopping/catalog/${itemId}`);
+  }
+
+  async createCatalogItem(data: {
+    name: string;
+    brand?: string;
+    sizeText?: string;
+    categoryId?: number;
+    imageUrl?: string;
+    prices?: Array<{ storeId: number; price: number }>;
+  }): Promise<{ item: CatalogItem }> {
+    await this.getCsrfToken();
+    return this.request('/shopping/catalog', {
+      method: 'POST',
+      body: JSON.stringify(data),
+    });
+  }
+
+  async updateCatalogItem(
+    itemId: number,
+    data: Partial<CatalogItem>,
+  ): Promise<{ success: boolean }> {
+    await this.getCsrfToken();
+    return this.request(`/shopping/catalog/${itemId}`, {
+      method: 'PUT',
+      body: JSON.stringify(data),
+    });
+  }
+
+  async deleteCatalogItem(itemId: number): Promise<{ success: boolean }> {
+    await this.getCsrfToken();
+    return this.request(`/shopping/catalog/${itemId}`, {
+      method: 'DELETE',
+    });
+  }
+
+  // =============================================================================
+  // SHOPPING - Requests
+  // =============================================================================
+
+  async getShoppingRequests(params?: {
+    status?: string;
+    type?: string;
+  }): Promise<{ requests: ShoppingRequest[] }> {
+    const searchParams = new URLSearchParams();
+    if (params?.status) searchParams.set('status', params.status);
+    if (params?.type) searchParams.set('type', params.type);
+    const query = searchParams.toString();
+    return this.request(`/shopping/requests${query ? `?${query}` : ''}`);
+  }
+
+  async createShoppingRequest(data: {
+    requestType: 'need' | 'want';
+    name: string;
+    brand?: string;
+    category?: string;
+    packageSize?: string;
+    unit?: string;
+    preferredStoreId?: number | null;
+    proposedPrice?: number | null;
+    notes?: string;
+    imageKey?: string; // Changed from required to optional
+    imageMime?: string; // Changed from required to optional
+    imageSizeBytes?: number; // Changed from required to optional
+  }): Promise<{ request: ShoppingRequest }> {
+    await this.getCsrfToken();
+    return this.request('/shopping/requests', {
+      method: 'POST',
+      body: JSON.stringify(data),
+    });
+  }
+
+  async approveShoppingRequest(
+    requestId: number,
+    data: {
+      catalogItemId?: number | null;
+      addToList?: boolean;
+      editedName?: string;
+      editedBrand?: string;
+      editedCategory?: string;
+      editedPrice?: number | null;
+      editedStoreId?: number | null;
+    },
+  ): Promise<{ success: boolean; catalogItemId: number }> {
+    await this.getCsrfToken();
+    return this.request(`/shopping/requests/${requestId}/approve`, {
+      method: 'POST',
+      body: JSON.stringify(data),
+    });
+  }
+
+  async denyShoppingRequest(requestId: number, reason?: string): Promise<{ success: boolean }> {
+    await this.getCsrfToken();
+    return this.request(`/shopping/requests/${requestId}/deny`, {
+      method: 'POST',
+      body: JSON.stringify({ reason }),
+    });
+  }
+
+  // =============================================================================
+  // SHOPPING - List
+  // =============================================================================
+
+  async getShoppingList(params?: { status?: string; storeId?: number }): Promise<{
+    items: ShoppingListItem[];
+    storeGroups: Record<string, ShoppingListItem[]>;
+    totals: { needsOnly: number; needsPlusWants: number };
+  }> {
+    const searchParams = new URLSearchParams();
+    if (params?.status) searchParams.set('status', params.status);
+    if (params?.storeId) searchParams.set('storeId', String(params.storeId));
+    const query = searchParams.toString();
+    return this.request(`/shopping/list${query ? `?${query}` : ''}`);
+  }
+
+  async addToShoppingList(data: {
+    catalogItemId: number;
+    storeId?: number | null;
+    preferredStoreId?: number | null; // Add this
+    listType?: 'need' | 'want';
+    quantity?: number;
+    note?: string;
+  }): Promise<{ success: boolean; id?: number }> {
+    await this.getCsrfToken();
+    // Map preferredStoreId to storeId for backwards compatibility
+    const payload = { ...data };
+    if (payload.preferredStoreId !== undefined && payload.storeId === undefined) {
+      payload.storeId = payload.preferredStoreId;
+    }
+    return this.request('/shopping/list', {
+      method: 'POST',
+      body: JSON.stringify(payload),
+    });
+  }
+
+  async updateShoppingListItem(
+    itemId: number,
+    data: {
+      storeId?: number | null;
+      listType?: 'need' | 'want';
+      quantity?: number;
+      note?: string;
+    },
+  ): Promise<{ success: boolean }> {
+    await this.getCsrfToken();
+    return this.request(`/shopping/list/${itemId}`, {
+      method: 'PUT',
+      body: JSON.stringify(data),
+    });
+  }
+
+  async removeFromShoppingList(itemId: number): Promise<{ success: boolean }> {
+    await this.getCsrfToken();
+    return this.request(`/shopping/list/${itemId}`, {
+      method: 'DELETE',
+    });
+  }
+
+  async markAsPurchased(
+    itemId: number,
+    data?: { pricePaid?: number; storeId?: number },
+  ): Promise<{ success: boolean }> {
+    await this.getCsrfToken();
+    return this.request(`/shopping/list/${itemId}/purchase`, {
+      method: 'POST',
+      body: JSON.stringify(data || {}),
+    });
+  }
+
+  async markMultipleAsPurchased(itemIds: number[]): Promise<{ success: boolean; count: number }> {
+    await this.getCsrfToken();
+    return this.request('/shopping/list/purchase-multiple', {
+      method: 'POST',
+      body: JSON.stringify({ itemIds }),
+    });
+  }
+
+  // =============================================================================
+  // SHOPPING - Suggestions
+  // =============================================================================
+
+  async getShoppingSuggestions(): Promise<{ suggestions: Suggestion[] }> {
+    return this.request('/shopping/suggestions');
+  }
+
+  async addAllSuggestionsToList(): Promise<{ success: boolean; addedCount: number }> {
+    await this.getCsrfToken();
+    return this.request('/shopping/suggestions/add-all', {
+      method: 'POST',
+      body: JSON.stringify({}),
+    });
+  }
+
+  // =============================================================================
+  // SHOPPING - Image Upload
+  // =============================================================================
+
+  async uploadShoppingImage(
+    image: string,
+    mimeType: string,
+  ): Promise<{
+    success: boolean;
+    imageUrl: string;
+    imageKey: string;
+    imageMime: string;
+    imageSizeBytes: number;
+  }> {
+    await this.getCsrfToken();
+    return this.request('/shopping/upload-image', {
+      method: 'POST',
+      body: JSON.stringify({ image, mimeType }),
+    });
+  }
+
+  // =============================================================================
+  // SHOPPING - Analytics & History (NEW)
+  // =============================================================================
+
+  async getShoppingAnalytics(days: number = 30): Promise<{
+    period: number;
+    totalSpent: number;
+    purchaseCount: number;
+    averagePerPurchase: number;
+    categorySpending: Array<{ categoryName: string; total: number; count: number }>;
+    storeSpending: Array<{ storeName: string; total: number; count: number }>;
+    dailySpending: Array<{ date: string; total: number }>;
+    topItems: Array<{ itemName: string; brand: string | null; count: number; totalSpent: number }>;
+  }> {
+    return this.request(`/shopping/analytics?period=${days}`);
+  }
+
+  async getShoppingHistory(
+    days: number = 30,
+    page: number = 1,
+  ): Promise<{
+    purchases: Array<{
+      id: number;
+      purchasedAt: string;
+      itemName: string;
+      brand: string | null;
+      categoryName: string | null;
+      storeName: string | null;
+      quantity: number;
+      unitPrice: number;
+      totalPrice: number;
+      purchasedByName: string | null;
+    }>;
+    pagination: {
+      page: number;
+      limit: number;
+      total: number;
+      totalPages: number;
+    };
+  }> {
+    return this.request(`/shopping/history?days=${days}&page=${page}`);
+  }
+
+  async getCatalogItemPrices(itemId: number): Promise<{
+    prices: Array<{
+      storeId: number;
+      storeName: string;
+      price: number;
+      unit: string | null;
+      observedAt: string;
+    }>;
+  }> {
+    return this.request(`/shopping/catalog/${itemId}/prices`);
+  }
+
+  // =============================================================================
+  // MESSAGES / NOTIFICATIONS
+  // =============================================================================
+
+  async getMessages(params?: {
+    type?: string;
+    unreadOnly?: string;
+    limit?: number;
+    offset?: number;
+  }): Promise<{ messages: Message[]; unreadCount: number }> {
+    const searchParams = new URLSearchParams();
+    if (params?.type) searchParams.set('type', params.type);
+    if (params?.unreadOnly) searchParams.set('unreadOnly', params.unreadOnly);
+    if (params?.limit) searchParams.set('limit', String(params.limit));
+    if (params?.offset) searchParams.set('offset', String(params.offset));
+
+    const query = searchParams.toString();
+    return this.request(`/messages${query ? `?${query}` : ''}`);
+  }
+
+  async getUnreadCount(): Promise<{ unreadCount: number }> {
+    return this.request('/messages/unread-count');
+  }
+
+  async getUnreadTotal(): Promise<{
+    notifications: number;
+    directMessages: number;
+    announcements: number;
+    total: number;
+  }> {
+    return this.request('/messages/unread-total');
+  }
+
+  async markMessageAsRead(messageId: number): Promise<{ success: boolean }> {
+    await this.getCsrfToken();
+    return this.request(`/messages/${messageId}/read`, {
+      method: 'POST',
+    });
+  }
+
+  async markAllMessagesAsRead(): Promise<{ success: boolean }> {
+    await this.getCsrfToken();
+    return this.request('/messages/read-all', {
+      method: 'POST',
+    });
+  }
+
+  async deleteMessage(messageId: number): Promise<{ success: boolean }> {
+    await this.getCsrfToken();
+    return this.request(`/messages/${messageId}`, {
+      method: 'DELETE',
+    });
+  }
+
+  async deleteAllMessages(readOnly?: boolean): Promise<{ success: boolean }> {
+    await this.getCsrfToken();
+    const query = readOnly ? '?readOnly=true' : '';
+    return this.request(`/messages${query}`, {
+      method: 'DELETE',
+    });
+  }
+
+  async createMessage(data: {
+    userId?: number;
+    type?: 'chore' | 'calendar' | 'family' | 'system';
+    title: string;
+    body?: string;
+    link?: string;
+    relatedId?: number;
+    relatedType?: string;
+    broadcast?: boolean;
+  }): Promise<{ success: boolean; messageId?: number; recipientCount?: number }> {
+    await this.getCsrfToken();
+    return this.request('/messages', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(data),
+    });
+  }
+}
+
+export const api = new ApiClient();

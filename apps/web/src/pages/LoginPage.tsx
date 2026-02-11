@@ -1,6 +1,6 @@
 // apps/web/src/pages/LoginPage.tsx
 
-import { useState, useEffect, SetStateAction } from 'react';
+import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 
@@ -19,8 +19,19 @@ export function LoginPage() {
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
   const [branding, setBranding] = useState<Branding | null>(null);
+  const [isDarkMode, setIsDarkMode] = useState(false);
   const { login } = useAuth();
   const navigate = useNavigate();
+
+  // Detect system dark mode preference
+  useEffect(() => {
+    const mediaQuery = window.matchMedia('(prefers-color-scheme: dark)');
+    setIsDarkMode(mediaQuery.matches);
+
+    const handler = (e: MediaQueryListEvent) => setIsDarkMode(e.matches);
+    mediaQuery.addEventListener('change', handler);
+    return () => mediaQuery.removeEventListener('change', handler);
+  }, []);
 
   useEffect(() => {
     // Fetch public branding — no auth required
@@ -79,15 +90,65 @@ export function LoginPage() {
   const backgroundStyle = getBackgroundStyle();
   const useDefaultGradient = !branding || branding.loginBackground === 'gradient';
 
+  // HabiTrack brand colors
+  const navyColor = '#3d4f5f';
+  const defaultGreen = '#3cb371';
+  // Use branding color if set, otherwise default green
+  const brandColor = branding?.brandColor || defaultGreen;
+
+  // Dark mode colors (navy-tinted to match SetupPage)
+  const darkColors = {
+    background: '#1a2530',
+    card: '#243340',
+    cardBorder: '#3d4f5f',
+    text: '#f9fafb',
+    mutedText: '#9ca3af',
+    inputBg: '#1a2530',
+    inputBorder: '#3d4f5f',
+    green: '#4fd693',
+  };
+
+  // Theme-aware colors
+  const cardBg = isDarkMode ? darkColors.card : '#ffffff';
+  const cardBorder = isDarkMode ? darkColors.cardBorder : '#e5e7eb';
+  const inputBg = isDarkMode ? darkColors.inputBg : '#ffffff';
+  const inputBorder = isDarkMode ? darkColors.inputBorder : '#e5e7eb';
+  const inputText = isDarkMode ? darkColors.text : navyColor;
+  const labelColor = isDarkMode ? '#d1d5db' : navyColor;
+  const subtitleColor = isDarkMode ? darkColors.mutedText : '#6b7280';
+  const titleColor = isDarkMode ? darkColors.text : navyColor;
+  const footerColor = isDarkMode ? darkColors.mutedText : navyColor;
+
+  // Default gradient for light/dark (navy-tinted)
+  const defaultGradientClass = isDarkMode
+    ? ''
+    : 'bg-gradient-to-br from-[#f8faf9] via-[#e8f5e9] to-[#c8e6c9]';
+
+  // Dark mode background style
+  const darkBgStyle = isDarkMode && useDefaultGradient
+    ? { background: `linear-gradient(to bottom right, ${darkColors.background}, #0f1a24, ${darkColors.background})` }
+    : {};
+
   return (
     <div
       className={`min-h-screen flex items-center justify-center relative ${
-        useDefaultGradient ? 'bg-gradient-to-b from-slate-950 via-purple-800 to-rose-400' : ''
+        useDefaultGradient ? defaultGradientClass : ''
       }`}
-      style={backgroundStyle}
+      style={{ ...backgroundStyle, ...darkBgStyle }}
     >
-      {/* Stars overlay - only show on gradient */}
-      {useDefaultGradient && <div className="absolute inset-0 bg-stars pointer-events-none"></div>}
+      {/* Subtle pattern overlay for default gradient */}
+      {useDefaultGradient && (
+        <div
+          className="absolute inset-0 opacity-30 pointer-events-none"
+          style={{
+            backgroundImage: isDarkMode
+              ? `radial-gradient(circle at 25% 25%, ${darkColors.green}10 0%, transparent 50%),
+                 radial-gradient(circle at 75% 75%, ${navyColor}15 0%, transparent 50%)`
+              : `radial-gradient(circle at 25% 25%, ${brandColor}15 0%, transparent 50%),
+                 radial-gradient(circle at 75% 75%, ${navyColor}10 0%, transparent 50%)`
+          }}
+        />
+      )}
 
       {/* Dark overlay for image backgrounds */}
       {branding?.loginBackground === 'image' && (
@@ -95,83 +156,149 @@ export function LoginPage() {
       )}
 
       <div className="relative z-10 w-full max-w-md mx-4">
-        <div className="bg-white rounded-2xl shadow-2xl p-8">
-          {/* Logo and Title */}
-          <div className="text-center mb-8">
-            {branding?.logoUrl ? (
-              <img
-                src={`${import.meta.env.VITE_API_BASE_URL || 'http://localhost:3000'}${branding.logoUrl}`}
-                alt="Logo"
-                className="w-16 h-16 mx-auto mb-4 rounded-xl object-cover"
-              />
-            ) : (
-              <div className="text-4xl mb-2">🏠</div>
-            )}
-            <h1
-              className="text-2xl font-bold"
-              style={{ color: branding?.brandColor || '#8b5cf6' }}
-            >
-              {branding?.name || 'HabiTrack'}
-            </h1>
-            <p className="text-gray-500 mt-1">Welcome back! Sign in to continue.</p>
-          </div>
+        {/* Card with brand accent */}
+        <div
+          className="rounded-2xl shadow-2xl overflow-hidden"
+          style={{ backgroundColor: cardBg }}
+        >
+          {/* Brand color accent bar at top */}
+          <div
+            className="h-2"
+            style={{ background: `linear-gradient(to right, ${navyColor}, ${brandColor})` }}
+          />
 
-          {/* Error message */}
-          {error && (
-            <div className="mb-6 p-3 bg-red-50 border border-red-200 rounded-xl text-red-600 text-sm">
-              {error}
-            </div>
-          )}
-
-          {/* Login form */}
-          <form onSubmit={handleSubmit} className="space-y-4">
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">Email</label>
-              <input
-                type="email"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-purple-500 focus:border-transparent"
-                placeholder="Enter your email"
-                required
-              />
-            </div>
-
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">Password</label>
-              <input
-                type="password"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-purple-500 focus:border-transparent"
-                placeholder="Enter your password"
-                required
-              />
-            </div>
-
-            <button
-              type="submit"
-              disabled={loading}
-              className="w-full py-3 text-white rounded-xl font-medium transition-colors disabled:opacity-50"
-              style={{ backgroundColor: branding?.brandColor || '#8b5cf6' }}
-            >
-              {loading ? 'Signing in...' : 'Sign In'}
-            </button>
-          </form>
-
-          {/* Kiosk link */}
-          <div className="mt-6 pt-6 border-t border-gray-200 text-center">
-            <p className="text-sm text-gray-500">
-              Using the family kiosk?{' '}
-              <button
-                className="font-medium hover:underline"
-                style={{ color: branding?.brandColor || '#8b5cf6' }}
+          <div className="p-8">
+            {/* Logo and Title */}
+            <div className="text-center mb-8">
+              <div
+                className="w-48 h-48 mx-auto mb-6 flex items-center justify-center"
+                style={{
+                  filter: isDarkMode
+                    ? `drop-shadow(0 0 25px rgba(79, 214, 147, 0.6)) drop-shadow(0 0 50px rgba(79, 214, 147, 0.35))`
+                    : `drop-shadow(0 0 20px rgba(60, 179, 113, 0.45)) drop-shadow(0 0 40px rgba(60, 179, 113, 0.25))`,
+                }}
               >
-                Switch User with PIN
+                <img
+                  src={branding?.logoUrl
+                    ? `${import.meta.env.VITE_API_BASE_URL || 'http://localhost:3000'}${branding.logoUrl}`
+                    : '/assets/HabiTrack_logo.png'
+                  }
+                  alt="HabiTrack Logo"
+                  className="w-44 h-44 object-contain"
+                />
+              </div>
+              <h1
+                className="text-2xl font-bold"
+                style={{ color: titleColor }}
+              >
+                {branding?.name || 'HabiTrack'}
+              </h1>
+              <p style={{ color: subtitleColor }} className="mt-1">Welcome back! Sign in to continue.</p>
+            </div>
+
+            {/* Error message */}
+            {error && (
+              <div
+                className="mb-6 p-3 rounded-xl text-sm"
+                style={{
+                  backgroundColor: isDarkMode ? 'rgba(239, 68, 68, 0.15)' : '#fef2f2',
+                  borderColor: isDarkMode ? '#991b1b' : '#fecaca',
+                  borderWidth: 1,
+                  color: isDarkMode ? '#fca5a5' : '#dc2626',
+                }}
+              >
+                {error}
+              </div>
+            )}
+
+            {/* Login form */}
+            <form onSubmit={handleSubmit} className="space-y-4">
+              <div>
+                <label className="block text-sm font-medium mb-1" style={{ color: labelColor }}>Email</label>
+                <input
+                  type="email"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  className="w-full px-4 py-3 rounded-xl outline-none transition-all"
+                  style={{
+                    backgroundColor: inputBg,
+                    borderWidth: 1,
+                    borderStyle: 'solid',
+                    borderColor: inputBorder,
+                    color: inputText,
+                  }}
+                  onFocus={(e) => {
+                    e.target.style.borderColor = brandColor;
+                    e.target.style.boxShadow = `0 0 0 3px ${brandColor}20`;
+                  }}
+                  onBlur={(e) => {
+                    e.target.style.borderColor = inputBorder;
+                    e.target.style.boxShadow = 'none';
+                  }}
+                  placeholder="Enter your email"
+                  required
+                />
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium mb-1" style={{ color: labelColor }}>Password</label>
+                <input
+                  type="password"
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  className="w-full px-4 py-3 rounded-xl outline-none transition-all"
+                  style={{
+                    backgroundColor: inputBg,
+                    borderWidth: 1,
+                    borderStyle: 'solid',
+                    borderColor: inputBorder,
+                    color: inputText,
+                  }}
+                  onFocus={(e) => {
+                    e.target.style.borderColor = brandColor;
+                    e.target.style.boxShadow = `0 0 0 3px ${brandColor}20`;
+                  }}
+                  onBlur={(e) => {
+                    e.target.style.borderColor = inputBorder;
+                    e.target.style.boxShadow = 'none';
+                  }}
+                  placeholder="Enter your password"
+                  required
+                />
+              </div>
+
+              <button
+                type="submit"
+                disabled={loading}
+                className="w-full py-3 text-white rounded-xl font-medium transition-all disabled:opacity-50 hover:shadow-lg hover:scale-[1.02]"
+                style={{ backgroundColor: brandColor }}
+              >
+                {loading ? 'Signing in...' : 'Sign In'}
               </button>
-            </p>
+            </form>
+
+            {/* Kiosk link */}
+            <div
+              className="mt-6 pt-6 text-center"
+              style={{ borderTopWidth: 1, borderTopStyle: 'solid', borderTopColor: cardBorder }}
+            >
+              <p className="text-sm" style={{ color: subtitleColor }}>
+                Using the family kiosk?{' '}
+                <button
+                  className="font-medium hover:underline"
+                  style={{ color: brandColor }}
+                >
+                  Switch User with PIN
+                </button>
+              </p>
+            </div>
           </div>
         </div>
+
+        {/* Footer branding */}
+        <p className="text-center mt-6 text-sm" style={{ color: footerColor }}>
+          Powered by <span className="font-semibold">HabiTrack</span>
+        </p>
       </div>
     </div>
   );

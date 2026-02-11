@@ -20,9 +20,9 @@ export function HistoryTab({ analytics, purchaseHistory, onPeriodChange }: Histo
 
   if (!analytics) {
     return (
-      <div className="bg-white dark:bg-gray-800 rounded-xl p-8 text-center">
-        <BarChart3 size={48} className="mx-auto mb-3 text-gray-300 dark:text-gray-600" />
-        <p className="text-gray-500 dark:text-gray-400">Loading...</p>
+      <div className="themed-card p-8 text-center">
+        <BarChart3 size={48} className="mx-auto mb-3 text-[var(--color-muted-foreground)]" />
+        <p className="text-[var(--color-muted-foreground)]">Loading...</p>
       </div>
     );
   }
@@ -41,8 +41,8 @@ export function HistoryTab({ analytics, purchaseHistory, onPeriodChange }: Histo
             onClick={() => handlePeriodChange(days)}
             className={`px-3 py-2 rounded-xl text-sm font-medium whitespace-nowrap transition-colors ${
               period === days
-                ? 'bg-orange-500 text-white'
-                : 'bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-300'
+                ? 'bg-[var(--color-primary)] text-[var(--color-primary-foreground)]'
+                : 'bg-[var(--color-muted)] text-[var(--color-muted-foreground)]'
             }`}
           >
             {days === 7 ? '7D' : days === 30 ? '30D' : days === 90 ? '3M' : '1Y'}
@@ -52,36 +52,36 @@ export function HistoryTab({ analytics, purchaseHistory, onPeriodChange }: Histo
 
       {/* Summary Cards */}
       <div className="grid grid-cols-2 gap-2">
-        <div className="bg-white dark:bg-gray-800 rounded-xl p-3 border border-gray-100 dark:border-gray-700">
-          <p className="text-xs text-gray-500">Total Spent</p>
-          <p className="text-xl font-bold text-green-600">${totalSpent.toFixed(2)}</p>
+        <div className="themed-card p-3">
+          <p className="text-xs text-[var(--color-muted-foreground)]">Total Spent</p>
+          <p className="text-xl font-bold text-[var(--color-success)]">${totalSpent.toFixed(2)}</p>
         </div>
-        <div className="bg-white dark:bg-gray-800 rounded-xl p-3 border border-gray-100 dark:border-gray-700">
-          <p className="text-xs text-gray-500">Purchases</p>
-          <p className="text-xl font-bold text-blue-600">{purchaseCount}</p>
+        <div className="themed-card p-3">
+          <p className="text-xs text-[var(--color-muted-foreground)]">Purchases</p>
+          <p className="text-xl font-bold text-[var(--color-info)]">{purchaseCount}</p>
         </div>
       </div>
 
       {/* Category Spending */}
       {analytics.categorySpending && analytics.categorySpending.length > 0 && (
-        <div className="bg-white dark:bg-gray-800 rounded-xl border border-gray-100 dark:border-gray-700 p-3">
-          <h3 className="font-semibold text-gray-900 dark:text-white mb-2 text-sm">By Category</h3>
+        <div className="themed-card p-3">
+          <h3 className="font-semibold text-[var(--color-foreground)] mb-2 text-sm">By Category</h3>
           <div className="space-y-2">
             {analytics.categorySpending.slice(0, 5).map((cat, i) => {
               const catTotal = Number(cat.total) || 0;
               const pct = totalSpent > 0 ? (catTotal / totalSpent) * 100 : 0;
               return (
                 <div key={i} className="flex items-center gap-2">
-                  <span className="text-xs text-gray-500 w-20 truncate">
+                  <span className="text-xs text-[var(--color-muted-foreground)] w-20 truncate">
                     {cat.categoryName || 'Uncategorized'}
                   </span>
-                  <div className="flex-1 h-2 bg-gray-100 dark:bg-gray-700 rounded-full overflow-hidden">
+                  <div className="flex-1 h-2 bg-[var(--color-muted)] rounded-full overflow-hidden">
                     <div
-                      className="h-full bg-orange-500 rounded-full"
+                      className="h-full bg-[var(--color-primary)] rounded-full"
                       style={{ width: `${Math.min(pct, 100)}%` }}
                     />
                   </div>
-                  <span className="text-xs font-medium text-gray-900 dark:text-white w-16 text-right">
+                  <span className="text-xs font-medium text-[var(--color-foreground)] w-16 text-right">
                     ${catTotal.toFixed(0)}
                   </span>
                 </div>
@@ -94,30 +94,30 @@ export function HistoryTab({ analytics, purchaseHistory, onPeriodChange }: Histo
       {/* Purchase History Toggle */}
       <button
         onClick={() => setShowHistory(!showHistory)}
-        className="w-full p-3 bg-white dark:bg-gray-800 rounded-xl border border-gray-100 dark:border-gray-700 flex items-center justify-between"
+        className="w-full p-3 themed-card flex items-center justify-between"
       >
-        <span className="font-medium text-gray-900 dark:text-white flex items-center gap-2">
+        <span className="font-medium text-[var(--color-foreground)] flex items-center gap-2">
           <History size={18} /> Purchase History
         </span>
-        {showHistory ? <ChevronUp size={18} /> : <ChevronDown size={18} />}
+        {showHistory ? <ChevronUp size={18} className="text-[var(--color-muted-foreground)]" /> : <ChevronDown size={18} className="text-[var(--color-muted-foreground)]" />}
       </button>
 
       {showHistory && purchaseHistory.length > 0 && (
-        <div className="bg-white dark:bg-gray-800 rounded-xl border border-gray-100 dark:border-gray-700 overflow-hidden max-h-64 overflow-y-auto">
+        <div className="themed-card overflow-hidden max-h-64 overflow-y-auto">
           {purchaseHistory.map((p) => (
             <div
               key={p.id}
-              className="p-2 flex items-center gap-2 border-b border-gray-100 dark:border-gray-700 last:border-0"
+              className="p-2 flex items-center gap-2 border-b border-[var(--color-border)] last:border-0"
             >
               <div className="flex-1 min-w-0">
-                <p className="font-medium text-gray-900 dark:text-white truncate text-sm">
+                <p className="font-medium text-[var(--color-foreground)] truncate text-sm">
                   {p.itemName}
                 </p>
-                <p className="text-xs text-gray-500">
+                <p className="text-xs text-[var(--color-muted-foreground)]">
                   {new Date(p.purchasedAt).toLocaleDateString()}
                 </p>
               </div>
-              <span className="text-sm font-medium text-gray-900 dark:text-white">
+              <span className="text-sm font-medium text-[var(--color-foreground)]">
                 ${(Number(p.totalPrice) || 0).toFixed(2)}
               </span>
             </div>

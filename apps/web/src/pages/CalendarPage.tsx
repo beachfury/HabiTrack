@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import {
   ChevronLeft,
   ChevronRight,
@@ -10,9 +11,13 @@ import {
   Calendar,
   Clock,
   MapPin,
+  Utensils,
+  User,
 } from 'lucide-react';
 import { api, type CalendarEvent, type CreateEventData, type ChoreInstance } from '../api';
+import { mealsApi } from '../api/meals';
 import { useAuth } from '../context/AuthContext';
+import type { MealPlan } from '../types/meals';
 
 const DAYS = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
 const MONTHS = [
@@ -74,10 +79,12 @@ function formatDateTimeLocal(date: Date): string {
 
 export function CalendarPage() {
   const { user } = useAuth();
+  const navigate = useNavigate();
   const [currentDate, setCurrentDate] = useState(new Date());
   const [events, setEvents] = useState<CalendarEvent[]>([]);
   const [chores, setChores] = useState<ChoreInstance[]>([]);
   const [users, setUsers] = useState<CalendarUser[]>([]);
+  const [mealPlans, setMealPlans] = useState<MealPlan[]>([]);
   const [loading, setLoading] = useState(true);
   const [showChores, setShowChores] = useState(true);
 
@@ -106,16 +113,18 @@ export function CalendarPage() {
   // Can current user assign to others?
   const canAssignToOthers = user?.role === 'admin';
 
-  // Fetch events, chores and users when month changes
+  // Fetch events, chores, users, and meal plans when month changes
   useEffect(() => {
     // Clear existing data immediately to prevent stale data flash
     setEvents([]);
     setChores([]);
+    setMealPlans([]);
     setLoading(true);
 
     fetchEvents();
     fetchChores();
     fetchUsers();
+    fetchMealPlans();
   }, [year, month]);
 
   const fetchUsers = async () => {
@@ -162,6 +171,26 @@ export function CalendarPage() {
       setChores(data.instances);
     } catch (err) {
       console.error('Failed to fetch chores:', err);
+    }
+  };
+
+  const fetchMealPlans = async () => {
+    try {
+      // Get current week's start and end
+      const today = new Date();
+      const dayOfWeek = today.getDay();
+      const startOfWeek = new Date(today);
+      startOfWeek.setDate(today.getDate() - dayOfWeek);
+      const endOfWeek = new Date(startOfWeek);
+      endOfWeek.setDate(startOfWeek.getDate() + 6);
+
+      const startStr = formatDateLocal(startOfWeek);
+      const endStr = formatDateLocal(endOfWeek);
+
+      const data = await mealsApi.getMealPlans({ startDate: startStr, endDate: endStr });
+      setMealPlans(data.mealPlans);
+    } catch (err) {
+      console.error('Failed to fetch meal plans:', err);
     }
   };
 
@@ -362,7 +391,10 @@ export function CalendarPage() {
       }
 
       if (selectedEvent) {
-        await api.updateEvent(selectedEvent.id, submitData);
+        // Only update regular events (not meal plans which have string IDs like "meal-123")
+        if (typeof selectedEvent.id === 'number') {
+          await api.updateEvent(selectedEvent.id, submitData);
+        }
       } else {
         await api.createEvent(submitData);
       }
@@ -375,6 +407,8 @@ export function CalendarPage() {
 
   const handleDelete = async () => {
     if (!selectedEvent) return;
+    // Only delete regular events (not meal plans which have string IDs like "meal-123")
+    if (typeof selectedEvent.id !== 'number') return;
 
     if (confirm('Are you sure you want to delete this event?')) {
       try {
@@ -424,30 +458,30 @@ export function CalendarPage() {
   };
 
   return (
-    <div className="p-8 h-full flex flex-col">
+    <div className="p-8 h-full flex flex-col themed-calendar-bg">
       {/* Header */}
       <div className="flex items-center justify-between mb-6">
         <div className="flex items-center gap-4">
-          <h1 className="text-3xl font-bold text-gray-900 dark:text-gray-100">
+          <h1 className="text-3xl font-bold text-[var(--color-foreground)]">
             {MONTHS[month]} {year}
           </h1>
           <div className="flex items-center gap-1">
             <button
               onClick={prevMonth}
-              className="p-2 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition-colors"
+              className="p-2 hover:bg-[var(--color-muted)] rounded-lg transition-colors"
             >
-              <ChevronLeft size={20} className="text-gray-600 dark:text-gray-300" />
+              <ChevronLeft size={20} className="text-[var(--color-muted-foreground)]" />
             </button>
             <button
               onClick={nextMonth}
-              className="p-2 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition-colors"
+              className="p-2 hover:bg-[var(--color-muted)] rounded-lg transition-colors"
             >
-              <ChevronRight size={20} className="text-gray-600 dark:text-gray-300" />
+              <ChevronRight size={20} className="text-[var(--color-muted-foreground)]" />
             </button>
           </div>
           <button
             onClick={goToToday}
-            className="px-3 py-1 text-sm font-medium text-purple-600 hover:bg-purple-50 dark:hover:bg-purple-900/20 rounded-lg transition-colors"
+            className="px-3 py-1 text-sm font-medium text-[var(--color-primary)] hover:bg-[var(--color-primary)]/10 rounded-lg transition-colors"
           >
             Today
           </button>
@@ -458,8 +492,8 @@ export function CalendarPage() {
             onClick={() => setShowChores(!showChores)}
             className={`flex items-center gap-2 px-3 py-2 rounded-lg transition-colors ${
               showChores
-                ? 'bg-purple-100 text-purple-700 dark:bg-purple-900/30 dark:text-purple-300'
-                : 'bg-gray-100 text-gray-600 hover:bg-gray-200 dark:bg-gray-700 dark:text-gray-300'
+                ? 'bg-[var(--color-primary)]/10 text-[var(--color-primary)]'
+                : 'bg-[var(--color-muted)] text-[var(--color-muted-foreground)] hover:bg-[var(--color-muted)]/80'
             }`}
           >
             <CheckSquare size={16} />
@@ -467,7 +501,7 @@ export function CalendarPage() {
           </button>
           <button
             onClick={() => openNewEventModal(new Date())}
-            className="flex items-center gap-2 bg-purple-600 hover:bg-purple-700 text-white px-4 py-2 rounded-xl transition-colors"
+            className="themed-btn-primary flex items-center gap-2"
           >
             <Plus size={20} />
             Add Event
@@ -476,13 +510,19 @@ export function CalendarPage() {
       </div>
 
       {/* Calendar Grid */}
-      <div className="flex-1 bg-white dark:bg-gray-800 rounded-2xl shadow-sm border border-gray-100 dark:border-gray-700 overflow-hidden flex flex-col">
-        {/* Day headers */}
-        <div className="grid grid-cols-7 border-b border-gray-100 dark:border-gray-700">
+      <div className="flex-1 themed-calendar-grid overflow-hidden flex flex-col">
+        {/* Day headers - use inherit for font styles from themed container */}
+        <div className="grid grid-cols-7 border-b border-[var(--color-border)]">
           {DAYS.map((day) => (
             <div
               key={day}
-              className="py-3 text-center text-sm font-semibold text-gray-500 dark:text-gray-400"
+              className="py-3 text-center"
+              style={{
+                fontSize: 'var(--calendar-grid-font-size, 0.875rem)',
+                fontWeight: 'var(--calendar-grid-font-weight, 600)',
+                fontFamily: 'var(--calendar-grid-font-family, inherit)',
+                color: 'var(--calendar-grid-text, var(--color-muted-foreground))',
+              }}
             >
               {day}
             </div>
@@ -496,7 +536,7 @@ export function CalendarPage() {
               return (
                 <div
                   key={index}
-                  className="border-b border-r border-gray-50 dark:border-gray-700"
+                  className="border-b border-r border-[var(--color-border)]/30"
                 />
               );
 
@@ -514,19 +554,24 @@ export function CalendarPage() {
               <div
                 key={index}
                 onClick={() => openDayModal(date)}
-                className={`border-b border-r border-gray-50 dark:border-gray-700 p-1 cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-700/50 transition-colors min-h-[100px] ${
-                  !inCurrentMonth ? 'bg-gray-50/50 dark:bg-gray-900/30' : ''
+                className={`border-b border-r border-[var(--color-border)]/30 p-1 cursor-pointer hover:bg-[var(--color-muted)]/50 transition-colors min-h-[100px] ${
+                  !inCurrentMonth ? 'bg-[var(--color-muted)]/30' : ''
                 }`}
               >
                 <div className="flex items-center justify-center mb-1">
                   <span
-                    className={`w-7 h-7 flex items-center justify-center text-sm rounded-full ${
-                      isCurrentDay
-                        ? 'bg-purple-600 text-white font-bold'
+                    className="w-7 h-7 flex items-center justify-center rounded-full"
+                    style={{
+                      fontSize: 'var(--calendar-grid-font-size, 0.875rem)',
+                      fontFamily: 'var(--calendar-grid-font-family, inherit)',
+                      fontWeight: isCurrentDay ? 700 : 'var(--calendar-grid-font-weight, 400)',
+                      backgroundColor: isCurrentDay ? 'var(--color-primary)' : 'transparent',
+                      color: isCurrentDay
+                        ? 'var(--color-primary-foreground)'
                         : inCurrentMonth
-                          ? 'text-gray-900 dark:text-gray-100'
-                          : 'text-gray-400 dark:text-gray-500'
-                    }`}
+                          ? 'var(--calendar-grid-text, var(--color-foreground))'
+                          : 'var(--color-muted-foreground)',
+                    }}
                   >
                     {date.getDate()}
                   </span>
@@ -544,7 +589,13 @@ export function CalendarPage() {
                         key={`event-${event.id}`}
                         onClick={(e) => {
                           e.stopPropagation();
-                          openEditEventModal(event);
+                          // Handle meal plan events differently
+                          if (event.isMealPlan) {
+                            const mealDate = event.start.split('T')[0];
+                            navigate(`/meals?date=${mealDate}`);
+                          } else {
+                            openEditEventModal(event);
+                          }
                         }}
                         title={`${displayName ? `${displayName}: ` : ''}${event.title}${event.location ? `\n📍 ${event.location}` : ''}${event.description ? `\n${event.description}` : ''}`}
                         className={`text-xs px-2 py-1 text-white cursor-pointer hover:opacity-80 overflow-hidden ${
@@ -587,10 +638,10 @@ export function CalendarPage() {
                         title={`${chore.assignedToName ? `${chore.assignedToName}: ` : ''}${chore.title} (${chore.points} pts)`}
                         className={`text-xs px-2 py-1 rounded truncate flex items-center gap-1 cursor-pointer hover:opacity-80 ${
                           isCompleted
-                            ? 'bg-green-100 text-green-700 line-through dark:bg-green-900/30 dark:text-green-400'
+                            ? 'bg-[var(--color-success)]/10 text-[var(--color-success)] line-through'
                             : chore.status === 'pending'
-                              ? 'bg-purple-100 text-purple-700 dark:bg-purple-900/30 dark:text-purple-300'
-                              : 'bg-gray-100 text-gray-600 dark:bg-gray-700 dark:text-gray-400'
+                              ? 'bg-[var(--color-primary)]/10 text-[var(--color-primary)]'
+                              : 'bg-[var(--color-muted)] text-[var(--color-muted-foreground)]'
                         }`}
                       >
                         <CheckSquare size={10} className="flex-shrink-0" />
@@ -607,7 +658,7 @@ export function CalendarPage() {
                   })}
 
                   {totalItems > maxDisplay && (
-                    <div className="text-xs text-gray-500 dark:text-gray-400 px-2">
+                    <div className="text-xs text-[var(--color-muted-foreground)] px-2">
                       +{totalItems - maxDisplay} more
                     </div>
                   )}
@@ -615,6 +666,40 @@ export function CalendarPage() {
               </div>
             );
           })}
+        </div>
+      </div>
+
+      {/* Bottom Section: Weekly Meals & User Cards */}
+      <div className="mt-6 space-y-6">
+        {/* Weekly Meal Planner */}
+        <WeeklyMealCard
+          mealPlans={mealPlans}
+          onMealClick={(date) => navigate(`/meals?date=${date}`)}
+        />
+
+        {/* User Daily Cards */}
+        <div>
+          <div className="flex items-center gap-2 mb-4">
+            <User size={18} className="text-[var(--color-primary)]" />
+            <h3 className="font-semibold text-[var(--color-foreground)]">Today's Schedule by Member</h3>
+          </div>
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+            {(user?.role === 'admin' ? users : users.filter((u) => u.id === user?.id)).map((member) => {
+              const today = new Date();
+              const todayEvents = getEventsForDay(today);
+              const todayChores = getChoresForDay(today);
+              return (
+                <UserDayCard
+                  key={member.id}
+                  user={member}
+                  events={todayEvents}
+                  chores={todayChores}
+                  date={today}
+                  isCurrentUser={member.id === user?.id}
+                />
+              );
+            })}
+          </div>
         </div>
       </div>
 
@@ -637,29 +722,29 @@ export function CalendarPage() {
       {/* Event Form Modal */}
       {showEventModal && (
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
-          <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-xl w-full max-w-md p-6 max-h-[90vh] overflow-y-auto m-4">
+          <div className="themed-card w-full max-w-md p-6 max-h-[90vh] overflow-y-auto m-4">
             <div className="flex items-center justify-between mb-6">
-              <h2 className="text-xl font-semibold text-gray-900 dark:text-gray-100">
+              <h2 className="text-xl font-semibold text-[var(--color-foreground)]">
                 {selectedEvent ? 'Edit Event' : 'New Event'}
               </h2>
               <button
                 onClick={closeModals}
-                className="p-2 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition-colors"
+                className="p-2 hover:bg-[var(--color-muted)] rounded-lg transition-colors"
               >
-                <X size={20} className="text-gray-500 dark:text-gray-400" />
+                <X size={20} className="text-[var(--color-muted-foreground)]" />
               </button>
             </div>
 
             <form onSubmit={handleSubmit} className="space-y-4">
               <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                <label className="block text-sm font-medium text-[var(--color-foreground)] mb-1">
                   Title
                 </label>
                 <input
                   type="text"
                   value={formData.title}
                   onChange={(e) => setFormData({ ...formData, title: e.target.value })}
-                  className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-xl focus:ring-2 focus:ring-purple-500 focus:border-transparent bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100"
+                  className="themed-input w-full"
                   placeholder="Event title"
                   required
                 />
@@ -668,7 +753,7 @@ export function CalendarPage() {
               {/* Assigned To - Only show dropdown for admins */}
               {canAssignToOthers && (
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                  <label className="block text-sm font-medium text-[var(--color-foreground)] mb-1">
                     Assigned To
                   </label>
                   <select
@@ -679,7 +764,7 @@ export function CalendarPage() {
                         assignedTo: e.target.value ? Number(e.target.value) : undefined,
                       })
                     }
-                    className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-xl focus:ring-2 focus:ring-purple-500 focus:border-transparent bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100"
+                    className="themed-input w-full"
                   >
                     <option value="">Everyone / Unassigned</option>
                     {users.map((u) => (
@@ -697,68 +782,68 @@ export function CalendarPage() {
                   id="allDay"
                   checked={formData.allDay}
                   onChange={(e) => setFormData({ ...formData, allDay: e.target.checked })}
-                  className="w-4 h-4 text-purple-600 rounded focus:ring-purple-500"
+                  className="w-4 h-4 text-[var(--color-primary)] rounded focus:ring-[var(--color-primary)]"
                 />
-                <label htmlFor="allDay" className="text-sm text-gray-700 dark:text-gray-300">
+                <label htmlFor="allDay" className="text-sm text-[var(--color-foreground)]">
                   All day event
                 </label>
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                <label className="block text-sm font-medium text-[var(--color-foreground)] mb-1">
                   {formData.allDay ? 'Date' : 'Start'}
                 </label>
                 <input
                   type={formData.allDay ? 'date' : 'datetime-local'}
                   value={formData.allDay ? formData.start.slice(0, 10) : formData.start}
                   onChange={(e) => setFormData({ ...formData, start: e.target.value })}
-                  className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-xl focus:ring-2 focus:ring-purple-500 focus:border-transparent bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100"
+                  className="themed-input w-full"
                   required
                 />
               </div>
 
               {!formData.allDay && (
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                  <label className="block text-sm font-medium text-[var(--color-foreground)] mb-1">
                     End (optional)
                   </label>
                   <input
                     type="datetime-local"
                     value={formData.end}
                     onChange={(e) => setFormData({ ...formData, end: e.target.value })}
-                    className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-xl focus:ring-2 focus:ring-purple-500 focus:border-transparent bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100"
+                    className="themed-input w-full"
                   />
                 </div>
               )}
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                <label className="block text-sm font-medium text-[var(--color-foreground)] mb-1">
                   Location
                 </label>
                 <input
                   type="text"
                   value={formData.location}
                   onChange={(e) => setFormData({ ...formData, location: e.target.value })}
-                  className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-xl focus:ring-2 focus:ring-purple-500 focus:border-transparent bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100"
+                  className="themed-input w-full"
                   placeholder="Event location"
                 />
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                <label className="block text-sm font-medium text-[var(--color-foreground)] mb-1">
                   Description
                 </label>
                 <textarea
                   value={formData.description}
                   onChange={(e) => setFormData({ ...formData, description: e.target.value })}
-                  className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-xl focus:ring-2 focus:ring-purple-500 focus:border-transparent bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100"
+                  className="themed-input w-full"
                   placeholder="Event description"
                   rows={3}
                 />
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                <label className="block text-sm font-medium text-[var(--color-foreground)] mb-2">
                   Color
                 </label>
                 <div className="flex gap-2">
@@ -769,7 +854,7 @@ export function CalendarPage() {
                       onClick={() => setFormData({ ...formData, color: color.value })}
                       className={`w-8 h-8 rounded-full transition-transform ${
                         formData.color === color.value
-                          ? 'ring-2 ring-offset-2 ring-gray-400 scale-110'
+                          ? 'ring-2 ring-offset-2 ring-[var(--color-border)] scale-110'
                           : ''
                       }`}
                       style={{ backgroundColor: color.value }}
@@ -784,7 +869,7 @@ export function CalendarPage() {
                   <button
                     type="button"
                     onClick={handleDelete}
-                    className="px-4 py-2 text-red-600 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-xl transition-colors"
+                    className="px-4 py-2 text-[var(--color-destructive)] hover:bg-[var(--color-destructive)]/10 rounded-xl transition-colors"
                   >
                     Delete
                   </button>
@@ -793,13 +878,13 @@ export function CalendarPage() {
                 <button
                   type="button"
                   onClick={closeModals}
-                  className="px-4 py-2 text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-xl transition-colors"
+                  className="themed-btn-secondary"
                 >
                   Cancel
                 </button>
                 <button
                   type="submit"
-                  className="px-4 py-2 bg-purple-600 hover:bg-purple-700 text-white rounded-xl transition-colors"
+                  className="themed-btn-primary"
                 >
                   {selectedEvent ? 'Save' : 'Create'}
                 </button>
@@ -865,22 +950,22 @@ function DayDetailModal({
 
   return (
     <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
-      <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-xl w-full max-w-lg p-6 max-h-[90vh] overflow-hidden flex flex-col m-4">
+      <div className="themed-card w-full max-w-lg p-6 max-h-[90vh] overflow-hidden flex flex-col m-4">
         {/* Header */}
         <div className="flex items-center justify-between mb-4">
           <div>
-            <h2 className="text-xl font-semibold text-gray-900 dark:text-gray-100">
+            <h2 className="text-xl font-semibold text-[var(--color-foreground)]">
               {isTodayDate(date) ? 'Today' : formatFullDate(date)}
             </h2>
             {isTodayDate(date) && (
-              <p className="text-sm text-gray-500 dark:text-gray-400">{formatFullDate(date)}</p>
+              <p className="text-sm text-[var(--color-muted-foreground)]">{formatFullDate(date)}</p>
             )}
           </div>
           <button
             onClick={onClose}
-            className="p-2 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg"
+            className="p-2 hover:bg-[var(--color-muted)] rounded-lg"
           >
-            <X size={20} className="text-gray-500 dark:text-gray-400" />
+            <X size={20} className="text-[var(--color-muted-foreground)]" />
           </button>
         </div>
 
@@ -889,13 +974,13 @@ function DayDetailModal({
           {/* Events Section */}
           <div>
             <div className="flex items-center justify-between mb-2">
-              <h3 className="text-sm font-medium text-gray-700 dark:text-gray-300 flex items-center gap-2">
+              <h3 className="text-sm font-medium text-[var(--color-foreground)] flex items-center gap-2">
                 <Calendar size={16} />
                 Events ({events.length})
               </h3>
               <button
                 onClick={onNewEvent}
-                className="text-sm text-purple-600 hover:text-purple-700 font-medium flex items-center gap-1"
+                className="text-sm text-[var(--color-primary)] hover:text-[var(--color-primary)]/80 font-medium flex items-center gap-1"
               >
                 <Plus size={14} />
                 Add Event
@@ -903,7 +988,7 @@ function DayDetailModal({
             </div>
 
             {events.length === 0 ? (
-              <p className="text-sm text-gray-400 dark:text-gray-500 py-4 text-center">
+              <p className="text-sm text-[var(--color-muted-foreground)] py-4 text-center">
                 No events scheduled
               </p>
             ) : (
@@ -912,7 +997,7 @@ function DayDetailModal({
                   <div
                     key={event.id}
                     onClick={() => onEditEvent(event)}
-                    className="p-3 rounded-xl border border-gray-200 dark:border-gray-700 hover:border-gray-300 dark:hover:border-gray-600 cursor-pointer transition-colors"
+                    className="p-3 rounded-xl border border-[var(--color-border)] hover:border-[var(--color-border)]/80 cursor-pointer transition-colors"
                   >
                     <div className="flex items-start gap-3">
                       <div
@@ -920,10 +1005,10 @@ function DayDetailModal({
                         style={{ backgroundColor: event.color || '#3b82f6' }}
                       />
                       <div className="flex-1 min-w-0">
-                        <p className="font-medium text-gray-900 dark:text-gray-100">
+                        <p className="font-medium text-[var(--color-foreground)]">
                           {event.title}
                         </p>
-                        <div className="flex items-center gap-3 mt-1 text-sm text-gray-500 dark:text-gray-400">
+                        <div className="flex items-center gap-3 mt-1 text-sm text-[var(--color-muted-foreground)]">
                           {!event.allDay && (
                             <span className="flex items-center gap-1">
                               <Clock size={12} />
@@ -940,7 +1025,7 @@ function DayDetailModal({
                           )}
                         </div>
                         {event.assignedToName && (
-                          <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">
+                          <p className="text-sm text-[var(--color-muted-foreground)] mt-1">
                             Assigned to: {event.assignedToName}
                           </p>
                         )}
@@ -955,7 +1040,7 @@ function DayDetailModal({
           {/* Chores Section */}
           {chores.length > 0 && (
             <div>
-              <h3 className="text-sm font-medium text-gray-700 dark:text-gray-300 flex items-center gap-2 mb-2">
+              <h3 className="text-sm font-medium text-[var(--color-foreground)] flex items-center gap-2 mb-2">
                 <CheckSquare size={16} />
                 Chores ({chores.length})
               </h3>
@@ -969,8 +1054,8 @@ function DayDetailModal({
                       key={chore.id}
                       className={`p-3 rounded-xl border transition-colors ${
                         isCompleted
-                          ? 'bg-green-50 dark:bg-green-900/20 border-green-200 dark:border-green-800'
-                          : 'border-gray-200 dark:border-gray-700'
+                          ? 'bg-[var(--color-success)]/10 border-[var(--color-success)]/30'
+                          : 'border-[var(--color-border)]'
                       }`}
                     >
                       <div className="flex items-center gap-3">
@@ -980,11 +1065,11 @@ function DayDetailModal({
                         />
                         <div className="flex-1 min-w-0">
                           <p
-                            className={`font-medium ${isCompleted ? 'text-gray-500 dark:text-gray-400 line-through' : 'text-gray-900 dark:text-gray-100'}`}
+                            className={`font-medium ${isCompleted ? 'text-[var(--color-muted-foreground)] line-through' : 'text-[var(--color-foreground)]'}`}
                           >
                             {chore.title}
                           </p>
-                          <div className="flex items-center gap-2 mt-1 text-sm text-gray-500 dark:text-gray-400">
+                          <div className="flex items-center gap-2 mt-1 text-sm text-[var(--color-muted-foreground)]">
                             <span>{chore.points} pts</span>
                             {chore.assignedToName && <span>• {chore.assignedToName}</span>}
                           </div>
@@ -994,14 +1079,14 @@ function DayDetailModal({
                           <div className="flex gap-1">
                             <button
                               onClick={() => onCompleteChore(chore)}
-                              className="p-2 bg-green-100 dark:bg-green-900/30 text-green-600 dark:text-green-400 rounded-lg hover:bg-green-200 dark:hover:bg-green-900/50 transition-colors"
+                              className="p-2 bg-[var(--color-success)]/10 text-[var(--color-success)] rounded-lg hover:bg-[var(--color-success)]/20 transition-colors"
                               title="Complete"
                             >
                               <Check size={16} />
                             </button>
                             <button
                               onClick={() => onSkipChore(chore)}
-                              className="p-2 bg-orange-100 dark:bg-orange-900/30 text-orange-600 dark:text-orange-400 rounded-lg hover:bg-orange-200 dark:hover:bg-orange-900/50 transition-colors"
+                              className="p-2 bg-[var(--color-warning)]/10 text-[var(--color-warning)] rounded-lg hover:bg-[var(--color-warning)]/20 transition-colors"
                               title="Skip"
                             >
                               <SkipForward size={16} />
@@ -1010,7 +1095,7 @@ function DayDetailModal({
                         )}
 
                         {isCompleted && (
-                          <span className="text-green-600 dark:text-green-400 text-sm font-medium">
+                          <span className="text-[var(--color-success)] text-sm font-medium">
                             ✓ Done
                           </span>
                         )}
@@ -1024,10 +1109,10 @@ function DayDetailModal({
         </div>
 
         {/* Footer */}
-        <div className="pt-4 mt-4 border-t border-gray-100 dark:border-gray-700">
+        <div className="pt-4 mt-4 border-t border-[var(--color-border)]">
           <button
             onClick={onClose}
-            className="w-full px-4 py-2 text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-xl transition-colors"
+            className="w-full themed-btn-secondary"
           >
             Close
           </button>
@@ -1064,18 +1149,18 @@ function ChoreActionModal({
 
   return (
     <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
-      <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-xl w-full max-w-sm p-6 m-4">
+      <div className="themed-card w-full max-w-sm p-6 m-4">
         <div className="flex items-center justify-between mb-4">
-          <h2 className="text-lg font-semibold text-gray-900 dark:text-gray-100">Chore Details</h2>
+          <h2 className="text-lg font-semibold text-[var(--color-foreground)]">Chore Details</h2>
           <button
             onClick={onClose}
-            className="p-2 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg"
+            className="p-2 hover:bg-[var(--color-muted)] rounded-lg"
           >
-            <X size={20} className="text-gray-500 dark:text-gray-400" />
+            <X size={20} className="text-[var(--color-muted-foreground)]" />
           </button>
         </div>
 
-        <div className="mb-4 p-4 bg-gray-50 dark:bg-gray-700/50 rounded-xl">
+        <div className="mb-4 p-4 bg-[var(--color-muted)]/50 rounded-xl">
           <div className="flex items-center gap-3 mb-2">
             <div
               className="w-8 h-8 rounded-lg flex items-center justify-center"
@@ -1084,11 +1169,11 @@ function ChoreActionModal({
               <CheckSquare className="text-white" size={16} />
             </div>
             <div>
-              <p className="font-medium text-gray-900 dark:text-gray-100">{chore.title}</p>
-              <p className="text-sm text-gray-500 dark:text-gray-400">{chore.points} points</p>
+              <p className="font-medium text-[var(--color-foreground)]">{chore.title}</p>
+              <p className="text-sm text-[var(--color-muted-foreground)]">{chore.points} points</p>
             </div>
           </div>
-          <div className="text-sm text-gray-600 dark:text-gray-300 space-y-1 mt-3 pt-3 border-t border-gray-200 dark:border-gray-600">
+          <div className="text-sm text-[var(--color-foreground)] space-y-1 mt-3 pt-3 border-t border-[var(--color-border)]">
             <p>
               <strong>Due:</strong> {formatDate(chore.dueDate)}
             </p>
@@ -1102,10 +1187,10 @@ function ChoreActionModal({
               <span
                 className={
                   isCompleted
-                    ? 'text-green-600 dark:text-green-400'
+                    ? 'text-[var(--color-success)]'
                     : chore.status === 'pending'
-                      ? 'text-purple-600 dark:text-purple-400'
-                      : 'text-gray-600 dark:text-gray-400'
+                      ? 'text-[var(--color-primary)]'
+                      : 'text-[var(--color-muted-foreground)]'
                 }
               >
                 {chore.status}
@@ -1118,12 +1203,12 @@ function ChoreActionModal({
           <div className="space-y-2">
             <button
               onClick={onComplete}
-              className="w-full p-3 text-left rounded-xl border border-gray-200 dark:border-gray-600 hover:border-green-300 dark:hover:border-green-600 hover:bg-green-50 dark:hover:bg-green-900/20 transition-colors flex items-center gap-3"
+              className="w-full p-3 text-left rounded-xl border border-[var(--color-border)] hover:border-[var(--color-success)]/50 hover:bg-[var(--color-success)]/10 transition-colors flex items-center gap-3"
             >
-              <Check className="text-green-600 dark:text-green-400" size={20} />
+              <Check className="text-[var(--color-success)]" size={20} />
               <div>
-                <p className="font-medium text-gray-900 dark:text-gray-100">Mark Complete</p>
-                <p className="text-sm text-gray-500 dark:text-gray-400">
+                <p className="font-medium text-[var(--color-foreground)]">Mark Complete</p>
+                <p className="text-sm text-[var(--color-muted-foreground)]">
                   Complete this chore and earn {chore.points} points
                 </p>
               </div>
@@ -1131,12 +1216,12 @@ function ChoreActionModal({
 
             <button
               onClick={onSkip}
-              className="w-full p-3 text-left rounded-xl border border-gray-200 dark:border-gray-600 hover:border-orange-300 dark:hover:border-orange-600 hover:bg-orange-50 dark:hover:bg-orange-900/20 transition-colors flex items-center gap-3"
+              className="w-full p-3 text-left rounded-xl border border-[var(--color-border)] hover:border-[var(--color-warning)]/50 hover:bg-[var(--color-warning)]/10 transition-colors flex items-center gap-3"
             >
-              <SkipForward className="text-orange-600 dark:text-orange-400" size={20} />
+              <SkipForward className="text-[var(--color-warning)]" size={20} />
               <div>
-                <p className="font-medium text-gray-900 dark:text-gray-100">Skip</p>
-                <p className="text-sm text-gray-500 dark:text-gray-400">
+                <p className="font-medium text-[var(--color-foreground)]">Skip</p>
+                <p className="text-sm text-[var(--color-muted-foreground)]">
                   Skip this occurrence (no points)
                 </p>
               </div>
@@ -1145,7 +1230,7 @@ function ChoreActionModal({
         )}
 
         {isCompleted && (
-          <div className="p-3 bg-green-50 dark:bg-green-900/20 rounded-xl text-green-700 dark:text-green-400 text-center">
+          <div className="p-3 bg-[var(--color-success)]/10 rounded-xl text-[var(--color-success)] text-center">
             <Check className="inline mr-2" size={16} />
             This chore has been completed
             {chore.pointsAwarded && ` (+${chore.pointsAwarded} points)`}
@@ -1154,10 +1239,361 @@ function ChoreActionModal({
 
         <button
           onClick={onClose}
-          className="w-full mt-4 px-4 py-2 text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-xl transition-colors"
+          className="w-full mt-4 themed-btn-secondary"
         >
           Close
         </button>
+      </div>
+    </div>
+  );
+}
+
+// =============================================================================
+// Weekly Meal Planner Card (Read-only)
+// =============================================================================
+function WeeklyMealCard({
+  mealPlans,
+  onMealClick,
+}: {
+  mealPlans: MealPlan[];
+  onMealClick: (date: string) => void;
+}) {
+  const today = new Date();
+  const dayOfWeek = today.getDay();
+  const startOfWeek = new Date(today);
+  startOfWeek.setDate(today.getDate() - dayOfWeek);
+
+  const weekDays = [];
+  for (let i = 0; i < 7; i++) {
+    const date = new Date(startOfWeek);
+    date.setDate(startOfWeek.getDate() + i);
+    weekDays.push(date);
+  }
+
+  const getMealForDate = (date: Date) => {
+    const dateStr = formatDateLocal(date);
+    return mealPlans.find((mp) => mp.date === dateStr);
+  };
+
+  const getMealDisplay = (meal: MealPlan | undefined) => {
+    if (!meal) return { text: 'Not planned', icon: '📭', style: 'text-[var(--color-muted-foreground)]' };
+    if (meal.isFendForYourself) return { text: 'Fend For Yourself', icon: '🍕', style: 'text-[var(--color-warning)]' };
+    if (meal.status === 'voting') return { text: 'Voting Open', icon: '🗳️', style: 'text-[var(--color-primary)]' };
+    if (meal.recipe?.name) return { text: meal.recipe.name, icon: '🍽️', style: 'text-[var(--color-foreground)]' };
+    if (meal.customMealName) return { text: meal.customMealName, icon: '🍽️', style: 'text-[var(--color-foreground)]' };
+    return { text: 'Planned', icon: '📅', style: 'text-[var(--color-muted-foreground)]' };
+  };
+
+  const isToday = (date: Date) => {
+    const todayStr = formatDateLocal(new Date());
+    return formatDateLocal(date) === todayStr;
+  };
+
+  return (
+    <div className="themed-calendar-meal p-4">
+      <div className="flex items-center gap-2 mb-4">
+        <Utensils size={18} className="text-[var(--color-primary)]" />
+        <h3
+          style={{
+            fontWeight: 'var(--calendar-meal-font-weight, 600)',
+            fontSize: 'var(--calendar-meal-font-size, 1rem)',
+            fontFamily: 'var(--calendar-meal-font-family, inherit)',
+            color: 'var(--calendar-meal-text, var(--color-foreground))',
+          }}
+        >
+          Weekly Meal Plan
+        </h3>
+      </div>
+      <div
+        className="grid grid-cols-7 gap-2"
+        style={{ fontFamily: 'var(--calendar-meal-font-family, inherit)' }}
+      >
+        {weekDays.map((date, i) => {
+          const meal = getMealForDate(date);
+          const display = getMealDisplay(meal);
+          const dayIsToday = isToday(date);
+
+          return (
+            <div
+              key={i}
+              onClick={() => onMealClick(formatDateLocal(date))}
+              className={`p-2 rounded-lg cursor-pointer transition-colors hover:bg-[var(--color-muted)]/50 ${
+                dayIsToday ? 'bg-[var(--color-primary)]/10 ring-1 ring-[var(--color-primary)]' : ''
+              }`}
+            >
+              <div className="text-center mb-1">
+                <span
+                  style={{
+                    fontSize: 'calc(var(--calendar-meal-font-size, 0.75rem) * 0.85)',
+                    fontWeight: 'var(--calendar-meal-font-weight, 400)',
+                    color: 'var(--color-muted-foreground)',
+                  }}
+                >
+                  {DAYS[date.getDay()]}
+                </span>
+                <span
+                  className="block"
+                  style={{
+                    fontSize: 'var(--calendar-meal-font-size, 0.875rem)',
+                    fontWeight: 'var(--calendar-meal-font-weight, 500)',
+                    color: dayIsToday ? 'var(--color-primary)' : 'var(--calendar-meal-text, var(--color-foreground))',
+                  }}
+                >
+                  {date.getDate()}
+                </span>
+              </div>
+              <div className="text-center">
+                <span style={{ fontSize: 'var(--calendar-meal-font-size, 1.125rem)' }}>{display.icon}</span>
+                <p
+                  className="truncate"
+                  style={{
+                    fontSize: 'calc(var(--calendar-meal-font-size, 0.75rem) * 0.85)',
+                    fontWeight: 'var(--calendar-meal-font-weight, 400)',
+                  }}
+                  title={display.text}
+                >
+                  {display.text}
+                </p>
+              </div>
+            </div>
+          );
+        })}
+      </div>
+    </div>
+  );
+}
+
+// =============================================================================
+// User Day Card (Shows events/chores for a specific user)
+// =============================================================================
+function UserDayCard({
+  user,
+  events,
+  chores,
+  date,
+  isCurrentUser,
+}: {
+  user: CalendarUser;
+  events: CalendarEvent[];
+  chores: ChoreInstance[];
+  date: Date;
+  isCurrentUser: boolean;
+}) {
+  // Filter events and chores for this specific user
+  const userEvents = events.filter((e) => e.assignedTo === user.id);
+  const userChores = chores.filter((c) => c.assignedTo === user.id);
+
+  const totalItems = userEvents.length + userChores.length;
+
+  if (totalItems === 0) {
+    return (
+      <div className={`themed-calendar-user p-4 ${isCurrentUser ? 'ring-2 ring-[var(--color-primary)]' : ''}`}>
+        <div className="flex items-center gap-3 mb-3">
+          <div
+            className="w-8 h-8 rounded-full flex items-center justify-center text-white"
+            style={{
+              backgroundColor: user.color || '#8b5cf6',
+              fontSize: 'calc(var(--calendar-user-font-size, 0.875rem) * 0.9)',
+              fontWeight: 'var(--calendar-user-font-weight, 500)',
+            }}
+          >
+            {(user.nickname || user.displayName).charAt(0).toUpperCase()}
+          </div>
+          <div style={{ fontFamily: 'var(--calendar-user-font-family, inherit)' }}>
+            <p
+              style={{
+                fontWeight: 'var(--calendar-user-font-weight, 500)',
+                fontSize: 'var(--calendar-user-font-size, inherit)',
+                color: 'var(--calendar-user-text, var(--color-foreground))',
+              }}
+            >
+              {user.nickname || user.displayName}
+              {isCurrentUser && (
+                <span
+                  className="ml-1"
+                  style={{
+                    fontSize: 'calc(var(--calendar-user-font-size, 0.75rem) * 0.85)',
+                    color: 'var(--color-primary)',
+                  }}
+                >
+                  (You)
+                </span>
+              )}
+            </p>
+            <p
+              style={{
+                fontSize: 'calc(var(--calendar-user-font-size, 0.75rem) * 0.85)',
+                fontWeight: 'var(--calendar-user-font-weight, 400)',
+                color: 'var(--color-muted-foreground)',
+              }}
+            >
+              {user.roleId}
+            </p>
+          </div>
+        </div>
+        <p
+          className="text-center py-2"
+          style={{
+            fontSize: 'var(--calendar-user-font-size, 0.875rem)',
+            fontWeight: 'var(--calendar-user-font-weight, 400)',
+            color: 'var(--color-muted-foreground)',
+          }}
+        >
+          No events or chores for today
+        </p>
+      </div>
+    );
+  }
+
+  return (
+    <div className={`themed-calendar-user p-4 ${isCurrentUser ? 'ring-2 ring-[var(--color-primary)]' : ''}`}>
+      <div className="flex items-center gap-3 mb-3">
+        <div
+          className="w-8 h-8 rounded-full flex items-center justify-center text-white"
+          style={{
+            backgroundColor: user.color || '#8b5cf6',
+            fontSize: 'calc(var(--calendar-user-font-size, 0.875rem) * 0.9)',
+            fontWeight: 'var(--calendar-user-font-weight, 500)',
+          }}
+        >
+          {(user.nickname || user.displayName).charAt(0).toUpperCase()}
+        </div>
+        <div className="flex-1" style={{ fontFamily: 'var(--calendar-user-font-family, inherit)' }}>
+          <p
+            style={{
+              fontWeight: 'var(--calendar-user-font-weight, 500)',
+              fontSize: 'var(--calendar-user-font-size, inherit)',
+              color: 'var(--calendar-user-text, var(--color-foreground))',
+            }}
+          >
+            {user.nickname || user.displayName}
+            {isCurrentUser && (
+              <span
+                className="ml-1"
+                style={{
+                  fontSize: 'calc(var(--calendar-user-font-size, 0.75rem) * 0.85)',
+                  color: 'var(--color-primary)',
+                }}
+              >
+                (You)
+              </span>
+            )}
+          </p>
+          <p
+            style={{
+              fontSize: 'calc(var(--calendar-user-font-size, 0.75rem) * 0.85)',
+              fontWeight: 'var(--calendar-user-font-weight, 400)',
+              color: 'var(--color-muted-foreground)',
+            }}
+          >
+            {user.roleId}
+          </p>
+        </div>
+        <div className="text-right">
+          <span
+            style={{
+              fontSize: 'var(--calendar-user-font-size, 0.875rem)',
+              fontWeight: 'var(--calendar-user-font-weight, 500)',
+              color: 'var(--calendar-user-text, var(--color-foreground))',
+            }}
+          >
+            {totalItems}
+          </span>
+          <span
+            className="ml-1"
+            style={{
+              fontSize: 'calc(var(--calendar-user-font-size, 0.75rem) * 0.85)',
+              color: 'var(--color-muted-foreground)',
+            }}
+          >
+            items
+          </span>
+        </div>
+      </div>
+
+      <div
+        className="space-y-2 max-h-32 overflow-y-auto"
+        style={{ fontFamily: 'var(--calendar-user-font-family, inherit)' }}
+      >
+        {/* Events */}
+        {userEvents.map((event) => (
+          <div
+            key={`event-${event.id}`}
+            className="flex items-center gap-2 p-2 rounded-lg bg-[var(--color-muted)]/30"
+          >
+            <div
+              className="w-2 h-2 rounded-full flex-shrink-0"
+              style={{ backgroundColor: event.color || '#3b82f6' }}
+            />
+            <div className="flex-1 min-w-0">
+              <p
+                className="truncate"
+                style={{
+                  fontSize: 'var(--calendar-user-font-size, 0.875rem)',
+                  fontWeight: 'var(--calendar-user-font-weight, 400)',
+                  color: 'var(--calendar-user-text, var(--color-foreground))',
+                }}
+              >
+                {event.title}
+              </p>
+              {!event.allDay && (
+                <p
+                  style={{
+                    fontSize: 'calc(var(--calendar-user-font-size, 0.75rem) * 0.85)',
+                    color: 'var(--color-muted-foreground)',
+                  }}
+                >
+                  {new Date(event.start).toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' })}
+                </p>
+              )}
+            </div>
+            <Calendar size={12} className="text-[var(--color-muted-foreground)]" />
+          </div>
+        ))}
+
+        {/* Chores */}
+        {userChores.map((chore) => {
+          const isCompleted = chore.status === 'completed' || chore.status === 'approved';
+          return (
+            <div
+              key={`chore-${chore.id}`}
+              className={`flex items-center gap-2 p-2 rounded-lg ${
+                isCompleted ? 'bg-[var(--color-success)]/10' : 'bg-[var(--color-muted)]/30'
+              }`}
+            >
+              <div
+                className="w-2 h-2 rounded-full flex-shrink-0"
+                style={{ backgroundColor: chore.categoryColor || '#8b5cf6' }}
+              />
+              <div className="flex-1 min-w-0">
+                <p
+                  className="truncate"
+                  style={{
+                    fontSize: 'var(--calendar-user-font-size, 0.875rem)',
+                    fontWeight: 'var(--calendar-user-font-weight, 400)',
+                    color: isCompleted ? 'var(--color-muted-foreground)' : 'var(--calendar-user-text, var(--color-foreground))',
+                    textDecoration: isCompleted ? 'line-through' : 'none',
+                  }}
+                >
+                  {chore.title}
+                </p>
+                <p
+                  style={{
+                    fontSize: 'calc(var(--calendar-user-font-size, 0.75rem) * 0.85)',
+                    color: 'var(--color-muted-foreground)',
+                  }}
+                >
+                  {chore.points} pts
+                </p>
+              </div>
+              {isCompleted ? (
+                <Check size={12} className="text-[var(--color-success)]" />
+              ) : (
+                <CheckSquare size={12} className="text-[var(--color-muted-foreground)]" />
+              )}
+            </div>
+          );
+        })}
       </div>
     </div>
   );

@@ -14,6 +14,7 @@ import { EarningsWidget } from './EarningsWidget';
 import { FamilyWidget } from './FamilyWidget';
 import { AnnouncementsWidget } from './AnnouncementsWidget';
 import { WeatherWidget } from './WeatherWidget';
+import { UpcomingMealsWidget } from './UpcomingMealsWidget';
 
 export {
   WelcomeWidget,
@@ -28,6 +29,7 @@ export {
   FamilyWidget,
   AnnouncementsWidget,
   WeatherWidget,
+  UpcomingMealsWidget,
 };
 
 // Widget component map for dynamic rendering
@@ -45,4 +47,5 @@ export const widgetComponents: Record<string, React.ComponentType<any>> = {
   'family-members': FamilyWidget,
   'announcements': AnnouncementsWidget,
   'weather': WeatherWidget,
+  'upcoming-meals': UpcomingMealsWidget,
 };

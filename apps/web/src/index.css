@@ -1,12 +1,15 @@
 @import 'tailwindcss';
 
+/* Configure Tailwind v4 to use class-based dark mode (instead of media query) */
+@custom-variant dark (&:where(.dark, .dark *));
+
 /* ============================================
    THEME SYSTEM CSS VARIABLES
    ============================================ */
 :root {
   /* Legacy accent color (backward compatible) */
-  --accent-color: #8b5cf6;
-  --accent-color-rgb: 139, 92, 246;
+  --accent-color: #3cb371;
+  --accent-color-rgb: 60, 179, 113;
 
   /* Layout */
   --layout-type: sidebar-left;
@@ -14,17 +17,17 @@
   --header-height: 64px;
   --nav-style: icons-text;
 
-  /* Colors - Light Mode Defaults */
-  --color-primary: #8b5cf6;
+  /* Colors - Light Mode Defaults (HabiTrack Brand) */
+  --color-primary: #3cb371;
   --color-primary-foreground: #ffffff;
   --color-secondary: #f3f4f6;
-  --color-secondary-foreground: #1f2937;
-  --color-accent: #8b5cf6;
+  --color-secondary-foreground: #3d4f5f;
+  --color-accent: #3cb371;
   --color-accent-foreground: #ffffff;
   --color-background: #ffffff;
-  --color-foreground: #1f2937;
+  --color-foreground: #3d4f5f;
   --color-card: #ffffff;
-  --color-card-foreground: #1f2937;
+  --color-card-foreground: #3d4f5f;
   --color-muted: #f3f4f6;
   --color-muted-foreground: #6b7280;
   --color-border: #e5e7eb;
@@ -56,27 +59,151 @@
   --sidebar-image-opacity: 30;
   --sidebar-blur: 0px;
 
-  /* Page Background */
+  /* Page Background (global) */
   --page-bg: var(--color-background);
   --page-bg-image: none;
   --page-bg-pattern: none;
+  --page-bg-opacity: 1;
+
+  /* Page-specific backgrounds (default to global) */
+  --dashboard-page-bg: var(--page-bg);
+  --dashboard-page-bg-image: var(--page-bg-image);
+  --dashboard-page-bg-opacity: var(--page-bg-opacity);
+
+  --calendar-page-bg: var(--page-bg);
+  --calendar-page-bg-image: var(--page-bg-image);
+  --calendar-page-bg-opacity: var(--page-bg-opacity);
+
+  --chores-page-bg: var(--page-bg);
+  --chores-page-bg-image: var(--page-bg-image);
+  --chores-page-bg-opacity: var(--page-bg-opacity);
+
+  --shopping-page-bg: var(--page-bg);
+  --shopping-page-bg-image: var(--page-bg-image);
+  --shopping-page-bg-opacity: var(--page-bg-opacity);
+
+  --messages-page-bg: var(--page-bg);
+  --messages-page-bg-image: var(--page-bg-image);
+  --messages-page-bg-opacity: var(--page-bg-opacity);
+
+  --settings-page-bg: var(--page-bg);
+  --settings-page-bg-image: var(--page-bg-image);
+  --settings-page-bg-opacity: var(--page-bg-opacity);
+
+  --budget-page-bg: var(--page-bg);
+  --budget-page-bg-image: var(--page-bg-image);
+  --budget-page-bg-opacity: var(--page-bg-opacity);
+
+  --meals-page-bg: var(--page-bg);
+  --meals-page-bg-image: var(--page-bg-image);
+  --meals-page-bg-opacity: var(--page-bg-opacity);
+
+  --recipes-page-bg: var(--page-bg);
+  --recipes-page-bg-image: var(--page-bg-image);
+  --recipes-page-bg-opacity: var(--page-bg-opacity);
+
+  /* ============================================
+     ELEMENT-SPECIFIC CSS VARIABLES
+     Per-element customization for advanced theming
+     ============================================ */
+
+  /* Card Element */
+  --card-bg: var(--color-card);
+  --card-text: var(--color-card-foreground);
+  --card-border: var(--color-border);
+  --card-border-width: 1px;
+  --card-radius: var(--radius-lg);
+  --card-shadow: var(--shadow-base);
+  --card-padding: 16px;
+  --card-custom-css: ;
+
+  /* Widget Element (inside cards) */
+  --widget-bg: var(--color-muted);
+  --widget-text: var(--color-foreground);
+  --widget-border: transparent;
+  --widget-border-width: 0px;
+  --widget-radius: var(--radius-md);
+  --widget-shadow: none;
+  --widget-padding: 12px;
+  --widget-custom-css: ;
+
+  /* Header Element */
+  --header-bg: var(--color-card);
+  --header-text: var(--color-foreground);
+  --header-border: var(--color-border);
+  --header-height: 64px;
+  --header-custom-css: ;
+
+  /* Primary Button */
+  --btn-primary-bg: var(--color-primary);
+  --btn-primary-text: var(--color-primary-foreground);
+  --btn-primary-border: transparent;
+  --btn-primary-radius: var(--radius-md);
+  --btn-primary-padding: 8px 16px;
+  --btn-primary-shadow: none;
+  --btn-primary-custom-css: ;
+
+  /* Secondary Button */
+  --btn-secondary-bg: var(--color-secondary);
+  --btn-secondary-text: var(--color-secondary-foreground);
+  --btn-secondary-border: var(--color-border);
+  --btn-secondary-radius: var(--radius-md);
+  --btn-secondary-padding: 8px 16px;
+  --btn-secondary-shadow: none;
+  --btn-secondary-custom-css: ;
+
+  /* Modal Element */
+  --modal-bg: var(--color-card);
+  --modal-text: var(--color-card-foreground);
+  --modal-border: var(--color-border);
+  --modal-radius: var(--radius-xl);
+  --modal-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
+  --modal-backdrop: rgba(0, 0, 0, 0.5);
+  --modal-custom-css: ;
+
+  /* Input Element */
+  --input-bg: var(--color-background);
+  --input-text: var(--color-foreground);
+  --input-border: var(--color-border);
+  --input-border-width: 1px;
+  --input-radius: var(--radius-md);
+  --input-padding: 8px 12px;
+  --input-focus-ring: var(--color-primary);
+  --input-custom-css: ;
+
+  /* Login Page Element (for login page styling) */
+  --login-bg: linear-gradient(135deg, #f8faf9 0%, #e8f5e9 50%, #c8e6c9 100%);
+  --login-card-bg: #ffffff;
+  --login-card-border: #e5e7eb;
+  --login-card-radius: var(--radius-xl);
+  --login-text: #3d4f5f;
+  --login-brand-color: var(--color-primary);
+  --login-custom-css: ;
+
+  /* LCARS Mode Variables */
+  --lcars-enabled: 0;
+  --lcars-corner-style: rounded;
+  --lcars-primary: #cc9900;
+  --lcars-secondary: #9999ff;
+  --lcars-tertiary: #cc6666;
+  --lcars-background: #000000;
 }
 
-/* Dark Mode Defaults */
+/* Dark Mode Defaults (HabiTrack Brand) */
 .dark {
-  --color-primary: #a78bfa;
-  --color-primary-foreground: #1f2937;
+  --color-primary: #4fd693;
+  --color-primary-foreground: #1a2e26;
   --color-secondary: #374151;
   --color-secondary-foreground: #f9fafb;
-  --color-accent: #a78bfa;
-  --color-accent-foreground: #1f2937;
-  --color-background: #111827;
+  --color-accent: #4fd693;
+  --color-accent-foreground: #1a2e26;
+  --color-background: #1a2530;
   --color-foreground: #f9fafb;
-  --color-card: #1f2937;
+  --color-card: #243340;
   --color-card-foreground: #f9fafb;
-  --color-muted: #374151;
+  --color-muted: #2d3e4e;
   --color-muted-foreground: #9ca3af;
-  --color-border: #374151;
+  --color-border: #3d4f5f;
   --color-destructive: #f87171;
   --color-destructive-foreground: #1f2937;
   --color-success: #4ade80;
@@ -87,6 +214,28 @@
   --sidebar-bg: var(--color-card);
   --sidebar-text: var(--color-foreground);
   --page-bg: var(--color-background);
+
+  /* Element-specific dark mode overrides */
+  --card-bg: var(--color-card);
+  --card-text: var(--color-card-foreground);
+  --card-border: var(--color-border);
+  --widget-bg: var(--color-muted);
+  --widget-text: var(--color-foreground);
+  --header-bg: var(--color-card);
+  --header-text: var(--color-foreground);
+  --input-bg: var(--color-muted);
+  --input-text: var(--color-foreground);
+  --input-border: var(--color-border);
+  --modal-bg: var(--color-card);
+  --modal-text: var(--color-card-foreground);
+  --modal-backdrop: rgba(0, 0, 0, 0.7);
+
+  /* Login Page Dark Mode */
+  --login-bg: linear-gradient(135deg, #111827 0%, #1a2e1a 50%, #1f2937 100%);
+  --login-card-bg: #1f2937;
+  --login-card-border: #374151;
+  --login-text: #f9fafb;
+  --login-brand-color: #4fd693;
 }
 
 /* Starry background effect - fades out toward bottom */
@@ -337,4 +486,961 @@
 
 .font-theme-heading {
   font-family: var(--font-family-heading);
+}
+
+/* ============================================
+   ELEMENT-SPECIFIC UTILITY CLASSES
+   For per-element customization
+   ============================================ */
+
+/* Themed Card */
+.themed-card {
+  /* Use 'background' to support gradients */
+  background: var(--card-bg);
+  color: var(--card-text);
+  border: var(--card-border-width) solid var(--card-border);
+  border-radius: var(--card-radius);
+  box-shadow: var(--card-shadow);
+  padding: var(--card-padding);
+  position: relative;
+  overflow: hidden;
+}
+
+/* Background image layer for card */
+.themed-card::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background-image: var(--card-bg-image);
+  background-size: cover;
+  background-position: center;
+  opacity: var(--card-bg-opacity, 1);
+  z-index: 0;
+  pointer-events: none;
+  border-radius: inherit;
+}
+
+/* Ensure content is above the background image */
+.themed-card > * {
+  position: relative;
+  z-index: 1;
+}
+
+/* Themed Widget */
+.themed-widget {
+  /* Use 'background' to support gradients */
+  background: var(--widget-bg);
+  color: var(--widget-text);
+  border: var(--widget-border-width) solid var(--widget-border);
+  border-radius: var(--widget-radius);
+  box-shadow: var(--widget-shadow);
+  padding: var(--widget-padding);
+  position: relative;
+  overflow: hidden;
+}
+
+/* Background image layer for widget */
+.themed-widget::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background-image: var(--widget-bg-image);
+  background-size: cover;
+  background-position: center;
+  opacity: var(--widget-bg-opacity, 1);
+  z-index: 0;
+  pointer-events: none;
+  border-radius: inherit;
+}
+
+/* Ensure content is above the background image */
+.themed-widget > * {
+  position: relative;
+  z-index: 1;
+}
+
+/* Themed Header */
+.themed-header {
+  /* Use 'background' to support gradients */
+  background: var(--header-bg);
+  color: var(--header-text);
+  border-bottom: 1px solid var(--header-border);
+  height: var(--header-height);
+}
+
+/* Themed Primary Button */
+.themed-btn-primary {
+  /* Use 'background' to support gradients */
+  background: var(--btn-primary-bg);
+  color: var(--btn-primary-text);
+  border: 1px solid var(--btn-primary-border);
+  border-radius: var(--btn-primary-radius);
+  padding: var(--btn-primary-padding);
+  box-shadow: var(--btn-primary-shadow);
+  font-weight: 500;
+  transition: all 0.15s ease;
+}
+
+.themed-btn-primary:hover {
+  filter: brightness(1.1);
+}
+
+.themed-btn-primary:active {
+  filter: brightness(0.95);
+}
+
+/* Themed Secondary Button */
+.themed-btn-secondary {
+  /* Use 'background' to support gradients */
+  background: var(--btn-secondary-bg);
+  color: var(--btn-secondary-text);
+  border: 1px solid var(--btn-secondary-border);
+  border-radius: var(--btn-secondary-radius);
+  padding: var(--btn-secondary-padding);
+  box-shadow: var(--btn-secondary-shadow);
+  font-weight: 500;
+  transition: all 0.15s ease;
+}
+
+.themed-btn-secondary:hover {
+  filter: brightness(0.95);
+}
+
+/* Themed Modal */
+.themed-modal {
+  /* Use 'background' to support gradients */
+  background: var(--modal-bg);
+  color: var(--modal-text);
+  border: 1px solid var(--modal-border);
+  border-radius: var(--modal-radius);
+  box-shadow: var(--modal-shadow);
+}
+
+.themed-modal-backdrop {
+  background-color: var(--modal-backdrop);
+}
+
+/* Themed Input */
+.themed-input {
+  /* Use 'background' to support gradients */
+  background: var(--input-bg);
+  color: var(--input-text);
+  border: var(--input-border-width) solid var(--input-border);
+  border-radius: var(--input-radius);
+  padding: var(--input-padding);
+}
+
+.themed-input:focus {
+  outline: none;
+  border-color: var(--input-focus-ring);
+  box-shadow: 0 0 0 2px rgba(139, 92, 246, 0.2);
+}
+
+/* Themed Page Background (global) */
+.themed-page-bg {
+  background: var(--page-bg);
+  position: relative;
+}
+
+.themed-page-bg::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background-image: var(--page-bg-image);
+  background-size: cover;
+  background-position: center;
+  opacity: var(--page-bg-opacity, 1);
+  z-index: 0;
+  pointer-events: none;
+}
+
+.themed-page-bg > * {
+  position: relative;
+  z-index: 1;
+}
+
+/* Themed Sidebar */
+.themed-sidebar {
+  background: var(--sidebar-bg);
+  color: var(--sidebar-text);
+}
+
+/* ============================================
+   PAGE-SPECIFIC BACKGROUND STYLES
+   Allow different backgrounds per page
+   ============================================ */
+
+/* Dashboard/Home Page Background */
+.themed-dashboard-bg {
+  background: var(--dashboard-page-bg);
+  position: relative;
+}
+
+.themed-dashboard-bg::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background-image: var(--dashboard-page-bg-image);
+  background-size: cover;
+  background-position: center;
+  opacity: var(--dashboard-page-bg-opacity, 1);
+  z-index: 0;
+  pointer-events: none;
+}
+
+.themed-dashboard-bg > * {
+  position: relative;
+  z-index: 1;
+}
+
+/* Calendar Page Background */
+.themed-calendar-bg {
+  background: var(--calendar-page-bg);
+  position: relative;
+}
+
+.themed-calendar-bg::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background-image: var(--calendar-page-bg-image);
+  background-size: cover;
+  background-position: center;
+  opacity: var(--calendar-page-bg-opacity, 1);
+  z-index: 0;
+  pointer-events: none;
+}
+
+.themed-calendar-bg > * {
+  position: relative;
+  z-index: 1;
+}
+
+/* Chores Page Background */
+.themed-chores-bg {
+  background: var(--chores-page-bg);
+  position: relative;
+}
+
+.themed-chores-bg::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background-image: var(--chores-page-bg-image);
+  background-size: cover;
+  background-position: center;
+  opacity: var(--chores-page-bg-opacity, 1);
+  z-index: 0;
+  pointer-events: none;
+}
+
+.themed-chores-bg > * {
+  position: relative;
+  z-index: 1;
+}
+
+/* Shopping Page Background */
+.themed-shopping-bg {
+  background: var(--shopping-page-bg);
+  position: relative;
+}
+
+.themed-shopping-bg::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background-image: var(--shopping-page-bg-image);
+  background-size: cover;
+  background-position: center;
+  opacity: var(--shopping-page-bg-opacity, 1);
+  z-index: 0;
+  pointer-events: none;
+}
+
+.themed-shopping-bg > * {
+  position: relative;
+  z-index: 1;
+}
+
+/* Messages Page Background */
+.themed-messages-bg {
+  background: var(--messages-page-bg);
+  position: relative;
+}
+
+.themed-messages-bg::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background-image: var(--messages-page-bg-image);
+  background-size: cover;
+  background-position: center;
+  opacity: var(--messages-page-bg-opacity, 1);
+  z-index: 0;
+  pointer-events: none;
+}
+
+.themed-messages-bg > * {
+  position: relative;
+  z-index: 1;
+}
+
+/* Settings Page Background */
+.themed-settings-bg {
+  background: var(--settings-page-bg);
+  position: relative;
+}
+
+.themed-settings-bg::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background-image: var(--settings-page-bg-image);
+  background-size: cover;
+  background-position: center;
+  opacity: var(--settings-page-bg-opacity, 1);
+  z-index: 0;
+  pointer-events: none;
+}
+
+.themed-settings-bg > * {
+  position: relative;
+  z-index: 1;
+}
+
+/* Budget Page Background */
+.themed-budget-bg {
+  background: var(--budget-page-bg);
+  position: relative;
+}
+
+.themed-budget-bg::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background-image: var(--budget-page-bg-image);
+  background-size: cover;
+  background-position: center;
+  opacity: var(--budget-page-bg-opacity, 1);
+  z-index: 0;
+  pointer-events: none;
+}
+
+.themed-budget-bg > * {
+  position: relative;
+  z-index: 1;
+}
+
+/* Meals Page Background */
+.themed-meals-bg {
+  background: var(--meals-page-bg);
+  position: relative;
+}
+
+.themed-meals-bg::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background-image: var(--meals-page-bg-image);
+  background-size: cover;
+  background-position: center;
+  opacity: var(--meals-page-bg-opacity, 1);
+  z-index: 0;
+  pointer-events: none;
+}
+
+.themed-meals-bg > * {
+  position: relative;
+  z-index: 1;
+}
+
+/* Recipes Page Background */
+.themed-recipes-bg {
+  background: var(--recipes-page-bg);
+  position: relative;
+}
+
+.themed-recipes-bg::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background-image: var(--recipes-page-bg-image);
+  background-size: cover;
+  background-position: center;
+  opacity: var(--recipes-page-bg-opacity, 1);
+  z-index: 0;
+  pointer-events: none;
+}
+
+.themed-recipes-bg > * {
+  position: relative;
+  z-index: 1;
+}
+
+/* ============================================
+   PAGE-SPECIFIC ELEMENT STYLES
+   These allow per-page customization of elements
+   ============================================ */
+
+/* Calendar Page - Grid Card */
+.themed-calendar-grid {
+  /* Use 'background' instead of 'background-color' to support gradients */
+  background: var(--calendar-grid-bg, var(--card-bg));
+  color: var(--calendar-grid-text, var(--card-text));
+  border: var(--calendar-grid-border-width, var(--card-border-width)) solid var(--calendar-grid-border, var(--card-border));
+  border-radius: var(--calendar-grid-radius, var(--card-radius));
+  box-shadow: var(--calendar-grid-shadow, var(--card-shadow));
+  padding: var(--calendar-grid-padding, var(--card-padding));
+  font-size: var(--calendar-grid-font-size, inherit);
+  font-weight: var(--calendar-grid-font-weight, inherit);
+  font-family: var(--calendar-grid-font-family, inherit);
+  position: relative;
+  overflow: hidden;
+}
+
+/* Background image layer for calendar grid (applied when --calendar-grid-bg-image is set) */
+.themed-calendar-grid::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background-image: var(--calendar-grid-bg-image);
+  background-size: cover;
+  background-position: center;
+  opacity: var(--calendar-grid-bg-opacity, 1);
+  z-index: 0;
+  pointer-events: none;
+  border-radius: inherit;
+}
+
+/* Ensure content is above the background image */
+.themed-calendar-grid > * {
+  position: relative;
+  z-index: 1;
+}
+
+/* Calendar Page - Meal Widget Card */
+.themed-calendar-meal {
+  /* Use 'background' instead of 'background-color' to support gradients */
+  background: var(--calendar-meal-bg, var(--card-bg));
+  color: var(--calendar-meal-text, var(--card-text));
+  border: var(--calendar-meal-border-width, var(--card-border-width)) solid var(--calendar-meal-border, var(--card-border));
+  border-radius: var(--calendar-meal-radius, var(--card-radius));
+  box-shadow: var(--calendar-meal-shadow, var(--card-shadow));
+  padding: var(--calendar-meal-padding, var(--card-padding));
+  font-size: var(--calendar-meal-font-size, inherit);
+  font-weight: var(--calendar-meal-font-weight, inherit);
+  font-family: var(--calendar-meal-font-family, inherit);
+  position: relative;
+  overflow: hidden;
+}
+
+/* Background image layer for meal widget */
+.themed-calendar-meal::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background-image: var(--calendar-meal-bg-image);
+  background-size: cover;
+  background-position: center;
+  opacity: var(--calendar-meal-bg-opacity, 1);
+  z-index: 0;
+  pointer-events: none;
+  border-radius: inherit;
+}
+
+/* Ensure content is above the background image */
+.themed-calendar-meal > * {
+  position: relative;
+  z-index: 1;
+}
+
+/* Calendar Page - User Schedule Card */
+.themed-calendar-user {
+  /* Use 'background' instead of 'background-color' to support gradients */
+  background: var(--calendar-user-bg, var(--card-bg));
+  color: var(--calendar-user-text, var(--card-text));
+  border: var(--calendar-user-border-width, var(--card-border-width)) solid var(--calendar-user-border, var(--card-border));
+  border-radius: var(--calendar-user-radius, var(--card-radius));
+  box-shadow: var(--calendar-user-shadow, var(--card-shadow));
+  padding: var(--calendar-user-padding, var(--card-padding));
+  font-size: var(--calendar-user-font-size, inherit);
+  font-weight: var(--calendar-user-font-weight, inherit);
+  font-family: var(--calendar-user-font-family, inherit);
+  position: relative;
+  overflow: hidden;
+}
+
+/* Background image layer for user schedule card */
+.themed-calendar-user::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background-image: var(--calendar-user-bg-image);
+  background-size: cover;
+  background-position: center;
+  opacity: var(--calendar-user-bg-opacity, 1);
+  z-index: 0;
+  pointer-events: none;
+  border-radius: inherit;
+}
+
+/* Ensure content is above the background image */
+.themed-calendar-user > * {
+  position: relative;
+  z-index: 1;
+}
+
+/* ============================================
+   DASHBOARD PAGE ELEMENTS
+   ============================================ */
+
+/* Dashboard - Stats Widget */
+.themed-dashboard-stats {
+  background: var(--dashboard-stats-bg, var(--widget-bg));
+  color: var(--dashboard-stats-text, var(--widget-text));
+  border: var(--dashboard-stats-border-width, var(--widget-border-width)) solid var(--dashboard-stats-border, var(--widget-border));
+  border-radius: var(--dashboard-stats-radius, var(--widget-radius));
+  box-shadow: var(--dashboard-stats-shadow, var(--widget-shadow));
+  padding: var(--dashboard-stats-padding, var(--widget-padding));
+  position: relative;
+  overflow: hidden;
+}
+
+.themed-dashboard-stats::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background-image: var(--dashboard-stats-bg-image);
+  background-size: cover;
+  background-position: center;
+  opacity: var(--dashboard-stats-bg-opacity, 1);
+  z-index: 0;
+  pointer-events: none;
+  border-radius: inherit;
+}
+
+.themed-dashboard-stats > * {
+  position: relative;
+  z-index: 1;
+}
+
+/* Dashboard - Chores Card */
+.themed-dashboard-chores {
+  background: var(--dashboard-chores-bg, var(--card-bg));
+  color: var(--dashboard-chores-text, var(--card-text));
+  border: var(--dashboard-chores-border-width, var(--card-border-width)) solid var(--dashboard-chores-border, var(--card-border));
+  border-radius: var(--dashboard-chores-radius, var(--card-radius));
+  box-shadow: var(--dashboard-chores-shadow, var(--card-shadow));
+  padding: var(--dashboard-chores-padding, var(--card-padding));
+  position: relative;
+  overflow: hidden;
+}
+
+.themed-dashboard-chores::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background-image: var(--dashboard-chores-bg-image);
+  background-size: cover;
+  background-position: center;
+  opacity: var(--dashboard-chores-bg-opacity, 1);
+  z-index: 0;
+  pointer-events: none;
+  border-radius: inherit;
+}
+
+.themed-dashboard-chores > * {
+  position: relative;
+  z-index: 1;
+}
+
+/* Dashboard - Events Card */
+.themed-dashboard-events {
+  background: var(--dashboard-events-bg, var(--card-bg));
+  color: var(--dashboard-events-text, var(--card-text));
+  border: var(--dashboard-events-border-width, var(--card-border-width)) solid var(--dashboard-events-border, var(--card-border));
+  border-radius: var(--dashboard-events-radius, var(--card-radius));
+  box-shadow: var(--dashboard-events-shadow, var(--card-shadow));
+  padding: var(--dashboard-events-padding, var(--card-padding));
+  position: relative;
+  overflow: hidden;
+}
+
+.themed-dashboard-events::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background-image: var(--dashboard-events-bg-image);
+  background-size: cover;
+  background-position: center;
+  opacity: var(--dashboard-events-bg-opacity, 1);
+  z-index: 0;
+  pointer-events: none;
+  border-radius: inherit;
+}
+
+.themed-dashboard-events > * {
+  position: relative;
+  z-index: 1;
+}
+
+/* Dashboard - Weather Widget */
+.themed-dashboard-weather {
+  background: var(--dashboard-weather-bg, var(--widget-bg));
+  color: var(--dashboard-weather-text, var(--widget-text));
+  border: var(--dashboard-weather-border-width, var(--widget-border-width)) solid var(--dashboard-weather-border, var(--widget-border));
+  border-radius: var(--dashboard-weather-radius, var(--widget-radius));
+  box-shadow: var(--dashboard-weather-shadow, var(--widget-shadow));
+  padding: var(--dashboard-weather-padding, var(--widget-padding));
+  position: relative;
+  overflow: hidden;
+}
+
+.themed-dashboard-weather::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background-image: var(--dashboard-weather-bg-image);
+  background-size: cover;
+  background-position: center;
+  opacity: var(--dashboard-weather-bg-opacity, 1);
+  z-index: 0;
+  pointer-events: none;
+  border-radius: inherit;
+}
+
+.themed-dashboard-weather > * {
+  position: relative;
+  z-index: 1;
+}
+
+/* ============================================
+   CHORES PAGE ELEMENTS
+   ============================================ */
+
+/* Chores - Task Card */
+.themed-chores-task {
+  background: var(--chores-task-bg, var(--card-bg));
+  color: var(--chores-task-text, var(--card-text));
+  border: var(--chores-task-border-width, var(--card-border-width)) solid var(--chores-task-border, var(--card-border));
+  border-radius: var(--chores-task-radius, var(--card-radius));
+  box-shadow: var(--chores-task-shadow, var(--card-shadow));
+  padding: var(--chores-task-padding, var(--card-padding));
+  position: relative;
+  overflow: hidden;
+}
+
+.themed-chores-task::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background-image: var(--chores-task-bg-image);
+  background-size: cover;
+  background-position: center;
+  opacity: var(--chores-task-bg-opacity, 1);
+  z-index: 0;
+  pointer-events: none;
+  border-radius: inherit;
+}
+
+.themed-chores-task > * {
+  position: relative;
+  z-index: 1;
+}
+
+/* Chores - Paid Chores Card */
+.themed-chores-paid {
+  background: var(--chores-paid-bg, var(--card-bg));
+  color: var(--chores-paid-text, var(--card-text));
+  border: var(--chores-paid-border-width, var(--card-border-width)) solid var(--chores-paid-border, var(--card-border));
+  border-radius: var(--chores-paid-radius, var(--card-radius));
+  box-shadow: var(--chores-paid-shadow, var(--card-shadow));
+  padding: var(--chores-paid-padding, var(--card-padding));
+  position: relative;
+  overflow: hidden;
+}
+
+.themed-chores-paid::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background-image: var(--chores-paid-bg-image);
+  background-size: cover;
+  background-position: center;
+  opacity: var(--chores-paid-bg-opacity, 1);
+  z-index: 0;
+  pointer-events: none;
+  border-radius: inherit;
+}
+
+.themed-chores-paid > * {
+  position: relative;
+  z-index: 1;
+}
+
+/* ============================================
+   SHOPPING PAGE ELEMENTS
+   ============================================ */
+
+/* Shopping - Filter Widget */
+.themed-shopping-filter {
+  background: var(--shopping-filter-bg, var(--widget-bg));
+  color: var(--shopping-filter-text, var(--widget-text));
+  border: var(--shopping-filter-border-width, var(--widget-border-width)) solid var(--shopping-filter-border, var(--widget-border));
+  border-radius: var(--shopping-filter-radius, var(--widget-radius));
+  box-shadow: var(--shopping-filter-shadow, var(--widget-shadow));
+  padding: var(--shopping-filter-padding, var(--widget-padding));
+  position: relative;
+  overflow: hidden;
+}
+
+.themed-shopping-filter::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background-image: var(--shopping-filter-bg-image);
+  background-size: cover;
+  background-position: center;
+  opacity: var(--shopping-filter-bg-opacity, 1);
+  z-index: 0;
+  pointer-events: none;
+  border-radius: inherit;
+}
+
+.themed-shopping-filter > * {
+  position: relative;
+  z-index: 1;
+}
+
+/* Shopping - List Card */
+.themed-shopping-list {
+  background: var(--shopping-list-bg, var(--card-bg));
+  color: var(--shopping-list-text, var(--card-text));
+  border: var(--shopping-list-border-width, var(--card-border-width)) solid var(--shopping-list-border, var(--card-border));
+  border-radius: var(--shopping-list-radius, var(--card-radius));
+  box-shadow: var(--shopping-list-shadow, var(--card-shadow));
+  padding: var(--shopping-list-padding, var(--card-padding));
+  position: relative;
+  overflow: hidden;
+}
+
+.themed-shopping-list::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background-image: var(--shopping-list-bg-image);
+  background-size: cover;
+  background-position: center;
+  opacity: var(--shopping-list-bg-opacity, 1);
+  z-index: 0;
+  pointer-events: none;
+  border-radius: inherit;
+}
+
+.themed-shopping-list > * {
+  position: relative;
+  z-index: 1;
+}
+
+/* ============================================
+   MESSAGES PAGE ELEMENTS
+   ============================================ */
+
+/* Messages - Announcements Card */
+.themed-messages-announcements {
+  background: var(--messages-announcements-bg, var(--card-bg));
+  color: var(--messages-announcements-text, var(--card-text));
+  border: var(--messages-announcements-border-width, var(--card-border-width)) solid var(--messages-announcements-border, var(--card-border));
+  border-radius: var(--messages-announcements-radius, var(--card-radius));
+  box-shadow: var(--messages-announcements-shadow, var(--card-shadow));
+  padding: var(--messages-announcements-padding, var(--card-padding));
+  position: relative;
+  overflow: hidden;
+}
+
+.themed-messages-announcements::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background-image: var(--messages-announcements-bg-image);
+  background-size: cover;
+  background-position: center;
+  opacity: var(--messages-announcements-bg-opacity, 1);
+  z-index: 0;
+  pointer-events: none;
+  border-radius: inherit;
+}
+
+.themed-messages-announcements > * {
+  position: relative;
+  z-index: 1;
+}
+
+/* Messages - Chat Card */
+.themed-messages-chat {
+  background: var(--messages-chat-bg, var(--card-bg));
+  color: var(--messages-chat-text, var(--card-text));
+  border: var(--messages-chat-border-width, var(--card-border-width)) solid var(--messages-chat-border, var(--card-border));
+  border-radius: var(--messages-chat-radius, var(--card-radius));
+  box-shadow: var(--messages-chat-shadow, var(--card-shadow));
+  padding: var(--messages-chat-padding, var(--card-padding));
+  position: relative;
+  overflow: hidden;
+}
+
+.themed-messages-chat::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background-image: var(--messages-chat-bg-image);
+  background-size: cover;
+  background-position: center;
+  opacity: var(--messages-chat-bg-opacity, 1);
+  z-index: 0;
+  pointer-events: none;
+  border-radius: inherit;
+}
+
+.themed-messages-chat > * {
+  position: relative;
+  z-index: 1;
+}
+
+/* ============================================
+   SETTINGS PAGE ELEMENTS
+   ============================================ */
+
+/* Settings - Navigation Card */
+.themed-settings-nav {
+  background: var(--settings-nav-bg, var(--card-bg));
+  color: var(--settings-nav-text, var(--card-text));
+  border: var(--settings-nav-border-width, var(--card-border-width)) solid var(--settings-nav-border, var(--card-border));
+  border-radius: var(--settings-nav-radius, var(--card-radius));
+  box-shadow: var(--settings-nav-shadow, var(--card-shadow));
+  padding: var(--settings-nav-padding, var(--card-padding));
+  position: relative;
+  overflow: hidden;
+}
+
+.themed-settings-nav::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background-image: var(--settings-nav-bg-image);
+  background-size: cover;
+  background-position: center;
+  opacity: var(--settings-nav-bg-opacity, 1);
+  z-index: 0;
+  pointer-events: none;
+  border-radius: inherit;
+}
+
+.themed-settings-nav > * {
+  position: relative;
+  z-index: 1;
+}
+
+/* Settings - Content Card */
+.themed-settings-content {
+  background: var(--settings-content-bg, var(--card-bg));
+  color: var(--settings-content-text, var(--card-text));
+  border: var(--settings-content-border-width, var(--card-border-width)) solid var(--settings-content-border, var(--card-border));
+  border-radius: var(--settings-content-radius, var(--card-radius));
+  box-shadow: var(--settings-content-shadow, var(--card-shadow));
+  padding: var(--settings-content-padding, var(--card-padding));
+  position: relative;
+  overflow: hidden;
+}
+
+.themed-settings-content::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background-image: var(--settings-content-bg-image);
+  background-size: cover;
+  background-position: center;
+  opacity: var(--settings-content-bg-opacity, 1);
+  z-index: 0;
+  pointer-events: none;
+  border-radius: inherit;
+}
+
+.themed-settings-content > * {
+  position: relative;
+  z-index: 1;
+}
+
+/* ============================================
+   LCARS MODE STYLES
+   Star Trek-inspired radical customization
+   ============================================ */
+
+/* LCARS mode active indicator */
+.lcars-mode {
+  --lcars-enabled: 1;
+}
+
+/* LCARS corner styles */
+.lcars-corner-rounded {
+  --lcars-corner-radius: 24px;
+}
+
+.lcars-corner-sharp {
+  --lcars-corner-radius: 0px;
+}
+
+.lcars-corner-curve {
+  --lcars-corner-radius: 40px;
+}
+
+/* LCARS sidebar elbow effect */
+.lcars-sidebar {
+  background-color: var(--lcars-background);
+  border-top-right-radius: var(--lcars-corner-radius, 40px);
+  border-bottom-right-radius: var(--lcars-corner-radius, 40px);
+}
+
+/* LCARS card style */
+.lcars-card {
+  background-color: rgba(204, 153, 0, 0.15);
+  border: 2px solid var(--lcars-primary);
+  border-radius: 0;
+}
+
+/* LCARS button with clip-path */
+.lcars-button {
+  background-color: var(--lcars-primary);
+  border-radius: 15px;
+  clip-path: polygon(10% 0, 100% 0, 100% 100%, 0 100%, 0 25%);
+  padding: 10px 20px 10px 30px;
+}
+
+/* LCARS header bar */
+.lcars-header {
+  background: linear-gradient(90deg,
+    var(--lcars-primary) 0%,
+    var(--lcars-primary) 30%,
+    transparent 30%,
+    transparent 32%,
+    var(--lcars-secondary) 32%,
+    var(--lcars-secondary) 60%,
+    transparent 60%,
+    transparent 62%,
+    var(--lcars-tertiary) 62%
+  );
+  height: 12px;
+  border-radius: 6px;
+}
+
+/* LCARS panel border */
+.lcars-panel {
+  border-left: 4px solid var(--lcars-primary);
+  padding-left: 16px;
+}
+
+/* LCARS text styling */
+.lcars-text {
+  font-family: 'Antonio', 'Orbitron', 'Helvetica Neue', sans-serif;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
 }

@@ -53,7 +53,7 @@ export function SecurityTab({ saving, onChangePassword }: SecurityTabProps) {
             type={showPasswords.current ? 'text' : 'password'}
             value={form.currentPassword}
             onChange={(e) => setForm({ ...form, currentPassword: e.target.value })}
-            className="w-full px-3 py-2 pr-10 border border-gray-300 dark:border-gray-600 rounded-xl bg-white dark:bg-gray-800 focus:ring-2 focus:ring-purple-500"
+            className="w-full px-3 py-2 pr-10 border border-gray-300 dark:border-gray-600 rounded-xl bg-white dark:bg-gray-800 focus:ring-2 focus:ring-emerald-500"
             required
           />
           <button
@@ -76,7 +76,7 @@ export function SecurityTab({ saving, onChangePassword }: SecurityTabProps) {
             type={showPasswords.new ? 'text' : 'password'}
             value={form.newPassword}
             onChange={(e) => setForm({ ...form, newPassword: e.target.value })}
-            className="w-full px-3 py-2 pr-10 border border-gray-300 dark:border-gray-600 rounded-xl bg-white dark:bg-gray-800 focus:ring-2 focus:ring-purple-500"
+            className="w-full px-3 py-2 pr-10 border border-gray-300 dark:border-gray-600 rounded-xl bg-white dark:bg-gray-800 focus:ring-2 focus:ring-emerald-500"
             required
             minLength={8}
           />
@@ -101,7 +101,7 @@ export function SecurityTab({ saving, onChangePassword }: SecurityTabProps) {
             type={showPasswords.confirm ? 'text' : 'password'}
             value={form.confirmPassword}
             onChange={(e) => setForm({ ...form, confirmPassword: e.target.value })}
-            className="w-full px-3 py-2 pr-10 border border-gray-300 dark:border-gray-600 rounded-xl bg-white dark:bg-gray-800 focus:ring-2 focus:ring-purple-500"
+            className="w-full px-3 py-2 pr-10 border border-gray-300 dark:border-gray-600 rounded-xl bg-white dark:bg-gray-800 focus:ring-2 focus:ring-emerald-500"
             required
           />
           <button
@@ -121,7 +121,7 @@ export function SecurityTab({ saving, onChangePassword }: SecurityTabProps) {
       <button
         type="submit"
         disabled={saving || !form.currentPassword || !form.newPassword || form.newPassword !== form.confirmPassword}
-        className="w-full py-2 bg-purple-600 text-white rounded-xl font-medium hover:bg-purple-700 disabled:opacity-50"
+        className="w-full py-2 bg-emerald-600 text-white rounded-xl font-medium hover:bg-emerald-700 disabled:opacity-50"
       >
         {saving ? 'Changing...' : 'Change Password'}
       </button>

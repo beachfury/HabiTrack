@@ -20,7 +20,7 @@ export function ThemeCard({ theme, isActive, onClick, disabled }: ThemeCardProps
       className={`
         relative w-full text-left rounded-xl overflow-hidden transition-all
         ${isActive
-          ? 'ring-2 ring-purple-500 ring-offset-2 dark:ring-offset-gray-800'
+          ? 'ring-2 ring-emerald-500 ring-offset-2 dark:ring-offset-gray-800'
           : 'hover:ring-2 hover:ring-gray-300 dark:hover:ring-gray-600'
         }
         ${disabled ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'}
@@ -47,7 +47,7 @@ export function ThemeCard({ theme, isActive, onClick, disabled }: ThemeCardProps
 
         {/* Active indicator */}
         {isActive && (
-          <div className="absolute top-2 right-2 w-6 h-6 bg-purple-500 rounded-full flex items-center justify-center">
+          <div className="absolute top-2 right-2 w-6 h-6 bg-emerald-500 rounded-full flex items-center justify-center">
             <Check size={14} className="text-white" />
           </div>
         )}
@@ -82,7 +82,7 @@ export function ThemeCard({ theme, isActive, onClick, disabled }: ThemeCardProps
             {theme.layoutType.replace('-', ' ')}
           </span>
           {theme.isDefault && (
-            <span className="text-xs text-purple-500 dark:text-purple-400">
+            <span className="text-xs text-emerald-500 dark:text-emerald-400">
               Default
             </span>
           )}

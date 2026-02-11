@@ -30,7 +30,7 @@ export async function getBranding(req: Request, res: Response) {
     if (!row) {
       return success(res, {
         name: 'Our Family',
-        brandColor: '#8b5cf6',
+        brandColor: '#3cb371',
         logoUrl: null,
         loginBackground: 'gradient',
         loginBackgroundValue: null,

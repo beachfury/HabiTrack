@@ -37,17 +37,17 @@ export function AppearanceTab({
               onClick={() => onThemeChange(t.id)}
               className={`p-4 rounded-xl border-2 transition-colors flex flex-col items-center gap-2 ${
                 theme === t.id
-                  ? 'border-purple-500 bg-purple-50 dark:bg-purple-900/20'
+                  ? 'border-emerald-500 bg-emerald-50 dark:bg-emerald-900/20'
                   : 'border-gray-200 dark:border-gray-700 hover:border-gray-300'
               }`}
             >
               <t.icon
                 size={24}
-                className={theme === t.id ? 'text-purple-600' : 'text-gray-500'}
+                className={theme === t.id ? 'text-emerald-600' : 'text-gray-500'}
               />
               <span
                 className={`text-sm font-medium ${
-                  theme === t.id ? 'text-purple-600' : 'text-gray-700 dark:text-gray-300'
+                  theme === t.id ? 'text-emerald-600' : 'text-gray-700 dark:text-gray-300'
                 }`}
               >
                 {t.label}

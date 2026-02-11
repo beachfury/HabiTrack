@@ -90,9 +90,9 @@ function getPriorityIcon(priority: string) {
 function getPriorityClass(priority: string) {
   switch (priority) {
     case 'urgent':
-      return 'border-l-4 border-red-500 bg-red-50 dark:bg-red-900/20';
+      return 'border-l-4 border-[var(--color-destructive)] bg-[var(--color-destructive)]/10';
     case 'high':
-      return 'border-l-4 border-orange-500 bg-orange-50 dark:bg-orange-900/20';
+      return 'border-l-4 border-[var(--color-warning)] bg-[var(--color-warning)]/10';
     default:
       return '';
   }
@@ -361,14 +361,14 @@ export function MessagesPage() {
   const totalUnread = unreadNotifications + unreadAnnouncements + unreadMessages;
 
   return (
-    <div className="max-w-4xl mx-auto">
+    <div className="max-w-4xl mx-auto h-full themed-messages-bg p-6">
       {/* Header */}
       <div className="flex items-center justify-between mb-6">
         <div className="flex items-center gap-3">
-          <Bell className="text-purple-500" size={28} />
+          <Bell className="text-[var(--color-primary)]" size={28} />
           <div>
-            <h1 className="text-2xl font-bold text-gray-800 dark:text-gray-100">Messages</h1>
-            <p className="text-gray-500 dark:text-gray-400 text-sm">
+            <h1 className="text-2xl font-bold text-[var(--color-foreground)]">Messages</h1>
+            <p className="text-[var(--color-muted-foreground)] text-sm">
               {totalUnread > 0 ? `${totalUnread} unread` : 'All caught up!'}
             </p>
           </div>
@@ -379,7 +379,7 @@ export function MessagesPage() {
             else if (activeTab === 'announcements') fetchAnnouncements();
             else fetchConversations();
           }}
-          className="p-2 text-gray-500 hover:text-gray-700 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition-colors"
+          className="p-2 text-[var(--color-muted-foreground)] hover:text-[var(--color-foreground)] hover:bg-[var(--color-muted)] rounded-lg transition-colors"
           title="Refresh"
         >
           <RefreshCw size={20} className={loading ? 'animate-spin' : ''} />
@@ -387,19 +387,19 @@ export function MessagesPage() {
       </div>
 
       {/* Tabs */}
-      <div className="flex gap-1 mb-6 bg-gray-100 dark:bg-gray-800 p-1 rounded-lg">
+      <div className="flex gap-1 mb-6 bg-[var(--color-muted)] p-1 rounded-lg">
         <button
           onClick={() => setActiveTab('notifications')}
           className={`flex-1 flex items-center justify-center gap-2 px-4 py-2 rounded-md text-sm font-medium transition-colors ${
             activeTab === 'notifications'
-              ? 'bg-white dark:bg-gray-700 text-purple-600 dark:text-purple-400 shadow-sm'
-              : 'text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-200'
+              ? 'bg-[var(--color-card)] text-[var(--color-primary)] shadow-sm'
+              : 'text-[var(--color-muted-foreground)] hover:text-[var(--color-foreground)]'
           }`}
         >
           <Bell size={18} />
           Notifications
           {unreadNotifications > 0 && (
-            <span className="px-1.5 py-0.5 text-xs bg-purple-500 text-white rounded-full">
+            <span className="px-1.5 py-0.5 text-xs bg-[var(--color-primary)] text-[var(--color-primary-foreground)] rounded-full">
               {unreadNotifications}
             </span>
           )}
@@ -408,14 +408,14 @@ export function MessagesPage() {
           onClick={() => setActiveTab('announcements')}
           className={`flex-1 flex items-center justify-center gap-2 px-4 py-2 rounded-md text-sm font-medium transition-colors ${
             activeTab === 'announcements'
-              ? 'bg-white dark:bg-gray-700 text-purple-600 dark:text-purple-400 shadow-sm'
-              : 'text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-200'
+              ? 'bg-[var(--color-card)] text-[var(--color-primary)] shadow-sm'
+              : 'text-[var(--color-muted-foreground)] hover:text-[var(--color-foreground)]'
           }`}
         >
           <Megaphone size={18} />
           Announcements
           {unreadAnnouncements > 0 && (
-            <span className="px-1.5 py-0.5 text-xs bg-orange-500 text-white rounded-full">
+            <span className="px-1.5 py-0.5 text-xs bg-[var(--color-warning)] text-white rounded-full">
               {unreadAnnouncements}
             </span>
           )}
@@ -424,14 +424,14 @@ export function MessagesPage() {
           onClick={() => setActiveTab('messages')}
           className={`flex-1 flex items-center justify-center gap-2 px-4 py-2 rounded-md text-sm font-medium transition-colors ${
             activeTab === 'messages'
-              ? 'bg-white dark:bg-gray-700 text-purple-600 dark:text-purple-400 shadow-sm'
-              : 'text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-200'
+              ? 'bg-[var(--color-card)] text-[var(--color-primary)] shadow-sm'
+              : 'text-[var(--color-muted-foreground)] hover:text-[var(--color-foreground)]'
           }`}
         >
           <MessageCircle size={18} />
           Direct Messages
           {unreadMessages > 0 && (
-            <span className="px-1.5 py-0.5 text-xs bg-blue-500 text-white rounded-full">
+            <span className="px-1.5 py-0.5 text-xs bg-[var(--color-accent)] text-[var(--color-accent-foreground)] rounded-full">
               {unreadMessages}
             </span>
           )}
@@ -439,7 +439,7 @@ export function MessagesPage() {
       </div>
 
       {error && (
-        <div className="mb-4 p-3 bg-red-50 dark:bg-red-900/20 text-red-600 dark:text-red-400 rounded-lg">
+        <div className="mb-4 p-3 bg-[var(--color-destructive)]/10 text-[var(--color-destructive)] rounded-lg">
           {error}
         </div>
       )}
@@ -456,8 +456,8 @@ export function MessagesPage() {
                   onClick={() => setNotificationFilter(opt.value)}
                   className={`flex items-center gap-1.5 px-3 py-1.5 text-sm rounded-full whitespace-nowrap transition-colors ${
                     notificationFilter === opt.value
-                      ? 'bg-purple-100 dark:bg-purple-900/50 text-purple-700 dark:text-purple-300'
-                      : 'bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-400 hover:bg-gray-200 dark:hover:bg-gray-600'
+                      ? 'bg-[var(--color-primary)]/10 text-[var(--color-primary)]'
+                      : 'bg-[var(--color-muted)] text-[var(--color-muted-foreground)] hover:bg-[var(--color-muted)]/80'
                   }`}
                 >
                   {opt.icon && <opt.icon size={14} />}
@@ -468,7 +468,7 @@ export function MessagesPage() {
             {unreadNotifications > 0 && (
               <button
                 onClick={handleMarkAllNotificationsRead}
-                className="flex items-center gap-2 px-3 py-1.5 text-sm bg-purple-100 dark:bg-purple-900/50 text-purple-700 dark:text-purple-300 rounded-lg hover:bg-purple-200 dark:hover:bg-purple-900 transition-colors"
+                className="flex items-center gap-2 px-3 py-1.5 text-sm bg-[var(--color-primary)]/10 text-[var(--color-primary)] rounded-lg hover:bg-[var(--color-primary)]/20 transition-colors"
               >
                 <CheckCheck size={16} />
                 Mark all read
@@ -478,19 +478,19 @@ export function MessagesPage() {
 
           {/* Notification List */}
           {loading ? (
-            <div className="text-center py-12 text-gray-500">Loading...</div>
+            <div className="text-center py-12 text-[var(--color-muted-foreground)]">Loading...</div>
           ) : notifications.length === 0 ? (
             <div className="text-center py-12">
-              <Bell size={48} className="mx-auto text-gray-300 dark:text-gray-600 mb-3" />
-              <p className="text-gray-500 dark:text-gray-400">No notifications</p>
+              <Bell size={48} className="mx-auto text-[var(--color-muted-foreground)]/50 mb-3" />
+              <p className="text-[var(--color-muted-foreground)]">No notifications</p>
             </div>
           ) : (
             <div className="space-y-2">
               {notifications.map((notif) => (
                 <div
                   key={notif.id}
-                  className={`p-4 bg-white dark:bg-gray-800 rounded-lg border dark:border-gray-700 ${
-                    !notif.isRead ? 'border-l-4 border-l-purple-500' : ''
+                  className={`p-4 themed-card ${
+                    !notif.isRead ? 'border-l-4 border-l-[var(--color-primary)]' : ''
                   }`}
                 >
                   <div className="flex items-start gap-3">
@@ -498,18 +498,18 @@ export function MessagesPage() {
                     <div className="flex-1 min-w-0">
                       <div className="flex items-center gap-2">
                         <h3
-                          className={`font-medium ${!notif.isRead ? 'text-gray-900 dark:text-gray-100' : 'text-gray-600 dark:text-gray-400'}`}
+                          className={`font-medium ${!notif.isRead ? 'text-[var(--color-foreground)]' : 'text-[var(--color-muted-foreground)]'}`}
                         >
                           {notif.title}
                         </h3>
-                        {!notif.isRead && <span className="w-2 h-2 bg-purple-500 rounded-full" />}
+                        {!notif.isRead && <span className="w-2 h-2 bg-[var(--color-primary)] rounded-full" />}
                       </div>
                       {notif.body && (
-                        <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">
+                        <p className="text-sm text-[var(--color-muted-foreground)] mt-1">
                           {notif.body}
                         </p>
                       )}
-                      <p className="text-xs text-gray-400 dark:text-gray-500 mt-2">
+                      <p className="text-xs text-[var(--color-muted-foreground)]/70 mt-2">
                         {formatDate(notif.createdAt)}
                       </p>
                     </div>
@@ -517,7 +517,7 @@ export function MessagesPage() {
                       {!notif.isRead && (
                         <button
                           onClick={() => handleMarkNotificationRead(notif.id)}
-                          className="p-1.5 text-gray-400 hover:text-green-500 hover:bg-green-50 dark:hover:bg-green-900/20 rounded"
+                          className="p-1.5 text-[var(--color-muted-foreground)] hover:text-[var(--color-success)] hover:bg-[var(--color-success)]/10 rounded"
                           title="Mark as read"
                         >
                           <Check size={16} />
@@ -525,7 +525,7 @@ export function MessagesPage() {
                       )}
                       <button
                         onClick={() => handleDeleteNotification(notif.id)}
-                        className="p-1.5 text-gray-400 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 rounded"
+                        className="p-1.5 text-[var(--color-muted-foreground)] hover:text-[var(--color-destructive)] hover:bg-[var(--color-destructive)]/10 rounded"
                         title="Delete"
                       >
                         <Trash2 size={16} />
@@ -546,7 +546,7 @@ export function MessagesPage() {
             <div className="mb-4">
               <button
                 onClick={() => setShowCreateAnnouncement(true)}
-                className="flex items-center gap-2 px-4 py-2 bg-orange-500 text-white rounded-lg hover:bg-orange-600 transition-colors"
+                className="themed-btn-primary flex items-center gap-2"
               >
                 <Plus size={18} />
                 New Announcement
@@ -555,11 +555,11 @@ export function MessagesPage() {
           )}
 
           {loading ? (
-            <div className="text-center py-12 text-gray-500">Loading...</div>
+            <div className="text-center py-12 text-[var(--color-muted-foreground)]">Loading...</div>
           ) : announcements.length === 0 ? (
             <div className="text-center py-12">
-              <Megaphone size={48} className="mx-auto text-gray-300 dark:text-gray-600 mb-3" />
-              <p className="text-gray-500 dark:text-gray-400">No announcements</p>
+              <Megaphone size={48} className="mx-auto text-[var(--color-muted-foreground)]/50 mb-3" />
+              <p className="text-[var(--color-muted-foreground)]">No announcements</p>
             </div>
           ) : (
             <div className="space-y-3">
@@ -567,23 +567,23 @@ export function MessagesPage() {
                 <div
                   key={ann.id}
                   onClick={() => !ann.isRead && handleMarkAnnouncementRead(ann.id)}
-                  className={`p-4 bg-white dark:bg-gray-800 rounded-lg border dark:border-gray-700 cursor-pointer ${getPriorityClass(ann.priority)} ${
-                    !ann.isRead ? 'ring-2 ring-orange-200 dark:ring-orange-800' : ''
+                  className={`p-4 themed-card cursor-pointer ${getPriorityClass(ann.priority)} ${
+                    !ann.isRead ? 'ring-2 ring-[var(--color-warning)]/30' : ''
                   }`}
                 >
                   <div className="flex items-start gap-3">
                     <div className="mt-1">
                       {getPriorityIcon(ann.priority) || (
-                        <Megaphone size={18} className="text-orange-500" />
+                        <Megaphone size={18} className="text-[var(--color-warning)]" />
                       )}
                     </div>
                     <div className="flex-1">
                       <div className="flex items-center gap-2">
-                        <h3 className="font-semibold text-gray-900 dark:text-gray-100">
+                        <h3 className="font-semibold text-[var(--color-foreground)]">
                           {ann.title}
                         </h3>
                         {!ann.isRead && (
-                          <span className="px-2 py-0.5 text-xs bg-orange-100 dark:bg-orange-900/50 text-orange-600 dark:text-orange-400 rounded">
+                          <span className="px-2 py-0.5 text-xs bg-[var(--color-warning)]/10 text-[var(--color-warning)] rounded">
                             New
                           </span>
                         )}
@@ -593,17 +593,17 @@ export function MessagesPage() {
                               e.stopPropagation();
                               handleDeleteAnnouncement(ann.id);
                             }}
-                            className="ml-auto p-1.5 text-gray-400 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 rounded"
+                            className="ml-auto p-1.5 text-[var(--color-muted-foreground)] hover:text-[var(--color-destructive)] hover:bg-[var(--color-destructive)]/10 rounded"
                             title="Delete announcement"
                           >
                             <Trash2 size={16} />
                           </button>
                         )}
                       </div>
-                      <p className="text-gray-600 dark:text-gray-300 mt-2 whitespace-pre-wrap">
+                      <p className="text-[var(--color-foreground)]/80 mt-2 whitespace-pre-wrap">
                         {ann.body}
                       </p>
-                      <div className="flex items-center gap-4 mt-3 text-xs text-gray-400 dark:text-gray-500">
+                      <div className="flex items-center gap-4 mt-3 text-xs text-[var(--color-muted-foreground)]">
                         <span>From {ann.fromUserName}</span>
                         <span>{formatDate(ann.createdAt)}</span>
                         <span>
@@ -617,7 +617,7 @@ export function MessagesPage() {
                               e.stopPropagation();
                               handleDeleteAnnouncement(ann.id);
                             }}
-                            className="p-1.5 text-gray-400 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 rounded"
+                            className="p-1.5 text-[var(--color-muted-foreground)] hover:text-[var(--color-destructive)] hover:bg-[var(--color-destructive)]/10 rounded"
                             title="Delete announcement"
                           >
                             <Trash2 size={16} />
@@ -638,13 +638,13 @@ export function MessagesPage() {
         <div className="flex gap-4 h-[500px]">
           {/* Conversations List */}
           <div
-            className={`${selectedConversation ? 'hidden md:block' : ''} w-full md:w-1/3 bg-white dark:bg-gray-800 rounded-lg border dark:border-gray-700 overflow-hidden`}
+            className={`${selectedConversation ? 'hidden md:block' : ''} w-full md:w-1/3 themed-card overflow-hidden`}
           >
-            <div className="p-3 border-b dark:border-gray-700 flex items-center justify-between">
-              <h3 className="font-medium text-gray-900 dark:text-gray-100">Conversations</h3>
+            <div className="p-3 border-b border-[var(--color-border)] flex items-center justify-between">
+              <h3 className="font-medium text-[var(--color-foreground)]">Conversations</h3>
               <button
                 onClick={() => setShowNewConversation(true)}
-                className="p-1.5 text-purple-500 hover:bg-purple-50 dark:hover:bg-purple-900/20 rounded"
+                className="p-1.5 text-[var(--color-primary)] hover:bg-[var(--color-primary)]/10 rounded"
                 title="New conversation"
               >
                 <Plus size={18} />
@@ -652,7 +652,7 @@ export function MessagesPage() {
             </div>
             <div className="overflow-y-auto h-[calc(100%-52px)]">
               {conversations.length === 0 ? (
-                <div className="text-center py-8 text-gray-500 dark:text-gray-400 text-sm">
+                <div className="text-center py-8 text-[var(--color-muted-foreground)] text-sm">
                   No conversations yet
                 </div>
               ) : (
@@ -665,9 +665,9 @@ export function MessagesPage() {
                     onKeyDown={(e) =>
                       e.key === 'Enter' && setSelectedConversation(conv.otherUserId)
                     }
-                    className={`w-full p-3 text-left hover:bg-gray-50 dark:hover:bg-gray-700 border-b dark:border-gray-700 cursor-pointer ${
+                    className={`w-full p-3 text-left hover:bg-[var(--color-muted)]/50 border-b border-[var(--color-border)] cursor-pointer ${
                       selectedConversation === conv.otherUserId
-                        ? 'bg-purple-50 dark:bg-purple-900/20'
+                        ? 'bg-[var(--color-primary)]/10'
                         : ''
                     }`}
                   >
@@ -680,16 +680,16 @@ export function MessagesPage() {
                       </div>
                       <div className="flex-1 min-w-0">
                         <div className="flex items-center justify-between gap-2">
-                          <span className="font-medium text-gray-900 dark:text-gray-100 truncate">
+                          <span className="font-medium text-[var(--color-foreground)] truncate">
                             {conv.otherUserName}
                           </span>
                           {conv.unreadCount > 0 && (
-                            <span className="px-1.5 py-0.5 text-xs bg-blue-500 text-white rounded-full">
+                            <span className="px-1.5 py-0.5 text-xs bg-[var(--color-accent)] text-[var(--color-accent-foreground)] rounded-full">
                               {conv.unreadCount}
                             </span>
                           )}
                         </div>
-                        <p className="text-sm text-gray-500 dark:text-gray-400 truncate">
+                        <p className="text-sm text-[var(--color-muted-foreground)] truncate">
                           {conv.lastMessagePreview}
                         </p>
                       </div>
@@ -698,7 +698,7 @@ export function MessagesPage() {
                           e.stopPropagation();
                           handleDeleteConversation(conv.otherUserId);
                         }}
-                        className="p-1.5 text-gray-400 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 rounded"
+                        className="p-1.5 text-[var(--color-muted-foreground)] hover:text-[var(--color-destructive)] hover:bg-[var(--color-destructive)]/10 rounded"
                         title="Delete conversation"
                       >
                         <Trash2 size={16} />
@@ -712,15 +712,15 @@ export function MessagesPage() {
 
           {/* Conversation View */}
           <div
-            className={`${selectedConversation ? '' : 'hidden md:flex'} flex-1 bg-white dark:bg-gray-800 rounded-lg border dark:border-gray-700 flex flex-col`}
+            className={`${selectedConversation ? '' : 'hidden md:flex'} flex-1 themed-card flex flex-col`}
           >
             {selectedConversation && otherUser ? (
               <>
                 {/* Header */}
-                <div className="p-3 border-b dark:border-gray-700 flex items-center gap-3">
+                <div className="p-3 border-b border-[var(--color-border)] flex items-center gap-3">
                   <button
                     onClick={() => setSelectedConversation(null)}
-                    className="md:hidden p-1 text-gray-500 hover:text-gray-700"
+                    className="md:hidden p-1 text-[var(--color-muted-foreground)] hover:text-[var(--color-foreground)]"
                   >
                     <ChevronLeft size={20} />
                   </button>
@@ -730,12 +730,12 @@ export function MessagesPage() {
                   >
                     {otherUser.displayName.charAt(0).toUpperCase()}
                   </div>
-                  <span className="font-medium text-gray-900 dark:text-gray-100">
+                  <span className="font-medium text-[var(--color-foreground)]">
                     {otherUser.displayName}
                   </span>
                   <button
                     onClick={() => handleDeleteConversation(selectedConversation)}
-                    className="ml-auto p-1.5 text-gray-400 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 rounded"
+                    className="ml-auto p-1.5 text-[var(--color-muted-foreground)] hover:text-[var(--color-destructive)] hover:bg-[var(--color-destructive)]/10 rounded"
                     title="Delete conversation"
                   >
                     <Trash2 size={18} />
@@ -753,8 +753,8 @@ export function MessagesPage() {
                         <div
                           className={`px-4 py-2 rounded-2xl ${
                             msg.fromUserId === user?.id
-                              ? 'bg-purple-500 text-white rounded-br-md'
-                              : 'bg-gray-100 dark:bg-gray-700 text-gray-900 dark:text-gray-100 rounded-bl-md'
+                              ? 'bg-[var(--color-primary)] text-[var(--color-primary-foreground)] rounded-br-md'
+                              : 'bg-[var(--color-muted)] text-[var(--color-foreground)] rounded-bl-md'
                           }`}
                         >
                           <div className="flex items-start gap-2">
@@ -771,7 +771,7 @@ export function MessagesPage() {
                           </div>
                           <p
                             className={`text-xs mt-1 ${
-                              msg.fromUserId === user?.id ? 'text-purple-200' : 'text-gray-400'
+                              msg.fromUserId === user?.id ? 'opacity-70' : 'text-[var(--color-muted-foreground)]'
                             }`}
                           >
                             {formatDate(msg.createdAt)}
@@ -782,7 +782,7 @@ export function MessagesPage() {
                             onClick={() => handleDeleteDirectMessage(msg.id)}
                             className={`absolute -top-2 ${
                               msg.fromUserId === user?.id ? '-left-2' : '-right-2'
-                            } p-1 bg-white/90 dark:bg-gray-800/90 border border-gray-200 dark:border-gray-700 rounded-full text-gray-400 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20`}
+                            } p-1 bg-[var(--color-card)] border border-[var(--color-border)] rounded-full text-[var(--color-muted-foreground)] hover:text-[var(--color-destructive)] hover:bg-[var(--color-destructive)]/10`}
                             title="Delete message"
                           >
                             <Trash2 size={14} />
@@ -795,7 +795,7 @@ export function MessagesPage() {
                 </div>
 
                 {/* Input */}
-                <div className="p-3 border-t dark:border-gray-700">
+                <div className="p-3 border-t border-[var(--color-border)]">
                   <div className="flex items-center gap-2">
                     <input
                       type="text"
@@ -803,12 +803,12 @@ export function MessagesPage() {
                       onChange={(e) => setNewMessage(e.target.value)}
                       onKeyDown={(e) => e.key === 'Enter' && !e.shiftKey && handleSendMessage()}
                       placeholder="Type a message..."
-                      className="flex-1 px-4 py-2 bg-gray-100 dark:bg-gray-700 rounded-full text-gray-900 dark:text-gray-100 placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-purple-500"
+                      className="flex-1 px-4 py-2 bg-[var(--color-muted)] rounded-full text-[var(--color-foreground)] placeholder-[var(--color-muted-foreground)] focus:outline-none focus:ring-2 focus:ring-[var(--color-primary)]"
                     />
                     <button
                       onClick={handleSendMessage}
                       disabled={!newMessage.trim()}
-                      className="p-2 bg-purple-500 text-white rounded-full hover:bg-purple-600 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                      className="p-2 bg-[var(--color-primary)] text-[var(--color-primary-foreground)] rounded-full hover:opacity-90 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
                     >
                       <Send size={18} />
                     </button>
@@ -816,11 +816,11 @@ export function MessagesPage() {
                 </div>
               </>
             ) : (
-              <div className="flex-1 flex items-center justify-center text-gray-500 dark:text-gray-400">
+              <div className="flex-1 flex items-center justify-center text-[var(--color-muted-foreground)]">
                 <div className="text-center">
                   <MessageCircle
                     size={48}
-                    className="mx-auto text-gray-300 dark:text-gray-600 mb-3"
+                    className="mx-auto text-[var(--color-muted-foreground)]/50 mb-3"
                   />
                   <p>Select a conversation or start a new one</p>
                 </div>
@@ -886,47 +886,47 @@ function CreateAnnouncementModal({
 
   return (
     <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
-      <div className="bg-white dark:bg-gray-800 rounded-lg w-full max-w-lg">
-        <div className="p-4 border-b dark:border-gray-700">
-          <h2 className="text-lg font-semibold text-gray-900 dark:text-gray-100">
+      <div className="themed-card w-full max-w-lg">
+        <div className="p-4 border-b border-[var(--color-border)]">
+          <h2 className="text-lg font-semibold text-[var(--color-foreground)]">
             New Announcement
           </h2>
         </div>
         <form onSubmit={handleSubmit} className="p-4 space-y-4">
           <div>
-            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+            <label className="block text-sm font-medium text-[var(--color-foreground)] mb-1">
               Title
             </label>
             <input
               type="text"
               value={title}
               onChange={(e) => setTitle(e.target.value)}
-              className="w-full px-3 py-2 border dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100"
+              className="themed-input w-full"
               placeholder="Announcement title"
               required
             />
           </div>
           <div>
-            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+            <label className="block text-sm font-medium text-[var(--color-foreground)] mb-1">
               Message
             </label>
             <textarea
               value={body}
               onChange={(e) => setBody(e.target.value)}
               rows={4}
-              className="w-full px-3 py-2 border dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100"
+              className="themed-input w-full"
               placeholder="Write your announcement..."
               required
             />
           </div>
           <div>
-            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+            <label className="block text-sm font-medium text-[var(--color-foreground)] mb-1">
               Priority
             </label>
             <select
               value={priority}
               onChange={(e) => setPriority(e.target.value as any)}
-              className="w-full px-3 py-2 border dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100"
+              className="themed-input w-full"
             >
               <option value="normal">Normal</option>
               <option value="high">High</option>
@@ -937,14 +937,14 @@ function CreateAnnouncementModal({
             <button
               type="button"
               onClick={onClose}
-              className="px-4 py-2 text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg"
+              className="themed-btn-secondary"
             >
               Cancel
             </button>
             <button
               type="submit"
               disabled={loading || !title.trim() || !body.trim()}
-              className="px-4 py-2 bg-orange-500 text-white rounded-lg hover:bg-orange-600 disabled:opacity-50"
+              className="themed-btn-primary disabled:opacity-50"
             >
               {loading ? 'Sending...' : 'Send Announcement'}
             </button>
@@ -986,24 +986,24 @@ function NewConversationModal({
 
   return (
     <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
-      <div className="bg-white dark:bg-gray-800 rounded-lg w-full max-w-sm">
-        <div className="p-4 border-b dark:border-gray-700 flex items-center justify-between">
-          <h2 className="text-lg font-semibold text-gray-900 dark:text-gray-100">New Message</h2>
-          <button onClick={onClose} className="text-gray-500 hover:text-gray-700">
+      <div className="themed-card w-full max-w-sm">
+        <div className="p-4 border-b border-[var(--color-border)] flex items-center justify-between">
+          <h2 className="text-lg font-semibold text-[var(--color-foreground)]">New Message</h2>
+          <button onClick={onClose} className="text-[var(--color-muted-foreground)] hover:text-[var(--color-foreground)]">
             ✕
           </button>
         </div>
         <div className="p-2 max-h-80 overflow-y-auto">
           {loading ? (
-            <div className="text-center py-8 text-gray-500">Loading...</div>
+            <div className="text-center py-8 text-[var(--color-muted-foreground)]">Loading...</div>
           ) : users.length === 0 ? (
-            <div className="text-center py-8 text-gray-500">No users available</div>
+            <div className="text-center py-8 text-[var(--color-muted-foreground)]">No users available</div>
           ) : (
             users.map((u) => (
               <button
                 key={u.id}
                 onClick={() => onSelect(u.id)}
-                className="w-full p-3 flex items-center gap-3 hover:bg-gray-50 dark:hover:bg-gray-700 rounded-lg"
+                className="w-full p-3 flex items-center gap-3 hover:bg-[var(--color-muted)]/50 rounded-lg"
               >
                 <div
                   className="w-10 h-10 rounded-full flex items-center justify-center text-white font-medium"
@@ -1011,7 +1011,7 @@ function NewConversationModal({
                 >
                   {u.displayName.charAt(0).toUpperCase()}
                 </div>
-                <span className="font-medium text-gray-900 dark:text-gray-100">
+                <span className="font-medium text-[var(--color-foreground)]">
                   {u.displayName}
                 </span>
               </button>

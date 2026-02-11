@@ -197,10 +197,16 @@ export function ManageTab({
     <div className="space-y-4">
       {/* Store Requests Alert */}
       {storeRequests.length > 0 && (
-        <div className="bg-yellow-50 dark:bg-yellow-900/20 border border-yellow-200 dark:border-yellow-800 rounded-xl p-4">
+        <div
+          className="rounded-xl p-4 border"
+          style={{
+            backgroundColor: 'color-mix(in srgb, var(--color-warning) 10%, transparent)',
+            borderColor: 'color-mix(in srgb, var(--color-warning) 30%, transparent)',
+          }}
+        >
           <div className="flex items-center gap-2 mb-3">
-            <AlertCircle size={20} className="text-yellow-600" />
-            <span className="font-medium text-yellow-800 dark:text-yellow-200">
+            <AlertCircle size={20} className="text-[var(--color-warning)]" />
+            <span className="font-medium text-[var(--color-warning)]">
               {storeRequests.length} pending store request{storeRequests.length > 1 ? 's' : ''}
             </span>
           </div>
@@ -208,19 +214,19 @@ export function ManageTab({
             {storeRequests.map((req) => (
               <div
                 key={req.id}
-                className="flex items-center justify-between bg-white dark:bg-gray-800 rounded-lg p-2"
+                className="flex items-center justify-between themed-card p-2"
               >
-                <span className="text-gray-900 dark:text-white">{req.name}</span>
+                <span className="text-[var(--color-foreground)]">{req.name}</span>
                 <div className="flex gap-2">
                   <button
                     onClick={() => onApproveStore(req.id)}
-                    className="p-1.5 text-green-600 hover:bg-green-100 dark:hover:bg-green-900/30 rounded-lg"
+                    className="p-1.5 text-[var(--color-success)] hover:bg-[var(--color-success)]/10 rounded-lg"
                   >
                     <Check size={18} />
                   </button>
                   <button
                     onClick={() => onDenyStore(req.id)}
-                    className="p-1.5 text-red-600 hover:bg-red-100 dark:hover:bg-red-900/30 rounded-lg"
+                    className="p-1.5 text-[var(--color-destructive)] hover:bg-[var(--color-destructive)]/10 rounded-lg"
                   >
                     <X size={18} />
                   </button>
@@ -232,13 +238,13 @@ export function ManageTab({
       )}
 
       {/* Sub-tabs */}
-      <div className="flex gap-2 border-b border-gray-200 dark:border-gray-700">
+      <div className="flex gap-2 border-b border-[var(--color-border)]">
         <button
           onClick={() => setActiveSubTab('catalog')}
           className={`px-4 py-2 font-medium border-b-2 transition-colors ${
             activeSubTab === 'catalog'
-              ? 'border-orange-500 text-orange-600'
-              : 'border-transparent text-gray-500 hover:text-gray-700'
+              ? 'border-[var(--color-primary)] text-[var(--color-primary)]'
+              : 'border-transparent text-[var(--color-muted-foreground)] hover:text-[var(--color-foreground)]'
           }`}
         >
           <Package size={18} className="inline mr-2" />
@@ -248,8 +254,8 @@ export function ManageTab({
           onClick={() => setActiveSubTab('categories')}
           className={`px-4 py-2 font-medium border-b-2 transition-colors ${
             activeSubTab === 'categories'
-              ? 'border-orange-500 text-orange-600'
-              : 'border-transparent text-gray-500 hover:text-gray-700'
+              ? 'border-[var(--color-primary)] text-[var(--color-primary)]'
+              : 'border-transparent text-[var(--color-muted-foreground)] hover:text-[var(--color-foreground)]'
           }`}
         >
           <Tag size={18} className="inline mr-2" />
@@ -259,8 +265,8 @@ export function ManageTab({
           onClick={() => setActiveSubTab('stores')}
           className={`px-4 py-2 font-medium border-b-2 transition-colors ${
             activeSubTab === 'stores'
-              ? 'border-orange-500 text-orange-600'
-              : 'border-transparent text-gray-500 hover:text-gray-700'
+              ? 'border-[var(--color-primary)] text-[var(--color-primary)]'
+              : 'border-transparent text-[var(--color-muted-foreground)] hover:text-[var(--color-foreground)]'
           }`}
         >
           <Store size={18} className="inline mr-2" />
@@ -273,7 +279,7 @@ export function ManageTab({
         <div className="space-y-3">
           {loading ? (
             <div className="flex items-center justify-center py-8">
-              <Loader2 className="animate-spin text-orange-500" size={32} />
+              <Loader2 className="animate-spin text-[var(--color-primary)]" size={32} />
             </div>
           ) : (
             <>
@@ -286,52 +292,52 @@ export function ManageTab({
                 return (
                   <div
                     key={category.id}
-                    className="bg-white dark:bg-gray-800 rounded-xl border border-gray-100 dark:border-gray-700 overflow-hidden"
+                    className="themed-card overflow-hidden"
                   >
                     <button
                       onClick={() => toggleCategory(category.id)}
-                      className="w-full flex items-center gap-3 p-3 hover:bg-gray-50 dark:hover:bg-gray-700/50"
+                      className="w-full flex items-center gap-3 p-3 hover:bg-[var(--color-muted)]"
                     >
                       {isExpanded ? (
-                        <ChevronDown size={20} className="text-gray-400" />
+                        <ChevronDown size={20} className="text-[var(--color-muted-foreground)]" />
                       ) : (
-                        <ChevronRight size={20} className="text-gray-400" />
+                        <ChevronRight size={20} className="text-[var(--color-muted-foreground)]" />
                       )}
                       <span
                         className="w-3 h-3 rounded-full"
                         style={{ backgroundColor: category.color || '#f97316' }}
                       />
-                      <span className="font-medium text-gray-900 dark:text-white">
+                      <span className="font-medium text-[var(--color-foreground)]">
                         {category.name}
                       </span>
-                      <span className="text-sm text-gray-500">({items.length})</span>
+                      <span className="text-sm text-[var(--color-muted-foreground)]">({items.length})</span>
                     </button>
 
                     {isExpanded && (
-                      <div className="border-t border-gray-100 dark:border-gray-700 divide-y divide-gray-100 dark:divide-gray-700">
+                      <div className="border-t border-[var(--color-border)] divide-y divide-[var(--color-border)]">
                         {items.map((item) => (
                           <div
                             key={item.id}
-                            className="flex items-center gap-3 p-3 hover:bg-gray-50 dark:hover:bg-gray-700/50"
+                            className="flex items-center gap-3 p-3 hover:bg-[var(--color-muted)]"
                           >
                             <div className="flex-1 min-w-0">
-                              <p className="font-medium text-gray-900 dark:text-white truncate">
+                              <p className="font-medium text-[var(--color-foreground)] truncate">
                                 {item.name}
                               </p>
                               {item.brand && (
-                                <p className="text-sm text-gray-500 truncate">{item.brand}</p>
+                                <p className="text-sm text-[var(--color-muted-foreground)] truncate">{item.brand}</p>
                               )}
                             </div>
                             <div className="flex gap-1">
                               <button
                                 onClick={() => setEditingItem(item)}
-                                className="p-2 text-blue-600 hover:bg-blue-100 dark:hover:bg-blue-900/30 rounded-lg"
+                                className="p-2 text-[var(--color-info)] hover:bg-[var(--color-info)]/10 rounded-lg"
                               >
                                 <Edit size={16} />
                               </button>
                               <button
                                 onClick={() => setDeleteConfirm({ type: 'item', id: item.id })}
-                                className="p-2 text-red-600 hover:bg-red-100 dark:hover:bg-red-900/30 rounded-lg"
+                                className="p-2 text-[var(--color-destructive)] hover:bg-[var(--color-destructive)]/10 rounded-lg"
                               >
                                 <Trash2 size={16} />
                               </button>
@@ -346,46 +352,46 @@ export function ManageTab({
 
               {/* Uncategorized items */}
               {uncategorizedItems.length > 0 && (
-                <div className="bg-white dark:bg-gray-800 rounded-xl border border-gray-100 dark:border-gray-700 overflow-hidden">
+                <div className="themed-card overflow-hidden">
                   <button
                     onClick={() => toggleCategory(0)}
-                    className="w-full flex items-center gap-3 p-3 hover:bg-gray-50 dark:hover:bg-gray-700/50"
+                    className="w-full flex items-center gap-3 p-3 hover:bg-[var(--color-muted)]"
                   >
                     {expandedCategories.has(0) ? (
-                      <ChevronDown size={20} className="text-gray-400" />
+                      <ChevronDown size={20} className="text-[var(--color-muted-foreground)]" />
                     ) : (
-                      <ChevronRight size={20} className="text-gray-400" />
+                      <ChevronRight size={20} className="text-[var(--color-muted-foreground)]" />
                     )}
-                    <span className="w-3 h-3 rounded-full bg-gray-400" />
-                    <span className="font-medium text-gray-900 dark:text-white">Uncategorized</span>
-                    <span className="text-sm text-gray-500">({uncategorizedItems.length})</span>
+                    <span className="w-3 h-3 rounded-full bg-[var(--color-muted-foreground)]" />
+                    <span className="font-medium text-[var(--color-foreground)]">Uncategorized</span>
+                    <span className="text-sm text-[var(--color-muted-foreground)]">({uncategorizedItems.length})</span>
                   </button>
 
                   {expandedCategories.has(0) && (
-                    <div className="border-t border-gray-100 dark:border-gray-700 divide-y divide-gray-100 dark:divide-gray-700">
+                    <div className="border-t border-[var(--color-border)] divide-y divide-[var(--color-border)]">
                       {uncategorizedItems.map((item) => (
                         <div
                           key={item.id}
-                          className="flex items-center gap-3 p-3 hover:bg-gray-50 dark:hover:bg-gray-700/50"
+                          className="flex items-center gap-3 p-3 hover:bg-[var(--color-muted)]"
                         >
                           <div className="flex-1 min-w-0">
-                            <p className="font-medium text-gray-900 dark:text-white truncate">
+                            <p className="font-medium text-[var(--color-foreground)] truncate">
                               {item.name}
                             </p>
                             {item.brand && (
-                              <p className="text-sm text-gray-500 truncate">{item.brand}</p>
+                              <p className="text-sm text-[var(--color-muted-foreground)] truncate">{item.brand}</p>
                             )}
                           </div>
                           <div className="flex gap-1">
                             <button
                               onClick={() => setEditingItem(item)}
-                              className="p-2 text-blue-600 hover:bg-blue-100 dark:hover:bg-blue-900/30 rounded-lg"
+                              className="p-2 text-[var(--color-info)] hover:bg-[var(--color-info)]/10 rounded-lg"
                             >
                               <Edit size={16} />
                             </button>
                             <button
                               onClick={() => setDeleteConfirm({ type: 'item', id: item.id })}
-                              className="p-2 text-red-600 hover:bg-red-100 dark:hover:bg-red-900/30 rounded-lg"
+                              className="p-2 text-[var(--color-destructive)] hover:bg-[var(--color-destructive)]/10 rounded-lg"
                             >
                               <Trash2 size={16} />
                             </button>
@@ -398,8 +404,8 @@ export function ManageTab({
               )}
 
               {catalogItems.length === 0 && (
-                <div className="text-center py-8 text-gray-500">
-                  <Package size={48} className="mx-auto mb-3 text-gray-300" />
+                <div className="text-center py-8 text-[var(--color-muted-foreground)]">
+                  <Package size={48} className="mx-auto mb-3 opacity-50" />
                   <p>No catalog items yet</p>
                 </div>
               )}
@@ -412,9 +418,9 @@ export function ManageTab({
       {activeSubTab === 'categories' && (
         <div className="space-y-3">
           {/* Add Category Form */}
-          <div className="bg-white dark:bg-gray-800 rounded-xl border border-gray-100 dark:border-gray-700 p-4">
-            <h3 className="font-semibold text-gray-900 dark:text-white mb-3 flex items-center gap-2">
-              <Plus size={18} className="text-orange-500" />
+          <div className="themed-card p-4">
+            <h3 className="font-semibold text-[var(--color-foreground)] mb-3 flex items-center gap-2">
+              <Plus size={18} className="text-[var(--color-primary)]" />
               Add Category
             </h3>
             <div className="space-y-3">
@@ -423,14 +429,14 @@ export function ManageTab({
                 value={newCategory}
                 onChange={(e) => setNewCategory(e.target.value)}
                 placeholder="Category name..."
-                className="w-full px-3 py-2 border border-gray-200 dark:border-gray-700 rounded-xl bg-white dark:bg-gray-800"
+                className="themed-input w-full"
                 onKeyDown={(e) => e.key === 'Enter' && handleAddCategory()}
               />
               <ColorPicker color={newCategoryColor} onChange={setNewCategoryColor} label="Color" />
               <button
                 onClick={handleAddCategory}
                 disabled={!newCategory.trim()}
-                className="w-full py-2 bg-orange-500 text-white rounded-xl font-medium disabled:opacity-50"
+                className="themed-btn-primary w-full disabled:opacity-50"
               >
                 Add Category
               </button>
@@ -442,22 +448,22 @@ export function ManageTab({
             {categories.map((cat) => (
               <div
                 key={cat.id}
-                className="flex items-center gap-3 p-3 bg-white dark:bg-gray-800 rounded-xl border border-gray-100 dark:border-gray-700"
+                className="flex items-center gap-3 p-3 themed-card"
               >
                 <span
                   className="w-4 h-4 rounded-full"
                   style={{ backgroundColor: cat.color || '#f97316' }}
                 />
-                <span className="flex-1 font-medium text-gray-900 dark:text-white">{cat.name}</span>
+                <span className="flex-1 font-medium text-[var(--color-foreground)]">{cat.name}</span>
                 <button
                   onClick={() => setEditingCategory(cat)}
-                  className="p-2 text-blue-600 hover:bg-blue-100 dark:hover:bg-blue-900/30 rounded-lg"
+                  className="p-2 text-[var(--color-info)] hover:bg-[var(--color-info)]/10 rounded-lg"
                 >
                   <Edit size={16} />
                 </button>
                 <button
                   onClick={() => setDeleteConfirm({ type: 'category', id: cat.id })}
-                  className="p-2 text-red-600 hover:bg-red-100 dark:hover:bg-red-900/30 rounded-lg"
+                  className="p-2 text-[var(--color-destructive)] hover:bg-[var(--color-destructive)]/10 rounded-lg"
                 >
                   <Trash2 size={16} />
                 </button>
@@ -471,9 +477,9 @@ export function ManageTab({
       {activeSubTab === 'stores' && (
         <div className="space-y-3">
           {/* Add Store Form */}
-          <div className="bg-white dark:bg-gray-800 rounded-xl border border-gray-100 dark:border-gray-700 p-4">
-            <h3 className="font-semibold text-gray-900 dark:text-white mb-3 flex items-center gap-2">
-              <Plus size={18} className="text-orange-500" />
+          <div className="themed-card p-4">
+            <h3 className="font-semibold text-[var(--color-foreground)] mb-3 flex items-center gap-2">
+              <Plus size={18} className="text-[var(--color-primary)]" />
               Add Store
             </h3>
             <div className="flex gap-2">
@@ -482,13 +488,13 @@ export function ManageTab({
                 value={newStore}
                 onChange={(e) => setNewStore(e.target.value)}
                 placeholder="Store name..."
-                className="flex-1 px-3 py-2 border border-gray-200 dark:border-gray-700 rounded-xl bg-white dark:bg-gray-800"
+                className="themed-input flex-1"
                 onKeyDown={(e) => e.key === 'Enter' && handleAddStore()}
               />
               <button
                 onClick={handleAddStore}
                 disabled={!newStore.trim()}
-                className="px-4 py-2 bg-blue-500 text-white rounded-xl font-medium disabled:opacity-50"
+                className="themed-btn-primary disabled:opacity-50"
               >
                 Add
               </button>
@@ -500,14 +506,20 @@ export function ManageTab({
             {stores.map((store) => (
               <div
                 key={store.id}
-                className="flex items-center gap-3 p-3 bg-white dark:bg-gray-800 rounded-xl border border-gray-100 dark:border-gray-700"
+                className="flex items-center gap-3 p-3 themed-card"
               >
-                <Store size={18} className="text-blue-500" />
-                <span className="flex-1 font-medium text-gray-900 dark:text-white">
+                <Store size={18} className="text-[var(--color-info)]" />
+                <span className="flex-1 font-medium text-[var(--color-foreground)]">
                   {store.name}
                 </span>
                 {store.isDefault && (
-                  <span className="text-xs bg-blue-100 text-blue-700 px-2 py-0.5 rounded-full">
+                  <span
+                    className="text-xs px-2 py-0.5 rounded-full"
+                    style={{
+                      backgroundColor: 'color-mix(in srgb, var(--color-info) 15%, transparent)',
+                      color: 'var(--color-info)',
+                    }}
+                  >
                     Default
                   </span>
                 )}
@@ -540,19 +552,19 @@ export function ManageTab({
 
       {/* Delete Confirmation Modal */}
       {deleteConfirm && (
-        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
-          <div className="bg-white dark:bg-gray-800 rounded-2xl w-full max-w-sm p-6">
-            <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-2">
+        <div className="themed-modal-backdrop fixed inset-0 flex items-center justify-center z-50 p-4">
+          <div className="themed-modal w-full max-w-sm p-6">
+            <h3 className="text-lg font-semibold text-[var(--color-foreground)] mb-2">
               Confirm Delete
             </h3>
-            <p className="text-gray-600 dark:text-gray-400 mb-4">
+            <p className="text-[var(--color-muted-foreground)] mb-4">
               Are you sure you want to delete this {deleteConfirm.type}? This action cannot be
               undone.
             </p>
             <div className="flex gap-2">
               <button
                 onClick={() => setDeleteConfirm(null)}
-                className="flex-1 py-2 border border-gray-300 dark:border-gray-600 rounded-xl"
+                className="themed-btn-secondary flex-1"
               >
                 Cancel
               </button>
@@ -564,7 +576,7 @@ export function ManageTab({
                     handleDeleteCategory(deleteConfirm.id);
                   }
                 }}
-                className="flex-1 py-2 bg-red-500 text-white rounded-xl"
+                className="flex-1 py-2 bg-[var(--color-destructive)] text-[var(--color-destructive-foreground)] rounded-xl"
               >
                 Delete
               </button>
@@ -603,13 +615,13 @@ function EditCategoryModal({ category, onClose, onSave }: EditCategoryModalProps
   };
 
   return (
-    <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
-      <div className="bg-white dark:bg-gray-800 rounded-2xl w-full max-w-md overflow-hidden">
-        <div className="p-4 border-b border-gray-100 dark:border-gray-700 flex items-center justify-between">
-          <h2 className="text-lg font-semibold text-gray-900 dark:text-white">Edit Category</h2>
+    <div className="themed-modal-backdrop fixed inset-0 flex items-center justify-center z-50 p-4">
+      <div className="themed-modal w-full max-w-md overflow-hidden">
+        <div className="p-4 border-b border-[var(--color-border)] flex items-center justify-between">
+          <h2 className="text-lg font-semibold text-[var(--color-foreground)]">Edit Category</h2>
           <button
             onClick={onClose}
-            className="p-2 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg"
+            className="p-2 hover:bg-[var(--color-muted)] rounded-lg text-[var(--color-muted-foreground)]"
           >
             <X size={20} />
           </button>
@@ -617,14 +629,14 @@ function EditCategoryModal({ category, onClose, onSave }: EditCategoryModalProps
 
         <div className="p-4 space-y-4">
           <div>
-            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+            <label className="block text-sm font-medium text-[var(--color-foreground)] mb-1">
               Name *
             </label>
             <input
               type="text"
               value={form.name}
               onChange={(e) => setForm({ ...form, name: e.target.value })}
-              className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-xl bg-white dark:bg-gray-800"
+              className="themed-input w-full"
             />
           </div>
 
@@ -635,17 +647,17 @@ function EditCategoryModal({ category, onClose, onSave }: EditCategoryModalProps
           />
         </div>
 
-        <div className="p-4 border-t border-gray-100 dark:border-gray-700 flex gap-2">
+        <div className="p-4 border-t border-[var(--color-border)] flex gap-2">
           <button
             onClick={onClose}
-            className="flex-1 py-2 border border-gray-300 dark:border-gray-600 rounded-xl"
+            className="themed-btn-secondary flex-1"
           >
             Cancel
           </button>
           <button
             onClick={handleSubmit}
             disabled={!form.name.trim() || saving}
-            className="flex-1 py-2 bg-orange-500 text-white rounded-xl disabled:opacity-50"
+            className="themed-btn-primary flex-1 disabled:opacity-50"
           >
             {saving ? 'Saving...' : 'Save'}
           </button>

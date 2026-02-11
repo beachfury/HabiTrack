@@ -15,10 +15,10 @@ export function QuickStatsWidget({
   earnings = 0,
 }: QuickStatsWidgetProps) {
   const stats = [
-    { label: 'Events Today', value: eventsToday, icon: Calendar, color: 'bg-blue-500' },
-    { label: 'Chores Due', value: choresDue, icon: CheckSquare, color: 'bg-green-500' },
-    { label: 'Shopping Items', value: shoppingItems, icon: ShoppingCart, color: 'bg-orange-500' },
-    { label: 'Earnings', value: `$${earnings.toFixed(2)}`, icon: DollarSign, color: 'bg-purple-500' },
+    { label: 'Events Today', value: eventsToday, icon: Calendar, colorVar: '--color-info' },
+    { label: 'Chores Due', value: choresDue, icon: CheckSquare, colorVar: '--color-success' },
+    { label: 'Shopping Items', value: shoppingItems, icon: ShoppingCart, colorVar: '--color-warning' },
+    { label: 'Earnings', value: `$${earnings.toFixed(2)}`, icon: DollarSign, colorVar: '--color-primary' },
   ];
 
   return (
@@ -26,14 +26,17 @@ export function QuickStatsWidget({
       {stats.map((stat) => (
         <div
           key={stat.label}
-          className="flex items-center gap-3 p-3 bg-gray-50 dark:bg-gray-700/50 rounded-xl"
+          className="themed-widget flex items-center gap-3"
         >
-          <div className={`${stat.color} p-2 rounded-lg text-white`}>
+          <div
+            className="p-2 rounded-lg text-white"
+            style={{ backgroundColor: `var(${stat.colorVar})` }}
+          >
             <stat.icon size={18} />
           </div>
           <div>
-            <p className="text-lg font-bold text-gray-900 dark:text-white">{stat.value}</p>
-            <p className="text-xs text-gray-500 dark:text-gray-400">{stat.label}</p>
+            <p className="text-lg font-bold text-[var(--color-foreground)]">{stat.value}</p>
+            <p className="text-xs text-[var(--color-muted-foreground)]">{stat.label}</p>
           </div>
         </div>
       ))}

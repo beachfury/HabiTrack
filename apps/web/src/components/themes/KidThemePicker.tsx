@@ -53,12 +53,12 @@ export function KidThemePicker() {
   return (
     <div className="space-y-6">
       {/* Fun Header */}
-      <div className="p-4 bg-gradient-to-r from-purple-100 to-pink-100 dark:from-purple-900/30 dark:to-pink-900/30 rounded-xl">
-        <h3 className="font-bold text-lg text-purple-700 dark:text-purple-300 mb-1 flex items-center gap-2">
+      <div className="p-4 bg-gradient-to-r from-emerald-100 to-teal-100 dark:from-emerald-900/30 dark:to-teal-900/30 rounded-xl">
+        <h3 className="font-bold text-lg text-emerald-700 dark:text-emerald-300 mb-1 flex items-center gap-2">
           <Sparkles size={20} className="text-yellow-500" />
           Pick Your Style!
         </h3>
-        <p className="text-sm text-purple-600 dark:text-purple-400">
+        <p className="text-sm text-emerald-600 dark:text-emerald-400">
           Choose how you want your HabiTrack to look
         </p>
       </div>
@@ -76,8 +76,8 @@ export function KidThemePicker() {
               className={`
                 p-5 rounded-xl border-3 transition-all transform hover:scale-[1.02]
                 ${(mode === m.id || (mode === 'system' && m.id === 'light'))
-                  ? 'border-purple-500 bg-purple-50 dark:bg-purple-900/30 shadow-lg'
-                  : 'border-gray-200 dark:border-gray-700 hover:border-purple-300'
+                  ? 'border-emerald-500 bg-emerald-50 dark:bg-emerald-900/30 shadow-lg'
+                  : 'border-gray-200 dark:border-gray-700 hover:border-emerald-300'
                 }
               `}
             >
@@ -85,7 +85,7 @@ export function KidThemePicker() {
               <span
                 className={`text-sm font-bold ${
                   (mode === m.id || (mode === 'system' && m.id === 'light'))
-                    ? 'text-purple-600 dark:text-purple-400'
+                    ? 'text-emerald-600 dark:text-emerald-400'
                     : 'text-gray-600 dark:text-gray-400'
                 }`}
               >

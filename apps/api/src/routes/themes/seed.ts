@@ -1,5 +1,6 @@
 // apps/api/src/routes/themes/seed.ts
 // Default theme seeding for fresh installations
+// Only two themes: HabiTrack Classic (non-editable) and Household Brand (editable)
 
 import { q } from '../../db';
 
@@ -15,44 +16,45 @@ interface DefaultTheme {
   pageBackground: object;
   ui: object;
   icons: object;
-  isDefault?: boolean;
+  isDefault: boolean;
+  isSystemTheme: boolean; // If true, cannot be edited or deleted
 }
 
 const DEFAULT_THEMES: DefaultTheme[] = [
   {
     id: 'habitrack-classic',
     name: 'HabiTrack Classic',
-    description: 'The default HabiTrack theme with purple accents and clean design',
+    description: 'The official HabiTrack theme - cannot be modified',
     layout: { type: 'sidebar-left', sidebarWidth: 256, navStyle: 'icons-text' },
     colorsLight: {
-      primary: '#8b5cf6',
+      primary: '#3cb371',          // HabiTrack Green
       primaryForeground: '#ffffff',
       secondary: '#f3f4f6',
-      secondaryForeground: '#1f2937',
-      accent: '#8b5cf6',
+      secondaryForeground: '#3d4f5f', // HabiTrack Navy
+      accent: '#3cb371',           // HabiTrack Green
       accentForeground: '#ffffff',
-      background: '#f9fafb',
-      foreground: '#1f2937',
+      background: '#ffffff',
+      foreground: '#3d4f5f',       // HabiTrack Navy
       card: '#ffffff',
-      cardForeground: '#1f2937',
+      cardForeground: '#3d4f5f',   // HabiTrack Navy
       muted: '#f3f4f6',
       mutedForeground: '#6b7280',
       border: '#e5e7eb',
     },
     colorsDark: {
-      primary: '#a78bfa',
-      primaryForeground: '#ffffff',
+      primary: '#4fd693',          // Lighter green for dark mode
+      primaryForeground: '#1a2e26',
       secondary: '#374151',
       secondaryForeground: '#f9fafb',
-      accent: '#a78bfa',
-      accentForeground: '#ffffff',
-      background: '#111827',
+      accent: '#4fd693',           // Lighter green for dark mode
+      accentForeground: '#1a2e26',
+      background: '#1a2530',       // Navy-tinted dark background
       foreground: '#f9fafb',
-      card: '#1f2937',
+      card: '#243340',             // Navy-tinted card
       cardForeground: '#f9fafb',
-      muted: '#374151',
+      muted: '#2d3e4e',            // Navy-tinted muted
       mutedForeground: '#9ca3af',
-      border: '#374151',
+      border: '#3d4f5f',           // HabiTrack Navy as border
     },
     typography: { fontFamily: 'system-ui, -apple-system, sans-serif', baseFontSize: 16, lineHeight: 'normal' },
     sidebar: { backgroundType: 'solid', backgroundColor: null, textColor: null },
@@ -60,170 +62,50 @@ const DEFAULT_THEMES: DefaultTheme[] = [
     ui: { borderRadius: 'large', shadowIntensity: 'subtle' },
     icons: { style: 'outline' },
     isDefault: true,
+    isSystemTheme: true, // Cannot be edited
   },
   {
-    id: 'ocean-blue',
-    name: 'Ocean Blue',
-    description: 'A calming blue theme inspired by the ocean',
+    id: 'household-brand',
+    name: 'Household Brand',
+    description: 'Your household\'s custom default theme - customize to match your family style',
     layout: { type: 'sidebar-left', sidebarWidth: 256, navStyle: 'icons-text' },
     colorsLight: {
-      primary: '#0ea5e9',
+      primary: '#3cb371',          // HabiTrack Green (default, can be changed)
       primaryForeground: '#ffffff',
-      secondary: '#f0f9ff',
-      secondaryForeground: '#0c4a6e',
-      accent: '#0ea5e9',
+      secondary: '#f3f4f6',
+      secondaryForeground: '#3d4f5f',
+      accent: '#3cb371',
       accentForeground: '#ffffff',
-      background: '#f8fafc',
-      foreground: '#0f172a',
+      background: '#ffffff',
+      foreground: '#3d4f5f',
       card: '#ffffff',
-      cardForeground: '#0f172a',
-      muted: '#f1f5f9',
-      mutedForeground: '#64748b',
-      border: '#e2e8f0',
-    },
-    colorsDark: {
-      primary: '#38bdf8',
-      primaryForeground: '#0c4a6e',
-      secondary: '#1e3a5f',
-      secondaryForeground: '#e0f2fe',
-      accent: '#38bdf8',
-      accentForeground: '#0c4a6e',
-      background: '#0f172a',
-      foreground: '#f1f5f9',
-      card: '#1e293b',
-      cardForeground: '#f1f5f9',
-      muted: '#334155',
-      mutedForeground: '#94a3b8',
-      border: '#334155',
-    },
-    typography: { fontFamily: 'system-ui, -apple-system, sans-serif', baseFontSize: 16, lineHeight: 'normal' },
-    sidebar: { backgroundType: 'solid', backgroundColor: null, textColor: null },
-    pageBackground: { type: 'solid', color: null },
-    ui: { borderRadius: 'large', shadowIntensity: 'subtle' },
-    icons: { style: 'outline' },
-  },
-  {
-    id: 'forest-green',
-    name: 'Forest Green',
-    description: 'A natural green theme inspired by forests',
-    layout: { type: 'sidebar-left', sidebarWidth: 256, navStyle: 'icons-text' },
-    colorsLight: {
-      primary: '#22c55e',
-      primaryForeground: '#ffffff',
-      secondary: '#f0fdf4',
-      secondaryForeground: '#14532d',
-      accent: '#22c55e',
-      accentForeground: '#ffffff',
-      background: '#fafaf9',
-      foreground: '#1c1917',
-      card: '#ffffff',
-      cardForeground: '#1c1917',
-      muted: '#f5f5f4',
-      mutedForeground: '#78716c',
-      border: '#e7e5e4',
-    },
-    colorsDark: {
-      primary: '#4ade80',
-      primaryForeground: '#14532d',
-      secondary: '#14532d',
-      secondaryForeground: '#dcfce7',
-      accent: '#4ade80',
-      accentForeground: '#14532d',
-      background: '#0a0a0a',
-      foreground: '#fafafa',
-      card: '#171717',
-      cardForeground: '#fafafa',
-      muted: '#262626',
-      mutedForeground: '#a3a3a3',
-      border: '#262626',
-    },
-    typography: { fontFamily: 'system-ui, -apple-system, sans-serif', baseFontSize: 16, lineHeight: 'normal' },
-    sidebar: { backgroundType: 'solid', backgroundColor: null, textColor: null },
-    pageBackground: { type: 'solid', color: null },
-    ui: { borderRadius: 'medium', shadowIntensity: 'subtle' },
-    icons: { style: 'outline' },
-  },
-  {
-    id: 'sunset-orange',
-    name: 'Sunset Orange',
-    description: 'A warm orange theme inspired by sunsets',
-    layout: { type: 'sidebar-left', sidebarWidth: 256, navStyle: 'icons-text' },
-    colorsLight: {
-      primary: '#f97316',
-      primaryForeground: '#ffffff',
-      secondary: '#fff7ed',
-      secondaryForeground: '#7c2d12',
-      accent: '#f97316',
-      accentForeground: '#ffffff',
-      background: '#fffbeb',
-      foreground: '#1c1917',
-      card: '#ffffff',
-      cardForeground: '#1c1917',
-      muted: '#fef3c7',
-      mutedForeground: '#78716c',
-      border: '#fed7aa',
-    },
-    colorsDark: {
-      primary: '#fb923c',
-      primaryForeground: '#7c2d12',
-      secondary: '#431407',
-      secondaryForeground: '#ffedd5',
-      accent: '#fb923c',
-      accentForeground: '#7c2d12',
-      background: '#0c0a09',
-      foreground: '#fafaf9',
-      card: '#1c1917',
-      cardForeground: '#fafaf9',
-      muted: '#292524',
-      mutedForeground: '#a8a29e',
-      border: '#292524',
-    },
-    typography: { fontFamily: 'system-ui, -apple-system, sans-serif', baseFontSize: 16, lineHeight: 'normal' },
-    sidebar: { backgroundType: 'solid', backgroundColor: null, textColor: null },
-    pageBackground: { type: 'solid', color: null },
-    ui: { borderRadius: 'large', shadowIntensity: 'medium' },
-    icons: { style: 'outline' },
-  },
-  {
-    id: 'rose-pink',
-    name: 'Rose Pink',
-    description: 'A soft pink theme with rosy accents',
-    layout: { type: 'sidebar-left', sidebarWidth: 256, navStyle: 'icons-text' },
-    colorsLight: {
-      primary: '#ec4899',
-      primaryForeground: '#ffffff',
-      secondary: '#fdf2f8',
-      secondaryForeground: '#831843',
-      accent: '#ec4899',
-      accentForeground: '#ffffff',
-      background: '#fefce8',
-      foreground: '#1f2937',
-      card: '#ffffff',
-      cardForeground: '#1f2937',
-      muted: '#fce7f3',
+      cardForeground: '#3d4f5f',
+      muted: '#f3f4f6',
       mutedForeground: '#6b7280',
-      border: '#fbcfe8',
+      border: '#e5e7eb',
     },
     colorsDark: {
-      primary: '#f472b6',
-      primaryForeground: '#831843',
-      secondary: '#500724',
-      secondaryForeground: '#fce7f3',
-      accent: '#f472b6',
-      accentForeground: '#831843',
-      background: '#0f0f0f',
+      primary: '#4fd693',
+      primaryForeground: '#1a2e26',
+      secondary: '#374151',
+      secondaryForeground: '#f9fafb',
+      accent: '#4fd693',
+      accentForeground: '#1a2e26',
+      background: '#1a2530',
       foreground: '#f9fafb',
-      card: '#1a1a1a',
+      card: '#243340',
       cardForeground: '#f9fafb',
-      muted: '#2a2a2a',
+      muted: '#2d3e4e',
       mutedForeground: '#9ca3af',
-      border: '#2a2a2a',
+      border: '#3d4f5f',
     },
     typography: { fontFamily: 'system-ui, -apple-system, sans-serif', baseFontSize: 16, lineHeight: 'normal' },
     sidebar: { backgroundType: 'solid', backgroundColor: null, textColor: null },
     pageBackground: { type: 'solid', color: null },
     ui: { borderRadius: 'large', shadowIntensity: 'subtle' },
     icons: { style: 'outline' },
+    isDefault: true,
+    isSystemTheme: false, // Can be edited by admin (but name cannot be changed)
   },
 ];
 
@@ -239,8 +121,8 @@ export async function seedDefaultThemes(createdBy: number): Promise<void> {
           id, name, description,
           layout, colorsLight, colorsDark, typography,
           sidebar, pageBackground, ui, icons,
-          createdBy, isPublic, isApprovedForKids, isDefault
-        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 1, 1, ?)
+          createdBy, isPublic, isApprovedForKids, isDefault, isSystemTheme
+        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 1, 1, ?, ?)
         ON DUPLICATE KEY UPDATE name = name`,
         [
           theme.id,
@@ -256,6 +138,7 @@ export async function seedDefaultThemes(createdBy: number): Promise<void> {
           JSON.stringify(theme.icons),
           createdBy,
           theme.isDefault ? 1 : 0,
+          theme.isSystemTheme ? 1 : 0,
         ],
       );
     } catch (err) {
@@ -263,6 +146,33 @@ export async function seedDefaultThemes(createdBy: number): Promise<void> {
     }
   }
 
-  // Set the default theme in settings
-  await q(`UPDATE settings SET defaultThemeId = 'habitrack-classic' WHERE id = 1 AND defaultThemeId IS NULL`);
+  // Set the default theme in settings (Household Brand is the default for new users)
+  await q(`UPDATE settings SET defaultThemeId = 'household-brand' WHERE id = 1 AND defaultThemeId IS NULL`);
+}
+
+/**
+ * Removes old default themes that are no longer needed
+ * Call this during migration to clean up
+ */
+export async function removeOldDefaultThemes(): Promise<void> {
+  const oldThemeIds = ['ocean-blue', 'forest-green', 'sunset-orange', 'rose-pink'];
+
+  for (const themeId of oldThemeIds) {
+    try {
+      // Only delete if no users are using it
+      const [usage] = await q<{ count: number }[]>(
+        `SELECT COUNT(*) as count FROM user_theme_preferences WHERE themeId = ?`,
+        [themeId]
+      );
+
+      if (!usage || usage.count === 0) {
+        await q(`DELETE FROM themes WHERE id = ? AND isDefault = 1`, [themeId]);
+        console.log(`Removed unused default theme: ${themeId}`);
+      } else {
+        console.log(`Keeping theme ${themeId} - still in use by ${usage.count} user(s)`);
+      }
+    } catch (err) {
+      console.error(`Failed to remove theme ${themeId}:`, err);
+    }
+  }
 }
