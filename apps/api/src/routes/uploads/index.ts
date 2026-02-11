@@ -25,10 +25,15 @@ function getUser(req: Request) {
 const UPLOAD_BASE = process.env.UPLOAD_DIR || path.join(process.cwd(), 'uploads');
 const THEME_UPLOAD_DIR = path.join(UPLOAD_BASE, 'themes');
 
+console.log('[uploads] UPLOAD_BASE:', UPLOAD_BASE);
+console.log('[uploads] THEME_UPLOAD_DIR:', THEME_UPLOAD_DIR);
+
 if (!existsSync(UPLOAD_BASE)) {
+  console.log('[uploads] Creating UPLOAD_BASE directory...');
   mkdirSync(UPLOAD_BASE, { recursive: true });
 }
 if (!existsSync(THEME_UPLOAD_DIR)) {
+  console.log('[uploads] Creating THEME_UPLOAD_DIR directory...');
   mkdirSync(THEME_UPLOAD_DIR, { recursive: true });
 }
 
@@ -87,7 +92,12 @@ export const uploadThemeImage: RequestHandler[] = [
         return;
       }
 
-      const { preset = 'background', themeId } = req.body as { preset?: string; themeId?: string };
+      const { preset = 'background', themeId, category, name } = req.body as {
+        preset?: string;
+        themeId?: string;
+        category?: string;
+        name?: string;
+      };
 
       // Validate preset
       if (!Object.keys(IMAGE_PRESETS).includes(preset)) {
@@ -115,18 +125,19 @@ export const uploadThemeImage: RequestHandler[] = [
       // Generate URL path
       const url = `/uploads/themes/${filename}`;
 
-      // If themeId provided, save to theme_assets table
-      if (themeId) {
-        const assetType = preset === 'thumbnail' ? 'thumbnail' :
-                         preset === 'sidebar' ? 'sidebar-image' :
-                         'background-image';
+      // Determine asset type from preset
+      const assetType = preset === 'thumbnail' ? 'thumbnail' :
+                       preset === 'sidebar' ? 'sidebar-image' :
+                       'background-image';
 
-        await q(
-          `INSERT INTO theme_assets (id, themeId, uploadedBy, assetType, filename, url, mimeType, sizeBytes, width, height)
-           VALUES (?, ?, ?, ?, ?, ?, 'image/webp', ?, ?, ?)`,
-          [fileId, themeId, user.id, assetType, filename, url, stats.size, imagePreset.width, imagePreset.height]
-        );
-      }
+      // Always save to theme_assets table so images can be reused from library
+      // themeId is optional - NULL means it's a general library image not tied to a specific theme
+      // category and name help organize images in the library
+      await q(
+        `INSERT INTO theme_assets (id, themeId, uploadedBy, assetType, category, name, filename, url, mimeType, sizeBytes, width, height)
+         VALUES (?, ?, ?, ?, ?, ?, ?, ?, 'image/webp', ?, ?, ?)`,
+        [fileId, themeId || null, user.id, assetType, category || null, name || null, filename, url, stats.size, imagePreset.width, imagePreset.height]
+      );
 
       res.json({
         success: true,
@@ -271,5 +282,180 @@ export async function getMyAssets(req: Request, res: Response): Promise<void> {
   } catch (err) {
     console.error('Failed to get assets:', err);
     res.status(500).json({ error: 'Failed to get assets' });
+  }
+}
+
+/**
+ * GET /api/uploads/theme-library
+ * Get all theme images available in the library (for media picker)
+ * Returns all images uploaded by anyone, organized for easy browsing
+ * Supports filtering by type and category
+ */
+export async function getThemeLibrary(req: Request, res: Response): Promise<void> {
+  try {
+    const user = getUser(req);
+    if (!user) {
+      res.status(401).json({ error: 'Authentication required' });
+      return;
+    }
+
+    const { type, category, limit = '100' } = req.query;
+
+    let sql = `
+      SELECT
+        ta.id, ta.themeId, ta.assetType, ta.category, ta.name, ta.filename, ta.url,
+        ta.width, ta.height, ta.sizeBytes, ta.createdAt,
+        ta.uploadedBy, u.displayName as uploaderName
+      FROM theme_assets ta
+      LEFT JOIN users u ON ta.uploadedBy = u.id
+    `;
+    const params: any[] = [];
+    const conditions: string[] = [];
+
+    // Filter by asset type if specified
+    if (type) {
+      conditions.push('ta.assetType = ?');
+      params.push(type);
+    }
+
+    // Filter by category if specified
+    if (category) {
+      if (category === 'uncategorized') {
+        conditions.push('ta.category IS NULL');
+      } else {
+        conditions.push('ta.category = ?');
+        params.push(category);
+      }
+    }
+
+    if (conditions.length > 0) {
+      sql += ' WHERE ' + conditions.join(' AND ');
+    }
+
+    sql += ' ORDER BY ta.createdAt DESC LIMIT ?';
+    params.push(parseInt(limit as string, 10));
+
+    const assets = await q<Array<{
+      id: string;
+      themeId: string | null;
+      assetType: string;
+      category: string | null;
+      name: string | null;
+      filename: string;
+      url: string;
+      width: number;
+      height: number;
+      sizeBytes: number;
+      createdAt: string;
+      uploadedBy: number;
+      uploaderName: string | null;
+    }>>(sql, params);
+
+    res.json({ assets });
+  } catch (err) {
+    console.error('Failed to get theme library:', err);
+    res.status(500).json({ error: 'Failed to get theme library' });
+  }
+}
+
+/**
+ * GET /api/uploads/categories
+ * Get all unique categories used in the theme library
+ */
+export async function getCategories(req: Request, res: Response): Promise<void> {
+  try {
+    const user = getUser(req);
+    if (!user) {
+      res.status(401).json({ error: 'Authentication required' });
+      return;
+    }
+
+    const categories = await q<Array<{ category: string | null; count: number }>>(
+      `SELECT category, COUNT(*) as count
+       FROM theme_assets
+       GROUP BY category
+       ORDER BY category ASC`
+    );
+
+    // Predefined categories that users can choose from
+    const predefinedCategories = [
+      { id: 'sidebar', label: 'Sidebar', description: 'Images for sidebar backgrounds' },
+      { id: 'page-background', label: 'Page Background', description: 'Full page backgrounds' },
+      { id: 'card-background', label: 'Card Background', description: 'Card and widget backgrounds' },
+      { id: 'header', label: 'Header', description: 'Header area images' },
+      { id: 'cyberpunk', label: 'Cyberpunk', description: 'Cyberpunk/neon themed images' },
+      { id: 'modern', label: 'Modern', description: 'Clean modern style images' },
+      { id: 'nature', label: 'Nature', description: 'Nature and outdoor images' },
+      { id: 'abstract', label: 'Abstract', description: 'Abstract patterns and designs' },
+      { id: 'fun', label: 'Fun', description: 'Fun and playful images' },
+      { id: 'minimal', label: 'Minimal', description: 'Minimalist designs' },
+    ];
+
+    res.json({
+      categories: categories.map(c => ({
+        id: c.category || 'uncategorized',
+        count: c.count,
+      })),
+      predefinedCategories,
+    });
+  } catch (err) {
+    console.error('Failed to get categories:', err);
+    res.status(500).json({ error: 'Failed to get categories' });
+  }
+}
+
+/**
+ * PATCH /api/uploads/theme-image/:id
+ * Update an image's category and/or name
+ */
+export async function updateThemeImage(req: Request, res: Response): Promise<void> {
+  try {
+    const user = getUser(req);
+    if (!user) {
+      res.status(401).json({ error: 'Authentication required' });
+      return;
+    }
+
+    const { id } = req.params;
+    const { category, name } = req.body as { category?: string; name?: string };
+
+    // Check if asset exists and user owns it (or is admin)
+    const [asset] = await q<Array<{ id: string; uploadedBy: number }>>(
+      'SELECT id, uploadedBy FROM theme_assets WHERE id = ?',
+      [id]
+    );
+
+    if (!asset) {
+      res.status(404).json({ error: 'Image not found' });
+      return;
+    }
+
+    if (asset.uploadedBy !== user.id && user.roleId !== 'admin') {
+      res.status(403).json({ error: 'Permission denied' });
+      return;
+    }
+
+    // Update category and/or name
+    const updates: string[] = [];
+    const params: any[] = [];
+
+    if (category !== undefined) {
+      updates.push('category = ?');
+      params.push(category || null);
+    }
+    if (name !== undefined) {
+      updates.push('name = ?');
+      params.push(name || null);
+    }
+
+    if (updates.length > 0) {
+      params.push(id);
+      await q(`UPDATE theme_assets SET ${updates.join(', ')} WHERE id = ?`, params);
+    }
+
+    res.json({ success: true });
+  } catch (err) {
+    console.error('Update failed:', err);
+    res.status(500).json({ error: 'Update failed' });
   }
 }

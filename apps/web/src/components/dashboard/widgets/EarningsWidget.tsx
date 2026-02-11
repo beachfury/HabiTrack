@@ -11,9 +11,12 @@ export function EarningsWidget({ totalEarnings = 0 }: EarningsWidgetProps) {
     <div className="h-full flex flex-col justify-center">
       <Link
         to="/paid-chores"
-        className="flex items-center gap-4 p-4 bg-gradient-to-r from-green-500 to-emerald-600 rounded-xl text-white hover:from-green-600 hover:to-emerald-700 transition-colors"
+        className="flex items-center gap-4 p-4 rounded-xl text-[var(--color-success-foreground)] hover:brightness-110 transition-all"
+        style={{
+          background: `linear-gradient(to right, var(--color-success), color-mix(in srgb, var(--color-success) 80%, var(--color-primary)))`,
+        }}
       >
-        <div className="p-3 bg-white/20 rounded-xl">
+        <div className="p-3 rounded-xl" style={{ backgroundColor: 'rgba(255,255,255,0.2)' }}>
           <Wallet size={28} />
         </div>
         <div>

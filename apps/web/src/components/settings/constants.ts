@@ -1,9 +1,9 @@
 // apps/web/src/components/settings/constants.ts
 
 export const ACCENT_COLORS = [
-  { name: 'Purple', value: '#8b5cf6' },
+  { name: 'HabiTrack Green', value: '#3cb371' },
   { name: 'Blue', value: '#3b82f6' },
-  { name: 'Green', value: '#22c55e' },
+  { name: 'Purple', value: '#8b5cf6' },
   { name: 'Red', value: '#ef4444' },
   { name: 'Orange', value: '#f97316' },
   { name: 'Pink', value: '#ec4899' },

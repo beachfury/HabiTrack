@@ -53,6 +53,7 @@ export async function getEvents(req: Request, res: Response) {
   }
 
   try {
+    // Get regular calendar events
     const events = await q<CalendarEvent[]>(
       `SELECT
         e.id, e.title, e.description,
@@ -72,7 +73,62 @@ export async function getEvents(req: Request, res: Response) {
       [end, start],
     );
 
-    return success(res, { events });
+    // Get meal plans for the date range
+    const mealPlans = await q<any[]>(
+      `SELECT
+        mp.id,
+        DATE_FORMAT(mp.date, '%Y-%m-%d') as date,
+        mp.recipeId,
+        r.name as recipeName,
+        mp.customMealName,
+        mp.isFendForYourself,
+        mp.ffyMessage,
+        mp.status
+      FROM meal_plans mp
+      LEFT JOIN recipes r ON mp.recipeId = r.id
+      WHERE mp.date >= ? AND mp.date <= ?`,
+      [String(start).split('T')[0], String(end).split('T')[0]],
+    );
+
+    // Convert meal plans to calendar events format
+    const mealEvents = mealPlans.map((mp) => {
+      let title = '';
+      if (mp.isFendForYourself) {
+        title = '🍕 Fend For Yourself';
+      } else if (mp.recipeName) {
+        title = `🍽️ ${mp.recipeName}`;
+      } else if (mp.customMealName) {
+        title = `🍽️ ${mp.customMealName}`;
+      } else {
+        title = '🍽️ Dinner';
+      }
+
+      return {
+        id: `meal-${mp.id}`, // Prefix to distinguish from regular events
+        title,
+        description: mp.status === 'voting' ? 'Voting in progress' : null,
+        start: `${mp.date}T18:00:00`, // Default dinner time
+        end: `${mp.date}T19:00:00`,
+        allDay: false,
+        color: '#f97316', // Orange color for meals
+        eventColor: '#f97316',
+        location: null,
+        createdBy: null,
+        createdByName: null,
+        assignedTo: null,
+        assignedToName: null,
+        isMealPlan: true, // Flag to identify meal events
+        mealPlanId: mp.id,
+        mealStatus: mp.status,
+      };
+    });
+
+    // Combine and sort by start time
+    const allEvents = [...events, ...mealEvents].sort((a, b) => {
+      return new Date(a.start).getTime() - new Date(b.start).getTime();
+    });
+
+    return success(res, { events: allEvents });
   } catch (err) {
     return serverError(res, err as Error);
   }

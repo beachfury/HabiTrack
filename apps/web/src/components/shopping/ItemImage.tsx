@@ -35,9 +35,9 @@ export function ItemImage({ url, size = 'md', alt = '', className = '' }: ItemIm
 
   return (
     <div
-      className={`${sizeClasses[size]} bg-gray-100 dark:bg-gray-700 rounded-lg flex items-center justify-center flex-shrink-0 ${className}`}
+      className={`${sizeClasses[size]} bg-[var(--color-muted)] rounded-lg flex items-center justify-center flex-shrink-0 ${className}`}
     >
-      <Package size={iconSizes[size]} className="text-gray-400" />
+      <Package size={iconSizes[size]} className="text-[var(--color-muted-foreground)]" />
     </div>
   );
 }

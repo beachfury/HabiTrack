@@ -15,10 +15,23 @@ import {
   Menu,
   X,
   DollarSign,
+  Wallet,
+  BookOpen,
+  UtensilsCrossed,
 } from 'lucide-react';
 import { useState } from 'react';
-import type { Theme } from '../../types/theme';
+import type { Theme, ExtendedTheme } from '../../types/theme';
 import type { HouseholdSettings } from '../../api';
+
+// Helper to resolve image URLs - converts relative API paths to full URLs
+const API_BASE = import.meta.env.VITE_API_BASE_URL || 'http://localhost:3000';
+function resolveImageUrl(url: string | undefined): string | undefined {
+  if (!url) return undefined;
+  if (url.startsWith('/')) {
+    return `${API_BASE}${url}`;
+  }
+  return url;
+}
 
 interface SidebarLayoutProps {
   children: React.ReactNode;
@@ -50,10 +63,15 @@ const navItems = [
   { path: '/shopping', icon: ShoppingCart, label: 'Shopping' },
   { path: '/chores', icon: CheckSquare, label: 'Chores' },
   { path: '/paid-chores', icon: DollarSign, label: 'Paid Chores' },
+  { path: '/meals', icon: UtensilsCrossed, label: 'Meals' },
+  { path: '/recipes', icon: BookOpen, label: 'Recipes' },
   { path: '/messages', icon: Bell, label: 'Messages' },
 ];
 
-const adminItems = [{ path: '/family', icon: Users, label: 'Family' }];
+const adminItems = [
+  { path: '/family', icon: Users, label: 'Family' },
+  { path: '/budgets', icon: Wallet, label: 'Budgets' },
+];
 const userItems = [{ path: '/settings', icon: Settings, label: 'Settings' }];
 
 export function SidebarLayout({
@@ -83,19 +101,77 @@ export function SidebarLayout({
   const navStyle = layout?.navStyle || 'icons-text';
   const sidebarWidth = layout?.sidebarWidth || 256;
 
-  // Build sidebar styles
-  const brandColor = householdSettings?.brandColor || colors?.primary || '#8b5cf6';
+  // Get elementStyles from extended theme (new system)
+  const extTheme = theme as ExtendedTheme | null;
+  const sidebarElementStyle = extTheme?.elementStyles?.sidebar;
+  const pageBackgroundStyle = extTheme?.elementStyles?.['page-background'];
+
+  // Build sidebar styles - prioritize elementStyles (new system) over sidebar (old system)
+  // Use theme's primary color for sidebar accents (NOT household accentColor - that's login-only)
+  const accentColor = colors?.primary || '#3cb371';
+
+  // Check if using new elementStyles system
+  const hasElementStyles = sidebarElementStyle && (
+    sidebarElementStyle.backgroundColor ||
+    sidebarElementStyle.backgroundGradient ||
+    sidebarElementStyle.backgroundImage
+  );
+
+  // Check for legacy image background
+  const hasLegacyImageBackground = !hasElementStyles && sidebar?.backgroundType === 'image' && sidebar?.imageUrl;
+  // Check for new elementStyles image background
+  const hasElementStyleImage = sidebarElementStyle?.backgroundImage;
+  const hasImageBackground = hasLegacyImageBackground || hasElementStyleImage;
 
   const sidebarStyle: React.CSSProperties = {
     width: sidebarWidth,
     minWidth: sidebarWidth,
+    position: 'relative',
+    overflow: 'hidden',
   };
 
-  if (sidebar) {
+  // Apply styles - prioritize elementStyles (new) over sidebar (legacy)
+  if (hasElementStyles) {
+    // NEW SYSTEM: Use elementStyles
+    if (sidebarElementStyle.backgroundGradient) {
+      const { from, to, direction } = sidebarElementStyle.backgroundGradient;
+      sidebarStyle.background = `linear-gradient(${direction || 'to bottom'}, ${from}, ${to})`;
+    } else if (sidebarElementStyle.backgroundImage) {
+      // Image will be handled via the background layer div
+      sidebarStyle.backgroundColor = sidebarElementStyle.backgroundColor || colors?.card || (resolvedMode === 'dark' ? '#1f2937' : '#ffffff');
+    } else if (sidebarElementStyle.backgroundColor) {
+      sidebarStyle.backgroundColor = sidebarElementStyle.backgroundColor;
+    }
+
+    // Apply border radius from elementStyles
+    if (sidebarElementStyle.borderRadius !== undefined) {
+      sidebarStyle.borderRadius = `${sidebarElementStyle.borderRadius}px`;
+    }
+
+    // Apply border from elementStyles
+    if (sidebarElementStyle.borderWidth && sidebarElementStyle.borderColor) {
+      sidebarStyle.border = `${sidebarElementStyle.borderWidth}px ${sidebarElementStyle.borderStyle || 'solid'} ${sidebarElementStyle.borderColor}`;
+    }
+
+    // Apply shadow from elementStyles
+    if (sidebarElementStyle.boxShadow) {
+      const shadowMap: Record<string, string> = {
+        none: 'none',
+        subtle: '0 1px 3px rgba(0,0,0,0.08)',
+        medium: '0 4px 6px rgba(0,0,0,0.1)',
+        strong: '0 10px 15px rgba(0,0,0,0.15)',
+      };
+      sidebarStyle.boxShadow = shadowMap[sidebarElementStyle.boxShadow] || sidebarElementStyle.boxShadow;
+    }
+  } else if (sidebar) {
+    // LEGACY SYSTEM: Use theme.sidebar
     if (sidebar.backgroundType === 'solid' && sidebar.backgroundColor) {
       sidebarStyle.backgroundColor = sidebar.backgroundColor;
     } else if (sidebar.backgroundType === 'gradient') {
       sidebarStyle.background = `linear-gradient(${sidebar.gradientDirection || '180deg'}, ${sidebar.gradientFrom}, ${sidebar.gradientTo})`;
+    } else if (hasLegacyImageBackground) {
+      // For image background, use a solid base color
+      sidebarStyle.backgroundColor = colors?.card || (resolvedMode === 'dark' ? '#1f2937' : '#ffffff');
     } else {
       sidebarStyle.backgroundColor = colors?.card || (resolvedMode === 'dark' ? '#1f2937' : '#ffffff');
     }
@@ -122,8 +198,8 @@ export function SidebarLayout({
         className="flex items-center gap-3 px-4 py-3 transition-colors relative"
         style={{
           borderRadius,
-          backgroundColor: active ? `${brandColor}20` : 'transparent',
-          color: active ? brandColor : textColor,
+          backgroundColor: active ? `${accentColor}20` : 'transparent',
+          color: active ? accentColor : textColor,
         }}
         title={navStyle === 'icons-only' ? item.label : undefined}
       >
@@ -136,7 +212,7 @@ export function SidebarLayout({
               </span>
             </>
           ) : (
-            <item.icon size={20} style={{ color: active ? brandColor : iconColor }} />
+            <item.icon size={20} style={{ color: active ? accentColor : iconColor }} />
           )}
         </div>
         {navStyle !== 'icons-only' && (
@@ -155,25 +231,54 @@ export function SidebarLayout({
 
   const sidebarContent = (
     <>
+      {/* Image background layer - must be first so it's behind other content */}
+      {hasImageBackground && (
+        <div
+          className="absolute inset-0 pointer-events-none"
+          style={{
+            backgroundImage: hasElementStyleImage
+              ? `url(${resolveImageUrl(sidebarElementStyle!.backgroundImage)})`
+              : `url(${resolveImageUrl(sidebar!.imageUrl)})`,
+            backgroundSize: 'cover',
+            backgroundPosition: 'center',
+            opacity: hasElementStyleImage
+              ? (sidebarElementStyle!.backgroundOpacity ?? 1)
+              : (sidebar!.imageOpacity || 30) / 100,
+            filter: hasElementStyleImage
+              ? (sidebarElementStyle!.blur ? `blur(${sidebarElementStyle!.blur}px)` : undefined)
+              : (sidebar!.blur ? `blur(${sidebar!.blur}px)` : undefined),
+            zIndex: 0,
+          }}
+        />
+      )}
+
       {/* Logo */}
       <div
-        className="p-6"
+        className="p-6 relative z-10"
         style={{ borderBottom: `1px solid ${textColor}15` }}
       >
-        <Link to="/" className="flex items-center gap-3" onClick={() => setMobileMenuOpen(false)}>
-          {householdSettings?.logoUrl ? (
+        <Link to="/" className="flex flex-col items-center gap-2" onClick={() => setMobileMenuOpen(false)}>
+          <div
+            className="w-48 h-48 flex items-center justify-center"
+            style={{
+              filter: resolvedMode === 'dark'
+                ? 'drop-shadow(0 0 25px rgba(79, 214, 147, 0.6)) drop-shadow(0 0 50px rgba(79, 214, 147, 0.35))'
+                : 'drop-shadow(0 0 20px rgba(60, 179, 113, 0.45)) drop-shadow(0 0 40px rgba(60, 179, 113, 0.25))',
+            }}
+          >
             <img
-              src={`${import.meta.env.VITE_API_BASE_URL || 'http://localhost:3000'}${householdSettings.logoUrl}`}
-              alt="Logo"
-              className="w-10 h-10 rounded-xl object-cover"
+              src={householdSettings?.logoUrl
+                ? `${import.meta.env.VITE_API_BASE_URL || 'http://localhost:3000'}${householdSettings.logoUrl}`
+                : '/assets/HabiTrack_logo.png'
+              }
+              alt="HabiTrack Logo"
+              className="w-44 h-44 object-contain"
             />
-          ) : (
-            <span className="text-2xl">🏠</span>
-          )}
+          </div>
           {navStyle !== 'icons-only' && (
             <h1
               className="text-xl font-bold"
-              style={{ color: brandColor }}
+              style={{ color: accentColor }}
             >
               {householdSettings?.name || 'HabiTrack'}
             </h1>
@@ -182,7 +287,7 @@ export function SidebarLayout({
       </div>
 
       {/* Navigation */}
-      <nav className="flex-1 p-4 space-y-1 overflow-y-auto">
+      <nav className="flex-1 p-4 space-y-1 overflow-y-auto relative z-10">
         {navItems.map((item) => {
           const hasUnread = item.path === '/messages' && unreadCount > 0;
           return renderNavItem(item, hasUnread);
@@ -212,7 +317,7 @@ export function SidebarLayout({
       </nav>
 
       {/* User section */}
-      <div className="p-4" style={{ borderTop: `1px solid ${textColor}15` }}>
+      <div className="p-4 relative z-10" style={{ borderTop: `1px solid ${textColor}15` }}>
         <div className="flex items-center gap-3 px-4 py-3">
           {user?.avatarUrl ? (
             <img
@@ -223,7 +328,7 @@ export function SidebarLayout({
           ) : (
             <div
               className="w-10 h-10 rounded-full flex items-center justify-center text-white font-semibold"
-              style={{ backgroundColor: user?.color || brandColor }}
+              style={{ backgroundColor: user?.color || accentColor }}
             >
               {user?.displayName?.charAt(0).toUpperCase() || '?'}
             </div>
@@ -253,7 +358,7 @@ export function SidebarLayout({
           <button
             onClick={onShowUserSwitcher}
             className="w-full mt-2 flex items-center justify-center gap-2 px-4 py-2 text-sm rounded-xl transition-colors hover:opacity-80"
-            style={{ color: brandColor, borderRadius }}
+            style={{ color: accentColor, borderRadius }}
           >
             <UserCheck size={16} />
             {impersonation.active ? 'Switch User' : 'View as User'}
@@ -261,20 +366,6 @@ export function SidebarLayout({
         )}
       </div>
 
-      {/* Image overlay for sidebar background */}
-      {sidebar?.backgroundType === 'image' && sidebar.imageUrl && (
-        <div
-          className="absolute inset-0 pointer-events-none"
-          style={{
-            backgroundImage: `url(${sidebar.imageUrl})`,
-            backgroundSize: 'cover',
-            backgroundPosition: 'center',
-            opacity: (sidebar.imageOpacity || 30) / 100,
-            filter: sidebar.blur ? `blur(${sidebar.blur}px)` : undefined,
-            zIndex: -1,
-          }}
-        />
-      )}
     </>
   );
 
@@ -307,7 +398,7 @@ export function SidebarLayout({
         <button
           onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
           className="p-2 rounded-lg bg-white dark:bg-gray-800 shadow-lg"
-          style={{ color: brandColor }}
+          style={{ color: accentColor }}
         >
           {mobileMenuOpen ? <X size={24} /> : <Menu size={24} />}
         </button>
@@ -344,12 +435,55 @@ export function SidebarLayout({
 
         {/* Main content */}
         <main
-          className="flex-1 overflow-auto"
-          style={{
-            backgroundColor: colors?.background || (resolvedMode === 'dark' ? '#111827' : '#f9fafb'),
-          }}
+          className="flex-1 overflow-auto relative"
+          style={(() => {
+            const mainStyle: React.CSSProperties = {
+              // Apply global typography from theme
+              fontFamily: theme?.typography?.fontFamily || 'var(--font-family)',
+              fontSize: theme?.typography?.baseFontSize ? `${theme.typography.baseFontSize}px` : 'var(--font-size-base)',
+            };
+
+            // Apply font weight if set
+            if (theme?.typography?.fontWeight) {
+              const weightMap: Record<string, number> = { normal: 400, medium: 500, semibold: 600, bold: 700 };
+              mainStyle.fontWeight = weightMap[theme.typography.fontWeight] || 400;
+            }
+
+            // Check for new elementStyles page background
+            if (pageBackgroundStyle) {
+              if (pageBackgroundStyle.backgroundGradient) {
+                const { from, to, direction } = pageBackgroundStyle.backgroundGradient;
+                mainStyle.background = `linear-gradient(${direction || 'to bottom'}, ${from}, ${to})`;
+              } else if (pageBackgroundStyle.backgroundImage) {
+                // For image backgrounds, set a base color (image rendered as separate layer)
+                mainStyle.backgroundColor = pageBackgroundStyle.backgroundColor || colors?.background || (resolvedMode === 'dark' ? '#111827' : '#f9fafb');
+              } else if (pageBackgroundStyle.backgroundColor) {
+                mainStyle.backgroundColor = pageBackgroundStyle.backgroundColor;
+              } else {
+                mainStyle.backgroundColor = colors?.background || (resolvedMode === 'dark' ? '#111827' : '#f9fafb');
+              }
+            } else {
+              mainStyle.backgroundColor = colors?.background || (resolvedMode === 'dark' ? '#111827' : '#f9fafb');
+            }
+
+            return mainStyle;
+          })()}
         >
-          <div className="p-8 lg:p-8 pt-16 lg:pt-8">
+          {/* Background image layer for page background */}
+          {pageBackgroundStyle?.backgroundImage && (
+            <div
+              className="absolute inset-0 pointer-events-none"
+              style={{
+                backgroundImage: `url(${resolveImageUrl(pageBackgroundStyle.backgroundImage)})`,
+                backgroundSize: 'cover',
+                backgroundPosition: 'center',
+                opacity: pageBackgroundStyle.backgroundOpacity ?? 1,
+                filter: pageBackgroundStyle.blur ? `blur(${pageBackgroundStyle.blur}px)` : undefined,
+                zIndex: 0,
+              }}
+            />
+          )}
+          <div className="p-8 lg:p-8 pt-16 lg:pt-8 relative z-10">
             {children}
           </div>
         </main>

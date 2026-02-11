@@ -14,5 +14,8 @@ export { PredictionsTab } from './PredictionsTab';
 export { HistoryTab } from './HistoryTab';
 export { ManageTab } from './ManageTab';
 
+// Meal integration
+export { MealIngredientsCard } from './MealIngredientsCard';
+
 // Modals
 export { CatalogBrowserModal, StoreSelectModal, NewItemModal } from './modals';

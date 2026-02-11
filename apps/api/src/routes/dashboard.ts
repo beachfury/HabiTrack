@@ -51,6 +51,7 @@ const defaultWidgetsList: Widget[] = [
   { id: 'shopping-list', name: 'Shopping List', description: 'Quick view of shopping items', icon: 'shopping-cart', category: 'shopping', defaultW: 2, defaultH: 2, minW: 1, minH: 2, maxW: null, maxH: null, defaultConfig: null, roles: null, active: true },
   { id: 'family-members', name: 'Family', description: 'Quick family member overview', icon: 'users', category: 'family', defaultW: 2, defaultH: 2, minW: 1, minH: 2, maxW: null, maxH: null, defaultConfig: null, roles: null, active: true },
   { id: 'announcements', name: 'Announcements', description: 'Recent announcements', icon: 'megaphone', category: 'messages', defaultW: 2, defaultH: 2, minW: 1, minH: 2, maxW: null, maxH: null, defaultConfig: null, roles: null, active: true },
+  { id: 'upcoming-meals', name: 'Upcoming Meals', description: "This week's dinner plans", icon: 'utensils', category: 'meals', defaultW: 2, defaultH: 2, minW: 1, minH: 2, maxW: null, maxH: null, defaultConfig: null, roles: null, active: true },
 ];
 
 // ============================================
@@ -425,22 +426,25 @@ export async function getDashboardData(req: Request, res: Response) {
       earnings,
       familyMembers,
       announcements,
+      upcomingMeals,
     ] = await Promise.all([
-      // Today's events
+      // Today's events (includes multi-day events that span today)
       safeQuery<any>(`
-        SELECT id, title, startTime, endTime, color, allDay
+        SELECT id, title, startAt as startTime, endAt as endTime, color, allDay
         FROM calendar_events
-        WHERE DATE(startTime) = CURDATE()
-        ORDER BY startTime ASC
+        WHERE DATE(startAt) <= CURDATE()
+          AND (DATE(endAt) >= CURDATE() OR endAt IS NULL OR DATE(startAt) = CURDATE())
+        ORDER BY startAt ASC
         LIMIT 10
       `),
 
-      // Upcoming events (next 7 days)
+      // Upcoming events (next 7 days, includes multi-day events)
       safeQuery<any>(`
-        SELECT id, title, startTime, endTime, color, allDay
+        SELECT id, title, startAt as startTime, endAt as endTime, color, allDay
         FROM calendar_events
-        WHERE DATE(startTime) BETWEEN CURDATE() AND DATE_ADD(CURDATE(), INTERVAL 7 DAY)
-        ORDER BY startTime ASC
+        WHERE DATE(startAt) <= DATE_ADD(CURDATE(), INTERVAL 7 DAY)
+          AND (DATE(endAt) >= CURDATE() OR endAt IS NULL OR DATE(startAt) >= CURDATE())
+        ORDER BY startAt ASC
         LIMIT 15
       `),
 
@@ -456,23 +460,28 @@ export async function getDashboardData(req: Request, res: Response) {
         LIMIT 10
       `),
 
-      // My chores
+      // My chores (next 7 days only - from today forward)
       safeQuery<any>(`
         SELECT ci.id, ci.choreId, c.title, ci.status, ci.dueDate, ci.completedAt
         FROM chore_instances ci
         JOIN chores c ON ci.choreId = c.id
-        WHERE ci.assignedTo = ? AND ci.status IN ('pending', 'in_progress')
+        WHERE ci.assignedTo = ?
+          AND ci.status IN ('pending', 'in_progress')
+          AND ci.dueDate >= CURDATE()
+          AND ci.dueDate <= DATE_ADD(CURDATE(), INTERVAL 7 DAY)
         ORDER BY ci.dueDate ASC
         LIMIT 10
       `, [user.id]),
 
       // Shopping list items
       safeQuery<any>(`
-        SELECT sl.id, ci.name, sl.quantity, sl.unit, sl.purchased, sc.name as categoryName
+        SELECT sl.id, ci.name, sl.quantity, ci.unit,
+               CASE WHEN sl.purchasedAt IS NULL THEN 0 ELSE 1 END as purchased,
+               sc.name as categoryName
         FROM shopping_list sl
-        JOIN catalog_items ci ON sl.itemId = ci.id
+        JOIN catalog_items ci ON sl.catalogItemId = ci.id
         LEFT JOIN shopping_categories sc ON ci.categoryId = sc.id
-        WHERE sl.purchased = 0
+        WHERE sl.active = 1 AND sl.purchasedAt IS NULL
         ORDER BY sc.sortOrder ASC, ci.name ASC
         LIMIT 15
       `),
@@ -487,17 +496,12 @@ export async function getDashboardData(req: Request, res: Response) {
         WHERE ci.assignedTo = ?
       `, [user.id]),
 
-      // Leaderboard
+      // Leaderboard - uses totalPoints from users table (same as Chores page)
       safeQuery<any>(`
-        SELECT u.id, u.displayName, u.color, u.avatarUrl,
-               COALESCE(SUM(c.points), 0) as points
+        SELECT u.id, u.displayName, u.color, u.avatarUrl, u.totalPoints as points
         FROM users u
-        LEFT JOIN chore_instances ci ON u.id = ci.assignedTo AND ci.status = 'completed'
-          AND DATE(ci.completedAt) >= DATE_SUB(CURDATE(), INTERVAL 7 DAY)
-        LEFT JOIN chores c ON ci.choreId = c.id
-        WHERE u.active = 1
-        GROUP BY u.id
-        ORDER BY points DESC
+        WHERE u.active = 1 AND u.roleId != 'kiosk'
+        ORDER BY u.totalPoints DESC
         LIMIT 5
       `),
 
@@ -537,7 +541,26 @@ export async function getDashboardData(req: Request, res: Response) {
         ORDER BY m.priority = 'urgent' DESC, m.priority = 'high' DESC, m.createdAt DESC
         LIMIT 5
       `),
+
+      // Upcoming meals (next 7 days)
+      safeQuery<any>(`
+        SELECT mp.id, DATE_FORMAT(mp.date, '%Y-%m-%d') as date, r.name as recipeName, mp.customMealName,
+               mp.isFendForYourself, mp.ffyMessage, mp.status,
+               (SELECT COUNT(*) FROM meal_suggestions ms WHERE ms.mealPlanId = mp.id) as voteCount
+        FROM meal_plans mp
+        LEFT JOIN recipes r ON mp.recipeId = r.id
+        WHERE mp.date >= CURDATE()
+          AND mp.date <= DATE_ADD(CURDATE(), INTERVAL 7 DAY)
+        ORDER BY mp.date ASC
+        LIMIT 7
+      `),
     ]);
+
+    // Ensure leaderboard points are numbers (SQL SUM can return strings)
+    const leaderboardWithNumbers = choreLeaderboard.map((entry: any) => ({
+      ...entry,
+      points: Number(entry.points) || 0,
+    }));
 
     res.json({
       user: userInfo[0] || { displayName: 'User' },
@@ -547,11 +570,12 @@ export async function getDashboardData(req: Request, res: Response) {
       myChores,
       shoppingItems,
       choreStats: choreStats[0] || { totalPoints: 0, thisWeek: 0 },
-      choreLeaderboard,
+      choreLeaderboard: leaderboardWithNumbers,
       paidChores,
-      earnings: earnings[0]?.totalEarnings || 0,
+      earnings: Number(earnings[0]?.totalEarnings) || 0,
       familyMembers,
       announcements,
+      upcomingMeals,
     });
   } catch (err) {
     console.error('Failed to get dashboard data:', err);

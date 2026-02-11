@@ -15,44 +15,45 @@ export function ListItemRow({ item, onMarkPurchased, onRemove, isAdmin }: ListIt
   const quantity = Number(item.quantity) || 1;
 
   return (
-    <div className="p-3 flex items-center gap-3 hover:bg-gray-50 dark:hover:bg-gray-700/50 transition-colors">
+    <div className="p-3 flex items-center gap-3 hover:bg-[var(--color-muted)] transition-colors">
       <ItemImage url={item.imageUrl} size="sm" />
       <div className="flex-1 min-w-0">
         <div className="flex items-center gap-2">
-          <p className="font-medium text-gray-900 dark:text-white truncate">{item.itemName}</p>
+          <p className="font-medium text-[var(--color-foreground)] truncate">{item.itemName}</p>
           <span
-            className={`px-1.5 py-0.5 text-xs rounded-full flex-shrink-0 ${
+            className="px-1.5 py-0.5 text-xs rounded-full flex-shrink-0"
+            style={
               item.listType === 'need'
-                ? 'bg-green-100 text-green-700 dark:bg-green-800 dark:text-green-300'
-                : 'bg-orange-100 text-orange-700 dark:bg-orange-800 dark:text-orange-300'
-            }`}
+                ? { backgroundColor: 'color-mix(in srgb, var(--color-success) 15%, transparent)', color: 'var(--color-success)' }
+                : { backgroundColor: 'color-mix(in srgb, var(--color-warning) 15%, transparent)', color: 'var(--color-warning)' }
+            }
           >
             {item.listType}
           </span>
         </div>
-        <div className="flex items-center gap-2 text-sm text-gray-500">
+        <div className="flex items-center gap-2 text-sm text-[var(--color-muted-foreground)]">
           {item.brand && <span className="truncate">{item.brand}</span>}
           {quantity > 1 && <span>• Qty: {quantity}</span>}
         </div>
       </div>
       <div className="text-right flex-shrink-0">
-        <p className="font-semibold text-gray-900 dark:text-white">
+        <p className="font-semibold text-[var(--color-foreground)]">
           ${(price * quantity).toFixed(2)}
         </p>
-        {quantity > 1 && <p className="text-xs text-gray-500">${price.toFixed(2)} ea</p>}
+        {quantity > 1 && <p className="text-xs text-[var(--color-muted-foreground)]">${price.toFixed(2)} ea</p>}
       </div>
       {isAdmin && (
         <div className="flex items-center gap-1 flex-shrink-0">
           <button
             onClick={() => onMarkPurchased(item.id)}
-            className="p-2 text-green-600 hover:bg-green-100 dark:hover:bg-green-800 rounded-lg transition-colors"
+            className="p-2 text-[var(--color-success)] hover:bg-[var(--color-success)]/10 rounded-lg transition-colors"
             title="Mark as purchased"
           >
             <Check size={18} />
           </button>
           <button
             onClick={() => onRemove(item.id)}
-            className="p-2 text-red-600 hover:bg-red-100 dark:hover:bg-red-800 rounded-lg transition-colors"
+            className="p-2 text-[var(--color-destructive)] hover:bg-[var(--color-destructive)]/10 rounded-lg transition-colors"
             title="Remove"
           >
             <Trash2 size={18} />

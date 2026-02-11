@@ -33,7 +33,8 @@ export async function listThemes(req: Request, res: Response) {
         id, name, description, thumbnailUrl,
         layout, colorsLight, colorsDark, typography,
         sidebar, header, pageBackground, ui, icons,
-        createdBy, isPublic, isApprovedForKids, isDefault,
+        elementStyles, widgetOverrides, loginPage, lcarsMode,
+        createdBy, isPublic, isApprovedForKids, isDefault, isSystemTheme,
         usageCount, createdAt, updatedAt
       FROM themes
       WHERE 1=1
@@ -54,7 +55,7 @@ export async function listThemes(req: Request, res: Response) {
       params.push(user.id);
     }
 
-    sql += ' ORDER BY isDefault DESC, usageCount DESC, name ASC';
+    sql += ' ORDER BY isSystemTheme DESC, isDefault DESC, usageCount DESC, name ASC';
 
     const themes = await q<any[]>(sql, params);
 
@@ -85,7 +86,8 @@ export async function getTheme(req: Request, res: Response) {
         id, name, description, thumbnailUrl,
         layout, colorsLight, colorsDark, typography,
         sidebar, header, pageBackground, ui, icons,
-        createdBy, isPublic, isApprovedForKids, isDefault,
+        elementStyles, widgetOverrides, loginPage, lcarsMode,
+        createdBy, isPublic, isApprovedForKids, isDefault, isSystemTheme,
         usageCount, createdAt, updatedAt
       FROM themes
       WHERE id = ? AND (isPublic = 1 OR createdBy = ?)`,
@@ -133,6 +135,11 @@ export async function createTheme(req: Request, res: Response) {
       ui,
       icons,
       isPublic = true,
+      // Extended theme fields
+      elementStyles,
+      widgetOverrides,
+      loginPage,
+      lcarsMode,
     } = req.body;
 
     // Validate required fields
@@ -147,8 +154,9 @@ export async function createTheme(req: Request, res: Response) {
         id, name, description, thumbnailUrl,
         layout, colorsLight, colorsDark, typography,
         sidebar, header, pageBackground, ui, icons,
+        elementStyles, widgetOverrides, loginPage, lcarsMode,
         createdBy, isPublic, isApprovedForKids, isDefault
-      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 0, 0)`,
+      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 0, 0)`,
       [
         id,
         name,
@@ -163,6 +171,10 @@ export async function createTheme(req: Request, res: Response) {
         JSON.stringify(pageBackground),
         JSON.stringify(ui),
         JSON.stringify(icons),
+        elementStyles ? JSON.stringify(elementStyles) : null,
+        widgetOverrides ? JSON.stringify(widgetOverrides) : null,
+        loginPage ? JSON.stringify(loginPage) : null,
+        lcarsMode ? JSON.stringify(lcarsMode) : null,
         user.id,
         isPublic ? 1 : 0,
       ],
@@ -192,13 +204,23 @@ export async function updateTheme(req: Request, res: Response) {
     const { id } = req.params;
 
     // Check ownership or admin
-    const existing = await q<any[]>('SELECT createdBy, isDefault FROM themes WHERE id = ?', [id]);
+    const existing = await q<any[]>('SELECT createdBy, isDefault, isSystemTheme FROM themes WHERE id = ?', [id]);
     if (existing.length === 0) {
       return res.status(404).json({ error: 'Theme not found' });
     }
 
+    // Cannot edit system themes (HabiTrack Classic)
+    if (existing[0].isSystemTheme) {
+      return res.status(403).json({ error: 'Cannot modify system themes' });
+    }
+
     const isOwner = existing[0].createdBy === user.id;
     const isAdmin = user.roleId === 'admin';
+
+    // Only admins can edit default themes (like Household Brand)
+    if (existing[0].isDefault && !isAdmin) {
+      return res.status(403).json({ error: 'Only administrators can modify the household theme' });
+    }
 
     if (!isOwner && !isAdmin) {
       return res.status(403).json({ error: 'Permission denied' });
@@ -219,15 +241,25 @@ export async function updateTheme(req: Request, res: Response) {
       icons,
       isPublic,
       isApprovedForKids,
+      // Extended theme fields
+      elementStyles,
+      widgetOverrides,
+      loginPage,
+      lcarsMode,
     } = req.body;
 
     // Build update query dynamically
     const updates: string[] = [];
     const params: any[] = [];
 
+    // Cannot rename default themes (Household Brand)
     if (name !== undefined) {
-      updates.push('name = ?');
-      params.push(name);
+      if (existing[0].isDefault) {
+        // Silently ignore name change for default themes
+      } else {
+        updates.push('name = ?');
+        params.push(name);
+      }
     }
     if (description !== undefined) {
       updates.push('description = ?');
@@ -282,6 +314,23 @@ export async function updateTheme(req: Request, res: Response) {
       updates.push('isApprovedForKids = ?');
       params.push(isApprovedForKids ? 1 : 0);
     }
+    // Extended theme fields
+    if (elementStyles !== undefined) {
+      updates.push('elementStyles = ?');
+      params.push(elementStyles ? JSON.stringify(elementStyles) : null);
+    }
+    if (widgetOverrides !== undefined) {
+      updates.push('widgetOverrides = ?');
+      params.push(widgetOverrides ? JSON.stringify(widgetOverrides) : null);
+    }
+    if (loginPage !== undefined) {
+      updates.push('loginPage = ?');
+      params.push(loginPage ? JSON.stringify(loginPage) : null);
+    }
+    if (lcarsMode !== undefined) {
+      updates.push('lcarsMode = ?');
+      params.push(lcarsMode ? JSON.stringify(lcarsMode) : null);
+    }
 
     if (updates.length === 0) {
       return res.status(400).json({ error: 'No fields to update' });
@@ -314,14 +363,19 @@ export async function deleteTheme(req: Request, res: Response) {
     const { id } = req.params;
 
     // Check ownership or admin
-    const existing = await q<any[]>('SELECT createdBy, isDefault FROM themes WHERE id = ?', [id]);
+    const existing = await q<any[]>('SELECT createdBy, isDefault, isSystemTheme FROM themes WHERE id = ?', [id]);
     if (existing.length === 0) {
       return res.status(404).json({ error: 'Theme not found' });
     }
 
-    // Cannot delete default theme
+    // Cannot delete system themes (HabiTrack Classic)
+    if (existing[0].isSystemTheme) {
+      return res.status(400).json({ error: 'Cannot delete system themes' });
+    }
+
+    // Cannot delete default theme (Household Brand)
     if (existing[0].isDefault) {
-      return res.status(400).json({ error: 'Cannot delete the default theme' });
+      return res.status(400).json({ error: 'Cannot delete the household default theme' });
     }
 
     const isOwner = existing[0].createdBy === user.id;
@@ -376,8 +430,9 @@ export async function duplicateTheme(req: Request, res: Response) {
         id, name, description, thumbnailUrl,
         layout, colorsLight, colorsDark, typography,
         sidebar, header, pageBackground, ui, icons,
+        elementStyles, widgetOverrides, loginPage, lcarsMode,
         createdBy, isPublic, isApprovedForKids, isDefault
-      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 0, 0, 0)`,
+      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 0, 0, 0)`,
       [
         newId,
         newName,
@@ -392,6 +447,10 @@ export async function duplicateTheme(req: Request, res: Response) {
         original.pageBackground,
         original.ui,
         original.icons,
+        original.elementStyles,
+        original.widgetOverrides,
+        original.loginPage,
+        original.lcarsMode,
         user.id,
       ],
     );
@@ -473,16 +532,38 @@ function parseThemeRow(row: any) {
       typeof row.pageBackground === 'string' ? JSON.parse(row.pageBackground) : row.pageBackground,
     ui: typeof row.ui === 'string' ? JSON.parse(row.ui) : row.ui,
     icons: typeof row.icons === 'string' ? JSON.parse(row.icons) : row.icons,
+    // Extended theme fields
+    elementStyles: row.elementStyles
+      ? typeof row.elementStyles === 'string'
+        ? JSON.parse(row.elementStyles)
+        : row.elementStyles
+      : null,
+    widgetOverrides: row.widgetOverrides
+      ? typeof row.widgetOverrides === 'string'
+        ? JSON.parse(row.widgetOverrides)
+        : row.widgetOverrides
+      : null,
+    loginPage: row.loginPage
+      ? typeof row.loginPage === 'string'
+        ? JSON.parse(row.loginPage)
+        : row.loginPage
+      : null,
+    lcarsMode: row.lcarsMode
+      ? typeof row.lcarsMode === 'string'
+        ? JSON.parse(row.lcarsMode)
+        : row.lcarsMode
+      : null,
     createdBy: row.createdBy,
     isPublic: Boolean(row.isPublic),
     isApprovedForKids: Boolean(row.isApprovedForKids),
     isDefault: Boolean(row.isDefault),
+    isSystemTheme: Boolean(row.isSystemTheme),
     usageCount: row.usageCount,
     createdAt: row.createdAt,
     updatedAt: row.updatedAt,
     // Flattened fields for list view (ThemeListItem)
-    primaryColor: colorsLight?.primary || '#8b5cf6',
-    accentColor: colorsLight?.accent || '#8b5cf6',
+    primaryColor: colorsLight?.primary || '#3cb371',
+    accentColor: colorsLight?.accent || '#3cb371',
     layoutType: layout?.type || 'sidebar-left',
   };
 }

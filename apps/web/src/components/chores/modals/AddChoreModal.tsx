@@ -58,12 +58,33 @@ export function AddChoreModal({
     recurrenceType: 'once' as ChoreRecurrenceType,
     recurrenceInterval: '1',
     recurrenceDays: '',
+    weeklyDays: [] as string[],
     dueTime: '',
     assignedTo: '',
     requireApproval: false,
     startDate: new Date().toISOString().split('T')[0],
     endDate: '',
   });
+
+  // Days of the week for weekly recurrence
+  const daysOfWeek = [
+    { key: 'mon', label: 'Mon' },
+    { key: 'tue', label: 'Tue' },
+    { key: 'wed', label: 'Wed' },
+    { key: 'thu', label: 'Thu' },
+    { key: 'fri', label: 'Fri' },
+    { key: 'sat', label: 'Sat' },
+    { key: 'sun', label: 'Sun' },
+  ];
+
+  const toggleWeeklyDay = (dayKey: string) => {
+    setForm((prev) => {
+      const newDays = prev.weeklyDays.includes(dayKey)
+        ? prev.weeklyDays.filter((d) => d !== dayKey)
+        : [...prev.weeklyDays, dayKey];
+      return { ...prev, weeklyDays: newDays };
+    });
+  };
 
   useEffect(() => {
     choresApi
@@ -89,6 +110,11 @@ export function AddChoreModal({
     setError('');
 
     try {
+      // Build recurrenceDays for weekly type
+      const recurrenceDays = form.recurrenceType === 'weekly' && form.weeklyDays.length > 0
+        ? form.weeklyDays.join(',')
+        : form.recurrenceDays || undefined;
+
       await choresApi.createChore({
         title: form.title.trim(),
         description: form.description.trim() || undefined,
@@ -98,7 +124,7 @@ export function AddChoreModal({
         estimatedMinutes: form.estimatedMinutes ? Number(form.estimatedMinutes) : undefined,
         recurrenceType: form.recurrenceType,
         recurrenceInterval: form.recurrenceInterval ? Number(form.recurrenceInterval) : 1,
-        recurrenceDays: form.recurrenceDays || undefined,
+        recurrenceDays,
         dueTime: form.dueTime || undefined,
         assignedTo: form.assignedTo ? Number(form.assignedTo) : undefined,
         requireApproval: form.requireApproval,
@@ -119,10 +145,16 @@ export function AddChoreModal({
     setSaving(true);
     setError('');
     try {
+      // Build recurrenceDays for weekly type
+      const recurrenceDays = form.recurrenceType === 'weekly' && form.weeklyDays.length > 0
+        ? form.weeklyDays.join(',')
+        : undefined;
+
       await choresApi.applyTemplate(templateId, {
         assignedTo: form.assignedTo ? Number(form.assignedTo) : undefined,
         recurrenceType: form.recurrenceType,
         recurrenceInterval: form.recurrenceInterval ? Number(form.recurrenceInterval) : 1,
+        recurrenceDays,
         startDate: form.startDate,
         endDate: form.endDate || undefined,
       });
@@ -379,6 +411,36 @@ export function AddChoreModal({
                 </div>
               )}
 
+              {/* Weekly day selection */}
+              {form.recurrenceType === 'weekly' && (
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                    Days of Week
+                  </label>
+                  <div className="flex flex-wrap gap-2">
+                    {daysOfWeek.map((day) => (
+                      <button
+                        key={day.key}
+                        type="button"
+                        onClick={() => toggleWeeklyDay(day.key)}
+                        className={`px-3 py-2 rounded-lg text-sm font-medium transition-colors ${
+                          form.weeklyDays.includes(day.key)
+                            ? 'bg-purple-600 text-white'
+                            : 'bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600'
+                        }`}
+                      >
+                        {day.label}
+                      </button>
+                    ))}
+                  </div>
+                  {form.weeklyDays.length === 0 && (
+                    <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
+                      Select at least one day
+                    </p>
+                  )}
+                </div>
+              )}
+
               {/* Start/End Date */}
               <div className="grid grid-cols-2 gap-4">
                 <div>
@@ -513,6 +575,31 @@ export function AddChoreModal({
                           <span className="text-gray-600 dark:text-gray-400">
                             {getIntervalLabel()}
                           </span>
+                        </div>
+                      </div>
+                    )}
+
+                    {/* Weekly day selection for templates */}
+                    {form.recurrenceType === 'weekly' && (
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                          Days of Week
+                        </label>
+                        <div className="flex flex-wrap gap-2">
+                          {daysOfWeek.map((day) => (
+                            <button
+                              key={day.key}
+                              type="button"
+                              onClick={() => toggleWeeklyDay(day.key)}
+                              className={`px-3 py-1.5 rounded-lg text-sm font-medium transition-colors ${
+                                form.weeklyDays.includes(day.key)
+                                  ? 'bg-purple-600 text-white'
+                                  : 'bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300 border border-gray-300 dark:border-gray-600 hover:bg-gray-100 dark:hover:bg-gray-700'
+                              }`}
+                            >
+                              {day.label}
+                            </button>
+                          ))}
                         </div>
                       </div>
                     )}

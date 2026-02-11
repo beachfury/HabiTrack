@@ -5,10 +5,32 @@ import { ReactNode } from 'react';
 
 export type ChoreDifficulty = 'easy' | 'medium' | 'hard';
 
+// Deprecated: Use getDifficultyStyle() instead for CSS variable support
 export const DIFFICULTY_COLORS: Record<ChoreDifficulty, string> = {
   easy: 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400',
   medium: 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900/30 dark:text-yellow-400',
   hard: 'bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-400',
+};
+
+// CSS variable based difficulty styles
+export const getDifficultyStyle = (difficulty: ChoreDifficulty) => {
+  switch (difficulty) {
+    case 'easy':
+      return {
+        backgroundColor: 'color-mix(in srgb, var(--color-success) 15%, transparent)',
+        color: 'var(--color-success)',
+      };
+    case 'hard':
+      return {
+        backgroundColor: 'color-mix(in srgb, var(--color-destructive) 15%, transparent)',
+        color: 'var(--color-destructive)',
+      };
+    default: // medium
+      return {
+        backgroundColor: 'color-mix(in srgb, var(--color-warning) 15%, transparent)',
+        color: 'var(--color-warning)',
+      };
+  }
 };
 
 export type ChoreRecurrenceType =

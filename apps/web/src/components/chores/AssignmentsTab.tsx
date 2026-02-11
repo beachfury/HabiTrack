@@ -40,27 +40,34 @@ interface AssignmentsTabProps {
   onRefresh?: () => void;
 }
 
-const STATUS_STYLES: Record<string, { bg: string; text: string; icon: any }> = {
-  pending: {
-    bg: 'bg-yellow-100 dark:bg-yellow-900/30',
-    text: 'text-yellow-700 dark:text-yellow-400',
-    icon: Clock,
-  },
-  completed: {
-    bg: 'bg-green-100 dark:bg-green-900/30',
-    text: 'text-green-700 dark:text-green-400',
-    icon: CheckCircle,
-  },
-  skipped: {
-    bg: 'bg-gray-100 dark:bg-gray-700',
-    text: 'text-gray-600 dark:text-gray-400',
-    icon: X,
-  },
-  pending_approval: {
-    bg: 'bg-blue-100 dark:bg-blue-900/30',
-    text: 'text-blue-700 dark:text-blue-400',
-    icon: AlertCircle,
-  },
+// Status styles using CSS variables
+const getStatusStyle = (status: string) => {
+  switch (status) {
+    case 'completed':
+      return {
+        backgroundColor: 'color-mix(in srgb, var(--color-success) 15%, transparent)',
+        color: 'var(--color-success)',
+        icon: CheckCircle,
+      };
+    case 'skipped':
+      return {
+        backgroundColor: 'var(--color-muted)',
+        color: 'var(--color-muted-foreground)',
+        icon: X,
+      };
+    case 'pending_approval':
+      return {
+        backgroundColor: 'color-mix(in srgb, var(--color-info) 15%, transparent)',
+        color: 'var(--color-info)',
+        icon: AlertCircle,
+      };
+    default: // pending
+      return {
+        backgroundColor: 'color-mix(in srgb, var(--color-warning) 15%, transparent)',
+        color: 'var(--color-warning)',
+        icon: Clock,
+      };
+  }
 };
 
 export function AssignmentsTab({ onRefresh }: AssignmentsTabProps) {
@@ -202,8 +209,8 @@ export function AssignmentsTab({ onRefresh }: AssignmentsTabProps) {
       {/* Header with filters toggle */}
       <div className="flex items-center justify-between">
         <div>
-          <h3 className="font-semibold text-gray-900 dark:text-white">Assigned Chores</h3>
-          <p className="text-sm text-gray-500">
+          <h3 className="font-semibold text-[var(--color-foreground)]">Assigned Chores</h3>
+          <p className="text-sm text-[var(--color-muted-foreground)]">
             {assignments.length} assignment{assignments.length !== 1 ? 's' : ''} found
           </p>
         </div>
@@ -211,8 +218,8 @@ export function AssignmentsTab({ onRefresh }: AssignmentsTabProps) {
           onClick={() => setShowFilters(!showFilters)}
           className={`flex items-center gap-2 px-3 py-2 rounded-lg text-sm font-medium transition-colors ${
             showFilters
-              ? 'bg-purple-100 dark:bg-purple-900/30 text-purple-700 dark:text-purple-300'
-              : 'bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-300'
+              ? 'bg-[var(--color-primary)]/10 text-[var(--color-primary)]'
+              : 'bg-[var(--color-muted)] text-[var(--color-muted-foreground)]'
           }`}
         >
           <Filter size={16} />
@@ -226,7 +233,7 @@ export function AssignmentsTab({ onRefresh }: AssignmentsTabProps) {
 
       {/* Alerts */}
       {error && (
-        <div className="p-3 bg-red-100 dark:bg-red-900/20 text-red-700 dark:text-red-300 rounded-lg flex items-center gap-2">
+        <div className="p-3 bg-[var(--color-destructive)]/10 text-[var(--color-destructive)] rounded-lg flex items-center gap-2">
           <AlertCircle size={18} />
           {error}
           <button onClick={() => setError('')} className="ml-auto">
@@ -236,7 +243,7 @@ export function AssignmentsTab({ onRefresh }: AssignmentsTabProps) {
       )}
 
       {success && (
-        <div className="p-3 bg-green-100 dark:bg-green-900/20 text-green-700 dark:text-green-300 rounded-lg flex items-center gap-2">
+        <div className="p-3 bg-[var(--color-success)]/10 text-[var(--color-success)] rounded-lg flex items-center gap-2">
           <CheckCircle size={18} />
           {success}
         </div>
@@ -244,17 +251,17 @@ export function AssignmentsTab({ onRefresh }: AssignmentsTabProps) {
 
       {/* Filters Panel */}
       {showFilters && (
-        <div className="p-4 bg-gray-50 dark:bg-gray-800 rounded-xl space-y-4">
+        <div className="p-4 bg-[var(--color-muted)] rounded-xl space-y-4">
           <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
             {/* Chore Filter */}
             <div>
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+              <label className="block text-sm font-medium text-[var(--color-foreground)] mb-1">
                 Chore
               </label>
               <select
                 value={selectedChoreId}
                 onChange={(e) => setSelectedChoreId(e.target.value ? Number(e.target.value) : '')}
-                className="w-full p-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white text-sm"
+                className="themed-input w-full text-sm"
               >
                 <option value="">All Chores</option>
                 {filterOptions.chores.map((chore) => (
@@ -267,13 +274,13 @@ export function AssignmentsTab({ onRefresh }: AssignmentsTabProps) {
 
             {/* User Filter */}
             <div>
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+              <label className="block text-sm font-medium text-[var(--color-foreground)] mb-1">
                 Assigned To
               </label>
               <select
                 value={selectedUserId}
                 onChange={(e) => setSelectedUserId(e.target.value ? Number(e.target.value) : '')}
-                className="w-full p-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white text-sm"
+                className="themed-input w-full text-sm"
               >
                 <option value="">All Users</option>
                 {filterOptions.users.map((user) => (
@@ -286,13 +293,13 @@ export function AssignmentsTab({ onRefresh }: AssignmentsTabProps) {
 
             {/* Status Filter */}
             <div>
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+              <label className="block text-sm font-medium text-[var(--color-foreground)] mb-1">
                 Status
               </label>
               <select
                 value={selectedStatus}
                 onChange={(e) => setSelectedStatus(e.target.value)}
-                className="w-full p-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white text-sm"
+                className="themed-input w-full text-sm"
               >
                 <option value="">All Statuses</option>
                 <option value="pending">Pending</option>
@@ -309,19 +316,19 @@ export function AssignmentsTab({ onRefresh }: AssignmentsTabProps) {
                   type="checkbox"
                   checked={futureOnly}
                   onChange={(e) => setFutureOnly(e.target.checked)}
-                  className="w-4 h-4 rounded border-gray-300 text-purple-600 focus:ring-purple-500"
+                  className="w-4 h-4 rounded border-[var(--color-border)] text-[var(--color-primary)] focus:ring-[var(--color-primary)]"
                 />
-                <span className="text-sm text-gray-700 dark:text-gray-300">Future only</span>
+                <span className="text-sm text-[var(--color-foreground)]">Future only</span>
               </label>
             </div>
           </div>
 
           {/* Bulk Actions */}
           {selectedChoreId && (
-            <div className="pt-3 border-t border-gray-200 dark:border-gray-700">
+            <div className="pt-3 border-t border-[var(--color-border)]">
               <button
                 onClick={handleDeleteAllForChore}
-                className="flex items-center gap-2 px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 text-sm font-medium"
+                className="flex items-center gap-2 px-4 py-2 bg-[var(--color-destructive)] text-[var(--color-destructive-foreground)] rounded-lg hover:opacity-90 text-sm font-medium"
               >
                 <Trash2 size={16} />
                 Delete All Future Pending for This Chore
@@ -333,20 +340,20 @@ export function AssignmentsTab({ onRefresh }: AssignmentsTabProps) {
 
       {/* Selection Actions */}
       {selectedIds.size > 0 && (
-        <div className="flex items-center gap-3 p-3 bg-purple-50 dark:bg-purple-900/20 rounded-lg">
-          <span className="text-sm font-medium text-purple-700 dark:text-purple-300">
+        <div className="flex items-center gap-3 p-3 bg-[var(--color-primary)]/10 rounded-lg">
+          <span className="text-sm font-medium text-[var(--color-primary)]">
             {selectedIds.size} selected
           </span>
           <button
             onClick={() => setShowBulkDeleteModal(true)}
-            className="flex items-center gap-1 px-3 py-1.5 bg-red-600 text-white rounded-lg hover:bg-red-700 text-sm font-medium"
+            className="flex items-center gap-1 px-3 py-1.5 bg-[var(--color-destructive)] text-[var(--color-destructive-foreground)] rounded-lg hover:opacity-90 text-sm font-medium"
           >
             <Trash2 size={14} />
             Delete Selected
           </button>
           <button
             onClick={() => setSelectedIds(new Set())}
-            className="text-sm text-gray-500 hover:text-gray-700"
+            className="text-sm text-[var(--color-muted-foreground)] hover:text-[var(--color-foreground)]"
           >
             Clear selection
           </button>
@@ -355,25 +362,25 @@ export function AssignmentsTab({ onRefresh }: AssignmentsTabProps) {
 
       {/* Assignments List */}
       {loading ? (
-        <div className="text-center py-8 text-gray-500">Loading assignments...</div>
+        <div className="text-center py-8 text-[var(--color-muted-foreground)]">Loading assignments...</div>
       ) : assignments.length === 0 ? (
-        <div className="text-center py-12 bg-gray-50 dark:bg-gray-800 rounded-xl">
-          <Calendar size={48} className="mx-auto text-gray-300 dark:text-gray-600 mb-3" />
-          <p className="text-gray-500 dark:text-gray-400">No assignments found</p>
-          <p className="text-sm text-gray-400 dark:text-gray-500 mt-1">
+        <div className="text-center py-12 bg-[var(--color-muted)] rounded-xl">
+          <Calendar size={48} className="mx-auto text-[var(--color-muted-foreground)] opacity-50 mb-3" />
+          <p className="text-[var(--color-muted-foreground)]">No assignments found</p>
+          <p className="text-sm text-[var(--color-muted-foreground)] opacity-70 mt-1">
             Try adjusting your filters
           </p>
         </div>
       ) : (
-        <div className="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 overflow-hidden">
+        <div className="themed-card overflow-hidden">
           {/* Table Header */}
-          <div className="grid grid-cols-[auto,1fr,1fr,1fr,auto,auto] gap-4 p-3 bg-gray-50 dark:bg-gray-700/50 border-b border-gray-200 dark:border-gray-700 text-sm font-medium text-gray-600 dark:text-gray-400">
+          <div className="grid grid-cols-[auto,1fr,1fr,1fr,auto,auto] gap-4 p-3 bg-[var(--color-muted)] border-b border-[var(--color-border)] text-sm font-medium text-[var(--color-muted-foreground)]">
             <div>
               <input
                 type="checkbox"
                 checked={selectedIds.size === assignments.length && assignments.length > 0}
                 onChange={toggleSelectAll}
-                className="w-4 h-4 rounded border-gray-300 text-purple-600 focus:ring-purple-500"
+                className="w-4 h-4 rounded border-[var(--color-border)] text-[var(--color-primary)] focus:ring-[var(--color-primary)]"
               />
             </div>
             <div>Chore</div>
@@ -384,16 +391,16 @@ export function AssignmentsTab({ onRefresh }: AssignmentsTabProps) {
           </div>
 
           {/* Table Body */}
-          <div className="divide-y divide-gray-100 dark:divide-gray-700">
+          <div className="divide-y divide-[var(--color-border)]">
             {assignments.map((assignment) => {
-              const statusStyle = STATUS_STYLES[assignment.status] || STATUS_STYLES.pending;
+              const statusStyle = getStatusStyle(assignment.status);
               const StatusIcon = statusStyle.icon;
 
               return (
                 <div
                   key={assignment.id}
-                  className={`grid grid-cols-[auto,1fr,1fr,1fr,auto,auto] gap-4 p-3 items-center hover:bg-gray-50 dark:hover:bg-gray-700/30 ${
-                    selectedIds.has(assignment.id) ? 'bg-purple-50 dark:bg-purple-900/10' : ''
+                  className={`grid grid-cols-[auto,1fr,1fr,1fr,auto,auto] gap-4 p-3 items-center hover:bg-[var(--color-muted)] ${
+                    selectedIds.has(assignment.id) ? 'bg-[var(--color-primary)]/5' : ''
                   }`}
                 >
                   <div>
@@ -401,7 +408,7 @@ export function AssignmentsTab({ onRefresh }: AssignmentsTabProps) {
                       type="checkbox"
                       checked={selectedIds.has(assignment.id)}
                       onChange={() => toggleSelect(assignment.id)}
-                      className="w-4 h-4 rounded border-gray-300 text-purple-600 focus:ring-purple-500"
+                      className="w-4 h-4 rounded border-[var(--color-border)] text-[var(--color-primary)] focus:ring-[var(--color-primary)]"
                     />
                   </div>
 
@@ -413,25 +420,25 @@ export function AssignmentsTab({ onRefresh }: AssignmentsTabProps) {
                           style={{ backgroundColor: assignment.categoryColor }}
                         />
                       )}
-                      <span className="font-medium text-gray-900 dark:text-white truncate">
+                      <span className="font-medium text-[var(--color-foreground)] truncate">
                         {assignment.title}
                       </span>
                     </div>
                     {assignment.categoryName && (
-                      <span className="text-xs text-gray-500">{assignment.categoryName}</span>
+                      <span className="text-xs text-[var(--color-muted-foreground)]">{assignment.categoryName}</span>
                     )}
                   </div>
 
-                  <div className="flex items-center gap-2 text-sm text-gray-600 dark:text-gray-400">
+                  <div className="flex items-center gap-2 text-sm text-[var(--color-muted-foreground)]">
                     <User size={14} />
                     {assignment.assignedToName || 'Unassigned'}
                   </div>
 
-                  <div className="flex items-center gap-2 text-sm text-gray-600 dark:text-gray-400">
+                  <div className="flex items-center gap-2 text-sm text-[var(--color-muted-foreground)]">
                     <Calendar size={14} />
                     {formatDate(assignment.dueDate)}
                     {assignment.dueTime && (
-                      <span className="text-xs text-gray-400">
+                      <span className="text-xs opacity-70">
                         @ {assignment.dueTime.slice(0, 5)}
                       </span>
                     )}
@@ -439,7 +446,11 @@ export function AssignmentsTab({ onRefresh }: AssignmentsTabProps) {
 
                   <div>
                     <span
-                      className={`inline-flex items-center gap-1 px-2 py-1 rounded-full text-xs font-medium ${statusStyle.bg} ${statusStyle.text}`}
+                      className="inline-flex items-center gap-1 px-2 py-1 rounded-full text-xs font-medium"
+                      style={{
+                        backgroundColor: statusStyle.backgroundColor,
+                        color: statusStyle.color,
+                      }}
                     >
                       <StatusIcon size={12} />
                       {assignment.status.replace('_', ' ')}
@@ -449,7 +460,7 @@ export function AssignmentsTab({ onRefresh }: AssignmentsTabProps) {
                   <div>
                     <button
                       onClick={() => handleDeleteSingle(assignment.id)}
-                      className="p-2 text-gray-400 hover:text-red-600 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-lg transition-colors"
+                      className="p-2 text-[var(--color-muted-foreground)] hover:text-[var(--color-destructive)] hover:bg-[var(--color-destructive)]/10 rounded-lg transition-colors"
                       title="Delete this assignment"
                     >
                       <Trash2 size={16} />
@@ -464,25 +475,25 @@ export function AssignmentsTab({ onRefresh }: AssignmentsTabProps) {
 
       {/* Bulk Delete Confirmation Modal */}
       {showBulkDeleteModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50">
-          <div className="bg-white dark:bg-gray-800 rounded-xl p-6 max-w-md w-full">
-            <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-2">
+        <div className="themed-modal-backdrop fixed inset-0 z-50 flex items-center justify-center p-4">
+          <div className="themed-modal p-6 max-w-md w-full">
+            <h3 className="text-lg font-semibold text-[var(--color-foreground)] mb-2">
               Delete {selectedIds.size} Assignment{selectedIds.size !== 1 ? 's' : ''}?
             </h3>
-            <p className="text-gray-600 dark:text-gray-400 mb-4">
+            <p className="text-[var(--color-muted-foreground)] mb-4">
               This action cannot be undone. The selected chore assignments will be permanently
               removed.
             </p>
             <div className="flex gap-3 justify-end">
               <button
                 onClick={() => setShowBulkDeleteModal(false)}
-                className="px-4 py-2 text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg"
+                className="themed-btn-secondary"
               >
                 Cancel
               </button>
               <button
                 onClick={handleBulkDelete}
-                className="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700"
+                className="px-4 py-2 bg-[var(--color-destructive)] text-[var(--color-destructive-foreground)] rounded-lg hover:opacity-90"
               >
                 Delete
               </button>

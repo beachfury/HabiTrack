@@ -90,7 +90,7 @@ export function ColorSchemeEditor({
             onClick={() => onColorModeChange('light')}
             className={`flex-1 flex items-center justify-center gap-2 px-4 py-2.5 rounded-lg border-2 transition-colors ${
               colorMode === 'light'
-                ? 'border-purple-500 bg-purple-50 dark:bg-purple-900/20 text-purple-700 dark:text-purple-300'
+                ? 'border-emerald-500 bg-emerald-50 dark:bg-emerald-900/20 text-emerald-700 dark:text-emerald-300'
                 : 'border-gray-200 dark:border-gray-700 text-gray-600 dark:text-gray-400'
             }`}
           >
@@ -101,7 +101,7 @@ export function ColorSchemeEditor({
             onClick={() => onColorModeChange('dark')}
             className={`flex-1 flex items-center justify-center gap-2 px-4 py-2.5 rounded-lg border-2 transition-colors ${
               colorMode === 'dark'
-                ? 'border-purple-500 bg-purple-50 dark:bg-purple-900/20 text-purple-700 dark:text-purple-300'
+                ? 'border-emerald-500 bg-emerald-50 dark:bg-emerald-900/20 text-emerald-700 dark:text-emerald-300'
                 : 'border-gray-200 dark:border-gray-700 text-gray-600 dark:text-gray-400'
             }`}
           >

@@ -167,6 +167,16 @@ export interface DashboardData {
     };
     isRead: boolean;
   }>;
+  upcomingMeals?: Array<{
+    id: number;
+    date: string;
+    recipeName: string | null;
+    customMealName: string | null;
+    isFendForYourself: boolean;
+    ffyMessage: string | null;
+    status: 'planned' | 'voting' | 'finalized';
+    voteCount?: number;
+  }>;
 }
 
 // =============================================================================
@@ -273,6 +283,7 @@ async function getDashboardData(): Promise<DashboardData> {
       },
       isRead: false,
     })),
+    upcomingMeals: data.upcomingMeals || [],
   };
 }
 

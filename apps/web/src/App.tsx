@@ -14,6 +14,9 @@ import { api } from './api';
 import { MessagesPage } from './pages/MessagesPage';
 import { KioskLoginPage } from './pages/KioskloginPage';
 import { PaidChoresPage } from './pages/PaidChoresPage';
+import { BudgetPage } from './pages/BudgetPage';
+import { RecipesPage } from './pages/RecipesPage';
+import { MealsPage } from './pages/MealsPage';
 
 function ProtectedRoute({ children }: { children: React.ReactNode }) {
   const { user, loading } = useAuth();
@@ -115,6 +118,30 @@ function AppRoutes() {
         element={
           <ProtectedRoute>
             <SettingsPage />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/budgets"
+        element={
+          <ProtectedRoute>
+            <BudgetPage />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/recipes"
+        element={
+          <ProtectedRoute>
+            <RecipesPage />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/meals"
+        element={
+          <ProtectedRoute>
+            <MealsPage />
           </ProtectedRoute>
         }
       />

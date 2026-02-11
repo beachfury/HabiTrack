@@ -53,16 +53,16 @@ export function LayoutEditor({ layout, onChange, ui, onUiChange }: LayoutEditorP
               onClick={() => onChange({ ...layout, type: option.id })}
               className={`p-4 rounded-xl border-2 text-left transition-all ${
                 layout.type === option.id
-                  ? 'border-purple-500 bg-purple-50 dark:bg-purple-900/20'
+                  ? 'border-emerald-500 bg-emerald-50 dark:bg-emerald-900/20'
                   : 'border-gray-200 dark:border-gray-700 hover:border-gray-300'
               }`}
             >
               <option.icon
                 size={24}
-                className={layout.type === option.id ? 'text-purple-600' : 'text-gray-400'}
+                className={layout.type === option.id ? 'text-emerald-600' : 'text-gray-400'}
               />
               <p className={`mt-2 text-sm font-medium ${
-                layout.type === option.id ? 'text-purple-700 dark:text-purple-300' : 'text-gray-700 dark:text-gray-300'
+                layout.type === option.id ? 'text-emerald-700 dark:text-emerald-300' : 'text-gray-700 dark:text-gray-300'
               }`}>
                 {option.label}
               </p>
@@ -87,7 +87,7 @@ export function LayoutEditor({ layout, onChange, ui, onUiChange }: LayoutEditorP
             step={8}
             value={layout.sidebarWidth || 256}
             onChange={(e) => onChange({ ...layout, sidebarWidth: parseInt(e.target.value) })}
-            className="w-full accent-purple-600"
+            className="w-full accent-emerald-600"
           />
           <div className="flex justify-between text-xs text-gray-500 dark:text-gray-400 mt-1">
             <span>Compact (180px)</span>
@@ -109,7 +109,7 @@ export function LayoutEditor({ layout, onChange, ui, onUiChange }: LayoutEditorP
             step={4}
             value={layout.headerHeight || 64}
             onChange={(e) => onChange({ ...layout, headerHeight: parseInt(e.target.value) })}
-            className="w-full accent-purple-600"
+            className="w-full accent-emerald-600"
           />
           <div className="flex justify-between text-xs text-gray-500 dark:text-gray-400 mt-1">
             <span>Compact (48px)</span>
@@ -130,12 +130,12 @@ export function LayoutEditor({ layout, onChange, ui, onUiChange }: LayoutEditorP
               onClick={() => onChange({ ...layout, navStyle: option.id })}
               className={`w-full p-3 rounded-lg border-2 text-left transition-all ${
                 layout.navStyle === option.id
-                  ? 'border-purple-500 bg-purple-50 dark:bg-purple-900/20'
+                  ? 'border-emerald-500 bg-emerald-50 dark:bg-emerald-900/20'
                   : 'border-gray-200 dark:border-gray-700 hover:border-gray-300'
               }`}
             >
               <p className={`text-sm font-medium ${
-                layout.navStyle === option.id ? 'text-purple-700 dark:text-purple-300' : 'text-gray-700 dark:text-gray-300'
+                layout.navStyle === option.id ? 'text-emerald-700 dark:text-emerald-300' : 'text-gray-700 dark:text-gray-300'
               }`}>
                 {option.label}
               </p>
@@ -159,16 +159,16 @@ export function LayoutEditor({ layout, onChange, ui, onUiChange }: LayoutEditorP
               onClick={() => onUiChange({ ...ui, borderRadius: option.id })}
               className={`flex-1 p-3 rounded-lg border-2 transition-all ${
                 ui.borderRadius === option.id
-                  ? 'border-purple-500 bg-purple-50 dark:bg-purple-900/20'
+                  ? 'border-emerald-500 bg-emerald-50 dark:bg-emerald-900/20'
                   : 'border-gray-200 dark:border-gray-700 hover:border-gray-300'
               }`}
             >
               <div
-                className="w-8 h-8 mx-auto bg-purple-500"
+                className="w-8 h-8 mx-auto bg-emerald-500"
                 style={{ borderRadius: option.preview }}
               />
               <p className={`mt-2 text-xs font-medium text-center ${
-                ui.borderRadius === option.id ? 'text-purple-700 dark:text-purple-300' : 'text-gray-600 dark:text-gray-400'
+                ui.borderRadius === option.id ? 'text-emerald-700 dark:text-emerald-300' : 'text-gray-600 dark:text-gray-400'
               }`}>
                 {option.label}
               </p>
@@ -189,12 +189,12 @@ export function LayoutEditor({ layout, onChange, ui, onUiChange }: LayoutEditorP
               onClick={() => onUiChange({ ...ui, shadowIntensity: option.id })}
               className={`flex-1 p-3 rounded-lg border-2 transition-all ${
                 ui.shadowIntensity === option.id
-                  ? 'border-purple-500 bg-purple-50 dark:bg-purple-900/20'
+                  ? 'border-emerald-500 bg-emerald-50 dark:bg-emerald-900/20'
                   : 'border-gray-200 dark:border-gray-700 hover:border-gray-300'
               }`}
             >
               <p className={`text-xs font-medium text-center ${
-                ui.shadowIntensity === option.id ? 'text-purple-700 dark:text-purple-300' : 'text-gray-600 dark:text-gray-400'
+                ui.shadowIntensity === option.id ? 'text-emerald-700 dark:text-emerald-300' : 'text-gray-600 dark:text-gray-400'
               }`}>
                 {option.label}
               </p>
@@ -210,7 +210,7 @@ export function LayoutEditor({ layout, onChange, ui, onUiChange }: LayoutEditorP
         </p>
         <div className="flex gap-3">
           <button
-            className="px-4 py-2 bg-purple-600 text-white text-sm font-medium"
+            className="px-4 py-2 bg-emerald-600 text-white text-sm font-medium"
             style={{
               borderRadius: BORDER_RADIUS_OPTIONS.find((o) => o.id === ui.borderRadius)?.preview || '0.5rem',
               boxShadow:

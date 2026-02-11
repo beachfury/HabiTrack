@@ -21,15 +21,15 @@ function getWeatherIcon(condition: string, size: number = 32) {
   const lowerCondition = condition.toLowerCase();
 
   if (lowerCondition.includes('rain') || lowerCondition.includes('drizzle')) {
-    return <CloudRain size={size} className="text-blue-400" />;
+    return <CloudRain size={size} className="text-[var(--color-info)]" />;
   } else if (lowerCondition.includes('snow')) {
-    return <CloudSnow size={size} className="text-blue-200" />;
+    return <CloudSnow size={size} style={{ color: 'color-mix(in srgb, var(--color-info) 70%, white)' }} />;
   } else if (lowerCondition.includes('cloud')) {
-    return <Cloud size={size} className="text-gray-400" />;
+    return <Cloud size={size} className="text-[var(--color-muted-foreground)]" />;
   } else if (lowerCondition.includes('wind')) {
-    return <Wind size={size} className="text-gray-500" />;
+    return <Wind size={size} className="text-[var(--color-muted-foreground)]" />;
   } else {
-    return <Sun size={size} className="text-yellow-400" />;
+    return <Sun size={size} className="text-[var(--color-warning)]" />;
   }
 }
 
@@ -112,14 +112,14 @@ export function WeatherWidget({ location }: WeatherWidgetProps) {
   if (loading) {
     return (
       <div className="h-full flex items-center justify-center">
-        <Loader2 className="animate-spin text-gray-400" size={24} />
+        <Loader2 className="animate-spin text-[var(--color-muted-foreground)]" size={24} />
       </div>
     );
   }
 
   if (error || !weather) {
     return (
-      <div className="h-full flex flex-col items-center justify-center text-gray-400">
+      <div className="h-full flex flex-col items-center justify-center text-[var(--color-muted-foreground)]">
         <Cloud size={32} className="mb-2 opacity-50" />
         <p className="text-sm">{error || 'Weather unavailable'}</p>
       </div>
@@ -128,7 +128,7 @@ export function WeatherWidget({ location }: WeatherWidgetProps) {
 
   return (
     <div className="h-full flex flex-col">
-      <div className="flex items-center gap-1 text-xs text-gray-500 dark:text-gray-400 mb-2">
+      <div className="flex items-center gap-1 text-xs text-[var(--color-muted-foreground)] mb-2">
         <MapPin size={12} />
         <span className="truncate">{weather.location}</span>
       </div>
@@ -140,18 +140,18 @@ export function WeatherWidget({ location }: WeatherWidgetProps) {
 
         <div className="flex-1 min-w-0">
           <div className="flex items-baseline gap-1">
-            <span className="text-3xl font-bold text-gray-900 dark:text-white">
+            <span className="text-3xl font-bold text-[var(--color-foreground)]">
               {weather.temperature}
             </span>
-            <span className="text-lg text-gray-500 dark:text-gray-400">°F</span>
+            <span className="text-lg text-[var(--color-muted-foreground)]">°F</span>
           </div>
-          <p className="text-sm text-gray-600 dark:text-gray-300 truncate">
+          <p className="text-sm text-[var(--color-foreground)]/80 truncate">
             {weather.condition}
           </p>
         </div>
       </div>
 
-      <div className="flex items-center justify-between text-xs text-gray-500 dark:text-gray-400 mt-2 pt-2 border-t border-gray-100 dark:border-gray-700">
+      <div className="flex items-center justify-between text-xs text-[var(--color-muted-foreground)] mt-2 pt-2 border-t border-[var(--color-border)]">
         <span>Humidity: {weather.humidity}%</span>
         <span>Wind: {weather.windSpeed} mph</span>
       </div>

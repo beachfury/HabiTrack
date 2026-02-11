@@ -27,6 +27,8 @@ import colorsRouter from './routes/colors';
 import * as themes from './routes/themes';
 import * as paidChores from './routes/paid-chores';
 import * as dashboard from './routes/dashboard';
+import * as budgets from './routes/budgets';
+import * as meals from './routes/meals';
 import { deleteDirectMessage, deleteConversation } from './routes/messages/direct';
 
 const router = Router();
@@ -393,6 +395,8 @@ router.post('/upload/avatar', requireAuth(), upload.uploadAvatar);
 router.delete('/upload/avatar', requireAuth(), upload.deleteAvatar);
 router.post('/upload/logo', requireAuth('admin'), upload.uploadLogo);
 router.post('/upload/background', requireAuth('admin'), upload.uploadBackground);
+router.post('/upload/recipe/:id', requireAuth(), upload.uploadRecipeImage);
+router.delete('/upload/recipe/:id', requireAuth(), upload.deleteRecipeImage);
 router.get('/uploads', requireAuth('admin'), upload.listUploads);
 router.delete('/uploads/:id', requireAuth('admin'), upload.deleteUpload);
 router.post('/uploads/:id/select', requireAuth('admin'), upload.selectUpload);
@@ -401,9 +405,12 @@ router.post('/uploads/:id/select', requireAuth('admin'), upload.selectUpload);
 // THEME IMAGE UPLOAD ROUTES
 // =============================================================================
 router.post('/uploads/theme-image', requireAuth(), ...themeUploads.uploadThemeImage);
+router.patch('/uploads/theme-image/:id', requireAuth(), themeUploads.updateThemeImage);
 router.delete('/uploads/theme-image/:id', requireAuth(), themeUploads.deleteThemeImage);
 router.get('/uploads/theme-assets/:themeId', requireAuth(), themeUploads.getThemeAssets);
 router.get('/uploads/my-assets', requireAuth(), themeUploads.getMyAssets);
+router.get('/uploads/theme-library', requireAuth(), themeUploads.getThemeLibrary);
+router.get('/uploads/categories', requireAuth(), themeUploads.getCategories);
 
 // =============================================================================
 // PAID CHORES (Chore Race) ROUTES
@@ -433,5 +440,75 @@ router.delete('/dashboard/widgets/:widgetId', requireAuth(), dashboard.removeWid
 router.put('/dashboard/widgets/:widgetId/config', requireAuth(), writeRateLimiter, dashboard.updateWidgetConfig);
 router.post('/dashboard/reset', requireAuth(), writeRateLimiter, dashboard.resetDashboard);
 router.get('/dashboard/data', requireAuth(), dashboard.getDashboardData);
+
+// =============================================================================
+// BUDGET ROUTES (Admin only)
+// =============================================================================
+// Categories
+router.get('/budgets/categories', requireAuth('admin'), budgets.getCategories);
+router.post('/budgets/categories', requireAuth('admin'), writeRateLimiter, budgets.createCategory);
+router.put('/budgets/categories/:id', requireAuth('admin'), writeRateLimiter, budgets.updateCategory);
+router.delete('/budgets/categories/:id', requireAuth('admin'), budgets.deleteCategory);
+
+// Analytics & Summary (before :id routes)
+router.get('/budgets/analytics', requireAuth('admin'), budgets.getAnalytics);
+router.get('/budgets/summary', requireAuth('admin'), budgets.getSummary);
+
+// Entries (before :id routes to avoid conflicts)
+router.get('/budgets/entries', requireAuth('admin'), budgets.getEntries);
+router.post('/budgets/entries', requireAuth('admin'), writeRateLimiter, budgets.createEntry);
+router.get('/budgets/entries/:id', requireAuth('admin'), budgets.getEntry);
+router.put('/budgets/entries/:id', requireAuth('admin'), writeRateLimiter, budgets.updateEntry);
+router.delete('/budgets/entries/:id', requireAuth('admin'), budgets.deleteEntry);
+
+// Budgets (generic :id routes last)
+router.get('/budgets', requireAuth('admin'), budgets.getBudgets);
+router.post('/budgets', requireAuth('admin'), writeRateLimiter, budgets.createBudget);
+router.get('/budgets/:id', requireAuth('admin'), budgets.getBudget);
+router.put('/budgets/:id', requireAuth('admin'), writeRateLimiter, budgets.updateBudget);
+router.delete('/budgets/:id', requireAuth('admin'), budgets.deleteBudget);
+router.get('/budgets/:id/history', requireAuth('admin'), budgets.getBudgetHistory);
+
+// =============================================================================
+// MEALS / DINNER PLANNER ROUTES
+// =============================================================================
+// Recipes - specific routes first
+router.get('/recipes', requireAuth(), meals.getRecipes);
+router.post('/recipes', requireAuth(), writeRateLimiter, meals.createRecipe);
+router.post('/recipes/:id/approve', requireAuth('admin'), writeRateLimiter, meals.approveRecipe);
+router.post('/recipes/:id/reject', requireAuth('admin'), writeRateLimiter, meals.rejectRecipe);
+router.post('/recipes/:id/ingredients', requireAuth(), writeRateLimiter, meals.addIngredient);
+router.post('/recipes/:id/ingredients/reorder', requireAuth(), writeRateLimiter, meals.reorderIngredients);
+router.put('/recipes/:id/ingredients/:ingredientId', requireAuth(), writeRateLimiter, meals.updateIngredient);
+router.delete('/recipes/:id/ingredients/:ingredientId', requireAuth(), meals.deleteIngredient);
+// Recipes - generic :id routes last
+router.get('/recipes/:id', requireAuth(), meals.getRecipe);
+router.put('/recipes/:id', requireAuth(), writeRateLimiter, meals.updateRecipe);
+router.delete('/recipes/:id', requireAuth('admin'), meals.deleteRecipe);
+
+// Meal Plans - specific routes first
+router.get('/meals/shopping-suggestions', requireAuth(), meals.getShoppingSuggestions);
+router.post('/meals/shopping-suggestions/bulk-add', requireAuth('admin'), writeRateLimiter, meals.bulkAddShoppingSuggestions);
+router.post('/meals/shopping-suggestions/:id/add', requireAuth('admin'), writeRateLimiter, meals.addShoppingSuggestion);
+router.post('/meals/shopping-suggestions/:id/dismiss', requireAuth('admin'), writeRateLimiter, meals.dismissShoppingSuggestion);
+// Voting reminders (for scheduled tasks)
+router.post('/meals/voting-reminders', requireAuth('admin'), meals.sendVotingReminders);
+// Meal Plans - date-based routes
+router.get('/meals', requireAuth(), meals.getMealPlans);
+// Anyone can create meal plans, but non-admins can only create in voting status
+router.post('/meals', requireAuth(), writeRateLimiter, meals.createMealPlan);
+// Meal Plans - :id specific actions
+router.post('/meals/:id/open-voting', requireAuth('admin'), writeRateLimiter, meals.openVoting);
+router.post('/meals/:id/suggestions', requireAuth(), writeRateLimiter, meals.addSuggestion);
+router.delete('/meals/:id/suggestions/:suggestionId', requireAuth(), meals.deleteSuggestion);
+router.post('/meals/:id/vote', requireAuth(), writeRateLimiter, meals.castVote);
+router.delete('/meals/:id/vote/:suggestionId', requireAuth(), meals.removeVote);
+router.post('/meals/:id/ffy', requireAuth('admin'), writeRateLimiter, meals.setFendForYourself);
+router.post('/meals/:id/finalize', requireAuth('admin'), writeRateLimiter, meals.finalizeMealPlan);
+router.post('/meals/:id/shopping-suggestions/generate', requireAuth('admin'), writeRateLimiter, meals.generateShoppingSuggestions);
+// Meal Plans - generic :id routes last
+router.get('/meals/:date', requireAuth(), meals.getMealPlan);
+router.put('/meals/:id', requireAuth('admin'), writeRateLimiter, meals.updateMealPlan);
+router.delete('/meals/:id', requireAuth('admin'), meals.deleteMealPlan);
 
 export default router;

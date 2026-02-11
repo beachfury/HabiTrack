@@ -2,7 +2,7 @@
 // Calendar and event related types
 
 export interface CalendarEvent {
-  id: number;
+  id: number | string; // Can be number for regular events or "meal-123" for meal plans
   title: string;
   description: string | null;
   start: string;
@@ -11,10 +11,14 @@ export interface CalendarEvent {
   color: string | null;
   eventColor?: string | null;
   location: string | null;
-  createdBy: number;
-  createdByName?: string;
+  createdBy: number | null;
+  createdByName?: string | null;
   assignedTo: number | null;
   assignedToName?: string | null;
+  // Meal plan specific fields
+  isMealPlan?: boolean;
+  mealPlanId?: number;
+  mealStatus?: 'planned' | 'voting' | 'finalized';
 }
 
 export interface CreateEventData {

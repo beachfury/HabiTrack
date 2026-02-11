@@ -5,6 +5,7 @@ import { authApi } from './auth';
 import { calendarApi } from './calendar';
 import { choresApi } from './chores';
 import { familyApi } from './family';
+import { mealsApi } from './meals';
 import { messagesApi } from './messages';
 import { settingsApi } from './settings';
 import { shoppingApi } from './shopping';
@@ -41,6 +42,19 @@ export type {
   Suggestion,
 } from '../types/shopping';
 export type { UploadedFile } from './upload';
+export type {
+  Recipe,
+  RecipeIngredient,
+  MealPlan,
+  MealSuggestion,
+  MealShoppingSuggestion,
+  CreateRecipeData,
+  UpdateRecipeData,
+  CreateMealPlanData,
+  RecipeStatus,
+  RecipeDifficulty,
+  MealPlanStatus,
+} from '../types/meals';
 
 // Unified api object
 export const api = {
@@ -183,6 +197,36 @@ export const api = {
   listUploads: uploadApi.listUploads,
   deleteUploadedFile: uploadApi.deleteUploadedFile,
   selectUpload: uploadApi.selectUpload,
+
+  // Meals / Dinner Planner
+  getRecipes: mealsApi.getRecipes,
+  getRecipe: mealsApi.getRecipe,
+  createRecipe: mealsApi.createRecipe,
+  updateRecipe: mealsApi.updateRecipe,
+  deleteRecipe: mealsApi.deleteRecipe,
+  approveRecipe: mealsApi.approveRecipe,
+  rejectRecipe: mealsApi.rejectRecipe,
+  addRecipeIngredient: mealsApi.addIngredient,
+  updateRecipeIngredient: mealsApi.updateIngredient,
+  deleteRecipeIngredient: mealsApi.deleteIngredient,
+  reorderRecipeIngredients: mealsApi.reorderIngredients,
+  getMealPlans: mealsApi.getMealPlans,
+  getMealPlan: mealsApi.getMealPlan,
+  createMealPlan: mealsApi.createMealPlan,
+  updateMealPlan: mealsApi.updateMealPlan,
+  deleteMealPlan: mealsApi.deleteMealPlan,
+  setFendForYourself: mealsApi.setFendForYourself,
+  finalizeMealPlan: mealsApi.finalizeMealPlan,
+  openMealVoting: mealsApi.openVoting,
+  addMealSuggestion: mealsApi.addSuggestion,
+  deleteMealSuggestion: mealsApi.deleteSuggestion,
+  castMealVote: mealsApi.castVote,
+  removeMealVote: mealsApi.removeVote,
+  getShoppingSuggestions: mealsApi.getShoppingSuggestions,
+  generateShoppingSuggestions: mealsApi.generateShoppingSuggestions,
+  addShoppingSuggestion: mealsApi.addShoppingSuggestion,
+  dismissShoppingSuggestion: mealsApi.dismissShoppingSuggestion,
+  bulkAddShoppingSuggestions: mealsApi.bulkAddShoppingSuggestions,
 };
 
 // Export individual APIs
@@ -191,6 +235,7 @@ export {
   calendarApi,
   choresApi,
   familyApi,
+  mealsApi,
   messagesApi,
   settingsApi,
   shoppingApi,

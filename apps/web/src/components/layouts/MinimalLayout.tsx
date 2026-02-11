@@ -14,10 +14,24 @@ import {
   Bell,
   Menu,
   X,
+  Wallet,
+  DollarSign,
+  BookOpen,
+  UtensilsCrossed,
 } from 'lucide-react';
 import { useState } from 'react';
-import type { Theme } from '../../types/theme';
+import type { Theme, ExtendedTheme } from '../../types/theme';
 import type { HouseholdSettings } from '../../api';
+
+// Helper to resolve image URLs - converts relative API paths to full URLs
+const API_BASE = import.meta.env.VITE_API_BASE_URL || 'http://localhost:3000';
+function resolveImageUrl(url: string | undefined): string | undefined {
+  if (!url) return undefined;
+  if (url.startsWith('/')) {
+    return `${API_BASE}${url}`;
+  }
+  return url;
+}
 
 interface MinimalLayoutProps {
   children: React.ReactNode;
@@ -47,10 +61,16 @@ const navItems = [
   { path: '/calendar', icon: Calendar, label: 'Calendar' },
   { path: '/shopping', icon: ShoppingCart, label: 'Shopping' },
   { path: '/chores', icon: CheckSquare, label: 'Chores' },
+  { path: '/paid-chores', icon: DollarSign, label: 'Paid Chores' },
+  { path: '/meals', icon: UtensilsCrossed, label: 'Meals' },
+  { path: '/recipes', icon: BookOpen, label: 'Recipes' },
   { path: '/messages', icon: Bell, label: 'Messages' },
 ];
 
-const adminItems = [{ path: '/family', icon: Users, label: 'Family' }];
+const adminItems = [
+  { path: '/family', icon: Users, label: 'Family' },
+  { path: '/budgets', icon: Wallet, label: 'Budgets' },
+];
 const userItems = [{ path: '/settings', icon: Settings, label: 'Settings' }];
 
 export function MinimalLayout({
@@ -75,9 +95,24 @@ export function MinimalLayout({
   // Get theme values
   const colors = theme ? (resolvedMode === 'dark' ? theme.colorsDark : theme.colorsLight) : null;
 
-  // Build styles
-  const brandColor = householdSettings?.brandColor || colors?.primary || '#8b5cf6';
-  const bgColor = colors?.background || (resolvedMode === 'dark' ? '#111827' : '#f9fafb');
+  // Get elementStyles from extended theme (new system)
+  const extTheme = theme as ExtendedTheme | null;
+  const pageBackgroundStyle = extTheme?.elementStyles?.['page-background'];
+
+  // Build styles - use theme's primary color for accents (NOT household accentColor - that's login-only)
+  const accentColor = colors?.primary || '#3cb371';
+
+  // Page background color - check elementStyles first
+  let bgColor = colors?.background || (resolvedMode === 'dark' ? '#111827' : '#f9fafb');
+  let bgGradient: string | undefined;
+  if (pageBackgroundStyle) {
+    if (pageBackgroundStyle.backgroundGradient) {
+      const { from, to, direction } = pageBackgroundStyle.backgroundGradient;
+      bgGradient = `linear-gradient(${direction || 'to bottom'}, ${from}, ${to})`;
+    } else if (pageBackgroundStyle.backgroundColor) {
+      bgColor = pageBackgroundStyle.backgroundColor;
+    }
+  }
   const cardBg = colors?.card || (resolvedMode === 'dark' ? '#1f2937' : '#ffffff');
   const textColor = colors?.foreground || (resolvedMode === 'dark' ? '#f9fafb' : '#1f2937');
   const mutedColor = colors?.mutedForeground || (resolvedMode === 'dark' ? '#9ca3af' : '#6b7280');
@@ -98,8 +133,8 @@ export function MinimalLayout({
         className="flex items-center gap-4 px-4 py-3 transition-colors"
         style={{
           borderRadius,
-          backgroundColor: active ? `${brandColor}15` : 'transparent',
-          color: active ? brandColor : textColor,
+          backgroundColor: active ? `${accentColor}15` : 'transparent',
+          color: active ? accentColor : textColor,
         }}
       >
         <div className="relative">
@@ -127,7 +162,27 @@ export function MinimalLayout({
   };
 
   return (
-    <div className="min-h-screen flex flex-col" style={{ backgroundColor: bgColor }}>
+    <div
+      className="min-h-screen flex flex-col relative"
+      style={{
+        backgroundColor: bgColor,
+        background: bgGradient || undefined,
+      }}
+    >
+      {/* Background image layer for page background */}
+      {pageBackgroundStyle?.backgroundImage && (
+        <div
+          className="absolute inset-0 pointer-events-none"
+          style={{
+            backgroundImage: `url(${resolveImageUrl(pageBackgroundStyle.backgroundImage)})`,
+            backgroundSize: 'cover',
+            backgroundPosition: 'center',
+            opacity: pageBackgroundStyle.backgroundOpacity ?? 1,
+            filter: pageBackgroundStyle.blur ? `blur(${pageBackgroundStyle.blur}px)` : undefined,
+            zIndex: 0,
+          }}
+        />
+      )}
       {/* Impersonation Banner */}
       {impersonation.active && (
         <div className="bg-amber-500 text-white px-4 py-2 flex items-center justify-center gap-4 z-50">
@@ -150,7 +205,7 @@ export function MinimalLayout({
         className="fixed top-4 left-4 z-50 p-3 rounded-xl shadow-lg transition-transform hover:scale-105"
         style={{
           backgroundColor: cardBg,
-          color: brandColor,
+          color: accentColor,
           borderRadius,
         }}
       >
@@ -182,18 +237,17 @@ export function MinimalLayout({
           className="p-6 flex items-center gap-3"
           style={{ borderBottom: `1px solid ${borderColor}` }}
         >
-          {householdSettings?.logoUrl ? (
-            <img
-              src={`${import.meta.env.VITE_API_BASE_URL || 'http://localhost:3000'}${householdSettings.logoUrl}`}
-              alt="Logo"
-              className="w-10 h-10 rounded-xl object-cover"
-            />
-          ) : (
-            <span className="text-2xl">🏠</span>
-          )}
+          <img
+            src={householdSettings?.logoUrl
+              ? `${import.meta.env.VITE_API_BASE_URL || 'http://localhost:3000'}${householdSettings.logoUrl}`
+              : '/assets/HabiTrack_logo.png'
+            }
+            alt="HabiTrack Logo"
+            className="w-10 h-10 object-contain"
+          />
           <h1
             className="text-xl font-bold"
-            style={{ color: brandColor }}
+            style={{ color: accentColor }}
           >
             {householdSettings?.name || 'HabiTrack'}
           </h1>
@@ -239,7 +293,7 @@ export function MinimalLayout({
             ) : (
               <div
                 className="w-10 h-10 rounded-full flex items-center justify-center text-white font-semibold"
-                style={{ backgroundColor: user?.color || brandColor }}
+                style={{ backgroundColor: user?.color || accentColor }}
               >
                 {user?.displayName?.charAt(0).toUpperCase() || '?'}
               </div>
@@ -263,8 +317,8 @@ export function MinimalLayout({
                 }}
                 className="flex-1 flex items-center justify-center gap-2 px-3 py-2 text-sm rounded-lg transition-colors"
                 style={{
-                  color: brandColor,
-                  backgroundColor: `${brandColor}10`,
+                  color: accentColor,
+                  backgroundColor: `${accentColor}10`,
                   borderRadius,
                 }}
               >
@@ -292,7 +346,17 @@ export function MinimalLayout({
       </div>
 
       {/* Main content */}
-      <main className="flex-1 overflow-auto">
+      <main
+        className="flex-1 overflow-auto relative z-10"
+        style={{
+          // Apply global typography from theme
+          fontFamily: theme?.typography?.fontFamily || 'var(--font-family)',
+          fontSize: theme?.typography?.baseFontSize ? `${theme.typography.baseFontSize}px` : 'var(--font-size-base)',
+          fontWeight: theme?.typography?.fontWeight
+            ? ({ normal: 400, medium: 500, semibold: 600, bold: 700 }[theme.typography.fontWeight] || 400)
+            : undefined,
+        }}
+      >
         <div className="p-4 pt-20 lg:p-8 lg:pt-8">
           {children}
         </div>

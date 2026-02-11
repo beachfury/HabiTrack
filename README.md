@@ -1,22 +1,126 @@
 # HabiTrack
 
-A self-hosted family household management app — chores, shopping, calendar, budgets, messaging, and more — built for a single household running on your own server.
+<p align="center">
+  <img src="apps/web/public/logo.svg" alt="HabiTrack Logo" width="120" height="120">
+</p>
+
+<p align="center">
+  <strong>A self-hosted family household management app</strong><br>
+  Chores, shopping, calendar, budgets, meals, messaging, and more — built for a single household running on your own server.
+</p>
+
+<p align="center">
+  <a href="#features">Features</a> •
+  <a href="#screenshots">Screenshots</a> •
+  <a href="#tech-stack">Tech Stack</a> •
+  <a href="#quick-start">Quick Start</a> •
+  <a href="#documentation">Documentation</a>
+</p>
+
+---
 
 ## Features
 
-- **Dashboard** — Customizable drag-and-drop widgets showing events, chores, weather, leaderboards, and more
-- **Chores** — Templates, recurring schedules, per-member assignments, completion tracking with points and streaks, leaderboard
-- **Paid Chores** — Extra tasks kids can claim for money, with approval workflow
-- **Shopping** — Shared lists with categories, store tracking, price history, product catalog, member requests and admin approval
-- **Calendar** — Family calendar with multi-day events, per-member color coding, day-detail view
-- **Budgets** — Admin-only budget tracking for bills, expenses, and household spending (electric, water, fuel, insurance, etc.)
-- **Messaging** — Notifications, admin announcements, direct messages between family members
-- **Family Management** — Add/edit members, assign roles, set passwords and kiosk PINs
-- **Gamification** — Points for chore completion, adjustable by admins, leaderboard rankings
-- **Theming** — Light/dark/system mode, accent color picker (per-user)
-- **Kiosk Mode** — PIN-based quick login for shared household screens
-- **Multi-role** — Admin, member, kid, and kiosk roles with granular permissions
-- **Self-hosted** — Docker Compose stack: API + frontend + MariaDB, all on your network
+### 📊 Dashboard
+- Customizable drag-and-drop widget grid
+- Quick stats (events, chores, shopping counts)
+- Weather widget with location-based forecasts
+- Today's events and chores at a glance
+- Family leaderboard
+- Upcoming meals preview
+
+### ✅ Chores Management
+- Create chore templates with custom icons and colors
+- Recurring schedules (daily, weekly, monthly, custom)
+- Per-member assignments with rotation support
+- Completion tracking with points and streaks
+- Family leaderboard with gamification
+- Stats dashboard (completion rate, streaks, weekly progress)
+
+### 💰 Paid Chores
+- Extra tasks kids can claim for money
+- Admin approval workflow
+- Configurable payout amounts
+- Track earnings per family member
+
+### 🛒 Shopping
+- Shared shopping lists with categories
+- Multi-store support with store-specific lists
+- Price tracking and history
+- Product catalog with favorites
+- Member request system with admin approval
+- Smart predictions based on purchase history
+- Barcode scanning support (planned)
+
+### 📅 Calendar
+- Family calendar with color-coded events
+- Multi-day event support
+- Per-member event filtering
+- Day detail view with all activities
+- Integration with chores and meals
+
+### 🍽️ Meals & Recipes
+- Weekly meal planning
+- Recipe management with ingredients
+- Automatic shopping list generation from meal plans
+- Recipe categories and favorites
+- Cooking instructions with step-by-step view
+
+### 💵 Budgets
+- Admin-only budget tracking
+- Categories for bills, utilities, groceries, etc.
+- Monthly spending overview
+- Budget vs. actual comparison
+- Expense history and trends
+
+### 💬 Messaging
+- System notifications for chore completions, events, etc.
+- Admin announcements to the whole family
+- Direct messages between family members
+- Read/unread tracking
+- Notification badges
+
+### 👨‍👩‍👧‍👦 Family Management
+- Add and manage family members
+- Role-based permissions (Admin, Member, Kid, Kiosk)
+- Custom avatars with color selection
+- Password management
+- Activity tracking
+
+### 🎨 Advanced Theming System
+HabiTrack features a powerful theming system that allows deep customization:
+
+- **Light/Dark/System modes** with per-user preference
+- **Global color palette** customization (primary, accent, background, card, etc.)
+- **Per-element styling** — customize cards, widgets, buttons, inputs, modals individually
+- **Per-page backgrounds** — different backgrounds for each section of the app
+- **Page-specific element overrides** — style the calendar grid differently than the chores card
+- **Background images** with opacity control and media library
+- **Typography control** — custom fonts, sizes, line heights
+- **Border radius and shadow** presets
+- **Live preview** in the theme editor
+- **Theme library** — save, duplicate, and share themes
+- **Kid-safe themes** — admins can approve themes for kids to use
+
+### 🖥️ Kiosk Mode
+- PIN-based quick login for shared household screens
+- Simplified display-focused interface
+- Perfect for wall-mounted tablets or kitchen displays
+
+### 🔒 Security
+- Argon2id password hashing
+- HTTP-only session cookies
+- CSRF protection
+- Role-based access control
+- Self-hosted — your data stays on your network
+
+---
+
+## Screenshots
+
+*Coming soon*
+
+---
 
 ## Tech Stack
 
@@ -31,16 +135,62 @@ A self-hosted family household management app — chores, shopping, calendar, bu
 
 ---
 
-## Server Deployment Guide
+## Quick Start
 
-### Prerequisites
+### Using Docker (Recommended)
+
+```bash
+# Clone the repository
+git clone https://github.com/beachfury/HabiTrack.git
+cd HabiTrack
+
+# Copy and configure environment
+cp .env.example .env
+# Edit .env with your settings (see Configuration section)
+
+# Start all services
+docker compose up -d
+
+# Open http://localhost:3000 in your browser
+```
+
+### Local Development
+
+```bash
+# Prerequisites: Node.js 18+, pnpm, Docker
+
+# Install dependencies
+pnpm install
+
+# Start database only
+docker compose up -d db
+
+# Start API (terminal 1)
+pnpm -F api dev
+
+# Start frontend (terminal 2)
+pnpm -F web dev
+```
+
+| Service  | Default URL           |
+| -------- | --------------------- |
+| Frontend | http://localhost:3000 |
+| API      | http://localhost:3001 |
+
+---
+
+## Documentation
+
+### Server Deployment Guide
+
+#### Prerequisites
 
 - A Linux server (Ubuntu 20.04+, Debian 11+, or similar)
 - [Docker](https://docs.docker.com/engine/install/) and [Docker Compose](https://docs.docker.com/compose/install/)
 - A domain name (optional, but recommended for HTTPS)
 - At least 1GB RAM and 10GB disk space
 
-### Step 1: Install Docker (if not installed)
+#### Step 1: Install Docker (if not installed)
 
 ```bash
 # Update system
@@ -61,7 +211,7 @@ docker --version
 docker compose version
 ```
 
-### Step 2: Clone the Repository
+#### Step 2: Clone the Repository
 
 ```bash
 cd /opt
@@ -70,7 +220,7 @@ sudo chown -R $USER:$USER habitrack
 cd habitrack
 ```
 
-### Step 3: Configure Environment
+#### Step 3: Configure Environment
 
 ```bash
 # Copy the example environment file
@@ -103,7 +253,7 @@ VITE_API_BASE_URL=http://your-server-ip:3001
 openssl rand -hex 32  # Run twice for API_SECRET and SESSION_SECRET
 ```
 
-### Step 4: Start the Application
+#### Step 4: Start the Application
 
 ```bash
 # Build and start all containers
@@ -116,7 +266,7 @@ docker compose ps
 docker compose logs -f
 ```
 
-### Step 5: Initial Setup
+#### Step 5: Initial Setup
 
 1. Open your browser and go to `http://your-server-ip:3000`
 2. Complete the bootstrap wizard to create your admin account
@@ -124,11 +274,11 @@ docker compose logs -f
 
 ---
 
-## Production Deployment (with HTTPS)
+### Production Deployment (with HTTPS)
 
 For production use with a domain name and SSL certificate:
 
-### Using Nginx as Reverse Proxy
+#### Using Nginx as Reverse Proxy
 
 1. **Install Nginx and Certbot:**
 
@@ -201,9 +351,9 @@ docker compose up -d --build
 
 ---
 
-## Managing the Application
+### Managing the Application
 
-### Common Commands
+#### Common Commands
 
 ```bash
 # Start the application
@@ -230,7 +380,7 @@ docker compose up -d --build
 docker compose ps
 ```
 
-### Updating HabiTrack
+#### Updating HabiTrack
 
 ```bash
 cd /opt/habitrack
@@ -243,7 +393,7 @@ docker compose down
 docker compose up -d --build
 ```
 
-### Database Backup
+#### Database Backup
 
 ```bash
 # Backup
@@ -253,7 +403,7 @@ docker compose exec db mysqldump -u root -p habitrackdb > backup_$(date +%Y%m%d)
 docker compose exec -T db mysql -u root -p habitrackdb < backup_file.sql
 ```
 
-### Troubleshooting
+#### Troubleshooting
 
 **Container won't start:**
 
@@ -279,9 +429,9 @@ docker compose up -d
 
 ---
 
-## Unraid Installation
+### Unraid Installation
 
-### Option 1: Using Docker Compose (Recommended)
+#### Option 1: Using Docker Compose (Recommended)
 
 1. **Install the Compose Manager plugin** from Community Applications (CA)
 
@@ -326,11 +476,11 @@ docker compose up -d
 
 6. **Access HabiTrack** at `http://YOUR-UNRAID-IP:3000`
 
-### Option 2: Manual Docker Containers
+#### Option 2: Manual Docker Containers
 
 If you prefer to set up containers manually through the Unraid Docker UI:
 
-#### Container 1: MariaDB Database
+##### Container 1: MariaDB Database
 
 | Setting      | Value        |
 | ------------ | ------------ |
@@ -352,7 +502,7 @@ If you prefer to set up containers manually through the Unraid Docker UI:
 |----------------|-----------|
 | /var/lib/mysql | /mnt/user/appdata/habitrack/db |
 
-#### Container 2: HabiTrack API
+##### Container 2: HabiTrack API
 
 | Setting      | Value                                  |
 | ------------ | -------------------------------------- |
@@ -373,7 +523,7 @@ If you prefer to set up containers manually through the Unraid Docker UI:
 | SESSION_SECRET | another-random-string |
 | CORS_ORIGIN | http://YOUR-UNRAID-IP:3000 |
 
-#### Container 3: HabiTrack Web
+##### Container 3: HabiTrack Web
 
 | Setting      | Value                                  |
 | ------------ | -------------------------------------- |
@@ -388,18 +538,18 @@ If you prefer to set up containers manually through the Unraid Docker UI:
 | VITE_API_URL | http://YOUR-UNRAID-IP:3001/api |
 | VITE_API_BASE_URL | http://YOUR-UNRAID-IP:3001 |
 
-### Data Persistence on Unraid
+#### Data Persistence on Unraid
 
 Store your data in `/mnt/user/appdata/habitrack/`:
 
 ```
 /mnt/user/appdata/habitrack/
 ├── db/          # MariaDB data
-├── uploads/     # User uploads (avatars, logos)
+├── uploads/     # User uploads (avatars, logos, theme assets)
 └── .env         # Environment configuration
 ```
 
-### Using with Unraid's Reverse Proxy (SWAG/NPM)
+#### Using with Unraid's Reverse Proxy (SWAG/NPM)
 
 If you use SWAG or Nginx Proxy Manager:
 
@@ -411,39 +561,6 @@ If you use SWAG or Nginx Proxy Manager:
 
 ---
 
-## Local Development
-
-### Prerequisites
-
-- [Node.js](https://nodejs.org/) v18+
-- [pnpm](https://pnpm.io/) package manager
-- Docker (for the database)
-
-### Setup
-
-```bash
-# Install dependencies
-pnpm install
-
-# Start MariaDB only
-docker compose up -d db
-
-# Start API (terminal 1)
-pnpm -F api dev
-
-# Start frontend (terminal 2)
-pnpm -F web dev
-```
-
-Migrations run automatically when the API starts.
-
-| Service  | Default URL           |
-| -------- | --------------------- |
-| Frontend | http://localhost:3000 |
-| API      | http://localhost:3001 |
-
----
-
 ## Project Structure
 
 ```
@@ -452,6 +569,15 @@ habitrack/
 │   ├── api/                        # Express backend
 │   │   └── src/
 │   │       ├── routes/             # API endpoints
+│   │       │   ├── auth/           # Authentication
+│   │       │   ├── chores/         # Chores management
+│   │       │   ├── shopping/       # Shopping lists
+│   │       │   ├── calendar/       # Calendar events
+│   │       │   ├── budgets/        # Budget tracking
+│   │       │   ├── meals/          # Meal planning
+│   │       │   ├── recipes/        # Recipe management
+│   │       │   ├── themes/         # Theme system
+│   │       │   └── ...
 │   │       ├── middleware/         # Error handler, request logger
 │   │       ├── services/           # Business logic
 │   │       └── server.ts           # Entry point
@@ -459,12 +585,17 @@ habitrack/
 │       └── src/
 │           ├── api/                # API client
 │           ├── components/         # UI components
+│           │   ├── themes/         # Theme editor components
+│           │   ├── dashboard/      # Dashboard widgets
+│           │   ├── chores/         # Chores components
+│           │   └── ...
 │           ├── pages/              # Page components
-│           └── context/            # React contexts
+│           ├── context/            # React contexts (Auth, Theme)
+│           └── types/              # TypeScript type definitions
 ├── packages/                       # Shared workspace packages
 ├── providers/
 │   └── storage-mariadb/
-│       └── migrations/             # SQL migrations
+│       └── migrations/             # SQL migrations (auto-run on start)
 ├── docker/                         # Dockerfiles
 ├── docker-compose.yml
 └── package.json
@@ -491,6 +622,9 @@ CORS_ORIGIN=http://localhost:3000
 # Frontend (build-time)
 VITE_API_URL=http://localhost:3001/api
 VITE_API_BASE_URL=http://localhost:3001
+
+# Optional: Weather API
+WEATHER_API_KEY=your-openweathermap-api-key
 ```
 
 ---
@@ -499,10 +633,79 @@ VITE_API_BASE_URL=http://localhost:3001
 
 | Role     | Description                                                            |
 | -------- | ---------------------------------------------------------------------- |
-| `admin`  | Full access — manage members, chores, shopping, budgets, settings      |
+| `admin`  | Full access — manage members, chores, shopping, budgets, themes, settings |
 | `member` | Standard access — own chores, shared lists, calendar, messaging        |
 | `kid`    | Limited access — own chores and events, can request items, paid chores |
 | `kiosk`  | PIN-only login for shared screens, display-only                        |
+
+---
+
+## Theming System
+
+HabiTrack includes a powerful theming system that goes beyond simple color changes:
+
+### Theme Editor Features
+
+- **Color Palette**: Customize primary, secondary, accent, background, card, muted, border, and semantic colors (success, warning, destructive)
+- **Typography**: Choose font family, base size, and line height
+- **UI Presets**: Border radius (none, small, medium, large, full) and shadow intensity (none, subtle, medium, strong)
+- **Element Styles**: Per-element customization for cards, widgets, buttons, inputs, modals
+- **Page Backgrounds**: Set different backgrounds (solid, gradient, or image) for each page
+- **Live Preview**: See changes in real-time across all preview pages
+- **Media Library**: Upload and manage background images with category organization
+
+### Creating Themes
+
+1. Go to **Settings → Themes**
+2. Click **Create Theme** or **Duplicate** an existing theme
+3. Use the theme editor to customize colors, typography, and element styles
+4. Preview your changes across different pages
+5. Save and apply your theme
+
+### Theme Structure
+
+Themes are stored as JSON in the database and include:
+
+```typescript
+{
+  name: string;
+  description: string;
+  layout: { type, sidebarWidth, navStyle };
+  colorsLight: { primary, secondary, accent, background, ... };
+  colorsDark: { ... };
+  typography: { fontFamily, baseFontSize, lineHeight };
+  ui: { borderRadius, shadowIntensity };
+  elementStyles: {
+    card: { backgroundColor, borderRadius, boxShadow, ... },
+    widget: { ... },
+    'button-primary': { ... },
+    // Per-page elements
+    'dashboard-stats-widget': { ... },
+    'calendar-grid': { ... },
+    // ...
+  };
+  loginPage: { backgroundType, gradientFrom, gradientTo, ... };
+}
+```
+
+---
+
+## API Overview
+
+HabiTrack provides a RESTful API for all operations:
+
+| Endpoint | Description |
+|----------|-------------|
+| `POST /api/auth/creds/login` | Login with username/password |
+| `POST /api/auth/pin/login` | Login with PIN (kiosk mode) |
+| `GET /api/me` | Get current user |
+| `GET /api/chores` | List chores |
+| `GET /api/shopping/items` | List shopping items |
+| `GET /api/calendar/events` | List calendar events |
+| `GET /api/themes` | List available themes |
+| `POST /api/themes` | Create a new theme |
+| `PUT /api/themes/:id` | Update a theme |
+| ... | See API source for full documentation |
 
 ---
 
@@ -511,10 +714,37 @@ VITE_API_BASE_URL=http://localhost:3001
 This application is designed to run on your **local home network**. If you expose it to the internet:
 
 - Always use HTTPS (SSL/TLS)
-- Use strong passwords
+- Use strong, unique passwords
 - Keep the software updated
 - Consider using a VPN instead of exposing directly
 - The developer assumes no liability for security issues (see LICENSE)
+
+---
+
+## Contributing
+
+Contributions are welcome! Please feel free to submit issues and pull requests.
+
+### Development Setup
+
+1. Fork the repository
+2. Clone your fork
+3. Install dependencies: `pnpm install`
+4. Start the database: `docker compose up -d db`
+5. Start the API: `pnpm -F api dev`
+6. Start the web app: `pnpm -F web dev`
+7. Make your changes
+8. Submit a pull request
+
+---
+
+## Credits
+
+### Author
+- **BeachFury** — Creator and lead developer
+
+### Contributors
+- **Claude** (Anthropic) — AI pair programming assistant
 
 ---
 
@@ -525,3 +755,16 @@ Copyright (c) 2025 BeachFury. All Rights Reserved.
 This software is proprietary. See [LICENSE](LICENSE) for full terms.
 
 **No warranty is provided. Use at your own risk.**
+
+---
+
+## Support
+
+- **Issues**: [GitHub Issues](https://github.com/beachfury/HabiTrack/issues)
+- **Discussions**: [GitHub Discussions](https://github.com/beachfury/HabiTrack/discussions)
+
+---
+
+<p align="center">
+  Made with ❤️ for families everywhere
+</p>

@@ -15,32 +15,47 @@ interface PaidChoresWidgetProps {
 }
 
 export function PaidChoresWidget({ chores = [] }: PaidChoresWidgetProps) {
-  const difficultyColors = {
-    easy: 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400',
-    medium: 'bg-yellow-100 text-yellow-700 dark:bg-yellow-900/30 dark:text-yellow-400',
-    hard: 'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400',
+  // Difficulty colors using CSS variables
+  const getDifficultyStyle = (difficulty: string) => {
+    switch (difficulty) {
+      case 'easy':
+        return {
+          backgroundColor: 'color-mix(in srgb, var(--color-success) 15%, transparent)',
+          color: 'var(--color-success)',
+        };
+      case 'hard':
+        return {
+          backgroundColor: 'color-mix(in srgb, var(--color-destructive) 15%, transparent)',
+          color: 'var(--color-destructive)',
+        };
+      default: // medium
+        return {
+          backgroundColor: 'color-mix(in srgb, var(--color-warning) 15%, transparent)',
+          color: 'var(--color-warning)',
+        };
+    }
   };
 
   return (
     <div className="h-full flex flex-col">
       <div className="flex items-center justify-between mb-3">
-        <h3 className="font-semibold text-gray-900 dark:text-white flex items-center gap-2">
-          <DollarSign size={18} className="text-green-500" />
+        <h3 className="font-semibold text-[var(--color-foreground)] flex items-center gap-2">
+          <DollarSign size={18} className="text-[var(--color-success)]" />
           Available Paid Chores
           {chores.length > 0 && (
-            <span className="text-xs bg-green-100 dark:bg-green-900/30 text-green-600 dark:text-green-400 px-2 py-0.5 rounded-full animate-pulse">
+            <span className="text-xs bg-[var(--color-success)]/20 text-[var(--color-success)] px-2 py-0.5 rounded-full animate-pulse">
               {chores.length} available!
             </span>
           )}
         </h3>
-        <Link to="/paid-chores" className="text-sm text-blue-500 hover:text-blue-600">
+        <Link to="/paid-chores" className="text-sm text-[var(--color-primary)] hover:opacity-80">
           View All
         </Link>
       </div>
 
       <div className="flex-1 overflow-y-auto space-y-2">
         {chores.length === 0 ? (
-          <p className="text-sm text-gray-500 dark:text-gray-400 text-center py-4">
+          <p className="text-sm text-[var(--color-muted-foreground)] text-center py-4">
             No paid chores available
           </p>
         ) : (
@@ -48,21 +63,20 @@ export function PaidChoresWidget({ chores = [] }: PaidChoresWidgetProps) {
             <Link
               key={chore.id}
               to="/paid-chores"
-              className="flex items-center gap-3 p-2 rounded-lg bg-gray-50 dark:bg-gray-700/50 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
+              className="themed-widget flex items-center gap-3 hover:opacity-90 transition-opacity"
             >
               <div className="flex-1 min-w-0">
-                <p className="text-sm font-medium text-gray-900 dark:text-white truncate">
+                <p className="text-sm font-medium text-[var(--color-foreground)] truncate">
                   {chore.title}
                 </p>
                 <span
-                  className={`text-xs px-2 py-0.5 rounded-full ${
-                    difficultyColors[chore.difficulty as keyof typeof difficultyColors] || difficultyColors.medium
-                  }`}
+                  className="text-xs px-2 py-0.5 rounded-full"
+                  style={getDifficultyStyle(chore.difficulty)}
                 >
                   {chore.difficulty}
                 </span>
               </div>
-              <div className="text-lg font-bold text-green-600">
+              <div className="text-lg font-bold text-[var(--color-success)]">
                 ${Number(chore.amount).toFixed(2)}
               </div>
             </Link>
@@ -73,7 +87,7 @@ export function PaidChoresWidget({ chores = [] }: PaidChoresWidgetProps) {
       {chores.length > 0 && (
         <Link
           to="/paid-chores"
-          className="mt-2 flex items-center justify-center gap-2 py-2 bg-green-500 hover:bg-green-600 text-white rounded-lg text-sm font-medium transition-colors"
+          className="mt-2 flex items-center justify-center gap-2 py-2 bg-[var(--color-success)] text-[var(--color-success-foreground)] rounded-[var(--radius-md)] text-sm font-medium transition-colors hover:opacity-90"
         >
           <Zap size={16} />
           Claim a Chore!

@@ -287,21 +287,21 @@ export function ChoresPage() {
   if (loading) {
     return (
       <div className="p-8 flex items-center justify-center">
-        <RefreshCw className="animate-spin text-purple-600" size={32} />
+        <RefreshCw className="animate-spin text-[var(--color-primary)]" size={32} />
       </div>
     );
   }
 
   return (
-    <div className="p-4 md:p-8 max-w-6xl mx-auto">
+    <div className="p-4 md:p-8 max-w-6xl mx-auto h-full themed-chores-bg">
       {/* Header */}
       <div className="flex items-center justify-between mb-6">
         <div>
-          <h1 className="text-2xl md:text-3xl font-bold text-gray-900 dark:text-white flex items-center gap-3">
-            <CheckSquare className="text-purple-600" />
+          <h1 className="text-2xl md:text-3xl font-bold text-[var(--color-foreground)] flex items-center gap-3">
+            <CheckSquare className="text-[var(--color-primary)]" />
             Chores
           </h1>
-          <p className="text-gray-500 mt-1">Track and complete your tasks</p>
+          <p className="text-[var(--color-muted-foreground)] mt-1">Track and complete your tasks</p>
         </div>
 
         {isAdmin && (
@@ -310,7 +310,7 @@ export function ChoresPage() {
             {view === 'manage' && (
               <button
                 onClick={() => setShowAddTemplateModal(true)}
-                className="flex items-center gap-2 bg-gray-100 dark:bg-gray-700 hover:bg-gray-200 dark:hover:bg-gray-600 text-gray-700 dark:text-gray-200 px-4 py-2 rounded-xl transition-colors"
+                className="themed-btn-secondary flex items-center gap-2"
               >
                 <FileText size={20} />
                 <span className="hidden sm:inline">Add Template</span>
@@ -319,7 +319,7 @@ export function ChoresPage() {
             {/* Add Chore Button */}
             <button
               onClick={() => setShowAddChoreModal(true)}
-              className="flex items-center gap-2 bg-purple-600 hover:bg-purple-700 text-white px-4 py-2 rounded-xl transition-colors"
+              className="themed-btn-primary flex items-center gap-2"
             >
               <Plus size={20} />
               <span className="hidden sm:inline">Add Chore</span>
@@ -330,13 +330,13 @@ export function ChoresPage() {
 
       {/* Alerts */}
       {success && (
-        <div className="mb-6 p-4 bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800 rounded-xl text-green-700 dark:text-green-300 flex items-center gap-2">
+        <div className="mb-6 p-4 bg-[var(--color-success)]/10 border border-[var(--color-success)]/30 rounded-[var(--radius-lg)] text-[var(--color-success)] flex items-center gap-2">
           <Check size={20} />
           {success}
         </div>
       )}
       {error && (
-        <div className="mb-6 p-4 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-xl text-red-600 dark:text-red-400 flex items-center gap-2">
+        <div className="mb-6 p-4 bg-[var(--color-destructive)]/10 border border-[var(--color-destructive)]/30 rounded-[var(--radius-lg)] text-[var(--color-destructive)] flex items-center gap-2">
           <AlertCircle size={20} />
           {error}
           <button onClick={() => setError('')} className="ml-auto">
@@ -356,10 +356,10 @@ export function ChoresPage() {
             <button
               key={v.id}
               onClick={() => setView(v.id)}
-              className={`flex items-center gap-2 px-4 py-2 rounded-xl font-medium whitespace-nowrap transition-colors ${
+              className={`flex items-center gap-2 px-4 py-2 rounded-[var(--radius-lg)] font-medium whitespace-nowrap transition-colors ${
                 view === v.id
-                  ? 'bg-purple-600 text-white'
-                  : 'bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-300 hover:bg-gray-200'
+                  ? 'bg-[var(--color-primary)] text-[var(--color-primary-foreground)]'
+                  : 'bg-[var(--color-muted)] text-[var(--color-muted-foreground)] hover:bg-[var(--color-muted)]/80'
               }`}
             >
               <v.icon size={18} />

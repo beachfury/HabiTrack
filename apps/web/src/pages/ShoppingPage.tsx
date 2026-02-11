@@ -37,6 +37,7 @@ import {
   PredictionsTab,
   HistoryTab,
   ManageTab,
+  MealIngredientsCard,
   CatalogBrowserModal,
   StoreSelectModal,
   NewItemModal,
@@ -396,26 +397,26 @@ export function ShoppingPage() {
   ];
 
   return (
-    <div className="min-h-screen bg-gray-50 dark:bg-gray-900 pb-24 overflow-x-hidden">
+    <div className="min-h-screen pb-24 overflow-x-hidden themed-shopping-bg">
       {/* Header */}
-      <div className="bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700 sticky top-0 z-10">
+      <div className="themed-card border-b border-[var(--color-border)] sticky top-0 z-10 rounded-none">
         <div className="max-w-4xl mx-auto px-3 py-3">
           <div className="flex items-center justify-between mb-3">
-            <h1 className="text-xl font-bold text-gray-900 dark:text-white flex items-center gap-2">
-              <ShoppingCart className="text-orange-500" size={22} />
+            <h1 className="text-xl font-bold text-[var(--color-foreground)] flex items-center gap-2">
+              <ShoppingCart className="text-[var(--color-warning)]" size={22} />
               Shopping
             </h1>
             {activeTab === 'list' && (
               <div className="text-right text-sm">
-                <p className="text-gray-500">
+                <p className="text-[var(--color-muted-foreground)]">
                   Needs:{' '}
-                  <span className="font-semibold text-green-600">
+                  <span className="font-semibold text-[var(--color-success)]">
                     ${Number(totals.needsOnly).toFixed(2)}
                   </span>
                 </p>
-                <p className="text-gray-500">
+                <p className="text-[var(--color-muted-foreground)]">
                   Total:{' '}
-                  <span className="font-semibold text-orange-600">
+                  <span className="font-semibold text-[var(--color-warning)]">
                     ${Number(totals.needsPlusWants).toFixed(2)}
                   </span>
                 </p>
@@ -433,8 +434,8 @@ export function ShoppingPage() {
                   onClick={() => setActiveTab(tab.id)}
                   className={`flex items-center gap-1 px-3 py-2 rounded-lg text-sm font-medium whitespace-nowrap flex-shrink-0 transition-colors ${
                     activeTab === tab.id
-                      ? 'bg-orange-500 text-white'
-                      : 'bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-300 hover:bg-gray-200'
+                      ? 'bg-[var(--color-primary)] text-[var(--color-primary-foreground)]'
+                      : 'bg-[var(--color-muted)] text-[var(--color-muted-foreground)] hover:bg-[var(--color-muted)]/80'
                   }`}
                 >
                   <tab.icon size={16} />
@@ -448,7 +449,7 @@ export function ShoppingPage() {
       {/* Alerts */}
       {error && (
         <div className="max-w-4xl mx-auto px-3 mt-3">
-          <div className="p-3 bg-red-100 dark:bg-red-900/20 text-red-700 dark:text-red-300 rounded-xl flex items-center gap-2">
+          <div className="p-3 bg-[var(--color-destructive)]/10 text-[var(--color-destructive)] rounded-xl flex items-center gap-2">
             <AlertCircle size={18} />
             {error}
             <button onClick={() => setError('')} className="ml-auto">
@@ -460,7 +461,7 @@ export function ShoppingPage() {
 
       {success && (
         <div className="max-w-4xl mx-auto px-3 mt-3">
-          <div className="p-3 bg-green-100 dark:bg-green-900/20 text-green-700 dark:text-green-300 rounded-xl flex items-center gap-2">
+          <div className="p-3 bg-[var(--color-success)]/10 text-[var(--color-success)] rounded-xl flex items-center gap-2">
             <CheckCircle size={18} />
             {success}
           </div>
@@ -471,24 +472,36 @@ export function ShoppingPage() {
       <div className="max-w-4xl mx-auto px-3 py-4">
         {loading ? (
           <div className="flex items-center justify-center py-12">
-            <RefreshCw size={32} className="animate-spin text-orange-500" />
+            <RefreshCw size={32} className="animate-spin text-[var(--color-primary)]" />
           </div>
         ) : (
           <>
             {activeTab === 'list' && (
-              <ShoppingListTab
-                itemsByStoreAndCategory={itemsByStoreAndCategory}
-                purchasedToday={purchasedToday}
-                suggestions={suggestions}
-                expandedStores={expandedStores}
-                toggleStore={toggleStore}
-                onMarkPurchased={handleMarkPurchased}
-                onRemove={handleRemoveFromList}
-                onAddSuggestion={handleAddSuggestion}
-                onAddAllSuggestions={handleAddAllSuggestions}
-                onAddItem={() => setShowAddItemModal(true)}
-                isAdmin={isAdmin}
-              />
+              <>
+                {/* Meal Ingredients Suggestions */}
+                <MealIngredientsCard
+                  onAddToList={(name, quantity, unit) => {
+                    // This is called when ingredients are added via meal suggestions
+                    // The API handles adding to the list directly
+                  }}
+                  onRefresh={fetchShoppingList}
+                  isAdmin={isAdmin}
+                />
+
+                <ShoppingListTab
+                  itemsByStoreAndCategory={itemsByStoreAndCategory}
+                  purchasedToday={purchasedToday}
+                  suggestions={suggestions}
+                  expandedStores={expandedStores}
+                  toggleStore={toggleStore}
+                  onMarkPurchased={handleMarkPurchased}
+                  onRemove={handleRemoveFromList}
+                  onAddSuggestion={handleAddSuggestion}
+                  onAddAllSuggestions={handleAddAllSuggestions}
+                  onAddItem={() => setShowAddItemModal(true)}
+                  isAdmin={isAdmin}
+                />
+              </>
             )}
 
             {activeTab === 'requests' && (

@@ -2,7 +2,7 @@
 import { useState } from 'react';
 import { Palette, Sun, Moon, Monitor, RefreshCw, Plus, Edit2, Copy, ShieldCheck, ShieldOff } from 'lucide-react';
 import { ThemeCard } from './ThemeCard';
-import { ThemeEditor } from './ThemeEditor';
+import { ThemeEditorAdvanced } from './ThemeEditorAdvanced';
 import { useTheme } from '../../context/ThemeContext';
 import type { Theme, ThemeListItem } from '../../types/theme';
 import * as themesApi from '../../api/themes';
@@ -159,18 +159,18 @@ export function ThemePicker({ userRole = 'member' }: ThemePickerProps) {
                 className={`
                   p-4 rounded-xl border-2 transition-colors flex flex-col items-center gap-2
                   ${mode === m.id
-                    ? 'border-purple-500 bg-purple-50 dark:bg-purple-900/20'
+                    ? 'border-emerald-500 bg-emerald-50 dark:bg-emerald-900/20'
                     : 'border-gray-200 dark:border-gray-700 hover:border-gray-300'
                   }
                 `}
               >
                 <m.icon
                   size={24}
-                  className={mode === m.id ? 'text-purple-600' : 'text-gray-500'}
+                  className={mode === m.id ? 'text-emerald-600' : 'text-gray-500'}
                 />
                 <span
                   className={`text-sm font-medium ${
-                    mode === m.id ? 'text-purple-600' : 'text-gray-700 dark:text-gray-300'
+                    mode === m.id ? 'text-emerald-600' : 'text-gray-700 dark:text-gray-300'
                   }`}
                 >
                   {m.label}
@@ -185,7 +185,7 @@ export function ThemePicker({ userRole = 'member' }: ThemePickerProps) {
           <div className="flex gap-2">
             <button
               onClick={handleCreateTheme}
-              className="flex items-center gap-2 px-4 py-2 bg-purple-600 hover:bg-purple-700 text-white rounded-lg transition-colors"
+              className="flex items-center gap-2 px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg transition-colors"
             >
               <Plus size={18} />
               Create Theme
@@ -221,7 +221,7 @@ export function ThemePicker({ userRole = 'member' }: ThemePickerProps) {
             <button
               onClick={() => loadThemes()}
               disabled={loading}
-              className="text-sm text-purple-600 hover:text-purple-700 flex items-center gap-1"
+              className="text-sm text-emerald-600 hover:text-emerald-700 flex items-center gap-1"
             >
               <RefreshCw size={14} className={loading ? 'animate-spin' : ''} />
               Refresh
@@ -306,12 +306,12 @@ export function ThemePicker({ userRole = 'member' }: ThemePickerProps) {
 
         {/* Admin kid approval info */}
         {isAdmin && (
-          <div className="p-4 bg-purple-50 dark:bg-purple-900/20 rounded-xl">
-            <h4 className="font-medium text-purple-700 dark:text-purple-300 mb-2 flex items-center gap-2">
+          <div className="p-4 bg-emerald-50 dark:bg-emerald-900/20 rounded-xl">
+            <h4 className="font-medium text-emerald-700 dark:text-emerald-300 mb-2 flex items-center gap-2">
               <ShieldCheck size={18} />
               Kid Approval Controls
             </h4>
-            <p className="text-sm text-purple-600 dark:text-purple-400 mb-2">
+            <p className="text-sm text-emerald-600 dark:text-emerald-400 mb-2">
               Click the shield icon on any theme to toggle whether it's available for kids.
             </p>
             <div className="flex items-center gap-4 text-sm">
@@ -319,13 +319,13 @@ export function ThemePicker({ userRole = 'member' }: ThemePickerProps) {
                 <span className="inline-flex items-center justify-center w-6 h-6 rounded bg-green-500 text-white">
                   <ShieldCheck size={14} />
                 </span>
-                <span className="text-purple-600 dark:text-purple-400">Approved for kids</span>
+                <span className="text-emerald-600 dark:text-emerald-400">Approved for kids</span>
               </span>
               <span className="flex items-center gap-1.5">
                 <span className="inline-flex items-center justify-center w-6 h-6 rounded bg-gray-200 dark:bg-gray-700 text-gray-500">
                   <ShieldOff size={14} />
                 </span>
-                <span className="text-purple-600 dark:text-purple-400">Not approved</span>
+                <span className="text-emerald-600 dark:text-emerald-400">Not approved</span>
               </span>
             </div>
           </div>
@@ -334,7 +334,7 @@ export function ThemePicker({ userRole = 'member' }: ThemePickerProps) {
 
       {/* Theme Editor Modal */}
       {showEditor && (
-        <ThemeEditor
+        <ThemeEditorAdvanced
           theme={editingTheme}
           onSave={handleEditorSave}
           onClose={handleEditorClose}
