@@ -13,3 +13,4 @@ export { EmptyState, EmptyStateInline } from './EmptyState';
 export { Input, Textarea, Select } from './Input';
 export { ColorPicker } from './ColorPicker';
 export { ColorPickerModal } from './ColorPickerModal';
+export { ModalForm, FormField, FormInput, FormTextarea, FormSelect, FormRow } from './ModalForm';
