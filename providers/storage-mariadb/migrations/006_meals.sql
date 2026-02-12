@@ -1,5 +1,6 @@
--- Migration 023: Dinner Planner
+-- Migration 006: Dinner Planner
 -- Recipe book, meal planning, voting, and shopping integration
+-- Consolidated from migration 023
 
 SET NAMES utf8mb4;
 SET FOREIGN_KEY_CHECKS = 0;
@@ -121,7 +122,7 @@ CREATE TABLE IF NOT EXISTS `meal_votes` (
 
 -- ============================================
 -- MEAL SHOPPING SUGGESTIONS TABLE
--- Ingredients suggested for shopping list (not auto-added)
+-- Ingredients suggested for shopping list
 -- ============================================
 CREATE TABLE IF NOT EXISTS `meal_shopping_suggestions` (
   `id` BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,

@@ -1,5 +1,6 @@
--- Migration 009: Shopping System
--- Shopping categories, stores, catalog, lists
+-- Migration 005: Shopping System
+-- Categories, stores, catalog, lists, prices, purchases, popularity
+-- Consolidated from migrations 009, 031
 
 SET NAMES utf8mb4;
 SET FOREIGN_KEY_CHECKS = 0;
@@ -203,6 +204,40 @@ CREATE TABLE IF NOT EXISTS `shopping_purchase_events` (
   CONSTRAINT `fk_purchase_item` FOREIGN KEY (`catalogItemId`) REFERENCES `catalog_items`(`id`) ON DELETE CASCADE,
   CONSTRAINT `fk_purchase_store` FOREIGN KEY (`storeId`) REFERENCES `stores`(`id`) ON DELETE SET NULL,
   CONSTRAINT `fk_purchase_by` FOREIGN KEY (`purchasedBy`) REFERENCES `users`(`id`) ON DELETE SET NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- ============================================
+-- ITEM ADD EVENTS TABLE
+-- Tracks every time an item is added to the shopping list
+-- Used for popularity-based suggestions
+-- ============================================
+CREATE TABLE IF NOT EXISTS `item_add_events` (
+  `id` BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,
+  `catalogItemId` BIGINT UNSIGNED NOT NULL,
+  `addedBy` BIGINT UNSIGNED NULL,
+  `addedAt` DATETIME(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3),
+  PRIMARY KEY (`id`),
+  KEY `idx_item_add_events_catalog` (`catalogItemId`),
+  KEY `idx_item_add_events_date` (`addedAt`),
+  CONSTRAINT `fk_item_add_events_catalog` FOREIGN KEY (`catalogItemId`) REFERENCES `catalog_items`(`id`) ON DELETE CASCADE,
+  CONSTRAINT `fk_item_add_events_user` FOREIGN KEY (`addedBy`) REFERENCES `users`(`id`) ON DELETE SET NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- ============================================
+-- ITEM POPULARITY CACHE TABLE
+-- Precomputed popularity scores
+-- ============================================
+CREATE TABLE IF NOT EXISTS `item_popularity` (
+  `catalogItemId` BIGINT UNSIGNED NOT NULL,
+  `addCount30Days` INT UNSIGNED NOT NULL DEFAULT 0,
+  `addCount90Days` INT UNSIGNED NOT NULL DEFAULT 0,
+  `addCountAllTime` INT UNSIGNED NOT NULL DEFAULT 0,
+  `lastAddedAt` DATETIME(3) NULL,
+  `updatedAt` DATETIME(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3) ON UPDATE CURRENT_TIMESTAMP(3),
+  PRIMARY KEY (`catalogItemId`),
+  KEY `idx_item_popularity_30d` (`addCount30Days` DESC),
+  KEY `idx_item_popularity_90d` (`addCount90Days` DESC),
+  CONSTRAINT `fk_item_popularity_catalog` FOREIGN KEY (`catalogItemId`) REFERENCES `catalog_items`(`id`) ON DELETE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 SET FOREIGN_KEY_CHECKS = 1;
