@@ -1,34 +1,9 @@
--- Migration 019: Dashboard Widgets
+-- Migration 009: Dashboard Widgets
 -- User-customizable home page widgets with drag-and-drop layout
+-- Consolidated from migration 019
 
 SET NAMES utf8mb4;
 SET FOREIGN_KEY_CHECKS = 0;
-
--- ============================================
--- USER DASHBOARD LAYOUTS
--- Stores widget positions per user
--- ============================================
-CREATE TABLE IF NOT EXISTS `user_dashboard_layouts` (
-  `id` BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,
-  `userId` BIGINT UNSIGNED NOT NULL,
-  `widgetId` VARCHAR(50) NOT NULL,
-  `x` INT NOT NULL DEFAULT 0,
-  `y` INT NOT NULL DEFAULT 0,
-  `w` INT NOT NULL DEFAULT 2,
-  `h` INT NOT NULL DEFAULT 2,
-  `minW` INT NULL,
-  `minH` INT NULL,
-  `maxW` INT NULL,
-  `maxH` INT NULL,
-  `visible` BOOLEAN NOT NULL DEFAULT 1,
-  `config` JSON NULL,
-  `createdAt` DATETIME(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3),
-  `updatedAt` DATETIME(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3) ON UPDATE CURRENT_TIMESTAMP(3),
-  PRIMARY KEY (`id`),
-  UNIQUE KEY `uk_user_widget` (`userId`, `widgetId`),
-  KEY `idx_user_dashboard` (`userId`),
-  CONSTRAINT `fk_dashboard_user` FOREIGN KEY (`userId`) REFERENCES `users`(`id`) ON DELETE CASCADE
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- ============================================
 -- AVAILABLE WIDGETS REGISTRY
@@ -69,5 +44,31 @@ INSERT INTO `dashboard_widgets` (`id`, `name`, `description`, `icon`, `category`
   ('family-members', 'Family', 'Quick family member overview', 'users', 'family', 2, 2, 1, 2, 4, 4, 11),
   ('announcements', 'Announcements', 'Recent announcements', 'megaphone', 'messages', 2, 2, 1, 2, 4, 4, 12),
   ('weather', 'Weather', 'Local weather forecast', 'cloud-sun', 'general', 2, 1, 1, 1, 2, 2, 13);
+
+-- ============================================
+-- USER DASHBOARD LAYOUTS
+-- Stores widget positions per user
+-- ============================================
+CREATE TABLE IF NOT EXISTS `user_dashboard_layouts` (
+  `id` BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,
+  `userId` BIGINT UNSIGNED NOT NULL,
+  `widgetId` VARCHAR(50) NOT NULL,
+  `x` INT NOT NULL DEFAULT 0,
+  `y` INT NOT NULL DEFAULT 0,
+  `w` INT NOT NULL DEFAULT 2,
+  `h` INT NOT NULL DEFAULT 2,
+  `minW` INT NULL,
+  `minH` INT NULL,
+  `maxW` INT NULL,
+  `maxH` INT NULL,
+  `visible` BOOLEAN NOT NULL DEFAULT 1,
+  `config` JSON NULL,
+  `createdAt` DATETIME(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3),
+  `updatedAt` DATETIME(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3) ON UPDATE CURRENT_TIMESTAMP(3),
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `uk_user_widget` (`userId`, `widgetId`),
+  KEY `idx_user_dashboard` (`userId`),
+  CONSTRAINT `fk_dashboard_user` FOREIGN KEY (`userId`) REFERENCES `users`(`id`) ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 SET FOREIGN_KEY_CHECKS = 1;

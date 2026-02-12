@@ -1,5 +1,6 @@
--- Migration 020: Budget Management System
+-- Migration 007: Budget Management System
 -- Admin-only household financial tracking
+-- Consolidated from migrations 020, 021
 
 SET NAMES utf8mb4;
 SET FOREIGN_KEY_CHECKS = 0;
@@ -49,6 +50,7 @@ CREATE TABLE IF NOT EXISTS `budgets` (
   `name` VARCHAR(255) NOT NULL,
   `description` TEXT NULL,
   `budgetAmount` DECIMAL(10, 2) NOT NULL,
+  `budgetType` ENUM('bill', 'spending') NOT NULL DEFAULT 'bill',
   `periodType` ENUM('monthly', 'yearly', 'weekly', 'one-time') NOT NULL DEFAULT 'monthly',
   `startDate` DATE NULL,
   `endDate` DATE NULL,

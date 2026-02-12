@@ -1,5 +1,6 @@
--- Migration 005: Calendar Events
+-- Migration 004: Calendar Events
 -- Family calendar and events
+-- Consolidated from migration 005
 
 SET NAMES utf8mb4;
 SET FOREIGN_KEY_CHECKS = 0;
