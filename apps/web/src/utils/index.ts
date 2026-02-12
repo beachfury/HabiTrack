@@ -3,3 +3,5 @@
 
 export * from './format';
 export * from './colors';
+export * from './styleHelpers';
+export * from './themeColors';

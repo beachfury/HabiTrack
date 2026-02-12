@@ -20,20 +20,7 @@ import type {
   ChoreRecurrenceType,
 } from '../../../types';
 import { ModalPortal, ModalBody } from '../../common/ModalPortal';
-
-// Helper function to get difficulty badge styles
-const getDifficultyStyle = (difficulty: string) => {
-  switch (difficulty) {
-    case 'easy':
-      return { backgroundColor: 'color-mix(in srgb, var(--color-success) 15%, transparent)', color: 'var(--color-success)' };
-    case 'medium':
-      return { backgroundColor: 'color-mix(in srgb, var(--color-warning) 15%, transparent)', color: 'var(--color-warning)' };
-    case 'hard':
-      return { backgroundColor: 'color-mix(in srgb, var(--color-destructive) 15%, transparent)', color: 'var(--color-destructive)' };
-    default:
-      return { backgroundColor: 'var(--color-muted)', color: 'var(--color-muted-foreground)' };
-  }
-};
+import { getDifficultyStyle } from '../../../utils';
 
 interface AddChoreModalProps {
   categories: ChoreCategory[];

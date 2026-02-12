@@ -1,6 +1,7 @@
 // apps/web/src/components/dashboard/widgets/PaidChoresWidget.tsx
 import { DollarSign, Zap } from 'lucide-react';
 import { Link } from 'react-router-dom';
+import { getDifficultyStyle } from '../../../utils';
 
 interface PaidChore {
   id: string;
@@ -15,26 +16,6 @@ interface PaidChoresWidgetProps {
 }
 
 export function PaidChoresWidget({ chores = [] }: PaidChoresWidgetProps) {
-  // Difficulty colors using CSS variables
-  const getDifficultyStyle = (difficulty: string) => {
-    switch (difficulty) {
-      case 'easy':
-        return {
-          backgroundColor: 'color-mix(in srgb, var(--color-success) 15%, transparent)',
-          color: 'var(--color-success)',
-        };
-      case 'hard':
-        return {
-          backgroundColor: 'color-mix(in srgb, var(--color-destructive) 15%, transparent)',
-          color: 'var(--color-destructive)',
-        };
-      default: // medium
-        return {
-          backgroundColor: 'color-mix(in srgb, var(--color-warning) 15%, transparent)',
-          color: 'var(--color-warning)',
-        };
-    }
-  };
 
   return (
     <div className="h-full flex flex-col">

@@ -21,6 +21,7 @@ import { ModalPortal, ModalBody } from '../components/common/ModalPortal';
 import { useAuth } from '../context/AuthContext';
 import * as paidChoresApi from '../api/paid-chores';
 import type { PaidChore, CreatePaidChoreInput, LeaderboardEntry } from '../api/paid-chores';
+import { getDifficultyStyle } from '../utils';
 
 type TabType = 'available' | 'my-claims' | 'pending-review' | 'leaderboard';
 
@@ -365,20 +366,6 @@ interface ChoreCardProps {
   onReject: (reopen: boolean) => void;
   onDelete: () => void;
 }
-
-// Helper function for difficulty badge styles
-const getDifficultyStyle = (difficulty: string) => {
-  switch (difficulty) {
-    case 'easy':
-      return { backgroundColor: 'color-mix(in srgb, var(--color-success) 15%, transparent)', color: 'var(--color-success)' };
-    case 'medium':
-      return { backgroundColor: 'color-mix(in srgb, var(--color-warning) 15%, transparent)', color: 'var(--color-warning)' };
-    case 'hard':
-      return { backgroundColor: 'color-mix(in srgb, var(--color-destructive) 15%, transparent)', color: 'var(--color-destructive)' };
-    default:
-      return { backgroundColor: 'var(--color-muted)', color: 'var(--color-muted-foreground)' };
-  }
-};
 
 // Helper function for status badge styles
 const getStatusStyle = (status: string) => {

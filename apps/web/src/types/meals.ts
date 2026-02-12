@@ -205,25 +205,8 @@ export const getDifficultyLabel = (difficulty: RecipeDifficulty): string => {
   }
 };
 
-export const getDifficultyStyle = (difficulty: RecipeDifficulty) => {
-  switch (difficulty) {
-    case 'easy':
-      return {
-        backgroundColor: 'color-mix(in srgb, var(--color-success) 15%, transparent)',
-        color: 'var(--color-success)',
-      };
-    case 'hard':
-      return {
-        backgroundColor: 'color-mix(in srgb, var(--color-destructive) 15%, transparent)',
-        color: 'var(--color-destructive)',
-      };
-    default: // medium
-      return {
-        backgroundColor: 'color-mix(in srgb, var(--color-warning) 15%, transparent)',
-        color: 'var(--color-warning)',
-      };
-  }
-};
+// Re-export from utils for backwards compatibility
+export { getDifficultyStyle } from '../utils';
 
 export const formatCookTime = (prepMinutes: number | null, cookMinutes: number | null): string => {
   const total = (prepMinutes || 0) + (cookMinutes || 0);

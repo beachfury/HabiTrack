@@ -19,32 +19,7 @@ import { mealsApi } from '../api/meals';
 import { useAuth } from '../context/AuthContext';
 import type { MealPlan } from '../types/meals';
 import { ModalPortal, ModalBody } from '../components/common/ModalPortal';
-
-const DAYS = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
-const MONTHS = [
-  'January',
-  'February',
-  'March',
-  'April',
-  'May',
-  'June',
-  'July',
-  'August',
-  'September',
-  'October',
-  'November',
-  'December',
-];
-
-const COLORS = [
-  { name: 'Blue', value: '#3b82f6' },
-  { name: 'Green', value: '#22c55e' },
-  { name: 'Purple', value: '#a855f7' },
-  { name: 'Red', value: '#ef4444' },
-  { name: 'Orange', value: '#f97316' },
-  { name: 'Pink', value: '#ec4899' },
-  { name: 'Teal', value: '#14b8a6' },
-];
+import { normalizeDate, formatDateLocal, formatDateTimeLocal, EVENT_COLORS, DAYS_SHORT, MONTHS } from '../utils';
 
 interface CalendarUser {
   id: number;
@@ -54,29 +29,9 @@ interface CalendarUser {
   color: string | null;
 }
 
-// Helper to normalize dates for comparison
-function normalizeDate(dateStr: string): string {
-  if (!dateStr) return '';
-  return dateStr.substring(0, 10);
-}
-
-// Format date to YYYY-MM-DD from Date object (LOCAL time, no timezone conversion)
-function formatDateLocal(date: Date): string {
-  const year = date.getFullYear();
-  const month = String(date.getMonth() + 1).padStart(2, '0');
-  const day = String(date.getDate()).padStart(2, '0');
-  return `${year}-${month}-${day}`;
-}
-
-// Format date to YYYY-MM-DDTHH:mm from Date object (LOCAL time)
-function formatDateTimeLocal(date: Date): string {
-  const year = date.getFullYear();
-  const month = String(date.getMonth() + 1).padStart(2, '0');
-  const day = String(date.getDate()).padStart(2, '0');
-  const hours = String(date.getHours()).padStart(2, '0');
-  const minutes = String(date.getMinutes()).padStart(2, '0');
-  return `${year}-${month}-${day}T${hours}:${minutes}`;
-}
+// Use constants from utils
+const DAYS = DAYS_SHORT;
+const COLORS = EVENT_COLORS;
 
 export function CalendarPage() {
   const { user } = useAuth();

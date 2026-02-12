@@ -16,6 +16,36 @@ export const USER_COLORS = [
 ];
 
 /**
+ * Event/calendar color presets
+ */
+export const EVENT_COLORS = [
+  { name: 'Blue', value: '#3b82f6' },
+  { name: 'Green', value: '#22c55e' },
+  { name: 'Purple', value: '#a855f7' },
+  { name: 'Red', value: '#ef4444' },
+  { name: 'Orange', value: '#f97316' },
+  { name: 'Pink', value: '#ec4899' },
+  { name: 'Teal', value: '#14b8a6' },
+];
+
+/**
+ * Category color presets
+ */
+export const CATEGORY_COLORS = [
+  '#ef4444', '#f97316', '#f59e0b', '#eab308', '#84cc16', '#22c55e',
+  '#10b981', '#14b8a6', '#06b6d4', '#0ea5e9', '#3b82f6', '#6366f1',
+  '#8b5cf6', '#a855f7', '#d946ef', '#ec4899', '#f43f5e', '#6b7280',
+];
+
+/**
+ * Chart color palette
+ */
+export const CHART_COLORS = [
+  '#3b82f6', '#22c55e', '#f97316', '#a855f7', '#ef4444',
+  '#14b8a6', '#eab308', '#ec4899', '#6366f1', '#84cc16',
+];
+
+/**
  * Get a color from user ID (deterministic)
  */
 export function getColorForUser(userId: number): string {
