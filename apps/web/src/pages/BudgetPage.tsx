@@ -48,11 +48,11 @@ export function BudgetPage() {
   if (!isAdmin) {
     return (
       <div className="flex flex-col items-center justify-center min-h-[60vh] text-center p-8">
-        <ShieldAlert className="w-16 h-16 text-red-500 mb-4" />
-        <h2 className="text-2xl font-bold text-gray-900 dark:text-white mb-2">
+        <ShieldAlert className="w-16 h-16 text-[var(--color-destructive)] mb-4" />
+        <h2 className="text-2xl font-bold text-[var(--color-foreground)] mb-2">
           Admin Access Required
         </h2>
-        <p className="text-gray-600 dark:text-gray-400 mb-6">
+        <p className="text-[var(--color-muted-foreground)] mb-6">
           The Budget Management feature is only available to household admins.
         </p>
         <Navigate to="/" replace />
@@ -310,24 +310,24 @@ export function BudgetPage() {
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div>
-          <h1 className="text-2xl font-bold text-gray-900 dark:text-white">
+          <h1 className="text-2xl font-bold text-[var(--color-foreground)]">
             Budget Management
           </h1>
-          <p className="text-sm text-gray-500 dark:text-gray-400">
+          <p className="text-sm text-[var(--color-muted-foreground)]">
             Track household expenses and manage your budget
           </p>
         </div>
         <div className="flex gap-2">
           <button
             onClick={() => setShowAddEntryModal(true)}
-            className="inline-flex items-center px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors"
+            className="inline-flex items-center px-4 py-2 bg-[var(--color-success)] text-white rounded-lg hover:opacity-90 transition-opacity"
           >
             <Receipt className="w-4 h-4 mr-2" />
             Record Payment
           </button>
           <button
             onClick={() => setShowAddBudgetModal(true)}
-            className="inline-flex items-center px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-colors"
+            className="inline-flex items-center px-4 py-2 bg-[var(--color-primary)] text-white rounded-lg hover:opacity-90 transition-opacity"
           >
             <Plus className="w-4 h-4 mr-2" />
             New Budget
@@ -337,39 +337,54 @@ export function BudgetPage() {
 
       {/* Success/Error Messages */}
       {success && (
-        <div className="flex items-center gap-2 p-4 bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800 rounded-lg">
-          <CheckCircle className="w-5 h-5 text-green-600 dark:text-green-400" />
-          <p className="text-green-800 dark:text-green-200">{success}</p>
-          <button onClick={() => setSuccess('')} className="ml-auto text-green-600 hover:text-green-800">
+        <div
+          className="flex items-center gap-2 p-4 rounded-lg"
+          style={{
+            backgroundColor: 'color-mix(in srgb, var(--color-success) 10%, transparent)',
+            borderColor: 'color-mix(in srgb, var(--color-success) 30%, transparent)',
+            border: '1px solid',
+          }}
+        >
+          <CheckCircle className="w-5 h-5 text-[var(--color-success)]" />
+          <p className="text-[var(--color-success)]">{success}</p>
+          <button onClick={() => setSuccess('')} className="ml-auto text-[var(--color-success)] hover:opacity-80">
             <X className="w-4 h-4" />
           </button>
         </div>
       )}
 
       {error && (
-        <div className="flex items-center gap-2 p-4 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg">
-          <AlertCircle className="w-5 h-5 text-red-600 dark:text-red-400" />
-          <p className="text-red-800 dark:text-red-200">{error}</p>
-          <button onClick={() => setError('')} className="ml-auto text-red-600 hover:text-red-800">
+        <div
+          className="flex items-center gap-2 p-4 rounded-lg"
+          style={{
+            backgroundColor: 'color-mix(in srgb, var(--color-destructive) 10%, transparent)',
+            borderColor: 'color-mix(in srgb, var(--color-destructive) 30%, transparent)',
+            border: '1px solid',
+          }}
+        >
+          <AlertCircle className="w-5 h-5 text-[var(--color-destructive)]" />
+          <p className="text-[var(--color-destructive)]">{error}</p>
+          <button onClick={() => setError('')} className="ml-auto text-[var(--color-destructive)] hover:opacity-80">
             <X className="w-4 h-4" />
           </button>
         </div>
       )}
 
       {/* Tabs */}
-      <div className="border-b border-gray-200 dark:border-gray-700">
+      <div className="border-b border-[var(--color-border)]">
         <nav className="flex gap-1 overflow-x-auto">
           {tabs.map((tab) => {
             const Icon = tab.icon;
+            const isActive = activeTab === tab.id;
             return (
               <button
                 key={tab.id}
                 onClick={() => setActiveTab(tab.id)}
-                className={`flex items-center gap-2 px-4 py-3 border-b-2 transition-colors whitespace-nowrap ${
-                  activeTab === tab.id
-                    ? 'border-purple-600 text-purple-600 dark:text-purple-400'
-                    : 'border-transparent text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-300'
-                }`}
+                className="flex items-center gap-2 px-4 py-3 border-b-2 transition-colors whitespace-nowrap"
+                style={{
+                  borderColor: isActive ? 'var(--color-primary)' : 'transparent',
+                  color: isActive ? 'var(--color-primary)' : 'var(--color-muted-foreground)',
+                }}
               >
                 <Icon className="w-4 h-4" />
                 <span className="hidden sm:inline">{tab.label}</span>
@@ -382,7 +397,7 @@ export function BudgetPage() {
       {/* Loading State */}
       {loading && (
         <div className="flex items-center justify-center py-12">
-          <RefreshCw className="w-8 h-8 text-purple-600 animate-spin" />
+          <RefreshCw className="w-8 h-8 text-[var(--color-primary)] animate-spin" />
         </div>
       )}
 

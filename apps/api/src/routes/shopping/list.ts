@@ -5,6 +5,36 @@ import type { Request, Response } from 'express';
 import { q } from '../../db';
 import { logAudit } from '../../audit';
 import { getUser, success, created, notFound, serverError, validationError } from '../../utils';
+import { queueEmail, getActiveUsersWithEmail } from '../../email/queue';
+
+/**
+ * Track when an item is added to the shopping list
+ * Used for popularity-based suggestions
+ */
+async function trackItemAdd(catalogItemId: number, userId: number | null): Promise<void> {
+  try {
+    // Log the add event
+    await q(
+      `INSERT INTO item_add_events (catalogItemId, addedBy) VALUES (?, ?)`,
+      [catalogItemId, userId],
+    );
+
+    // Update the popularity cache (upsert)
+    await q(
+      `INSERT INTO item_popularity (catalogItemId, addCount30Days, addCount90Days, addCountAllTime, lastAddedAt)
+       VALUES (?, 1, 1, 1, NOW(3))
+       ON DUPLICATE KEY UPDATE
+         addCount30Days = addCount30Days + 1,
+         addCount90Days = addCount90Days + 1,
+         addCountAllTime = addCountAllTime + 1,
+         lastAddedAt = NOW(3)`,
+      [catalogItemId],
+    );
+  } catch (err) {
+    // Non-fatal - don't fail the main operation if tracking fails
+    console.warn('[trackItemAdd] Failed to track item add:', err);
+  }
+}
 
 interface ShoppingListItem {
   id: number;
@@ -51,14 +81,22 @@ export async function getShoppingList(req: Request, res: Response) {
     );
 
     // Calculate totals
+    // If a specific store is selected, use ONLY that store's price
+    // Only use lowestPrice when no store is selected (storeId is null)
+    const getItemPrice = (item: (typeof items)[0]) => {
+      if (item.storeId) {
+        // Specific store selected - use its price or 0
+        return Number(item.storePrice || 0);
+      }
+      // Any store - use lowest price
+      return Number(item.storePrice || item.lowestPrice || 0);
+    };
+
     const activeItems = items.filter((i) => !i.purchasedToday);
     const needsOnly = activeItems
       .filter((i) => i.listType === 'need')
-      .reduce((sum, i) => sum + Number(i.storePrice || i.lowestPrice || 0) * i.quantity, 0);
-    const needsPlusWants = activeItems.reduce(
-      (sum, i) => sum + Number(i.storePrice || i.lowestPrice || 0) * i.quantity,
-      0,
-    );
+      .reduce((sum, i) => sum + getItemPrice(i) * i.quantity, 0);
+    const needsPlusWants = activeItems.reduce((sum, i) => sum + getItemPrice(i) * i.quantity, 0);
 
     return success(res, {
       items,
@@ -105,6 +143,35 @@ export async function addToList(req: Request, res: Response) {
        VALUES (?, ?, ?, ?, ?)`,
       [catalogItemId, listType, quantity, storeId || null, user.id],
     );
+
+    // Track this add event for popularity-based suggestions
+    await trackItemAdd(catalogItemId, user.id);
+
+    // Get item name for notification
+    const [itemInfo] = await q<Array<{ name: string }>>(
+      `SELECT name FROM catalog_items WHERE id = ?`,
+      [catalogItemId],
+    );
+
+    // Send email notifications to active users who have shopping updates enabled
+    const activeUsers = await getActiveUsersWithEmail();
+    for (const recipient of activeUsers) {
+      // Don't send to the user who added the item
+      if (recipient.id !== user.id) {
+        await queueEmail({
+          userId: recipient.id,
+          toEmail: recipient.email,
+          template: 'SHOPPING_ITEM_ADDED',
+          variables: {
+            userName: recipient.displayName,
+            itemName: itemInfo?.name || 'An item',
+            addedBy: user.displayName || 'Someone',
+            quantity: quantity,
+            listType: listType === 'want' ? 'wants list' : 'shopping list',
+          },
+        });
+      }
+    }
 
     await logAudit({
       action: 'shopping.list.add',

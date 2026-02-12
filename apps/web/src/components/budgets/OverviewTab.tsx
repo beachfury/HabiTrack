@@ -86,85 +86,84 @@ export function OverviewTab({
       {/* Summary Cards */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
         {/* Total Budgeted */}
-        <div className="bg-white dark:bg-gray-800 rounded-xl p-6 shadow-sm border border-gray-200 dark:border-gray-700">
+        <div className="themed-card rounded-xl p-6 shadow-sm">
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-sm text-gray-500 dark:text-gray-400">Monthly Budget</p>
-              <p className="text-2xl font-bold text-gray-900 dark:text-white mt-1">
+              <p className="text-sm text-[var(--color-muted-foreground)]">Monthly Budget</p>
+              <p className="text-2xl font-bold text-[var(--color-foreground)] mt-1">
                 {formatCurrency(summary?.totalBudgeted || 0)}
               </p>
             </div>
-            <div className="p-3 bg-purple-100 dark:bg-purple-900/30 rounded-full">
-              <Target className="w-6 h-6 text-purple-600 dark:text-purple-400" />
+            <div className="p-3 rounded-full" style={{ backgroundColor: 'color-mix(in srgb, var(--color-primary) 15%, transparent)' }}>
+              <Target className="w-6 h-6 text-[var(--color-primary)]" />
             </div>
           </div>
         </div>
 
         {/* Total Spent */}
-        <div className="bg-white dark:bg-gray-800 rounded-xl p-6 shadow-sm border border-gray-200 dark:border-gray-700">
+        <div className="themed-card rounded-xl p-6 shadow-sm">
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-sm text-gray-500 dark:text-gray-400">Spent This Month</p>
-              <p className="text-2xl font-bold text-gray-900 dark:text-white mt-1">
+              <p className="text-sm text-[var(--color-muted-foreground)]">Spent This Month</p>
+              <p className="text-2xl font-bold text-[var(--color-foreground)] mt-1">
                 {formatCurrency(summary?.totalSpent || 0)}
               </p>
             </div>
-            <div className="p-3 bg-blue-100 dark:bg-blue-900/30 rounded-full">
-              <Receipt className="w-6 h-6 text-blue-600 dark:text-blue-400" />
+            <div className="p-3 rounded-full" style={{ backgroundColor: 'color-mix(in srgb, var(--color-info) 15%, transparent)' }}>
+              <Receipt className="w-6 h-6 text-[var(--color-info)]" />
             </div>
           </div>
         </div>
 
         {/* Remaining */}
-        <div className="bg-white dark:bg-gray-800 rounded-xl p-6 shadow-sm border border-gray-200 dark:border-gray-700">
+        <div className="themed-card rounded-xl p-6 shadow-sm">
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-sm text-gray-500 dark:text-gray-400">Remaining</p>
-              <p className={`text-2xl font-bold mt-1 ${
-                (summary?.remainingBudget || 0) >= 0
-                  ? 'text-green-600 dark:text-green-400'
-                  : 'text-red-600 dark:text-red-400'
-              }`}>
+              <p className="text-sm text-[var(--color-muted-foreground)]">Remaining</p>
+              <p
+                className="text-2xl font-bold mt-1"
+                style={{ color: (summary?.remainingBudget || 0) >= 0 ? 'var(--color-success)' : 'var(--color-destructive)' }}
+              >
                 {formatCurrency(summary?.remainingBudget || 0)}
               </p>
             </div>
-            <div className={`p-3 rounded-full ${
-              (summary?.remainingBudget || 0) >= 0
-                ? 'bg-green-100 dark:bg-green-900/30'
-                : 'bg-red-100 dark:bg-red-900/30'
-            }`}>
+            <div
+              className="p-3 rounded-full"
+              style={{
+                backgroundColor: (summary?.remainingBudget || 0) >= 0
+                  ? 'color-mix(in srgb, var(--color-success) 15%, transparent)'
+                  : 'color-mix(in srgb, var(--color-destructive) 15%, transparent)'
+              }}
+            >
               {(summary?.remainingBudget || 0) >= 0 ? (
-                <TrendingUp className="w-6 h-6 text-green-600 dark:text-green-400" />
+                <TrendingUp className="w-6 h-6 text-[var(--color-success)]" />
               ) : (
-                <TrendingDown className="w-6 h-6 text-red-600 dark:text-red-400" />
+                <TrendingDown className="w-6 h-6 text-[var(--color-destructive)]" />
               )}
             </div>
           </div>
         </div>
 
         {/* Progress */}
-        <div className="bg-white dark:bg-gray-800 rounded-xl p-6 shadow-sm border border-gray-200 dark:border-gray-700">
+        <div className="themed-card rounded-xl p-6 shadow-sm">
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-sm text-gray-500 dark:text-gray-400">Budget Used</p>
-              <p className="text-2xl font-bold text-gray-900 dark:text-white mt-1">
+              <p className="text-sm text-[var(--color-muted-foreground)]">Budget Used</p>
+              <p className="text-2xl font-bold text-[var(--color-foreground)] mt-1">
                 {(summary?.percentUsed || 0).toFixed(1)}%
               </p>
             </div>
-            <div className="p-3 bg-amber-100 dark:bg-amber-900/30 rounded-full">
-              <Wallet className="w-6 h-6 text-amber-600 dark:text-amber-400" />
+            <div className="p-3 rounded-full" style={{ backgroundColor: 'color-mix(in srgb, var(--color-warning) 15%, transparent)' }}>
+              <Wallet className="w-6 h-6 text-[var(--color-warning)]" />
             </div>
           </div>
-          <div className="mt-3 bg-gray-200 dark:bg-gray-700 rounded-full h-2 overflow-hidden">
+          <div className="mt-3 bg-[var(--color-muted)] rounded-full h-2 overflow-hidden">
             <div
-              className={`h-full rounded-full transition-all ${
-                (summary?.percentUsed || 0) > 100
-                  ? 'bg-red-500'
-                  : (summary?.percentUsed || 0) > 80
-                  ? 'bg-amber-500'
-                  : 'bg-green-500'
-              }`}
-              style={{ width: `${Math.min(summary?.percentUsed || 0, 100)}%` }}
+              className="h-full rounded-full transition-all"
+              style={{
+                width: `${Math.min(summary?.percentUsed || 0, 100)}%`,
+                backgroundColor: (summary?.percentUsed || 0) > 100 ? 'var(--color-destructive)' : (summary?.percentUsed || 0) > 80 ? 'var(--color-warning)' : 'var(--color-success)'
+              }}
             />
           </div>
         </div>
@@ -172,10 +171,17 @@ export function OverviewTab({
 
       {/* Alert Section - Unpaid Bills and Over-Budget Spending */}
       {(unpaidBills.length > 0 || alertBudgets.length > 0) && (
-        <div className="bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-800 rounded-xl p-4">
+        <div
+          className="rounded-xl p-4"
+          style={{
+            backgroundColor: 'color-mix(in srgb, var(--color-warning) 10%, transparent)',
+            borderColor: 'color-mix(in srgb, var(--color-warning) 30%, transparent)',
+            border: '1px solid',
+          }}
+        >
           <div className="flex items-center gap-2 mb-3">
-            <AlertTriangle className="w-5 h-5 text-amber-600 dark:text-amber-400" />
-            <h3 className="font-semibold text-amber-800 dark:text-amber-200">
+            <AlertTriangle className="w-5 h-5 text-[var(--color-warning)]" />
+            <h3 className="font-semibold text-[var(--color-warning)]">
               Needs Attention
             </h3>
           </div>
@@ -184,18 +190,19 @@ export function OverviewTab({
             {unpaidBills.slice(0, 3).map((budget) => (
               <div
                 key={budget.id}
-                className="flex items-center justify-between bg-white dark:bg-gray-800 rounded-lg p-3 border border-amber-200 dark:border-amber-700"
+                className="flex items-center justify-between bg-[var(--color-card)] rounded-lg p-3"
+                style={{ borderColor: 'color-mix(in srgb, var(--color-warning) 30%, transparent)', border: '1px solid' }}
               >
                 <div className="flex items-center gap-2">
                   <div
                     className="w-3 h-3 rounded-full"
                     style={{ backgroundColor: budget.categoryColor || '#6b7280' }}
                   />
-                  <span className="font-medium text-gray-900 dark:text-white text-sm">
+                  <span className="font-medium text-[var(--color-foreground)] text-sm">
                     {budget.name}
                   </span>
                 </div>
-                <span className="text-sm font-medium text-amber-600 dark:text-amber-400">
+                <span className="text-sm font-medium text-[var(--color-warning)]">
                   Unpaid
                 </span>
               </div>
@@ -204,20 +211,22 @@ export function OverviewTab({
             {alertBudgets.slice(0, 3).map((budget) => (
               <div
                 key={budget.id}
-                className="flex items-center justify-between bg-white dark:bg-gray-800 rounded-lg p-3 border border-amber-200 dark:border-amber-700"
+                className="flex items-center justify-between bg-[var(--color-card)] rounded-lg p-3"
+                style={{ borderColor: 'color-mix(in srgb, var(--color-warning) 30%, transparent)', border: '1px solid' }}
               >
                 <div className="flex items-center gap-2">
                   <div
                     className="w-3 h-3 rounded-full"
                     style={{ backgroundColor: budget.categoryColor || '#6b7280' }}
                   />
-                  <span className="font-medium text-gray-900 dark:text-white text-sm">
+                  <span className="font-medium text-[var(--color-foreground)] text-sm">
                     {budget.name}
                   </span>
                 </div>
-                <span className={`text-sm font-medium ${
-                  budget.percentUsed > 100 ? 'text-red-600' : 'text-amber-600'
-                }`}>
+                <span
+                  className="text-sm font-medium"
+                  style={{ color: budget.percentUsed > 100 ? 'var(--color-destructive)' : 'var(--color-warning)' }}
+                >
                   {budget.percentUsed.toFixed(0)}%
                 </span>
               </div>
@@ -228,40 +237,40 @@ export function OverviewTab({
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         {/* Top Budgets */}
-        <div className="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700">
-          <div className="p-4 border-b border-gray-200 dark:border-gray-700 flex items-center justify-between">
-            <h3 className="font-semibold text-gray-900 dark:text-white">Active Budgets</h3>
+        <div className="themed-card rounded-xl shadow-sm">
+          <div className="p-4 border-b border-[var(--color-border)] flex items-center justify-between">
+            <h3 className="font-semibold text-[var(--color-foreground)]">Active Budgets</h3>
             <button
               onClick={onRefresh}
-              className="text-gray-400 hover:text-gray-600 dark:hover:text-gray-300"
+              className="text-[var(--color-muted-foreground)] hover:text-[var(--color-foreground)]"
             >
               <RefreshCw className="w-4 h-4" />
             </button>
           </div>
-          <div className="divide-y divide-gray-100 dark:divide-gray-700">
+          <div className="divide-y divide-[var(--color-border)]">
             {budgets.slice(0, 5).map((budget) => (
-              <div key={budget.id} className="p-4 hover:bg-gray-50 dark:hover:bg-gray-700/50">
+              <div key={budget.id} className="p-4 hover:bg-[var(--color-muted)]/50">
                 <div className="flex items-center justify-between mb-2">
                   <div className="flex items-center gap-2">
                     <div
                       className="w-3 h-3 rounded-full"
                       style={{ backgroundColor: budget.categoryColor || '#6b7280' }}
                     />
-                    <span className="font-medium text-gray-900 dark:text-white">
+                    <span className="font-medium text-[var(--color-foreground)]">
                       {budget.name}
                     </span>
                   </div>
                   <div className="flex items-center gap-2">
                     <button
                       onClick={() => onAddEntry(budget.id)}
-                      className="p-1 text-gray-400 hover:text-green-600 dark:hover:text-green-400"
+                      className="p-1 text-[var(--color-muted-foreground)] hover:text-[var(--color-success)]"
                       title="Record payment"
                     >
                       <Plus className="w-4 h-4" />
                     </button>
                     <button
                       onClick={() => onEditBudget(budget)}
-                      className="p-1 text-gray-400 hover:text-purple-600 dark:hover:text-purple-400"
+                      className="p-1 text-[var(--color-muted-foreground)] hover:text-[var(--color-primary)]"
                       title="Edit budget"
                     >
                       <Edit className="w-4 h-4" />
@@ -271,46 +280,48 @@ export function OverviewTab({
                 {budget.budgetType === 'spending' ? (
                   <>
                     <div className="flex items-center justify-between text-sm">
-                      <span className="text-gray-500 dark:text-gray-400">
+                      <span className="text-[var(--color-muted-foreground)]">
                         {formatCurrency(budget.currentSpent)} / {formatCurrency(budget.budgetAmount)}
                       </span>
-                      <span className={`font-medium ${
-                        budget.percentUsed > 100
-                          ? 'text-red-600'
-                          : budget.percentUsed > 80
-                          ? 'text-amber-600'
-                          : 'text-green-600'
-                      }`}>
+                      <span
+                        className="font-medium"
+                        style={{
+                          color: budget.percentUsed > 100 ? 'var(--color-destructive)' : budget.percentUsed > 80 ? 'var(--color-warning)' : 'var(--color-success)'
+                        }}
+                      >
                         {budget.percentUsed.toFixed(0)}%
                       </span>
                     </div>
-                    <div className="mt-2 bg-gray-200 dark:bg-gray-700 rounded-full h-1.5 overflow-hidden">
+                    <div className="mt-2 bg-[var(--color-muted)] rounded-full h-1.5 overflow-hidden">
                       <div
-                        className={`h-full rounded-full transition-all ${
-                          budget.percentUsed > 100
-                            ? 'bg-red-500'
-                            : budget.percentUsed > 80
-                            ? 'bg-amber-500'
-                            : 'bg-green-500'
-                        }`}
-                        style={{ width: `${Math.min(budget.percentUsed, 100)}%` }}
+                        className="h-full rounded-full transition-all"
+                        style={{
+                          width: `${Math.min(budget.percentUsed, 100)}%`,
+                          backgroundColor: budget.percentUsed > 100 ? 'var(--color-destructive)' : budget.percentUsed > 80 ? 'var(--color-warning)' : 'var(--color-success)'
+                        }}
                       />
                     </div>
                   </>
                 ) : (
                   <div className="flex items-center justify-between text-sm">
-                    <span className="text-gray-500 dark:text-gray-400">
+                    <span className="text-[var(--color-muted-foreground)]">
                       {formatCurrency(budget.budgetAmount)}
                     </span>
                     {budget.isPaidThisPeriod ? (
                       // Show next due date for paid bills
-                      <span className="inline-flex items-center gap-1 px-2 py-0.5 text-xs font-medium bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-400 rounded-full">
+                      <span
+                        className="inline-flex items-center gap-1 px-2 py-0.5 text-xs font-medium rounded-full"
+                        style={{ backgroundColor: 'color-mix(in srgb, var(--color-success) 15%, transparent)', color: 'var(--color-success)' }}
+                      >
                         <CheckCircle className="w-3 h-3" />
                         {budget.dueDay ? `Next: ${formatDueDate(getDueDate(budget, true)!)}` : 'Paid'}
                       </span>
                     ) : (
                       // Show due date for unpaid bills
-                      <span className="inline-flex items-center gap-1 px-2 py-0.5 text-xs font-medium bg-amber-100 dark:bg-amber-900/30 text-amber-700 dark:text-amber-400 rounded-full">
+                      <span
+                        className="inline-flex items-center gap-1 px-2 py-0.5 text-xs font-medium rounded-full"
+                        style={{ backgroundColor: 'color-mix(in srgb, var(--color-warning) 15%, transparent)', color: 'var(--color-warning)' }}
+                      >
                         {budget.dueDay ? `Due: ${formatDueDate(getDueDate(budget)!)}` : 'Unpaid'}
                       </span>
                     )}
@@ -319,7 +330,7 @@ export function OverviewTab({
               </div>
             ))}
             {budgets.length === 0 && (
-              <div className="p-8 text-center text-gray-500 dark:text-gray-400">
+              <div className="p-8 text-center text-[var(--color-muted-foreground)]">
                 <Wallet className="w-12 h-12 mx-auto mb-3 opacity-50" />
                 <p>No budgets set up yet</p>
                 <p className="text-sm">Create your first budget to start tracking</p>
@@ -329,13 +340,13 @@ export function OverviewTab({
         </div>
 
         {/* Recent Payments */}
-        <div className="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700">
-          <div className="p-4 border-b border-gray-200 dark:border-gray-700">
-            <h3 className="font-semibold text-gray-900 dark:text-white">Recent Payments</h3>
+        <div className="themed-card rounded-xl shadow-sm">
+          <div className="p-4 border-b border-[var(--color-border)]">
+            <h3 className="font-semibold text-[var(--color-foreground)]">Recent Payments</h3>
           </div>
-          <div className="divide-y divide-gray-100 dark:divide-gray-700">
+          <div className="divide-y divide-[var(--color-border)]">
             {recentEntries.slice(0, 5).map((entry) => (
-              <div key={entry.id} className="p-4 hover:bg-gray-50 dark:hover:bg-gray-700/50">
+              <div key={entry.id} className="p-4 hover:bg-[var(--color-muted)]/50">
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-3">
                     <div
@@ -345,22 +356,22 @@ export function OverviewTab({
                       <Receipt className="w-5 h-5" style={{ color: entry.categoryColor || '#6b7280' }} />
                     </div>
                     <div>
-                      <p className="font-medium text-gray-900 dark:text-white">
+                      <p className="font-medium text-[var(--color-foreground)]">
                         {entry.vendor || entry.description || entry.budgetName}
                       </p>
-                      <p className="text-sm text-gray-500 dark:text-gray-400">
+                      <p className="text-sm text-[var(--color-muted-foreground)]">
                         {entry.budgetName} &bull; {formatDate(entry.transactionDate)}
                       </p>
                     </div>
                   </div>
-                  <span className="font-semibold text-gray-900 dark:text-white">
+                  <span className="font-semibold text-[var(--color-foreground)]">
                     -{formatCurrency(entry.amount)}
                   </span>
                 </div>
               </div>
             ))}
             {recentEntries.length === 0 && (
-              <div className="p-8 text-center text-gray-500 dark:text-gray-400">
+              <div className="p-8 text-center text-[var(--color-muted-foreground)]">
                 <Receipt className="w-12 h-12 mx-auto mb-3 opacity-50" />
                 <p>No entries yet</p>
                 <p className="text-sm">Add your first expense to start tracking</p>
@@ -372,8 +383,8 @@ export function OverviewTab({
 
       {/* Top Category */}
       {summary?.topCategory && (
-        <div className="bg-white dark:bg-gray-800 rounded-xl p-6 shadow-sm border border-gray-200 dark:border-gray-700">
-          <h3 className="font-semibold text-gray-900 dark:text-white mb-4">
+        <div className="themed-card rounded-xl p-6 shadow-sm">
+          <h3 className="font-semibold text-[var(--color-foreground)] mb-4">
             Top Spending Category
           </h3>
           <div className="flex items-center gap-4">
@@ -384,10 +395,10 @@ export function OverviewTab({
               <Wallet className="w-8 h-8" style={{ color: summary.topCategory.color }} />
             </div>
             <div>
-              <p className="text-xl font-bold text-gray-900 dark:text-white">
+              <p className="text-xl font-bold text-[var(--color-foreground)]">
                 {summary.topCategory.name}
               </p>
-              <p className="text-lg text-gray-600 dark:text-gray-400">
+              <p className="text-lg text-[var(--color-muted-foreground)]">
                 {formatCurrency(summary.topCategory.total)} this month
               </p>
             </div>

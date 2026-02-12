@@ -1,8 +1,9 @@
 // Add/Edit Category Modal
 
 import { useState, useEffect } from 'react';
-import { X, FolderOpen, Palette, Check } from 'lucide-react';
+import { FolderOpen, Palette, Check } from 'lucide-react';
 import type { BudgetCategory, CreateCategoryData } from '../../../types/budget';
+import { ModalPortal, ModalBody } from '../../common/ModalPortal';
 
 // Color palette
 const COLOR_OPTIONS = [
@@ -98,27 +99,36 @@ export function CategoryModal({
     }
   };
 
-  return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50">
-      <div className="bg-white dark:bg-gray-800 rounded-xl shadow-xl w-full max-w-md max-h-[90vh] overflow-y-auto">
-        {/* Header */}
-        <div className="flex items-center justify-between p-4 border-b border-gray-200 dark:border-gray-700">
-          <div className="flex items-center gap-2">
-            <FolderOpen className="w-5 h-5 text-purple-600 dark:text-purple-400" />
-            <h2 className="text-lg font-semibold text-gray-900 dark:text-white">
-              {category ? 'Edit Category' : 'New Category'}
-            </h2>
-          </div>
-          <button
-            onClick={onClose}
-            className="p-1 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300"
-          >
-            <X className="w-5 h-5" />
-          </button>
-        </div>
+  const footer = (
+    <div className="flex gap-3">
+      <button
+        type="button"
+        onClick={onClose}
+        className="flex-1 px-4 py-2 bg-[var(--color-muted)] text-[var(--color-muted-foreground)] rounded-lg hover:opacity-80 transition-opacity"
+      >
+        Cancel
+      </button>
+      <button
+        type="submit"
+        form="category-form"
+        disabled={submitting}
+        className="flex-1 px-4 py-2 bg-[var(--color-primary)] text-white rounded-lg hover:opacity-90 transition-opacity disabled:opacity-50 disabled:cursor-not-allowed"
+      >
+        {submitting ? 'Saving...' : category ? 'Update' : 'Create'}
+      </button>
+    </div>
+  );
 
-        {/* Form */}
-        <form onSubmit={handleSubmit} className="p-4 space-y-4">
+  return (
+    <ModalPortal
+      isOpen={true}
+      onClose={onClose}
+      title={category ? 'Edit Category' : 'New Category'}
+      size="md"
+      footer={footer}
+    >
+      <ModalBody>
+        <form id="category-form" onSubmit={handleSubmit} className="space-y-4">
           {/* Preview */}
           <div className="flex items-center justify-center py-4">
             <div
@@ -131,7 +141,7 @@ export function CategoryModal({
 
           {/* Name */}
           <div>
-            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+            <label className="block text-sm font-medium text-[var(--color-foreground)] mb-1">
               Category Name *
             </label>
             <input
@@ -139,18 +149,17 @@ export function CategoryModal({
               value={formData.name}
               onChange={(e) => setFormData({ ...formData, name: e.target.value })}
               placeholder="e.g., Housing, Transportation, Food"
-              className={`w-full px-3 py-2 bg-white dark:bg-gray-700 border rounded-lg focus:ring-2 focus:ring-purple-500 ${
-                errors.name ? 'border-red-500' : 'border-gray-300 dark:border-gray-600'
-              }`}
+              className="w-full px-3 py-2 bg-[var(--color-card)] border border-[var(--color-border)] rounded-lg text-[var(--color-foreground)]"
+              style={errors.name ? { borderColor: 'var(--color-destructive)' } : {}}
             />
             {errors.name && (
-              <p className="text-red-500 text-sm mt-1">{errors.name}</p>
+              <p className="text-[var(--color-destructive)] text-sm mt-1">{errors.name}</p>
             )}
           </div>
 
           {/* Color */}
           <div>
-            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+            <label className="block text-sm font-medium text-[var(--color-foreground)] mb-2">
               <Palette className="w-4 h-4 inline mr-1" />
               Color
             </label>
@@ -160,12 +169,12 @@ export function CategoryModal({
                   key={color}
                   type="button"
                   onClick={() => setFormData({ ...formData, color })}
-                  className={`w-8 h-8 rounded-full border-2 transition-all flex items-center justify-center ${
-                    formData.color === color
-                      ? 'border-gray-900 dark:border-white scale-110'
-                      : 'border-transparent hover:scale-105'
-                  }`}
-                  style={{ backgroundColor: color }}
+                  className="w-8 h-8 rounded-full border-2 transition-all flex items-center justify-center hover:scale-105"
+                  style={{
+                    backgroundColor: color,
+                    borderColor: formData.color === color ? 'var(--color-foreground)' : 'transparent',
+                    transform: formData.color === color ? 'scale(1.1)' : undefined,
+                  }}
                 >
                   {formData.color === color && (
                     <Check className="w-4 h-4 text-white" />
@@ -177,7 +186,7 @@ export function CategoryModal({
 
           {/* Icon */}
           <div>
-            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+            <label className="block text-sm font-medium text-[var(--color-foreground)] mb-2">
               Icon
             </label>
             <div className="grid grid-cols-6 gap-2">
@@ -186,45 +195,28 @@ export function CategoryModal({
                   key={icon.name}
                   type="button"
                   onClick={() => setFormData({ ...formData, icon: icon.name })}
-                  className={`p-2 rounded-lg border-2 transition-all flex flex-col items-center gap-1 ${
+                  className="p-2 rounded-lg border-2 transition-all flex flex-col items-center gap-1"
+                  style={
                     formData.icon === icon.name
-                      ? 'border-purple-500 bg-purple-50 dark:bg-purple-900/30'
-                      : 'border-gray-200 dark:border-gray-700 hover:border-gray-300 dark:hover:border-gray-600'
-                  }`}
+                      ? { borderColor: 'var(--color-primary)', backgroundColor: 'color-mix(in srgb, var(--color-primary) 10%, transparent)' }
+                      : { borderColor: 'var(--color-border)' }
+                  }
                   title={icon.label}
                 >
                   <FolderOpen
                     className="w-5 h-5"
                     style={{ color: formData.color }}
                   />
-                  <span className="text-xs text-gray-500 dark:text-gray-400 truncate w-full text-center">
+                  <span className="text-xs text-[var(--color-muted-foreground)] truncate w-full text-center">
                     {icon.label}
                   </span>
                 </button>
               ))}
             </div>
           </div>
-
-          {/* Actions */}
-          <div className="flex gap-3 pt-4">
-            <button
-              type="button"
-              onClick={onClose}
-              className="flex-1 px-4 py-2 border border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors"
-            >
-              Cancel
-            </button>
-            <button
-              type="submit"
-              disabled={submitting}
-              className="flex-1 px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-            >
-              {submitting ? 'Saving...' : category ? 'Update' : 'Create'}
-            </button>
-          </div>
         </form>
-      </div>
-    </div>
+      </ModalBody>
+    </ModalPortal>
   );
 }
 

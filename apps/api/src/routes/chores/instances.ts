@@ -14,6 +14,7 @@ import {
   serverError,
   validationError,
 } from '../../utils';
+import { queueEmail, getUserEmail } from '../../email/queue';
 
 interface ChoreInstance {
   id: number;
@@ -246,6 +247,27 @@ export async function approveInstance(req: Request, res: Response) {
         relatedId: instanceId,
         relatedType: 'chore_instance',
       });
+
+      // Send email notification for chore completion/approval
+      const completedByEmail = await getUserEmail(instance.completedBy);
+      if (completedByEmail) {
+        const [completedByInfo] = await q<Array<{ displayName: string }>>(
+          'SELECT displayName FROM users WHERE id = ?',
+          [instance.completedBy],
+        );
+
+        await queueEmail({
+          userId: instance.completedBy,
+          toEmail: completedByEmail,
+          template: 'CHORE_COMPLETED',
+          variables: {
+            userName: completedByInfo?.displayName || 'there',
+            choreName: instance.title,
+            points: points,
+            message: 'Great job! Your chore has been approved.',
+          },
+        });
+      }
     }
 
     await logAudit({
@@ -304,6 +326,27 @@ export async function rejectInstance(req: Request, res: Response) {
         relatedId: instanceId,
         relatedType: 'chore_instance',
       });
+
+      // Send email notification about rejection
+      const completedByEmail = await getUserEmail(instance.completedBy);
+      if (completedByEmail) {
+        const [completedByInfo] = await q<Array<{ displayName: string }>>(
+          'SELECT displayName FROM users WHERE id = ?',
+          [instance.completedBy],
+        );
+
+        await queueEmail({
+          userId: instance.completedBy,
+          toEmail: completedByEmail,
+          template: 'CHORE_COMPLETED',
+          variables: {
+            userName: completedByInfo?.displayName || 'there',
+            choreName: instance.title,
+            points: 0,
+            message: reason ? `Your chore was sent back: ${reason}` : 'Your chore needs to be redone.',
+          },
+        });
+      }
     }
 
     await logAudit({
@@ -382,6 +425,34 @@ export async function reassignInstance(req: Request, res: Response) {
         relatedId: instanceId,
         relatedType: 'chore_instance',
       });
+
+      // Send email notification for reassignment
+      const assigneeEmail = await getUserEmail(userId);
+      if (assigneeEmail) {
+        const [assigneeInfo] = await q<Array<{ displayName: string }>>(
+          'SELECT displayName FROM users WHERE id = ?',
+          [userId],
+        );
+
+        await queueEmail({
+          userId,
+          toEmail: assigneeEmail,
+          template: 'CHORE_ASSIGNED',
+          variables: {
+            userName: assigneeInfo?.displayName || 'there',
+            choreName: instance?.title || 'A chore',
+            dueDate: instance?.dueDate
+              ? new Date(instance.dueDate).toLocaleDateString('en-US', {
+                  weekday: 'short',
+                  month: 'short',
+                  day: 'numeric',
+                })
+              : 'soon',
+            points: 0,
+            description: '',
+          },
+        });
+      }
     }
 
     await logAudit({

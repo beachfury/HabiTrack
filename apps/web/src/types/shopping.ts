@@ -3,7 +3,7 @@
 
 export type ListType = 'need' | 'want';
 export type ConfidenceLevel = 'high' | 'medium' | 'low';
-export type SuggestionType = 'overdue' | 'due_soon' | 'popular' | 'frequently_bought' | 'low_stock';
+export type SuggestionType = 'overdue' | 'due_soon' | 'popular' | 'frequently_bought' | 'low_stock' | 'meal_ingredient';
 
 // Confidence level colors for badges
 export const CONFIDENCE_COLORS: Record<ConfidenceLevel, string> = {

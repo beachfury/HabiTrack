@@ -27,10 +27,18 @@ interface ManageViewProps {
 
 type Tab = 'templates' | 'categories' | 'assignments';
 
-const DIFFICULTY_COLORS: Record<string, string> = {
-  easy: 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400',
-  medium: 'bg-yellow-100 text-yellow-700 dark:bg-yellow-900/30 dark:text-yellow-400',
-  hard: 'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400',
+// Helper function to get difficulty badge styles
+const getDifficultyStyle = (difficulty: string) => {
+  switch (difficulty) {
+    case 'easy':
+      return { backgroundColor: 'color-mix(in srgb, var(--color-success) 15%, transparent)', color: 'var(--color-success)' };
+    case 'medium':
+      return { backgroundColor: 'color-mix(in srgb, var(--color-warning) 15%, transparent)', color: 'var(--color-warning)' };
+    case 'hard':
+      return { backgroundColor: 'color-mix(in srgb, var(--color-destructive) 15%, transparent)', color: 'var(--color-destructive)' };
+    default:
+      return { backgroundColor: 'var(--color-muted)', color: 'var(--color-muted-foreground)' };
+  }
 };
 
 export function ManageView({ categories, onRefresh }: ManageViewProps) {
@@ -116,13 +124,13 @@ export function ManageView({ categories, onRefresh }: ManageViewProps) {
   return (
     <div className="space-y-4">
       {/* Tabs */}
-      <div className="flex gap-2 border-b border-gray-200 dark:border-gray-700 pb-2 overflow-x-auto">
+      <div className="flex gap-2 border-b border-[var(--color-border)] pb-2 overflow-x-auto">
         <button
           onClick={() => setTab('templates')}
           className={`flex items-center gap-2 px-4 py-2 rounded-lg font-medium text-sm transition-colors whitespace-nowrap ${
             tab === 'templates'
-              ? 'bg-purple-100 dark:bg-purple-900/30 text-purple-700 dark:text-purple-300'
-              : 'text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-800'
+              ? 'bg-[var(--color-primary)]/15 text-[var(--color-primary)]'
+              : 'text-[var(--color-muted-foreground)] hover:bg-[var(--color-muted)]'
           }`}
         >
           <FileText size={16} />
@@ -132,8 +140,8 @@ export function ManageView({ categories, onRefresh }: ManageViewProps) {
           onClick={() => setTab('categories')}
           className={`flex items-center gap-2 px-4 py-2 rounded-lg font-medium text-sm transition-colors whitespace-nowrap ${
             tab === 'categories'
-              ? 'bg-purple-100 dark:bg-purple-900/30 text-purple-700 dark:text-purple-300'
-              : 'text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-800'
+              ? 'bg-[var(--color-primary)]/15 text-[var(--color-primary)]'
+              : 'text-[var(--color-muted-foreground)] hover:bg-[var(--color-muted)]'
           }`}
         >
           <Folder size={16} />
@@ -143,8 +151,8 @@ export function ManageView({ categories, onRefresh }: ManageViewProps) {
           onClick={() => setTab('assignments')}
           className={`flex items-center gap-2 px-4 py-2 rounded-lg font-medium text-sm transition-colors whitespace-nowrap ${
             tab === 'assignments'
-              ? 'bg-purple-100 dark:bg-purple-900/30 text-purple-700 dark:text-purple-300'
-              : 'text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-800'
+              ? 'bg-[var(--color-primary)]/15 text-[var(--color-primary)]'
+              : 'text-[var(--color-muted-foreground)] hover:bg-[var(--color-muted)]'
           }`}
         >
           <CalendarCheck size={16} />
@@ -157,7 +165,7 @@ export function ManageView({ categories, onRefresh }: ManageViewProps) {
         <div className="space-y-4">
           {/* Add Template Button */}
           <div className="flex items-center justify-between">
-            <p className="text-sm text-gray-500">
+            <p className="text-sm text-[var(--color-muted-foreground)]">
               Create chore templates here, then assign them to family members from the "Add Chore"
               button.
             </p>
@@ -166,7 +174,7 @@ export function ManageView({ categories, onRefresh }: ManageViewProps) {
                 setEditingTemplate(null);
                 setShowTemplateModal(true);
               }}
-              className="flex items-center gap-2 px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 text-sm font-medium"
+              className="flex items-center gap-2 px-4 py-2 bg-[var(--color-primary)] text-[var(--color-primary-foreground)] rounded-lg hover:opacity-90 text-sm font-medium"
             >
               <Plus size={18} />
               Add Template
@@ -174,12 +182,12 @@ export function ManageView({ categories, onRefresh }: ManageViewProps) {
           </div>
 
           {loading ? (
-            <div className="text-center py-8 text-gray-500">Loading templates...</div>
+            <div className="text-center py-8 text-[var(--color-muted-foreground)]">Loading templates...</div>
           ) : templates.length === 0 ? (
-            <div className="text-center py-12 bg-gray-50 dark:bg-gray-800 rounded-xl">
-              <FileText size={48} className="mx-auto text-gray-300 dark:text-gray-600 mb-3" />
-              <p className="text-gray-500 dark:text-gray-400 mb-2">No chore templates yet</p>
-              <p className="text-sm text-gray-400 dark:text-gray-500">
+            <div className="text-center py-12 bg-[var(--color-muted)] rounded-xl">
+              <FileText size={48} className="mx-auto text-[var(--color-muted-foreground)] opacity-50 mb-3" />
+              <p className="text-[var(--color-muted-foreground)] mb-2">No chore templates yet</p>
+              <p className="text-sm text-[var(--color-muted-foreground)] opacity-70">
                 Create templates to quickly assign chores to family members
               </p>
             </div>
@@ -195,12 +203,12 @@ export function ManageView({ categories, onRefresh }: ManageViewProps) {
                 return (
                   <div
                     key={category.id}
-                    className="border border-gray-200 dark:border-gray-700 rounded-xl overflow-hidden"
+                    className="border border-[var(--color-border)] rounded-xl overflow-hidden"
                   >
                     {/* Category Header */}
                     <button
                       onClick={() => toggleCategory(category.id)}
-                      className="w-full p-3 flex items-center justify-between bg-gray-50 dark:bg-gray-800 hover:bg-gray-100 dark:hover:bg-gray-700"
+                      className="w-full p-3 flex items-center justify-between bg-[var(--color-muted)] hover:opacity-80 transition-opacity"
                     >
                       <div className="flex items-center gap-3">
                         {isExpanded ? <ChevronDown size={18} /> : <ChevronRight size={18} />}
@@ -208,16 +216,16 @@ export function ManageView({ categories, onRefresh }: ManageViewProps) {
                           className="w-4 h-4 rounded-full"
                           style={{ backgroundColor: category.color || '#6b7280' }}
                         />
-                        <span className="font-medium text-gray-900 dark:text-white">
+                        <span className="font-medium text-[var(--color-foreground)]">
                           {category.name}
                         </span>
-                        <span className="text-sm text-gray-500">({catTemplates.length})</span>
+                        <span className="text-sm text-[var(--color-muted-foreground)]">({catTemplates.length})</span>
                       </div>
                     </button>
 
                     {/* Templates */}
                     {isExpanded && (
-                      <div className="divide-y divide-gray-100 dark:divide-gray-700">
+                      <div className="divide-y divide-[var(--color-border)]">
                         {catTemplates.map((template) => (
                           <TemplateRow
                             key={template.id}
@@ -237,10 +245,10 @@ export function ManageView({ categories, onRefresh }: ManageViewProps) {
 
               {/* Uncategorized Templates */}
               {uncategorizedTemplates.length > 0 && (
-                <div className="border border-gray-200 dark:border-gray-700 rounded-xl overflow-hidden">
+                <div className="border border-[var(--color-border)] rounded-xl overflow-hidden">
                   <button
                     onClick={() => toggleCategory('uncategorized')}
-                    className="w-full p-3 flex items-center justify-between bg-gray-50 dark:bg-gray-800 hover:bg-gray-100 dark:hover:bg-gray-700"
+                    className="w-full p-3 flex items-center justify-between bg-[var(--color-muted)] hover:opacity-80 transition-opacity"
                   >
                     <div className="flex items-center gap-3">
                       {expandedCategories.has('uncategorized') ? (
@@ -248,18 +256,18 @@ export function ManageView({ categories, onRefresh }: ManageViewProps) {
                       ) : (
                         <ChevronRight size={18} />
                       )}
-                      <span className="w-4 h-4 rounded-full bg-gray-400" />
-                      <span className="font-medium text-gray-900 dark:text-white">
+                      <span className="w-4 h-4 rounded-full bg-[var(--color-muted-foreground)]" />
+                      <span className="font-medium text-[var(--color-foreground)]">
                         Uncategorized
                       </span>
-                      <span className="text-sm text-gray-500">
+                      <span className="text-sm text-[var(--color-muted-foreground)]">
                         ({uncategorizedTemplates.length})
                       </span>
                     </div>
                   </button>
 
                   {expandedCategories.has('uncategorized') && (
-                    <div className="divide-y divide-gray-100 dark:divide-gray-700">
+                    <div className="divide-y divide-[var(--color-border)]">
                       {uncategorizedTemplates.map((template) => (
                         <TemplateRow
                           key={template.id}
@@ -284,13 +292,13 @@ export function ManageView({ categories, onRefresh }: ManageViewProps) {
       {tab === 'categories' && (
         <div className="space-y-4">
           <div className="flex items-center justify-between">
-            <p className="text-sm text-gray-500">Organize your chore templates into categories.</p>
+            <p className="text-sm text-[var(--color-muted-foreground)]">Organize your chore templates into categories.</p>
             <button
               onClick={() => {
                 setEditingCategory(null);
                 setShowCategoryModal(true);
               }}
-              className="flex items-center gap-2 px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 text-sm font-medium"
+              className="flex items-center gap-2 px-4 py-2 bg-[var(--color-primary)] text-[var(--color-primary-foreground)] rounded-lg hover:opacity-90 text-sm font-medium"
             >
               <Plus size={18} />
               Add Category
@@ -298,10 +306,10 @@ export function ManageView({ categories, onRefresh }: ManageViewProps) {
           </div>
 
           {categories.length === 0 ? (
-            <div className="text-center py-12 bg-gray-50 dark:bg-gray-800 rounded-xl">
-              <Folder size={48} className="mx-auto text-gray-300 dark:text-gray-600 mb-3" />
-              <p className="text-gray-500 dark:text-gray-400 mb-2">No categories yet</p>
-              <p className="text-sm text-gray-400 dark:text-gray-500">
+            <div className="text-center py-12 bg-[var(--color-muted)] rounded-xl">
+              <Folder size={48} className="mx-auto text-[var(--color-muted-foreground)] opacity-50 mb-3" />
+              <p className="text-[var(--color-muted-foreground)] mb-2">No categories yet</p>
+              <p className="text-sm text-[var(--color-muted-foreground)] opacity-70">
                 Create categories to organize your chore templates
               </p>
             </div>
@@ -313,7 +321,7 @@ export function ManageView({ categories, onRefresh }: ManageViewProps) {
                 return (
                   <div
                     key={category.id}
-                    className="p-4 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl flex items-center justify-between"
+                    className="p-4 themed-card flex items-center justify-between"
                   >
                     <div className="flex items-center gap-3">
                       <span
@@ -323,10 +331,10 @@ export function ManageView({ categories, onRefresh }: ManageViewProps) {
                         <Folder size={16} className="text-white" />
                       </span>
                       <div>
-                        <h3 className="font-medium text-gray-900 dark:text-white">
+                        <h3 className="font-medium text-[var(--color-foreground)]">
                           {category.name}
                         </h3>
-                        <p className="text-sm text-gray-500">
+                        <p className="text-sm text-[var(--color-muted-foreground)]">
                           {templateCount} template{templateCount !== 1 ? 's' : ''}
                         </p>
                       </div>
@@ -338,13 +346,13 @@ export function ManageView({ categories, onRefresh }: ManageViewProps) {
                           setEditingCategory(category);
                           setShowCategoryModal(true);
                         }}
-                        className="p-2 text-gray-400 hover:text-purple-600 hover:bg-purple-50 dark:hover:bg-purple-900/20 rounded-lg"
+                        className="p-2 text-[var(--color-muted-foreground)] hover:text-[var(--color-primary)] hover:bg-[var(--color-primary)]/10 rounded-lg transition-colors"
                       >
                         <Edit2 size={16} />
                       </button>
                       <button
                         onClick={() => handleDeleteCategory(category.id)}
-                        className="p-2 text-gray-400 hover:text-red-600 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-lg"
+                        className="p-2 text-[var(--color-muted-foreground)] hover:text-[var(--color-destructive)] hover:bg-[var(--color-destructive)]/10 rounded-lg transition-colors"
                       >
                         <Trash2 size={16} />
                       </button>
@@ -407,15 +415,16 @@ function TemplateRow({
   onDelete: () => void;
 }) {
   return (
-    <div className="p-3 flex items-center justify-between bg-white dark:bg-gray-800 hover:bg-gray-50 dark:hover:bg-gray-700/50">
+    <div className="p-3 flex items-center justify-between bg-[var(--color-card)] hover:bg-[var(--color-muted)] transition-colors">
       <div className="flex items-center gap-3 min-w-0">
-        <FileText size={18} className="text-gray-400 flex-shrink-0" />
+        <FileText size={18} className="text-[var(--color-muted-foreground)] flex-shrink-0" />
         <div className="min-w-0">
-          <p className="font-medium text-gray-900 dark:text-white truncate">{template.title}</p>
-          <div className="flex items-center gap-2 text-xs text-gray-500 mt-0.5">
+          <p className="font-medium text-[var(--color-foreground)] truncate">{template.title}</p>
+          <div className="flex items-center gap-2 text-xs text-[var(--color-muted-foreground)] mt-0.5">
             {template.difficulty && (
               <span
-                className={`px-1.5 py-0.5 rounded ${DIFFICULTY_COLORS[template.difficulty] || ''}`}
+                className="px-1.5 py-0.5 rounded"
+                style={getDifficultyStyle(template.difficulty)}
               >
                 {template.difficulty}
               </span>
@@ -439,13 +448,13 @@ function TemplateRow({
       <div className="flex items-center gap-1 flex-shrink-0">
         <button
           onClick={onEdit}
-          className="p-2 text-gray-400 hover:text-purple-600 hover:bg-purple-50 dark:hover:bg-purple-900/20 rounded-lg"
+          className="p-2 text-[var(--color-muted-foreground)] hover:text-[var(--color-primary)] hover:bg-[var(--color-primary)]/10 rounded-lg transition-colors"
         >
           <Edit2 size={16} />
         </button>
         <button
           onClick={onDelete}
-          className="p-2 text-gray-400 hover:text-red-600 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-lg"
+          className="p-2 text-[var(--color-muted-foreground)] hover:text-[var(--color-destructive)] hover:bg-[var(--color-destructive)]/10 rounded-lg transition-colors"
         >
           <Trash2 size={16} />
         </button>

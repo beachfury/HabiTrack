@@ -41,7 +41,17 @@
       "Bash(npx vite build)",
       "Bash(dir \"P:\\\\HabiTrack\\\\apps\\\\api\\\\uploads\\\\themes\"\")",
       "Bash(npx vue-tsc:*)",
-      "Bash(git commit:*)"
+      "Bash(git commit:*)",
+      "Bash(ls -la \"P:\\\\HabiTrack\\\\apps\\\\api\\\\src\\\\routes\\\\auth\"\" 2>/dev/null || echo \"Auth directory not found \")",
+      "Bash(ls -la \"P:\\\\HabiTrack\\\\apps\\\\api\\\\src\\\\middleware\"\" 2>/dev/null || echo \"Middleware directory may not exist \")",
+      "Bash(grep -n \"ALTER TABLE.*settings\\\\|ADD.*email\\\\|ADD.*notification\" \"P:\\\\HabiTrack\\\\providers\\\\storage-mariadb\\\\migrations\"*.sql \")",
+      "Bash(npm run)",
+      "Bash(docker ps:*)",
+      "Bash(npm run:*)",
+      "Bash(xargs:*)",
+      "Bash(dir /a \"P:\\\\HabiTrack\")",
+      "Bash(dir:*)",
+      "Bash(wc:*)"
     ]
   }
 }

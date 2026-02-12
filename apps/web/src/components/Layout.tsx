@@ -8,6 +8,7 @@ import { useTheme } from '../context/ThemeContext';
 import { api, type HouseholdSettings } from '../api';
 import type { UserOption as ApiUserOption } from '../types/user';
 import { SidebarLayout, TopHeaderLayout, MinimalLayout } from './layouts';
+import { ModalPortal, ModalBody } from './common/ModalPortal';
 
 type UserOption = ApiUserOption;
 
@@ -181,20 +182,24 @@ export function Layout({ children }: { children: ReactNode }) {
 
       {/* User Switcher Modal */}
       {showUserSwitcher && (
-        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
-          <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-xl w-full max-w-md p-6">
-            <div className="flex items-center justify-between mb-6">
-              <h2 className="text-xl font-semibold text-gray-900 dark:text-gray-100">
-                View as User
-              </h2>
-              <button
-                onClick={() => setShowUserSwitcher(false)}
-                className="p-2 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition-colors"
-              >
-                <X size={20} className="text-gray-500 dark:text-gray-400" />
-              </button>
-            </div>
-
+        <ModalPortal
+          isOpen={true}
+          onClose={() => setShowUserSwitcher(false)}
+          title="View as User"
+          size="md"
+          footer={impersonation.active ? (
+            <button
+              onClick={async () => {
+                await stopImpersonating();
+                setShowUserSwitcher(false);
+              }}
+              className="w-full py-3 bg-amber-500 hover:bg-amber-600 text-white rounded-xl font-medium transition-colors"
+            >
+              Return to {impersonation.originalAdmin?.displayName}
+            </button>
+          ) : undefined}
+        >
+          <ModalBody>
             <p className="text-sm text-gray-500 dark:text-gray-400 mb-4">
               Select a user to view the app as them. This is useful for testing permissions.
             </p>
@@ -225,20 +230,8 @@ export function Layout({ children }: { children: ReactNode }) {
                   </button>
                 ))}
             </div>
-
-            {impersonation.active && (
-              <button
-                onClick={async () => {
-                  await stopImpersonating();
-                  setShowUserSwitcher(false);
-                }}
-                className="w-full mt-4 py-3 bg-amber-500 hover:bg-amber-600 text-white rounded-xl font-medium transition-colors"
-              >
-                Return to {impersonation.originalAdmin?.displayName}
-              </button>
-            )}
-          </div>
-        </div>
+          </ModalBody>
+        </ModalPortal>
       )}
     </>
   );

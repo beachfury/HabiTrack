@@ -5,6 +5,7 @@ import type { Request, Response } from 'express';
 import { q } from '../../db';
 import { logAudit } from '../../audit';
 import { createNotification } from '../messages';
+import { queueEmail, getUserEmail, getActiveUsersWithEmail } from '../../email/queue';
 import {
   getUser,
   isValidString,
@@ -282,8 +283,8 @@ export async function createRecipe(req: Request, res: Response) {
     // If pending, notify admins
     if (status === 'pending') {
       // Get admin users to notify
-      const admins = await q<{ id: number }[]>(
-        `SELECT id FROM users WHERE roleId = 'admin' AND id != ?`,
+      const admins = await q<{ id: number; email: string | null; displayName: string }[]>(
+        `SELECT id, email, displayName FROM users WHERE roleId = 'admin' AND id != ? AND active = 1`,
         [user.id],
       );
 
@@ -297,6 +298,21 @@ export async function createRecipe(req: Request, res: Response) {
           relatedId: recipeId,
           relatedType: 'recipe',
         });
+
+        // Send email to admin
+        if (admin.email) {
+          await queueEmail({
+            userId: admin.id,
+            toEmail: admin.email,
+            template: 'RECIPE_STATUS',
+            variables: {
+              userName: admin.displayName,
+              recipeName: name.trim(),
+              status: 'submitted for approval',
+              message: `${user.displayName} has submitted a new recipe for your approval.`,
+            },
+          });
+        }
       }
     }
 
@@ -537,6 +553,26 @@ export async function approveRecipe(req: Request, res: Response) {
         relatedId: recipeId,
         relatedType: 'recipe',
       });
+
+      // Send email notification
+      const creatorEmail = await getUserEmail(recipe.createdBy);
+      if (creatorEmail) {
+        const [creatorInfo] = await q<Array<{ displayName: string }>>(
+          'SELECT displayName FROM users WHERE id = ?',
+          [recipe.createdBy],
+        );
+        await queueEmail({
+          userId: recipe.createdBy,
+          toEmail: creatorEmail,
+          template: 'RECIPE_STATUS',
+          variables: {
+            userName: creatorInfo?.displayName || 'there',
+            recipeName: recipe.name,
+            status: 'approved',
+            message: 'Your recipe is now available in the family recipe book!',
+          },
+        });
+      }
     }
 
     return success(res, { success: true });
@@ -592,6 +628,26 @@ export async function rejectRecipe(req: Request, res: Response) {
         relatedId: recipeId,
         relatedType: 'recipe',
       });
+
+      // Send email notification
+      const creatorEmail = await getUserEmail(recipe.createdBy);
+      if (creatorEmail) {
+        const [creatorInfo] = await q<Array<{ displayName: string }>>(
+          'SELECT displayName FROM users WHERE id = ?',
+          [recipe.createdBy],
+        );
+        await queueEmail({
+          userId: recipe.createdBy,
+          toEmail: creatorEmail,
+          template: 'RECIPE_STATUS',
+          variables: {
+            userName: creatorInfo?.displayName || 'there',
+            recipeName: recipe.name,
+            status: 'not approved',
+            message: reason || 'Please review and resubmit if you would like.',
+          },
+        });
+      }
     }
 
     return success(res, { success: true });

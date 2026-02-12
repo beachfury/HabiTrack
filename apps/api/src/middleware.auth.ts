@@ -27,6 +27,7 @@ declare global {
     interface Request {
       user?: UserInfo;
       sessionId?: string;
+      isKioskSession?: boolean;
     }
   }
 }
@@ -45,29 +46,18 @@ declare global {
  */
 export function requireAuth(...allowedRoles: Express.UserInfo['roleId'][]) {
   return async (req: Request, res: Response, next: NextFunction) => {
-    // DEBUG: Log the request path and allowed roles
-    console.log(
-      `[requireAuth] Path: ${req.path}, Method: ${req.method}, AllowedRoles: [${allowedRoles.join(', ')}], AllowedRoles.length: ${allowedRoles.length}`,
-    );
-
     try {
       // Get session ID from cookie
       const sid = (req.cookies?.[SESSION_COOKIE_NAME] ?? '').trim();
       if (!sid) {
-        console.log('[requireAuth] No session cookie found');
         return res.status(401).json({ error: { code: 'AUTH_REQUIRED' } });
       }
 
       // Load session from store
       const sess = await sessionStore.get(sid);
       if (!sess) {
-        console.log('[requireAuth] Session not found or expired');
         return res.status(401).json({ error: { code: 'AUTH_EXPIRED' } });
       }
-
-      console.log(
-        `[requireAuth] Session found: userId=${sess.userId}, role=${sess.role}, impersonatedBy=${sess.impersonatedBy}`,
-      );
 
       // Load user from database
       const rows = await q<Array<{ id: number; displayName: string; roleId: any; active: 0 | 1 }>>(
@@ -76,21 +66,12 @@ export function requireAuth(...allowedRoles: Express.UserInfo['roleId'][]) {
       );
       const u = rows[0];
 
-      console.log(
-        `[requireAuth] User from DB: id=${u?.id}, displayName=${u?.displayName}, roleId=${u?.roleId}, active=${u?.active}`,
-      );
-
       if (!u || !u.active) {
-        console.log('[requireAuth] User not found or inactive - returning USER_INACTIVE');
         return res.status(403).json({ error: { code: 'USER_INACTIVE' } });
       }
 
       // Role check (if roles specified)
-      console.log(
-        `[requireAuth] Role check: allowedRoles.length=${allowedRoles.length}, u.roleId=${u.roleId}, includes=${allowedRoles.includes(u.roleId)}`,
-      );
       if (allowedRoles.length && !allowedRoles.includes(u.roleId)) {
-        console.log(`[requireAuth] Role check FAILED - returning FORBIDDEN`);
         return res.status(403).json({ error: { code: 'FORBIDDEN' } });
       }
 
@@ -104,7 +85,11 @@ export function requireAuth(...allowedRoles: Express.UserInfo['roleId'][]) {
       req.sessionId = sid;
       req.user = { id: u.id, displayName: u.displayName, roleId: u.roleId };
 
-      console.log('[requireAuth] SUCCESS - calling next()');
+      // SECURITY: Mark kiosk sessions for route restriction middleware
+      if (sess.isKiosk) {
+        req.isKioskSession = true;
+      }
+
       return next();
     } catch (err) {
       console.error('[requireAuth] error', err);
@@ -138,6 +123,11 @@ export function optionalAuth() {
       if (u && u.active) {
         req.sessionId = sid;
         req.user = { id: u.id, displayName: u.displayName, roleId: u.roleId };
+
+        // SECURITY: Mark kiosk sessions for route restriction middleware
+        if (sess.isKiosk) {
+          req.isKioskSession = true;
+        }
 
         // Rolling session
         if (SESSION_ROLLING) {

@@ -2,6 +2,7 @@
 // Central export for all common components
 
 export { Modal, ModalBody, ModalFooter } from './Modal';
+export { ModalPortal, ModalBody as ModalPortalBody, ModalFooter as ModalPortalFooter } from './ModalPortal';
 export { Button, IconButton } from './Button';
 export { Avatar, AvatarWithStatus, AvatarGroup } from './Avatar';
 export { Badge, CountBadge } from './Badge';

@@ -5,6 +5,7 @@ import type { Request, Response } from 'express';
 import { q } from '../../db';
 import { logAudit } from '../../audit';
 import { createNotification } from '../messages';
+import { queueEmail } from '../../email/queue';
 
 /**
  * POST /api/auth/onboard/complete
@@ -30,8 +31,8 @@ export async function postOnboardComplete(req: Request, res: Response) {
     );
 
     // Notify all admins that a new user has joined
-    const admins = await q<Array<{ id: number }>>(
-      `SELECT id FROM users WHERE roleId = 'admin' AND active = 1 AND id != ?`,
+    const admins = await q<Array<{ id: number; email: string | null; displayName: string }>>(
+      `SELECT id, email, displayName FROM users WHERE roleId = 'admin' AND active = 1 AND id != ?`,
       [userId],
     );
 
@@ -45,6 +46,19 @@ export async function postOnboardComplete(req: Request, res: Response) {
         relatedId: userId,
         relatedType: 'user',
       });
+
+      // Send email notification
+      if (admin.email) {
+        await queueEmail({
+          userId: admin.id,
+          toEmail: admin.email,
+          template: 'NEW_FAMILY_MEMBER',
+          variables: {
+            userName: admin.displayName,
+            memberName: userData?.displayName || 'A new user',
+          },
+        });
+      }
     }
 
     await logAudit({ action: 'auth.onboard.complete', result: 'ok', actorId: userId });

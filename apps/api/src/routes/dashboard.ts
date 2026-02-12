@@ -438,12 +438,12 @@ export async function getDashboardData(req: Request, res: Response) {
         LIMIT 10
       `),
 
-      // Upcoming events (next 7 days, includes multi-day events)
+      // Upcoming events (next 7 days, EXCLUDES today - starts from tomorrow)
       safeQuery<any>(`
         SELECT id, title, startAt as startTime, endAt as endTime, color, allDay
         FROM calendar_events
-        WHERE DATE(startAt) <= DATE_ADD(CURDATE(), INTERVAL 7 DAY)
-          AND (DATE(endAt) >= CURDATE() OR endAt IS NULL OR DATE(startAt) >= CURDATE())
+        WHERE DATE(startAt) > CURDATE()
+          AND DATE(startAt) <= DATE_ADD(CURDATE(), INTERVAL 7 DAY)
         ORDER BY startAt ASC
         LIMIT 15
       `),

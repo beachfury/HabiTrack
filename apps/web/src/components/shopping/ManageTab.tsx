@@ -19,6 +19,7 @@ import {
 import { shoppingApi } from '../../api';
 import { ColorPicker } from '../common/ColorPicker';
 import { NewItemModal } from './modals/NewItemModal';
+import { ModalPortal, ModalBody } from '../common/ModalPortal';
 import type { ShoppingCategory, ShoppingStore, StoreRequest, CatalogItem } from '../../types';
 
 type ManageSubTab = 'catalog' | 'categories' | 'stores';
@@ -552,15 +553,12 @@ export function ManageTab({
 
       {/* Delete Confirmation Modal */}
       {deleteConfirm && (
-        <div className="themed-modal-backdrop fixed inset-0 flex items-center justify-center z-50 p-4">
-          <div className="themed-modal w-full max-w-sm p-6">
-            <h3 className="text-lg font-semibold text-[var(--color-foreground)] mb-2">
-              Confirm Delete
-            </h3>
-            <p className="text-[var(--color-muted-foreground)] mb-4">
-              Are you sure you want to delete this {deleteConfirm.type}? This action cannot be
-              undone.
-            </p>
+        <ModalPortal
+          isOpen={true}
+          onClose={() => setDeleteConfirm(null)}
+          title="Confirm Delete"
+          size="sm"
+          footer={
             <div className="flex gap-2">
               <button
                 onClick={() => setDeleteConfirm(null)}
@@ -581,8 +579,15 @@ export function ManageTab({
                 Delete
               </button>
             </div>
-          </div>
-        </div>
+          }
+        >
+          <ModalBody>
+            <p className="text-[var(--color-muted-foreground)]">
+              Are you sure you want to delete this {deleteConfirm.type}? This action cannot be
+              undone.
+            </p>
+          </ModalBody>
+        </ModalPortal>
       )}
     </div>
   );
@@ -614,20 +619,34 @@ function EditCategoryModal({ category, onClose, onSave }: EditCategoryModalProps
     setSaving(false);
   };
 
-  return (
-    <div className="themed-modal-backdrop fixed inset-0 flex items-center justify-center z-50 p-4">
-      <div className="themed-modal w-full max-w-md overflow-hidden">
-        <div className="p-4 border-b border-[var(--color-border)] flex items-center justify-between">
-          <h2 className="text-lg font-semibold text-[var(--color-foreground)]">Edit Category</h2>
-          <button
-            onClick={onClose}
-            className="p-2 hover:bg-[var(--color-muted)] rounded-lg text-[var(--color-muted-foreground)]"
-          >
-            <X size={20} />
-          </button>
-        </div>
+  const footer = (
+    <div className="flex gap-2">
+      <button
+        onClick={onClose}
+        className="themed-btn-secondary flex-1"
+      >
+        Cancel
+      </button>
+      <button
+        onClick={handleSubmit}
+        disabled={!form.name.trim() || saving}
+        className="themed-btn-primary flex-1 disabled:opacity-50"
+      >
+        {saving ? 'Saving...' : 'Save'}
+      </button>
+    </div>
+  );
 
-        <div className="p-4 space-y-4">
+  return (
+    <ModalPortal
+      isOpen={true}
+      onClose={onClose}
+      title="Edit Category"
+      size="md"
+      footer={footer}
+    >
+      <ModalBody>
+        <div className="space-y-4">
           <div>
             <label className="block text-sm font-medium text-[var(--color-foreground)] mb-1">
               Name *
@@ -646,23 +665,7 @@ function EditCategoryModal({ category, onClose, onSave }: EditCategoryModalProps
             label="Color"
           />
         </div>
-
-        <div className="p-4 border-t border-[var(--color-border)] flex gap-2">
-          <button
-            onClick={onClose}
-            className="themed-btn-secondary flex-1"
-          >
-            Cancel
-          </button>
-          <button
-            onClick={handleSubmit}
-            disabled={!form.name.trim() || saving}
-            className="themed-btn-primary flex-1 disabled:opacity-50"
-          >
-            {saving ? 'Saving...' : 'Save'}
-          </button>
-        </div>
-      </div>
-    </div>
+      </ModalBody>
+    </ModalPortal>
   );
 }

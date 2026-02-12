@@ -17,6 +17,7 @@ import {
   Target,
   X,
 } from 'lucide-react';
+import { ModalPortal, ModalBody } from '../components/common/ModalPortal';
 import { useAuth } from '../context/AuthContext';
 import * as paidChoresApi from '../api/paid-chores';
 import type { PaidChore, CreatePaidChoreInput, LeaderboardEntry } from '../api/paid-chores';
@@ -160,26 +161,31 @@ export function PaidChoresPage() {
       {/* Header */}
       <div className="flex items-center justify-between mb-8">
         <div>
-          <h1 className="text-3xl font-bold text-gray-900 dark:text-white flex items-center gap-3">
-            <DollarSign className="text-green-600" />
+          <h1 className="text-3xl font-bold text-[var(--color-foreground)] flex items-center gap-3">
+            <DollarSign className="text-[var(--color-success)]" />
             Paid Chores
           </h1>
-          <p className="text-gray-500 dark:text-gray-400 mt-1">
+          <p className="text-[var(--color-muted-foreground)] mt-1">
             Race to claim chores and earn real money!
           </p>
         </div>
         <div className="flex items-center gap-4">
           {/* My Earnings */}
-          <div className="bg-green-100 dark:bg-green-900/30 px-4 py-2 rounded-xl">
-            <p className="text-sm text-green-600 dark:text-green-400">My Earnings</p>
-            <p className="text-2xl font-bold text-green-700 dark:text-green-300">
+          <div
+            className="px-4 py-2 rounded-xl"
+            style={{
+              backgroundColor: 'color-mix(in srgb, var(--color-success) 15%, transparent)',
+            }}
+          >
+            <p className="text-sm text-[var(--color-success)]">My Earnings</p>
+            <p className="text-2xl font-bold text-[var(--color-success)]">
               ${myEarnings.toFixed(2)}
             </p>
           </div>
           {isAdmin && (
             <button
               onClick={() => setShowCreateModal(true)}
-              className="flex items-center gap-2 bg-purple-600 hover:bg-purple-700 text-white px-4 py-2 rounded-xl transition-colors"
+              className="flex items-center gap-2 bg-[var(--color-primary)] hover:opacity-90 text-[var(--color-primary-foreground)] px-4 py-2 rounded-xl transition-opacity"
             >
               <Plus size={20} />
               Create Paid Chore
@@ -190,13 +196,29 @@ export function PaidChoresPage() {
 
       {/* Messages */}
       {success && (
-        <div className="mb-6 p-4 bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800 rounded-xl text-green-700 dark:text-green-300 flex items-center gap-2">
+        <div
+          className="mb-6 p-4 rounded-xl flex items-center gap-2"
+          style={{
+            backgroundColor: 'color-mix(in srgb, var(--color-success) 10%, transparent)',
+            borderColor: 'color-mix(in srgb, var(--color-success) 30%, transparent)',
+            color: 'var(--color-success)',
+            border: '1px solid',
+          }}
+        >
           <CheckCircle size={20} />
           {success}
         </div>
       )}
       {error && (
-        <div className="mb-6 p-4 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-xl text-red-600 dark:text-red-400 flex items-center gap-2">
+        <div
+          className="mb-6 p-4 rounded-xl flex items-center gap-2"
+          style={{
+            backgroundColor: 'color-mix(in srgb, var(--color-destructive) 10%, transparent)',
+            borderColor: 'color-mix(in srgb, var(--color-destructive) 30%, transparent)',
+            color: 'var(--color-destructive)',
+            border: '1px solid',
+          }}
+        >
           <AlertCircle size={20} />
           {error}
           <button onClick={() => setError('')} className="ml-auto">
@@ -206,16 +228,17 @@ export function PaidChoresPage() {
       )}
 
       {/* Tabs */}
-      <div className="flex gap-2 mb-6 border-b border-gray-200 dark:border-gray-700">
+      <div className="flex gap-2 mb-6 border-b border-[var(--color-border)]">
         {tabs.map((tab) => (
           <button
             key={tab.id}
             onClick={() => setActiveTab(tab.id)}
-            className={`flex items-center gap-2 px-4 py-3 border-b-2 transition-colors ${
+            className="flex items-center gap-2 px-4 py-3 border-b-2 transition-colors"
+            style={
               activeTab === tab.id
-                ? 'border-purple-600 text-purple-600'
-                : 'border-transparent text-gray-500 hover:text-gray-700'
-            }`}
+                ? { borderColor: 'var(--color-primary)', color: 'var(--color-primary)' }
+                : { borderColor: 'transparent', color: 'var(--color-muted-foreground)' }
+            }
           >
             <tab.icon size={18} />
             {tab.label}
@@ -226,14 +249,14 @@ export function PaidChoresPage() {
       {/* Content */}
       {loading ? (
         <div className="flex items-center justify-center py-12">
-          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-purple-600"></div>
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-[var(--color-primary)]"></div>
         </div>
       ) : activeTab === 'leaderboard' ? (
         <LeaderboardView leaderboard={leaderboard} currentUserId={user?.id} />
       ) : filteredChores.length === 0 ? (
-        <div className="text-center py-12 bg-white dark:bg-gray-800 rounded-2xl">
-          <DollarSign size={48} className="mx-auto mb-4 text-gray-400" />
-          <p className="text-gray-500 dark:text-gray-400">
+        <div className="text-center py-12 themed-card rounded-2xl">
+          <DollarSign size={48} className="mx-auto mb-4 text-[var(--color-muted-foreground)]" />
+          <p className="text-[var(--color-muted-foreground)]">
             {activeTab === 'available'
               ? 'No chores available right now. Check back soon!'
               : activeTab === 'my-claims'
@@ -275,26 +298,16 @@ export function PaidChoresPage() {
 
       {/* Complete Modal */}
       {showCompleteModal && selectedChore && (
-        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
-          <div className="bg-white dark:bg-gray-800 rounded-2xl w-full max-w-md p-6">
-            <h2 className="text-xl font-semibold text-gray-900 dark:text-white mb-4">
-              Complete Chore
-            </h2>
-            <p className="text-gray-600 dark:text-gray-400 mb-4">
-              Mark "{selectedChore.title}" as complete?
-            </p>
-            <div className="mb-4">
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                Notes (optional)
-              </label>
-              <textarea
-                value={completionNotes}
-                onChange={(e) => setCompletionNotes(e.target.value)}
-                className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-xl bg-white dark:bg-gray-800"
-                rows={3}
-                placeholder="Any notes about how you completed it..."
-              />
-            </div>
+        <ModalPortal
+          isOpen={true}
+          onClose={() => {
+            setShowCompleteModal(false);
+            setSelectedChore(null);
+            setCompletionNotes('');
+          }}
+          title="Complete Chore"
+          size="md"
+          footer={
             <div className="flex gap-3">
               <button
                 onClick={() => {
@@ -302,19 +315,37 @@ export function PaidChoresPage() {
                   setSelectedChore(null);
                   setCompletionNotes('');
                 }}
-                className="flex-1 py-2 bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 rounded-xl"
+                className="flex-1 py-2 bg-[var(--color-muted)] text-[var(--color-muted-foreground)] rounded-xl hover:opacity-80 transition-opacity"
               >
                 Cancel
               </button>
               <button
                 onClick={handleComplete}
-                className="flex-1 py-2 bg-green-600 hover:bg-green-700 text-white rounded-xl"
+                className="flex-1 py-2 bg-[var(--color-success)] hover:opacity-90 text-white rounded-xl transition-opacity"
               >
                 Mark Complete
               </button>
             </div>
-          </div>
-        </div>
+          }
+        >
+          <ModalBody>
+            <p className="text-[var(--color-muted-foreground)] mb-4">
+              Mark "{selectedChore.title}" as complete?
+            </p>
+            <div>
+              <label className="block text-sm font-medium text-[var(--color-foreground)] mb-1">
+                Notes (optional)
+              </label>
+              <textarea
+                value={completionNotes}
+                onChange={(e) => setCompletionNotes(e.target.value)}
+                className="w-full px-3 py-2 border border-[var(--color-border)] rounded-xl bg-[var(--color-card)] text-[var(--color-foreground)]"
+                rows={3}
+                placeholder="Any notes about how you completed it..."
+              />
+            </div>
+          </ModalBody>
+        </ModalPortal>
       )}
     </div>
   );
@@ -335,6 +366,36 @@ interface ChoreCardProps {
   onDelete: () => void;
 }
 
+// Helper function for difficulty badge styles
+const getDifficultyStyle = (difficulty: string) => {
+  switch (difficulty) {
+    case 'easy':
+      return { backgroundColor: 'color-mix(in srgb, var(--color-success) 15%, transparent)', color: 'var(--color-success)' };
+    case 'medium':
+      return { backgroundColor: 'color-mix(in srgb, var(--color-warning) 15%, transparent)', color: 'var(--color-warning)' };
+    case 'hard':
+      return { backgroundColor: 'color-mix(in srgb, var(--color-destructive) 15%, transparent)', color: 'var(--color-destructive)' };
+    default:
+      return { backgroundColor: 'var(--color-muted)', color: 'var(--color-muted-foreground)' };
+  }
+};
+
+// Helper function for status badge styles
+const getStatusStyle = (status: string) => {
+  switch (status) {
+    case 'available':
+      return { backgroundColor: 'color-mix(in srgb, var(--color-primary) 15%, transparent)', color: 'var(--color-primary)' };
+    case 'claimed':
+      return { backgroundColor: 'color-mix(in srgb, var(--color-warning) 15%, transparent)', color: 'var(--color-warning)' };
+    case 'completed':
+      return { backgroundColor: 'color-mix(in srgb, var(--color-primary) 15%, transparent)', color: 'var(--color-primary)' };
+    case 'verified':
+      return { backgroundColor: 'color-mix(in srgb, var(--color-success) 15%, transparent)', color: 'var(--color-success)' };
+    default:
+      return { backgroundColor: 'var(--color-muted)', color: 'var(--color-muted-foreground)' };
+  }
+};
+
 function ChoreCard({
   chore,
   isAdmin,
@@ -347,33 +408,22 @@ function ChoreCard({
 }: ChoreCardProps) {
   const isClaimedByMe = chore.claimedBy === currentUserId;
 
-  const difficultyColors = {
-    easy: 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400',
-    medium: 'bg-yellow-100 text-yellow-700 dark:bg-yellow-900/30 dark:text-yellow-400',
-    hard: 'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400',
-  };
-
-  const statusColors = {
-    available: 'bg-blue-100 text-blue-700',
-    claimed: 'bg-yellow-100 text-yellow-700',
-    completed: 'bg-purple-100 text-purple-700',
-    verified: 'bg-green-100 text-green-700',
-    cancelled: 'bg-gray-100 text-gray-700',
-  };
-
   return (
-    <div className="bg-white dark:bg-gray-800 rounded-2xl p-5 shadow-sm border border-gray-100 dark:border-gray-700">
+    <div className="themed-card rounded-2xl p-5">
       {/* Header */}
       <div className="flex items-start justify-between mb-3">
         <div>
-          <h3 className="font-semibold text-gray-900 dark:text-white">{chore.title}</h3>
+          <h3 className="font-semibold text-[var(--color-foreground)]">{chore.title}</h3>
           {chore.categoryName && (
-            <span className="text-sm text-gray-500">{chore.categoryName}</span>
+            <span className="text-sm text-[var(--color-muted-foreground)]">{chore.categoryName}</span>
           )}
         </div>
         <div className="text-right">
-          <p className="text-2xl font-bold text-green-600">${Number(chore.amount).toFixed(2)}</p>
-          <span className={`text-xs px-2 py-0.5 rounded-full ${statusColors[chore.status]}`}>
+          <p className="text-2xl font-bold text-[var(--color-success)]">${Number(chore.amount).toFixed(2)}</p>
+          <span
+            className="text-xs px-2 py-0.5 rounded-full"
+            style={getStatusStyle(chore.status)}
+          >
             {chore.status.charAt(0).toUpperCase() + chore.status.slice(1)}
           </span>
         </div>
@@ -381,22 +431,31 @@ function ChoreCard({
 
       {/* Description */}
       {chore.description && (
-        <p className="text-sm text-gray-600 dark:text-gray-400 mb-3">{chore.description}</p>
+        <p className="text-sm text-[var(--color-muted-foreground)] mb-3">{chore.description}</p>
       )}
 
       {/* Meta */}
       <div className="flex flex-wrap gap-2 mb-4">
-        <span className={`text-xs px-2 py-1 rounded-full ${difficultyColors[chore.difficulty]}`}>
+        <span
+          className="text-xs px-2 py-1 rounded-full"
+          style={getDifficultyStyle(chore.difficulty)}
+        >
           {chore.difficulty.charAt(0).toUpperCase() + chore.difficulty.slice(1)}
         </span>
         {chore.estimatedMinutes && (
-          <span className="text-xs px-2 py-1 rounded-full bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-400 flex items-center gap-1">
+          <span className="text-xs px-2 py-1 rounded-full bg-[var(--color-muted)] text-[var(--color-muted-foreground)] flex items-center gap-1">
             <Timer size={12} />
             ~{chore.estimatedMinutes} min
           </span>
         )}
         {chore.requirePhoto && (
-          <span className="text-xs px-2 py-1 rounded-full bg-purple-100 dark:bg-purple-900/30 text-purple-700 dark:text-purple-400">
+          <span
+            className="text-xs px-2 py-1 rounded-full"
+            style={{
+              backgroundColor: 'color-mix(in srgb, var(--color-primary) 15%, transparent)',
+              color: 'var(--color-primary)',
+            }}
+          >
             Photo Required
           </span>
         )}
@@ -404,12 +463,12 @@ function ChoreCard({
 
       {/* Claimed info */}
       {chore.claimedBy && (
-        <div className="mb-4 p-2 bg-gray-50 dark:bg-gray-700/50 rounded-lg">
-          <p className="text-sm text-gray-600 dark:text-gray-400">
+        <div className="mb-4 p-2 bg-[var(--color-muted)] rounded-lg">
+          <p className="text-sm text-[var(--color-muted-foreground)]">
             Claimed by{' '}
             <span
               className="font-medium"
-              style={{ color: chore.claimerColor || '#8b5cf6' }}
+              style={{ color: chore.claimerColor || 'var(--color-primary)' }}
             >
               {chore.claimerName}
             </span>
@@ -420,8 +479,13 @@ function ChoreCard({
 
       {/* Completion notes */}
       {chore.completionNotes && chore.status === 'completed' && (
-        <div className="mb-4 p-2 bg-blue-50 dark:bg-blue-900/20 rounded-lg">
-          <p className="text-sm text-blue-700 dark:text-blue-300">
+        <div
+          className="mb-4 p-2 rounded-lg"
+          style={{
+            backgroundColor: 'color-mix(in srgb, var(--color-primary) 10%, transparent)',
+          }}
+        >
+          <p className="text-sm text-[var(--color-primary)]">
             <strong>Notes:</strong> {chore.completionNotes}
           </p>
         </div>
@@ -432,7 +496,7 @@ function ChoreCard({
         {chore.status === 'available' && (
           <button
             onClick={onClaim}
-            className="flex-1 py-2 bg-green-600 hover:bg-green-700 text-white rounded-xl font-medium flex items-center justify-center gap-2 transition-colors"
+            className="flex-1 py-2 bg-[var(--color-success)] hover:opacity-90 text-white rounded-xl font-medium flex items-center justify-center gap-2 transition-opacity"
           >
             <Zap size={18} />
             Claim It!
@@ -442,7 +506,7 @@ function ChoreCard({
         {chore.status === 'claimed' && isClaimedByMe && (
           <button
             onClick={onComplete}
-            className="flex-1 py-2 bg-purple-600 hover:bg-purple-700 text-white rounded-xl font-medium flex items-center justify-center gap-2 transition-colors"
+            className="flex-1 py-2 bg-[var(--color-primary)] hover:opacity-90 text-[var(--color-primary-foreground)] rounded-xl font-medium flex items-center justify-center gap-2 transition-opacity"
           >
             <CheckCircle size={18} />
             Mark Complete
@@ -453,14 +517,14 @@ function ChoreCard({
           <>
             <button
               onClick={onVerify}
-              className="flex-1 py-2 bg-green-600 hover:bg-green-700 text-white rounded-xl font-medium flex items-center justify-center gap-2 transition-colors"
+              className="flex-1 py-2 bg-[var(--color-success)] hover:opacity-90 text-white rounded-xl font-medium flex items-center justify-center gap-2 transition-opacity"
             >
               <CheckCircle size={18} />
               Verify & Pay
             </button>
             <button
               onClick={() => onReject(true)}
-              className="py-2 px-3 bg-yellow-500 hover:bg-yellow-600 text-white rounded-xl transition-colors"
+              className="py-2 px-3 bg-[var(--color-warning)] hover:opacity-90 text-white rounded-xl transition-opacity"
               title="Reject and reopen"
             >
               <XCircle size={18} />
@@ -469,7 +533,13 @@ function ChoreCard({
         )}
 
         {chore.status === 'verified' && (
-          <div className="flex-1 py-2 bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-400 rounded-xl font-medium text-center flex items-center justify-center gap-2">
+          <div
+            className="flex-1 py-2 rounded-xl font-medium text-center flex items-center justify-center gap-2"
+            style={{
+              backgroundColor: 'color-mix(in srgb, var(--color-success) 15%, transparent)',
+              color: 'var(--color-success)',
+            }}
+          >
             <CheckCircle size={18} />
             Paid!
           </div>
@@ -478,7 +548,11 @@ function ChoreCard({
         {isAdmin && chore.status === 'available' && (
           <button
             onClick={onDelete}
-            className="py-2 px-3 bg-red-100 hover:bg-red-200 dark:bg-red-900/30 dark:hover:bg-red-900/50 text-red-600 rounded-xl transition-colors"
+            className="py-2 px-3 rounded-xl transition-opacity hover:opacity-80"
+            style={{
+              backgroundColor: 'color-mix(in srgb, var(--color-destructive) 15%, transparent)',
+              color: 'var(--color-destructive)',
+            }}
             title="Delete"
           >
             <X size={18} />
@@ -500,20 +574,28 @@ interface LeaderboardViewProps {
 
 function LeaderboardView({ leaderboard, currentUserId }: LeaderboardViewProps) {
   return (
-    <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-sm border border-gray-100 dark:border-gray-700 overflow-hidden">
-      <div className="p-4 bg-gradient-to-r from-yellow-400 to-orange-500">
+    <div className="themed-card rounded-2xl overflow-hidden">
+      <div
+        className="p-4"
+        style={{
+          background: 'linear-gradient(to right, var(--color-warning), color-mix(in srgb, var(--color-warning) 70%, var(--color-destructive)))',
+        }}
+      >
         <h2 className="text-xl font-bold text-white flex items-center gap-2">
           <Trophy size={24} />
           Earnings Leaderboard
         </h2>
       </div>
-      <div className="divide-y divide-gray-100 dark:divide-gray-700">
+      <div className="divide-y divide-[var(--color-border)]">
         {leaderboard.map((entry, index) => (
           <div
             key={entry.id}
-            className={`p-4 flex items-center gap-4 ${
-              entry.id === currentUserId ? 'bg-purple-50 dark:bg-purple-900/20' : ''
-            }`}
+            className="p-4 flex items-center gap-4"
+            style={
+              entry.id === currentUserId
+                ? { backgroundColor: 'color-mix(in srgb, var(--color-primary) 10%, transparent)' }
+                : {}
+            }
           >
             {/* Rank */}
             <div className="w-10 text-center">
@@ -524,42 +606,48 @@ function LeaderboardView({ leaderboard, currentUserId }: LeaderboardViewProps) {
               ) : index === 2 ? (
                 <span className="text-2xl">🥉</span>
               ) : (
-                <span className="text-lg font-bold text-gray-400">#{index + 1}</span>
+                <span className="text-lg font-bold text-[var(--color-muted-foreground)]">#{index + 1}</span>
               )}
             </div>
 
             {/* Avatar */}
             <div
               className="w-10 h-10 rounded-full flex items-center justify-center text-white font-bold"
-              style={{ backgroundColor: entry.color || '#8b5cf6' }}
+              style={{ backgroundColor: entry.color || 'var(--color-primary)' }}
             >
               {(entry.nickname || entry.displayName).charAt(0).toUpperCase()}
             </div>
 
             {/* Name */}
             <div className="flex-1">
-              <p className="font-medium text-gray-900 dark:text-white">
+              <p className="font-medium text-[var(--color-foreground)]">
                 {entry.displayName}
                 {entry.id === currentUserId && (
-                  <span className="ml-2 text-xs bg-purple-100 dark:bg-purple-900/50 text-purple-700 dark:text-purple-300 px-2 py-0.5 rounded-full">
+                  <span
+                    className="ml-2 text-xs px-2 py-0.5 rounded-full"
+                    style={{
+                      backgroundColor: 'color-mix(in srgb, var(--color-primary) 15%, transparent)',
+                      color: 'var(--color-primary)',
+                    }}
+                  >
                     You
                   </span>
                 )}
               </p>
-              <p className="text-sm text-gray-500 dark:text-gray-400">
+              <p className="text-sm text-[var(--color-muted-foreground)]">
                 {entry.choresCompleted} chores completed
               </p>
             </div>
 
             {/* Earnings */}
             <div className="text-right">
-              <p className="text-xl font-bold text-green-600">${Number(entry.totalEarnings).toFixed(2)}</p>
+              <p className="text-xl font-bold text-[var(--color-success)]">${Number(entry.totalEarnings).toFixed(2)}</p>
             </div>
           </div>
         ))}
 
         {leaderboard.length === 0 && (
-          <div className="p-8 text-center text-gray-500 dark:text-gray-400">
+          <div className="p-8 text-center text-[var(--color-muted-foreground)]">
             <Trophy size={48} className="mx-auto mb-4 opacity-50" />
             <p>No earnings yet. Be the first to complete a paid chore!</p>
           </div>
@@ -610,54 +698,79 @@ function CreatePaidChoreModal({ onClose, onCreated }: CreatePaidChoreModalProps)
     }
   };
 
-  return (
-    <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
-      <div className="bg-white dark:bg-gray-800 rounded-2xl w-full max-w-lg p-6 max-h-[90vh] overflow-y-auto">
-        <div className="flex items-center justify-between mb-6">
-          <h2 className="text-xl font-semibold text-gray-900 dark:text-white">
-            Create Paid Chore
-          </h2>
-          <button onClick={onClose} className="p-2 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg">
-            <X size={20} />
-          </button>
-        </div>
+  const footer = (
+    <div className="flex gap-3">
+      <button
+        type="button"
+        onClick={onClose}
+        className="flex-1 py-2 bg-[var(--color-muted)] text-[var(--color-muted-foreground)] rounded-xl hover:opacity-80 transition-opacity"
+      >
+        Cancel
+      </button>
+      <button
+        type="submit"
+        form="create-paid-chore-form"
+        disabled={saving}
+        className="flex-1 py-2 bg-[var(--color-primary)] hover:opacity-90 text-[var(--color-primary-foreground)] rounded-xl disabled:opacity-50 transition-opacity"
+      >
+        {saving ? 'Creating...' : 'Create Chore'}
+      </button>
+    </div>
+  );
 
+  return (
+    <ModalPortal
+      isOpen={true}
+      onClose={onClose}
+      title="Create Paid Chore"
+      size="lg"
+      footer={footer}
+    >
+      <ModalBody>
         {error && (
-          <div className="mb-4 p-3 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-xl text-red-600 dark:text-red-400 text-sm">
+          <div
+            className="mb-4 p-3 rounded-xl text-sm"
+            style={{
+              backgroundColor: 'color-mix(in srgb, var(--color-destructive) 10%, transparent)',
+              borderColor: 'color-mix(in srgb, var(--color-destructive) 30%, transparent)',
+              color: 'var(--color-destructive)',
+              border: '1px solid',
+            }}
+          >
             {error}
           </div>
         )}
 
-        <form onSubmit={handleSubmit} className="space-y-4">
+        <form id="create-paid-chore-form" onSubmit={handleSubmit} className="space-y-4">
           <div>
-            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+            <label className="block text-sm font-medium text-[var(--color-foreground)] mb-1">
               Title *
             </label>
             <input
               type="text"
               value={formData.title}
               onChange={(e) => setFormData({ ...formData, title: e.target.value })}
-              className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-xl bg-white dark:bg-gray-800"
+              className="w-full px-3 py-2 border border-[var(--color-border)] rounded-xl bg-[var(--color-card)] text-[var(--color-foreground)]"
               placeholder="Clean the garage"
               required
             />
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+            <label className="block text-sm font-medium text-[var(--color-foreground)] mb-1">
               Description
             </label>
             <textarea
               value={formData.description}
               onChange={(e) => setFormData({ ...formData, description: e.target.value })}
-              className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-xl bg-white dark:bg-gray-800"
+              className="w-full px-3 py-2 border border-[var(--color-border)] rounded-xl bg-[var(--color-card)] text-[var(--color-foreground)]"
               rows={3}
               placeholder="Details about what needs to be done..."
             />
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+            <label className="block text-sm font-medium text-[var(--color-foreground)] mb-1">
               Amount ($) *
             </label>
             <input
@@ -666,19 +779,19 @@ function CreatePaidChoreModal({ onClose, onCreated }: CreatePaidChoreModalProps)
               step="0.01"
               value={formData.amount}
               onChange={(e) => setFormData({ ...formData, amount: parseFloat(e.target.value) || 0 })}
-              className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-xl bg-white dark:bg-gray-800"
+              className="w-full px-3 py-2 border border-[var(--color-border)] rounded-xl bg-[var(--color-card)] text-[var(--color-foreground)]"
               required
             />
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+            <label className="block text-sm font-medium text-[var(--color-foreground)] mb-1">
               Difficulty
             </label>
             <select
               value={formData.difficulty}
               onChange={(e) => setFormData({ ...formData, difficulty: e.target.value as any })}
-              className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-xl bg-white dark:bg-gray-800"
+              className="w-full px-3 py-2 border border-[var(--color-border)] rounded-xl bg-[var(--color-card)] text-[var(--color-foreground)]"
             >
               <option value="easy">Easy</option>
               <option value="medium">Medium</option>
@@ -687,7 +800,7 @@ function CreatePaidChoreModal({ onClose, onCreated }: CreatePaidChoreModalProps)
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+            <label className="block text-sm font-medium text-[var(--color-foreground)] mb-1">
               Estimated Time (minutes)
             </label>
             <input
@@ -695,7 +808,7 @@ function CreatePaidChoreModal({ onClose, onCreated }: CreatePaidChoreModalProps)
               min="1"
               value={formData.estimatedMinutes}
               onChange={(e) => setFormData({ ...formData, estimatedMinutes: parseInt(e.target.value) || undefined })}
-              className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-xl bg-white dark:bg-gray-800"
+              className="w-full px-3 py-2 border border-[var(--color-border)] rounded-xl bg-[var(--color-card)] text-[var(--color-foreground)]"
             />
           </div>
 
@@ -705,31 +818,14 @@ function CreatePaidChoreModal({ onClose, onCreated }: CreatePaidChoreModalProps)
               id="requirePhoto"
               checked={formData.requirePhoto}
               onChange={(e) => setFormData({ ...formData, requirePhoto: e.target.checked })}
-              className="rounded border-gray-300"
+              className="rounded border-[var(--color-border)]"
             />
-            <label htmlFor="requirePhoto" className="text-sm text-gray-700 dark:text-gray-300">
+            <label htmlFor="requirePhoto" className="text-sm text-[var(--color-foreground)]">
               Require photo proof
             </label>
           </div>
-
-          <div className="flex gap-3 pt-4">
-            <button
-              type="button"
-              onClick={onClose}
-              className="flex-1 py-2 bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 rounded-xl"
-            >
-              Cancel
-            </button>
-            <button
-              type="submit"
-              disabled={saving}
-              className="flex-1 py-2 bg-purple-600 hover:bg-purple-700 text-white rounded-xl disabled:opacity-50"
-            >
-              {saving ? 'Creating...' : 'Create Chore'}
-            </button>
-          </div>
         </form>
-      </div>
-    </div>
+      </ModalBody>
+    </ModalPortal>
   );
 }

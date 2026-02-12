@@ -5,6 +5,7 @@ import type { Request, Response } from 'express';
 import { q } from '../../db';
 import { logAudit } from '../../audit';
 import { createNotification } from '../messages';
+import { queueEmail, getUserEmail } from '../../email/queue';
 import {
   getUser,
   isValidString,
@@ -275,8 +276,8 @@ export async function requestStore(req: Request, res: Response) {
     ]);
 
     // Notify admins
-    const admins = await q<Array<{ id: number }>>(
-      `SELECT id FROM users WHERE roleId = 'admin' AND active = 1`,
+    const admins = await q<Array<{ id: number; email: string | null; displayName: string }>>(
+      `SELECT id, email, displayName FROM users WHERE roleId = 'admin' AND active = 1`,
     );
     for (const admin of admins) {
       await createNotification({
@@ -288,6 +289,21 @@ export async function requestStore(req: Request, res: Response) {
         relatedId: result.insertId,
         relatedType: 'store_request',
       });
+
+      // Send email to admin
+      if (admin.email) {
+        await queueEmail({
+          userId: admin.id,
+          toEmail: admin.email,
+          template: 'STORE_REQUEST',
+          variables: {
+            userName: admin.displayName,
+            storeName: name.trim(),
+            status: 'pending review',
+            message: `${user.displayName} has requested to add this store.`,
+          },
+        });
+      }
     }
 
     return created(res, { request: { id: result.insertId, name: name.trim(), status: 'pending' } });
@@ -358,6 +374,26 @@ export async function approveStoreRequest(req: Request, res: Response) {
       link: '/shopping',
     });
 
+    // Send email notification
+    const requesterEmail = await getUserEmail(request.requestedBy);
+    if (requesterEmail) {
+      const [requesterInfo] = await q<Array<{ displayName: string }>>(
+        'SELECT displayName FROM users WHERE id = ?',
+        [request.requestedBy],
+      );
+      await queueEmail({
+        userId: request.requestedBy,
+        toEmail: requesterEmail,
+        template: 'STORE_REQUEST',
+        variables: {
+          userName: requesterInfo?.displayName || 'there',
+          storeName: request.name,
+          status: 'approved',
+          message: 'The store has been added and is now available.',
+        },
+      });
+    }
+
     await logAudit({
       action: 'shopping.store.approve_request',
       result: 'ok',
@@ -400,6 +436,26 @@ export async function denyStoreRequest(req: Request, res: Response) {
       body: `Your request for "${request.name}" was not approved`,
       link: '/shopping',
     });
+
+    // Send email notification
+    const requesterEmail = await getUserEmail(request.requestedBy);
+    if (requesterEmail) {
+      const [requesterInfo] = await q<Array<{ displayName: string }>>(
+        'SELECT displayName FROM users WHERE id = ?',
+        [request.requestedBy],
+      );
+      await queueEmail({
+        userId: request.requestedBy,
+        toEmail: requesterEmail,
+        template: 'STORE_REQUEST',
+        variables: {
+          userName: requesterInfo?.displayName || 'there',
+          storeName: request.name,
+          status: 'denied',
+          message: 'Your request was not approved at this time.',
+        },
+      });
+    }
 
     await logAudit({
       action: 'shopping.store.deny_request',

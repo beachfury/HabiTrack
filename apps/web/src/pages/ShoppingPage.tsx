@@ -4,7 +4,6 @@
 import { useState, useEffect } from 'react';
 import {
   ShoppingCart,
-  ListPlus,
   Package,
   Sparkles,
   History,
@@ -33,7 +32,6 @@ import type {
 import {
   ShoppingListTab,
   CatalogTab,
-  RequestsTab,
   PredictionsTab,
   HistoryTab,
   ManageTab,
@@ -41,9 +39,10 @@ import {
   CatalogBrowserModal,
   StoreSelectModal,
   NewItemModal,
+  EditListItemModal,
 } from '../components/shopping';
 
-type Tab = 'list' | 'requests' | 'catalog' | 'predictions' | 'history' | 'manage';
+type Tab = 'list' | 'catalog' | 'predictions' | 'history' | 'manage';
 
 export function ShoppingPage() {
   const { user } = useAuth();
@@ -84,7 +83,7 @@ export function ShoppingPage() {
   const [showNewCatalogItemModal, setShowNewCatalogItemModal] = useState(false);
   const [showStoreSelectModal, setShowStoreSelectModal] = useState(false);
   const [itemForStoreSelect, setItemForStoreSelect] = useState<CatalogItem | null>(null);
-  const [selectedRequest, setSelectedRequest] = useState<ShoppingRequest | null>(null);
+  const [editingListItem, setEditingListItem] = useState<ShoppingListItem | null>(null);
 
   // Fetch data on tab change
   useEffect(() => {
@@ -106,10 +105,9 @@ export function ShoppingPage() {
 
       if (activeTab === 'list') {
         await Promise.all([fetchShoppingList(), fetchSuggestions()]);
-      } else if (activeTab === 'requests') {
-        await Promise.all([fetchRequests(), fetchCatalog()]);
       } else if (activeTab === 'catalog') {
-        await fetchCatalog();
+        // Fetch requests too for the integrated pending requests panel
+        await Promise.all([fetchCatalog(), fetchRequests()]);
       } else if (activeTab === 'predictions') {
         await fetchSuggestions();
       } else if (activeTab === 'history') {
@@ -208,6 +206,22 @@ export function ShoppingPage() {
       fetchShoppingList();
     } catch (err) {
       setError('Failed to remove item');
+    }
+  };
+
+  const handleEditListItem = async (data: {
+    listType: 'need' | 'want';
+    quantity: number;
+    storeId: number | null;
+  }) => {
+    if (!editingListItem) return;
+    try {
+      await shoppingApi.updateListItem(editingListItem.id, data);
+      showSuccessMessage('Item updated!');
+      setEditingListItem(null);
+      fetchShoppingList();
+    } catch (err) {
+      setError('Failed to update item');
     }
   };
 
@@ -341,6 +355,44 @@ export function ShoppingPage() {
     }
   };
 
+  // Create a quick request (from catalog search)
+  const handleCreateQuickRequest = async (data: {
+    name: string;
+    brand?: string;
+    categoryId?: number;
+  }) => {
+    await shoppingApi.createRequest({
+      requestType: 'need',
+      name: data.name,
+      brand: data.brand,
+      category: categories.find((c) => c.id === data.categoryId)?.name,
+    });
+    showSuccessMessage('Request submitted! An admin will review it.');
+    fetchRequests();
+  };
+
+  // Approve request and add to catalog
+  const handleApproveRequestAndAdd = async (request: ShoppingRequest) => {
+    try {
+      // First create the catalog item
+      const result = await shoppingApi.createCatalogItem({
+        name: request.name,
+        brand: request.brand || undefined,
+        categoryId: request.categoryId || undefined,
+        imageUrl: request.imageKey || undefined,
+      });
+
+      // Then approve the request (mark as reviewed)
+      await shoppingApi.approveRequest(request.id, {});
+
+      showSuccessMessage(`"${request.name}" approved and added to catalog!`);
+      fetchRequests();
+      fetchCatalog();
+    } catch (err) {
+      setError('Failed to approve request');
+    }
+  };
+
   const handleAddCategory = async (name: string, color?: string) => {
     try {
       await shoppingApi.createCategory(name, color);
@@ -386,10 +438,9 @@ export function ShoppingPage() {
 
   const itemsByStoreAndCategory = groupItemsByStoreAndCategory(listItems);
 
-  // Tab configuration
+  // Tab configuration - Requests tab removed, integrated into Catalog
   const tabs: Array<{ id: Tab; label: string; icon: any; show: boolean }> = [
     { id: 'list', label: 'List', icon: ShoppingCart, show: true },
-    { id: 'requests', label: 'Requests', icon: ListPlus, show: true },
     { id: 'catalog', label: 'Catalog', icon: Package, show: true },
     { id: 'predictions', label: 'Predict', icon: Sparkles, show: true },
     { id: 'history', label: 'History', icon: History, show: true },
@@ -496,27 +547,13 @@ export function ShoppingPage() {
                   toggleStore={toggleStore}
                   onMarkPurchased={handleMarkPurchased}
                   onRemove={handleRemoveFromList}
+                  onEdit={setEditingListItem}
                   onAddSuggestion={handleAddSuggestion}
                   onAddAllSuggestions={handleAddAllSuggestions}
                   onAddItem={() => setShowAddItemModal(true)}
                   isAdmin={isAdmin}
                 />
               </>
-            )}
-
-            {activeTab === 'requests' && (
-              <RequestsTab
-                requests={requests}
-                catalogItems={catalogItems}
-                categories={categories}
-                isAdmin={isAdmin}
-                isKid={isKid}
-                onApprove={(req) => setSelectedRequest(req)}
-                onDeny={handleDenyRequest}
-                onAddToList={handleAddToListClick}
-                onNewItem={() => setShowNewCatalogItemModal(true)}
-                onRequestItem={() => setShowNewCatalogItemModal(true)}
-              />
             )}
 
             {activeTab === 'catalog' && (
@@ -535,6 +572,11 @@ export function ShoppingPage() {
                 onRefresh={() => fetchCatalog()}
                 isAdmin={isAdmin}
                 isKid={isKid}
+                // Integrated request handling
+                pendingRequests={requests.filter((r) => r.status === 'pending')}
+                onApproveRequest={handleApproveRequestAndAdd}
+                onDenyRequest={handleDenyRequest}
+                onCreateRequest={handleCreateQuickRequest}
               />
             )}
 
@@ -617,6 +659,15 @@ export function ShoppingPage() {
           onClose={() => setShowNewCatalogItemModal(false)}
           onSubmit={handleCreateCatalogItem}
           isAdmin={isAdmin}
+        />
+      )}
+
+      {editingListItem && (
+        <EditListItemModal
+          item={editingListItem}
+          stores={stores}
+          onClose={() => setEditingListItem(null)}
+          onSave={handleEditListItem}
         />
       )}
     </div>

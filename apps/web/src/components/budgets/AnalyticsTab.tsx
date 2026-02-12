@@ -46,8 +46,8 @@ export function AnalyticsTab({ analytics, onRefresh }: AnalyticsTabProps) {
   if (!analytics) {
     return (
       <div className="text-center py-12">
-        <RefreshCw className="w-12 h-12 mx-auto text-gray-400 animate-spin mb-4" />
-        <p className="text-gray-500 dark:text-gray-400">Loading analytics...</p>
+        <RefreshCw className="w-12 h-12 mx-auto text-[var(--color-muted-foreground)] animate-spin mb-4" />
+        <p className="text-[var(--color-muted-foreground)]">Loading analytics...</p>
       </div>
     );
   }
@@ -59,8 +59,8 @@ export function AnalyticsTab({ analytics, onRefresh }: AnalyticsTabProps) {
     if (!active || !payload?.length) return null;
 
     return (
-      <div className="bg-white dark:bg-gray-800 p-3 rounded-lg shadow-lg border border-gray-200 dark:border-gray-700">
-        <p className="font-medium text-gray-900 dark:text-white mb-1">{label}</p>
+      <div className="bg-[var(--color-card)] p-3 rounded-lg shadow-lg border border-[var(--color-border)]">
+        <p className="font-medium text-[var(--color-foreground)] mb-1">{label}</p>
         {payload.map((item: any, index: number) => (
           <p key={index} className="text-sm" style={{ color: item.color }}>
             {item.name}: {formatCurrency(item.value)}
@@ -74,80 +74,83 @@ export function AnalyticsTab({ analytics, onRefresh }: AnalyticsTabProps) {
     <div className="space-y-6">
       {/* Summary Cards */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-        <div className="bg-white dark:bg-gray-800 rounded-xl p-4 shadow-sm border border-gray-200 dark:border-gray-700">
-          <p className="text-sm text-gray-500 dark:text-gray-400">Total Budgeted</p>
-          <p className="text-xl font-bold text-gray-900 dark:text-white mt-1">
+        <div className="themed-card rounded-xl p-4 shadow-sm">
+          <p className="text-sm text-[var(--color-muted-foreground)]">Total Budgeted</p>
+          <p className="text-xl font-bold text-[var(--color-foreground)] mt-1">
             {formatCurrency(summary.totalBudgeted)}
           </p>
         </div>
-        <div className="bg-white dark:bg-gray-800 rounded-xl p-4 shadow-sm border border-gray-200 dark:border-gray-700">
-          <p className="text-sm text-gray-500 dark:text-gray-400">Total Spent</p>
-          <p className="text-xl font-bold text-gray-900 dark:text-white mt-1">
+        <div className="themed-card rounded-xl p-4 shadow-sm">
+          <p className="text-sm text-[var(--color-muted-foreground)]">Total Spent</p>
+          <p className="text-xl font-bold text-[var(--color-foreground)] mt-1">
             {formatCurrency(summary.totalSpent)}
           </p>
         </div>
-        <div className="bg-white dark:bg-gray-800 rounded-xl p-4 shadow-sm border border-gray-200 dark:border-gray-700">
-          <p className="text-sm text-gray-500 dark:text-gray-400">Over Budget</p>
-          <p className="text-xl font-bold text-red-600 dark:text-red-400 mt-1">
+        <div className="themed-card rounded-xl p-4 shadow-sm">
+          <p className="text-sm text-[var(--color-muted-foreground)]">Over Budget</p>
+          <p className="text-xl font-bold text-[var(--color-destructive)] mt-1">
             {summary.overBudgetCount} items
           </p>
         </div>
-        <div className="bg-white dark:bg-gray-800 rounded-xl p-4 shadow-sm border border-gray-200 dark:border-gray-700">
-          <p className="text-sm text-gray-500 dark:text-gray-400">Under Budget</p>
-          <p className="text-xl font-bold text-green-600 dark:text-green-400 mt-1">
+        <div className="themed-card rounded-xl p-4 shadow-sm">
+          <p className="text-sm text-[var(--color-muted-foreground)]">Under Budget</p>
+          <p className="text-xl font-bold text-[var(--color-success)] mt-1">
             {summary.underBudgetCount} items
           </p>
         </div>
       </div>
 
       {/* Chart Selector */}
-      <div className="flex gap-2 border-b border-gray-200 dark:border-gray-700 pb-4">
+      <div className="flex gap-2 border-b border-[var(--color-border)] pb-4">
         <button
           onClick={() => setSelectedChart('pie')}
-          className={`flex items-center gap-2 px-4 py-2 rounded-lg transition-colors ${
+          className="flex items-center gap-2 px-4 py-2 rounded-lg transition-colors"
+          style={
             selectedChart === 'pie'
-              ? 'bg-purple-100 dark:bg-purple-900/30 text-purple-600 dark:text-purple-400'
-              : 'text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-700'
-          }`}
+              ? { backgroundColor: 'color-mix(in srgb, var(--color-primary) 15%, transparent)', color: 'var(--color-primary)' }
+              : { color: 'var(--color-muted-foreground)' }
+          }
         >
           <PieChartIcon className="w-4 h-4" />
           Category Breakdown
         </button>
         <button
           onClick={() => setSelectedChart('trend')}
-          className={`flex items-center gap-2 px-4 py-2 rounded-lg transition-colors ${
+          className="flex items-center gap-2 px-4 py-2 rounded-lg transition-colors"
+          style={
             selectedChart === 'trend'
-              ? 'bg-purple-100 dark:bg-purple-900/30 text-purple-600 dark:text-purple-400'
-              : 'text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-700'
-          }`}
+              ? { backgroundColor: 'color-mix(in srgb, var(--color-primary) 15%, transparent)', color: 'var(--color-primary)' }
+              : { color: 'var(--color-muted-foreground)' }
+          }
         >
           <TrendingUp className="w-4 h-4" />
           Monthly Trends
         </button>
         <button
           onClick={() => setSelectedChart('comparison')}
-          className={`flex items-center gap-2 px-4 py-2 rounded-lg transition-colors ${
+          className="flex items-center gap-2 px-4 py-2 rounded-lg transition-colors"
+          style={
             selectedChart === 'comparison'
-              ? 'bg-purple-100 dark:bg-purple-900/30 text-purple-600 dark:text-purple-400'
-              : 'text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-700'
-          }`}
+              ? { backgroundColor: 'color-mix(in srgb, var(--color-primary) 15%, transparent)', color: 'var(--color-primary)' }
+              : { color: 'var(--color-muted-foreground)' }
+          }
         >
           <BarChart3 className="w-4 h-4" />
           Budget vs Actual
         </button>
         <button
           onClick={onRefresh}
-          className="ml-auto p-2 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300"
+          className="ml-auto p-2 text-[var(--color-muted-foreground)] hover:text-[var(--color-foreground)]"
         >
           <RefreshCw className="w-4 h-4" />
         </button>
       </div>
 
       {/* Charts */}
-      <div className="bg-white dark:bg-gray-800 rounded-xl p-6 shadow-sm border border-gray-200 dark:border-gray-700">
+      <div className="themed-card rounded-xl p-6 shadow-sm">
         {selectedChart === 'pie' && (
           <div>
-            <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">
+            <h3 className="text-lg font-semibold text-[var(--color-foreground)] mb-4">
               Spending by Category
             </h3>
             {categoryBreakdown.length > 0 ? (
@@ -183,13 +186,13 @@ export function AnalyticsTab({ analytics, onRefresh }: AnalyticsTabProps) {
                           className="w-3 h-3 rounded-full"
                           style={{ backgroundColor: cat.color || '#6b7280' }}
                         />
-                        <span className="text-gray-900 dark:text-white">{cat.categoryName}</span>
+                        <span className="text-[var(--color-foreground)]">{cat.categoryName}</span>
                       </div>
                       <div className="text-right">
-                        <span className="font-medium text-gray-900 dark:text-white">
+                        <span className="font-medium text-[var(--color-foreground)]">
                           {formatCurrency(cat.total)}
                         </span>
-                        <span className="text-sm text-gray-500 dark:text-gray-400 ml-2">
+                        <span className="text-sm text-[var(--color-muted-foreground)] ml-2">
                           ({cat.percentage.toFixed(1)}%)
                         </span>
                       </div>
@@ -198,7 +201,7 @@ export function AnalyticsTab({ analytics, onRefresh }: AnalyticsTabProps) {
                 </div>
               </div>
             ) : (
-              <div className="text-center py-12 text-gray-500 dark:text-gray-400">
+              <div className="text-center py-12 text-[var(--color-muted-foreground)]">
                 No spending data available for this period
               </div>
             )}
@@ -207,23 +210,23 @@ export function AnalyticsTab({ analytics, onRefresh }: AnalyticsTabProps) {
 
         {selectedChart === 'trend' && (
           <div>
-            <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">
+            <h3 className="text-lg font-semibold text-[var(--color-foreground)] mb-4">
               Monthly Spending Trends
             </h3>
             {monthlyTrends.length > 0 ? (
               <div className="h-80">
                 <ResponsiveContainer width="100%" height="100%">
                   <LineChart data={monthlyTrends}>
-                    <CartesianGrid strokeDasharray="3 3" stroke="#374151" opacity={0.3} />
+                    <CartesianGrid strokeDasharray="3 3" stroke="var(--color-border)" opacity={0.5} />
                     <XAxis
                       dataKey="monthName"
-                      tick={{ fill: '#9ca3af', fontSize: 12 }}
-                      axisLine={{ stroke: '#374151' }}
+                      tick={{ fill: 'var(--color-muted-foreground)', fontSize: 12 }}
+                      axisLine={{ stroke: 'var(--color-border)' }}
                     />
                     <YAxis
                       tickFormatter={(v) => `$${v / 1000}k`}
-                      tick={{ fill: '#9ca3af', fontSize: 12 }}
-                      axisLine={{ stroke: '#374151' }}
+                      tick={{ fill: 'var(--color-muted-foreground)', fontSize: 12 }}
+                      axisLine={{ stroke: 'var(--color-border)' }}
                     />
                     <Tooltip content={<CustomTooltip />} />
                     <Legend />
@@ -248,7 +251,7 @@ export function AnalyticsTab({ analytics, onRefresh }: AnalyticsTabProps) {
                 </ResponsiveContainer>
               </div>
             ) : (
-              <div className="text-center py-12 text-gray-500 dark:text-gray-400">
+              <div className="text-center py-12 text-[var(--color-muted-foreground)]">
                 No trend data available
               </div>
             )}
@@ -257,7 +260,7 @@ export function AnalyticsTab({ analytics, onRefresh }: AnalyticsTabProps) {
 
         {selectedChart === 'comparison' && (
           <div>
-            <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">
+            <h3 className="text-lg font-semibold text-[var(--color-foreground)] mb-4">
               Budget vs Actual Spending
             </h3>
             {budgetComparison.length > 0 ? (
@@ -268,18 +271,18 @@ export function AnalyticsTab({ analytics, onRefresh }: AnalyticsTabProps) {
                     layout="vertical"
                     margin={{ left: 100 }}
                   >
-                    <CartesianGrid strokeDasharray="3 3" stroke="#374151" opacity={0.3} />
+                    <CartesianGrid strokeDasharray="3 3" stroke="var(--color-border)" opacity={0.5} />
                     <XAxis
                       type="number"
                       tickFormatter={(v) => `$${v}`}
-                      tick={{ fill: '#9ca3af', fontSize: 12 }}
-                      axisLine={{ stroke: '#374151' }}
+                      tick={{ fill: 'var(--color-muted-foreground)', fontSize: 12 }}
+                      axisLine={{ stroke: 'var(--color-border)' }}
                     />
                     <YAxis
                       type="category"
                       dataKey="name"
-                      tick={{ fill: '#9ca3af', fontSize: 12 }}
-                      axisLine={{ stroke: '#374151' }}
+                      tick={{ fill: 'var(--color-muted-foreground)', fontSize: 12 }}
+                      axisLine={{ stroke: 'var(--color-border)' }}
                       width={100}
                     />
                     <Tooltip content={<CustomTooltip />} />
@@ -290,7 +293,7 @@ export function AnalyticsTab({ analytics, onRefresh }: AnalyticsTabProps) {
                 </ResponsiveContainer>
               </div>
             ) : (
-              <div className="text-center py-12 text-gray-500 dark:text-gray-400">
+              <div className="text-center py-12 text-[var(--color-muted-foreground)]">
                 No comparison data available
               </div>
             )}
@@ -299,7 +302,7 @@ export function AnalyticsTab({ analytics, onRefresh }: AnalyticsTabProps) {
       </div>
 
       {/* Period Info */}
-      <div className="text-center text-sm text-gray-500 dark:text-gray-400">
+      <div className="text-center text-sm text-[var(--color-muted-foreground)]">
         <Calendar className="w-4 h-4 inline mr-1" />
         Showing data from {period.startDate} to {period.endDate}
       </div>

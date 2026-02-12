@@ -18,6 +18,7 @@ import { api, type CalendarEvent, type CreateEventData, type ChoreInstance } fro
 import { mealsApi } from '../api/meals';
 import { useAuth } from '../context/AuthContext';
 import type { MealPlan } from '../types/meals';
+import { ModalPortal, ModalBody } from '../components/common/ModalPortal';
 
 const DAYS = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
 const MONTHS = [
@@ -720,179 +721,171 @@ export function CalendarPage() {
       )}
 
       {/* Event Form Modal */}
-      {showEventModal && (
-        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
-          <div className="themed-card w-full max-w-md p-6 max-h-[90vh] overflow-y-auto m-4">
-            <div className="flex items-center justify-between mb-6">
-              <h2 className="text-xl font-semibold text-[var(--color-foreground)]">
-                {selectedEvent ? 'Edit Event' : 'New Event'}
-              </h2>
-              <button
-                onClick={closeModals}
-                className="p-2 hover:bg-[var(--color-muted)] rounded-lg transition-colors"
-              >
-                <X size={20} className="text-[var(--color-muted-foreground)]" />
-              </button>
+      <ModalPortal
+        isOpen={showEventModal}
+        onClose={closeModals}
+        title={selectedEvent ? 'Edit Event' : 'New Event'}
+        size="md"
+        className="themed-card"
+      >
+        <ModalBody>
+          <form onSubmit={handleSubmit} className="space-y-4">
+            <div>
+              <label className="block text-sm font-medium text-[var(--color-foreground)] mb-1">
+                Title
+              </label>
+              <input
+                type="text"
+                value={formData.title}
+                onChange={(e) => setFormData({ ...formData, title: e.target.value })}
+                className="themed-input w-full"
+                placeholder="Event title"
+                required
+              />
             </div>
 
-            <form onSubmit={handleSubmit} className="space-y-4">
+            {/* Assigned To - Only show dropdown for admins */}
+            {canAssignToOthers && (
               <div>
                 <label className="block text-sm font-medium text-[var(--color-foreground)] mb-1">
-                  Title
+                  Assigned To
                 </label>
-                <input
-                  type="text"
-                  value={formData.title}
-                  onChange={(e) => setFormData({ ...formData, title: e.target.value })}
+                <select
+                  value={formData.assignedTo || ''}
+                  onChange={(e) =>
+                    setFormData({
+                      ...formData,
+                      assignedTo: e.target.value ? Number(e.target.value) : undefined,
+                    })
+                  }
                   className="themed-input w-full"
-                  placeholder="Event title"
-                  required
-                />
-              </div>
-
-              {/* Assigned To - Only show dropdown for admins */}
-              {canAssignToOthers && (
-                <div>
-                  <label className="block text-sm font-medium text-[var(--color-foreground)] mb-1">
-                    Assigned To
-                  </label>
-                  <select
-                    value={formData.assignedTo || ''}
-                    onChange={(e) =>
-                      setFormData({
-                        ...formData,
-                        assignedTo: e.target.value ? Number(e.target.value) : undefined,
-                      })
-                    }
-                    className="themed-input w-full"
-                  >
-                    <option value="">Everyone / Unassigned</option>
-                    {users.map((u) => (
-                      <option key={u.id} value={u.id}>
-                        {u.nickname || u.displayName} ({u.roleId})
-                      </option>
-                    ))}
-                  </select>
-                </div>
-              )}
-
-              <div className="flex items-center gap-3">
-                <input
-                  type="checkbox"
-                  id="allDay"
-                  checked={formData.allDay}
-                  onChange={(e) => setFormData({ ...formData, allDay: e.target.checked })}
-                  className="w-4 h-4 text-[var(--color-primary)] rounded focus:ring-[var(--color-primary)]"
-                />
-                <label htmlFor="allDay" className="text-sm text-[var(--color-foreground)]">
-                  All day event
-                </label>
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium text-[var(--color-foreground)] mb-1">
-                  {formData.allDay ? 'Date' : 'Start'}
-                </label>
-                <input
-                  type={formData.allDay ? 'date' : 'datetime-local'}
-                  value={formData.allDay ? formData.start.slice(0, 10) : formData.start}
-                  onChange={(e) => setFormData({ ...formData, start: e.target.value })}
-                  className="themed-input w-full"
-                  required
-                />
-              </div>
-
-              {!formData.allDay && (
-                <div>
-                  <label className="block text-sm font-medium text-[var(--color-foreground)] mb-1">
-                    End (optional)
-                  </label>
-                  <input
-                    type="datetime-local"
-                    value={formData.end}
-                    onChange={(e) => setFormData({ ...formData, end: e.target.value })}
-                    className="themed-input w-full"
-                  />
-                </div>
-              )}
-
-              <div>
-                <label className="block text-sm font-medium text-[var(--color-foreground)] mb-1">
-                  Location
-                </label>
-                <input
-                  type="text"
-                  value={formData.location}
-                  onChange={(e) => setFormData({ ...formData, location: e.target.value })}
-                  className="themed-input w-full"
-                  placeholder="Event location"
-                />
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium text-[var(--color-foreground)] mb-1">
-                  Description
-                </label>
-                <textarea
-                  value={formData.description}
-                  onChange={(e) => setFormData({ ...formData, description: e.target.value })}
-                  className="themed-input w-full"
-                  placeholder="Event description"
-                  rows={3}
-                />
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium text-[var(--color-foreground)] mb-2">
-                  Color
-                </label>
-                <div className="flex gap-2">
-                  {COLORS.map((color) => (
-                    <button
-                      key={color.value}
-                      type="button"
-                      onClick={() => setFormData({ ...formData, color: color.value })}
-                      className={`w-8 h-8 rounded-full transition-transform ${
-                        formData.color === color.value
-                          ? 'ring-2 ring-offset-2 ring-[var(--color-border)] scale-110'
-                          : ''
-                      }`}
-                      style={{ backgroundColor: color.value }}
-                      title={color.name}
-                    />
+                >
+                  <option value="">Everyone / Unassigned</option>
+                  {users.map((u) => (
+                    <option key={u.id} value={u.id}>
+                      {u.nickname || u.displayName} ({u.roleId})
+                    </option>
                   ))}
-                </div>
+                </select>
               </div>
+            )}
 
-              <div className="flex gap-3 pt-4">
-                {selectedEvent && (
+            <div className="flex items-center gap-3">
+              <input
+                type="checkbox"
+                id="allDay"
+                checked={formData.allDay}
+                onChange={(e) => setFormData({ ...formData, allDay: e.target.checked })}
+                className="w-4 h-4 text-[var(--color-primary)] rounded focus:ring-[var(--color-primary)]"
+              />
+              <label htmlFor="allDay" className="text-sm text-[var(--color-foreground)]">
+                All day event
+              </label>
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium text-[var(--color-foreground)] mb-1">
+                {formData.allDay ? 'Date' : 'Start'}
+              </label>
+              <input
+                type={formData.allDay ? 'date' : 'datetime-local'}
+                value={formData.allDay ? formData.start.slice(0, 10) : formData.start}
+                onChange={(e) => setFormData({ ...formData, start: e.target.value })}
+                className="themed-input w-full"
+                required
+              />
+            </div>
+
+            {!formData.allDay && (
+              <div>
+                <label className="block text-sm font-medium text-[var(--color-foreground)] mb-1">
+                  End (optional)
+                </label>
+                <input
+                  type="datetime-local"
+                  value={formData.end}
+                  onChange={(e) => setFormData({ ...formData, end: e.target.value })}
+                  className="themed-input w-full"
+                />
+              </div>
+            )}
+
+            <div>
+              <label className="block text-sm font-medium text-[var(--color-foreground)] mb-1">
+                Location
+              </label>
+              <input
+                type="text"
+                value={formData.location}
+                onChange={(e) => setFormData({ ...formData, location: e.target.value })}
+                className="themed-input w-full"
+                placeholder="Event location"
+              />
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium text-[var(--color-foreground)] mb-1">
+                Description
+              </label>
+              <textarea
+                value={formData.description}
+                onChange={(e) => setFormData({ ...formData, description: e.target.value })}
+                className="themed-input w-full"
+                placeholder="Event description"
+                rows={3}
+              />
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium text-[var(--color-foreground)] mb-2">
+                Color
+              </label>
+              <div className="flex gap-2">
+                {COLORS.map((color) => (
                   <button
+                    key={color.value}
                     type="button"
-                    onClick={handleDelete}
-                    className="px-4 py-2 text-[var(--color-destructive)] hover:bg-[var(--color-destructive)]/10 rounded-xl transition-colors"
-                  >
-                    Delete
-                  </button>
-                )}
-                <div className="flex-1" />
+                    onClick={() => setFormData({ ...formData, color: color.value })}
+                    className={`w-8 h-8 rounded-full transition-transform ${
+                      formData.color === color.value
+                        ? 'ring-2 ring-offset-2 ring-[var(--color-border)] scale-110'
+                        : ''
+                    }`}
+                    style={{ backgroundColor: color.value }}
+                    title={color.name}
+                  />
+                ))}
+              </div>
+            </div>
+
+            <div className="flex gap-3 pt-4">
+              {selectedEvent && (
                 <button
                   type="button"
-                  onClick={closeModals}
-                  className="themed-btn-secondary"
+                  onClick={handleDelete}
+                  className="px-4 py-2 text-[var(--color-destructive)] hover:bg-[var(--color-destructive)]/10 rounded-xl transition-colors"
                 >
-                  Cancel
+                  Delete
                 </button>
-                <button
-                  type="submit"
-                  className="themed-btn-primary"
-                >
-                  {selectedEvent ? 'Save' : 'Create'}
-                </button>
-              </div>
-            </form>
-          </div>
-        </div>
-      )}
+              )}
+              <div className="flex-1" />
+              <button
+                type="button"
+                onClick={closeModals}
+                className="themed-btn-secondary"
+              >
+                Cancel
+              </button>
+              <button
+                type="submit"
+                className="themed-btn-primary"
+              >
+                {selectedEvent ? 'Save' : 'Create'}
+              </button>
+            </div>
+          </form>
+        </ModalBody>
+      </ModalPortal>
 
       {/* Chore Action Modal */}
       {selectedChore && (
@@ -948,177 +941,169 @@ function DayDetailModal({
     );
   };
 
+  const modalTitle = (
+    <div>
+      <span>{isTodayDate(date) ? 'Today' : formatFullDate(date)}</span>
+      {isTodayDate(date) && (
+        <p className="text-sm text-[var(--color-muted-foreground)] font-normal">{formatFullDate(date)}</p>
+      )}
+    </div>
+  );
+
   return (
-    <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
-      <div className="themed-card w-full max-w-lg p-6 max-h-[90vh] overflow-hidden flex flex-col m-4">
-        {/* Header */}
-        <div className="flex items-center justify-between mb-4">
-          <div>
-            <h2 className="text-xl font-semibold text-[var(--color-foreground)]">
-              {isTodayDate(date) ? 'Today' : formatFullDate(date)}
-            </h2>
-            {isTodayDate(date) && (
-              <p className="text-sm text-[var(--color-muted-foreground)]">{formatFullDate(date)}</p>
-            )}
-          </div>
-          <button
-            onClick={onClose}
-            className="p-2 hover:bg-[var(--color-muted)] rounded-lg"
-          >
-            <X size={20} className="text-[var(--color-muted-foreground)]" />
-          </button>
-        </div>
-
-        {/* Content */}
-        <div className="flex-1 overflow-y-auto space-y-4">
-          {/* Events Section */}
-          <div>
-            <div className="flex items-center justify-between mb-2">
-              <h3 className="text-sm font-medium text-[var(--color-foreground)] flex items-center gap-2">
-                <Calendar size={16} />
-                Events ({events.length})
-              </h3>
-              <button
-                onClick={onNewEvent}
-                className="text-sm text-[var(--color-primary)] hover:text-[var(--color-primary)]/80 font-medium flex items-center gap-1"
-              >
-                <Plus size={14} />
-                Add Event
-              </button>
-            </div>
-
-            {events.length === 0 ? (
-              <p className="text-sm text-[var(--color-muted-foreground)] py-4 text-center">
-                No events scheduled
-              </p>
-            ) : (
-              <div className="space-y-2">
-                {events.map((event) => (
-                  <div
-                    key={event.id}
-                    onClick={() => onEditEvent(event)}
-                    className="p-3 rounded-xl border border-[var(--color-border)] hover:border-[var(--color-border)]/80 cursor-pointer transition-colors"
-                  >
-                    <div className="flex items-start gap-3">
-                      <div
-                        className="w-3 h-3 rounded-full mt-1.5 flex-shrink-0"
-                        style={{ backgroundColor: event.color || '#3b82f6' }}
-                      />
-                      <div className="flex-1 min-w-0">
-                        <p className="font-medium text-[var(--color-foreground)]">
-                          {event.title}
-                        </p>
-                        <div className="flex items-center gap-3 mt-1 text-sm text-[var(--color-muted-foreground)]">
-                          {!event.allDay && (
-                            <span className="flex items-center gap-1">
-                              <Clock size={12} />
-                              {formatTime(event.start)}
-                              {event.end && ` - ${formatTime(event.end)}`}
-                            </span>
-                          )}
-                          {event.allDay && <span>All day</span>}
-                          {event.location && (
-                            <span className="flex items-center gap-1">
-                              <MapPin size={12} />
-                              {event.location}
-                            </span>
-                          )}
-                        </div>
-                        {event.assignedToName && (
-                          <p className="text-sm text-[var(--color-muted-foreground)] mt-1">
-                            Assigned to: {event.assignedToName}
-                          </p>
-                        )}
-                      </div>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            )}
+    <ModalPortal
+      isOpen={true}
+      onClose={onClose}
+      title={isTodayDate(date) ? 'Today' : formatFullDate(date)}
+      size="lg"
+      className="themed-card"
+      footer={
+        <button
+          onClick={onClose}
+          className="w-full themed-btn-secondary"
+        >
+          Close
+        </button>
+      }
+    >
+      <ModalBody className="space-y-4">
+        {/* Events Section */}
+        <div>
+          <div className="flex items-center justify-between mb-2">
+            <h3 className="text-sm font-medium text-[var(--color-foreground)] flex items-center gap-2">
+              <Calendar size={16} />
+              Events ({events.length})
+            </h3>
+            <button
+              onClick={onNewEvent}
+              className="text-sm text-[var(--color-primary)] hover:text-[var(--color-primary)]/80 font-medium flex items-center gap-1"
+            >
+              <Plus size={14} />
+              Add Event
+            </button>
           </div>
 
-          {/* Chores Section */}
-          {chores.length > 0 && (
-            <div>
-              <h3 className="text-sm font-medium text-[var(--color-foreground)] flex items-center gap-2 mb-2">
-                <CheckSquare size={16} />
-                Chores ({chores.length})
-              </h3>
-              <div className="space-y-2">
-                {chores.map((chore) => {
-                  const isCompleted = chore.status === 'completed' || chore.status === 'approved';
-                  const isPending = chore.status === 'pending';
-
-                  return (
+          {events.length === 0 ? (
+            <p className="text-sm text-[var(--color-muted-foreground)] py-4 text-center">
+              No events scheduled
+            </p>
+          ) : (
+            <div className="space-y-2">
+              {events.map((event) => (
+                <div
+                  key={event.id}
+                  onClick={() => onEditEvent(event)}
+                  className="p-3 rounded-xl border border-[var(--color-border)] hover:border-[var(--color-border)]/80 cursor-pointer transition-colors"
+                >
+                  <div className="flex items-start gap-3">
                     <div
-                      key={chore.id}
-                      className={`p-3 rounded-xl border transition-colors ${
-                        isCompleted
-                          ? 'bg-[var(--color-success)]/10 border-[var(--color-success)]/30'
-                          : 'border-[var(--color-border)]'
-                      }`}
-                    >
-                      <div className="flex items-center gap-3">
-                        <div
-                          className="w-3 h-3 rounded-full flex-shrink-0"
-                          style={{ backgroundColor: chore.categoryColor || '#8b5cf6' }}
-                        />
-                        <div className="flex-1 min-w-0">
-                          <p
-                            className={`font-medium ${isCompleted ? 'text-[var(--color-muted-foreground)] line-through' : 'text-[var(--color-foreground)]'}`}
-                          >
-                            {chore.title}
-                          </p>
-                          <div className="flex items-center gap-2 mt-1 text-sm text-[var(--color-muted-foreground)]">
-                            <span>{chore.points} pts</span>
-                            {chore.assignedToName && <span>• {chore.assignedToName}</span>}
-                          </div>
-                        </div>
-
-                        {isPending && (
-                          <div className="flex gap-1">
-                            <button
-                              onClick={() => onCompleteChore(chore)}
-                              className="p-2 bg-[var(--color-success)]/10 text-[var(--color-success)] rounded-lg hover:bg-[var(--color-success)]/20 transition-colors"
-                              title="Complete"
-                            >
-                              <Check size={16} />
-                            </button>
-                            <button
-                              onClick={() => onSkipChore(chore)}
-                              className="p-2 bg-[var(--color-warning)]/10 text-[var(--color-warning)] rounded-lg hover:bg-[var(--color-warning)]/20 transition-colors"
-                              title="Skip"
-                            >
-                              <SkipForward size={16} />
-                            </button>
-                          </div>
+                      className="w-3 h-3 rounded-full mt-1.5 flex-shrink-0"
+                      style={{ backgroundColor: event.color || '#3b82f6' }}
+                    />
+                    <div className="flex-1 min-w-0">
+                      <p className="font-medium text-[var(--color-foreground)]">
+                        {event.title}
+                      </p>
+                      <div className="flex items-center gap-3 mt-1 text-sm text-[var(--color-muted-foreground)]">
+                        {!event.allDay && (
+                          <span className="flex items-center gap-1">
+                            <Clock size={12} />
+                            {formatTime(event.start)}
+                            {event.end && ` - ${formatTime(event.end)}`}
+                          </span>
                         )}
-
-                        {isCompleted && (
-                          <span className="text-[var(--color-success)] text-sm font-medium">
-                            ✓ Done
+                        {event.allDay && <span>All day</span>}
+                        {event.location && (
+                          <span className="flex items-center gap-1">
+                            <MapPin size={12} />
+                            {event.location}
                           </span>
                         )}
                       </div>
+                      {event.assignedToName && (
+                        <p className="text-sm text-[var(--color-muted-foreground)] mt-1">
+                          Assigned to: {event.assignedToName}
+                        </p>
+                      )}
                     </div>
-                  );
-                })}
-              </div>
+                  </div>
+                </div>
+              ))}
             </div>
           )}
         </div>
 
-        {/* Footer */}
-        <div className="pt-4 mt-4 border-t border-[var(--color-border)]">
-          <button
-            onClick={onClose}
-            className="w-full themed-btn-secondary"
-          >
-            Close
-          </button>
-        </div>
-      </div>
-    </div>
+        {/* Chores Section */}
+        {chores.length > 0 && (
+          <div>
+            <h3 className="text-sm font-medium text-[var(--color-foreground)] flex items-center gap-2 mb-2">
+              <CheckSquare size={16} />
+              Chores ({chores.length})
+            </h3>
+            <div className="space-y-2">
+              {chores.map((chore) => {
+                const isCompleted = chore.status === 'completed' || chore.status === 'approved';
+                const isPending = chore.status === 'pending';
+
+                return (
+                  <div
+                    key={chore.id}
+                    className={`p-3 rounded-xl border transition-colors ${
+                      isCompleted
+                        ? 'bg-[var(--color-success)]/10 border-[var(--color-success)]/30'
+                        : 'border-[var(--color-border)]'
+                    }`}
+                  >
+                    <div className="flex items-center gap-3">
+                      <div
+                        className="w-3 h-3 rounded-full flex-shrink-0"
+                        style={{ backgroundColor: chore.categoryColor || '#8b5cf6' }}
+                      />
+                      <div className="flex-1 min-w-0">
+                        <p
+                          className={`font-medium ${isCompleted ? 'text-[var(--color-muted-foreground)] line-through' : 'text-[var(--color-foreground)]'}`}
+                        >
+                          {chore.title}
+                        </p>
+                        <div className="flex items-center gap-2 mt-1 text-sm text-[var(--color-muted-foreground)]">
+                          <span>{chore.points} pts</span>
+                          {chore.assignedToName && <span>• {chore.assignedToName}</span>}
+                        </div>
+                      </div>
+
+                      {isPending && (
+                        <div className="flex gap-1">
+                          <button
+                            onClick={() => onCompleteChore(chore)}
+                            className="p-2 bg-[var(--color-success)]/10 text-[var(--color-success)] rounded-lg hover:bg-[var(--color-success)]/20 transition-colors"
+                            title="Complete"
+                          >
+                            <Check size={16} />
+                          </button>
+                          <button
+                            onClick={() => onSkipChore(chore)}
+                            className="p-2 bg-[var(--color-warning)]/10 text-[var(--color-warning)] rounded-lg hover:bg-[var(--color-warning)]/20 transition-colors"
+                            title="Skip"
+                          >
+                            <SkipForward size={16} />
+                          </button>
+                        </div>
+                      )}
+
+                      {isCompleted && (
+                        <span className="text-[var(--color-success)] text-sm font-medium">
+                          ✓ Done
+                        </span>
+                      )}
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+        )}
+      </ModalBody>
+    </ModalPortal>
   );
 }
 
@@ -1148,18 +1133,22 @@ function ChoreActionModal({
   };
 
   return (
-    <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
-      <div className="themed-card w-full max-w-sm p-6 m-4">
-        <div className="flex items-center justify-between mb-4">
-          <h2 className="text-lg font-semibold text-[var(--color-foreground)]">Chore Details</h2>
-          <button
-            onClick={onClose}
-            className="p-2 hover:bg-[var(--color-muted)] rounded-lg"
-          >
-            <X size={20} className="text-[var(--color-muted-foreground)]" />
-          </button>
-        </div>
-
+    <ModalPortal
+      isOpen={true}
+      onClose={onClose}
+      title="Chore Details"
+      size="sm"
+      className="themed-card"
+      footer={
+        <button
+          onClick={onClose}
+          className="w-full themed-btn-secondary"
+        >
+          Close
+        </button>
+      }
+    >
+      <ModalBody>
         <div className="mb-4 p-4 bg-[var(--color-muted)]/50 rounded-xl">
           <div className="flex items-center gap-3 mb-2">
             <div
@@ -1236,15 +1225,8 @@ function ChoreActionModal({
             {chore.pointsAwarded && ` (+${chore.pointsAwarded} points)`}
           </div>
         )}
-
-        <button
-          onClick={onClose}
-          className="w-full mt-4 themed-btn-secondary"
-        >
-          Close
-        </button>
-      </div>
-    </div>
+      </ModalBody>
+    </ModalPortal>
   );
 }
 

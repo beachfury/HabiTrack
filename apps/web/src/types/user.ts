@@ -11,6 +11,8 @@ export interface User {
   role: 'admin' | 'member' | 'kid';
   color: string | null;
   avatarUrl: string | null;
+  /** True if this is a kiosk session (PIN login from local network) */
+  isKiosk?: boolean;
 }
 
 export interface FamilyMember extends User {

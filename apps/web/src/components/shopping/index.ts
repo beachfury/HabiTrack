@@ -18,4 +18,4 @@ export { ManageTab } from './ManageTab';
 export { MealIngredientsCard } from './MealIngredientsCard';
 
 // Modals
-export { CatalogBrowserModal, StoreSelectModal, NewItemModal } from './modals';
+export { CatalogBrowserModal, StoreSelectModal, NewItemModal, EditListItemModal } from './modals';

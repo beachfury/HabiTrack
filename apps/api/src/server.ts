@@ -18,9 +18,16 @@ import { issueCsrf, csrfProtect } from './csrf';
 import router from './router';
 import { setTimezone } from './utils/date';
 import { q } from './db';
+import { kioskRestrictions } from './middleware';
 
 // Import and start calendar reminder service
 import { startReminderService } from './services/calendarReminders';
+
+// Import and start chore reminder service
+import { startChoreReminderService } from './services/choreReminders';
+
+// Import email notification worker (starts automatically on import)
+import './workers/send-notifications';
 
 const cfg = parseEnv(process.env);
 const app = express();
@@ -82,6 +89,14 @@ app.get('/api/_debug/csrf', (req, res) => {
     sameSite: String(cfg.HABITRACK_COOKIE_SAMESITE ?? 'Lax'),
   });
 });
+
+// =============================================================================
+// KIOSK RESTRICTIONS (applies to all API routes)
+// =============================================================================
+// SECURITY: Kiosk sessions have restricted access to certain routes
+// This middleware checks if the session is a kiosk session and blocks
+// access to admin, settings, and other sensitive endpoints
+app.use('/api', kioskRestrictions);
 
 // =============================================================================
 // API ROUTES
@@ -148,5 +163,8 @@ initializeTimezone();
 
 // Start calendar reminder service
 startReminderService();
+
+// Start chore reminder service
+startChoreReminderService();
 
 export default app;

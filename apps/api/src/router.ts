@@ -9,6 +9,7 @@ import {
   forgotPasswordRateLimiter,
   writeRateLimiter,
 } from './rate-limit';
+import { kioskLocalOnly, kioskRestrictions } from './middleware';
 
 // Import from modular routes
 import * as auth from './routes/auth';
@@ -30,6 +31,7 @@ import * as dashboard from './routes/dashboard';
 import * as budgets from './routes/budgets';
 import * as meals from './routes/meals';
 import { deleteDirectMessage, deleteConversation } from './routes/messages/direct';
+import notificationsRouter from './routes/notifications';
 
 const router = Router();
 
@@ -56,10 +58,11 @@ router.post('/auth/creds/change', requireAuth(), auth.postChangePassword);
 router.post('/auth/creds/forgot', forgotPasswordRateLimiter, auth.postForgotPassword);
 router.post('/auth/creds/reset', auth.postResetPassword);
 
-// PIN Auth
-router.get('/auth/pin/users', auth.getPinUsers);
-router.post('/auth/pin/login', loginRateLimiter, auth.postPinLogin);
-router.post('/auth/pin/verify', auth.verifyPin);
+// PIN Auth (KIOSK MODE - LOCAL NETWORK ONLY)
+// SECURITY: kioskLocalOnly middleware ensures these endpoints are ONLY accessible from local network
+router.get('/auth/pin/users', kioskLocalOnly, auth.getPinUsers);
+router.post('/auth/pin/login', kioskLocalOnly, loginRateLimiter, auth.postPinLogin);
+router.post('/auth/pin/verify', kioskLocalOnly, auth.verifyPin);
 
 // Onboarding
 router.post('/auth/onboard/complete', auth.postOnboardComplete);
@@ -387,6 +390,11 @@ router.delete('/messages/:id', requireAuth(), messages.deleteMessage);
 
 // Delete all read notifications (generic path last)
 router.delete('/messages', requireAuth(), messages.deleteAllRead);
+
+// =============================================================================
+// NOTIFICATION PREFERENCES ROUTES
+// =============================================================================
+router.use('/notifications', notificationsRouter);
 
 // =============================================================================
 // UPLOAD ROUTES

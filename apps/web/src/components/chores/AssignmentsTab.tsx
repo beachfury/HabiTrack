@@ -13,6 +13,7 @@ import {
   ChevronDown,
   X,
 } from 'lucide-react';
+import { ModalPortal, ModalBody } from '../common/ModalPortal';
 import { choresApi } from '../../api';
 
 interface AssignedChore {
@@ -475,15 +476,12 @@ export function AssignmentsTab({ onRefresh }: AssignmentsTabProps) {
 
       {/* Bulk Delete Confirmation Modal */}
       {showBulkDeleteModal && (
-        <div className="themed-modal-backdrop fixed inset-0 z-50 flex items-center justify-center p-4">
-          <div className="themed-modal p-6 max-w-md w-full">
-            <h3 className="text-lg font-semibold text-[var(--color-foreground)] mb-2">
-              Delete {selectedIds.size} Assignment{selectedIds.size !== 1 ? 's' : ''}?
-            </h3>
-            <p className="text-[var(--color-muted-foreground)] mb-4">
-              This action cannot be undone. The selected chore assignments will be permanently
-              removed.
-            </p>
+        <ModalPortal
+          isOpen={true}
+          onClose={() => setShowBulkDeleteModal(false)}
+          title={`Delete ${selectedIds.size} Assignment${selectedIds.size !== 1 ? 's' : ''}?`}
+          size="md"
+          footer={
             <div className="flex gap-3 justify-end">
               <button
                 onClick={() => setShowBulkDeleteModal(false)}
@@ -498,8 +496,15 @@ export function AssignmentsTab({ onRefresh }: AssignmentsTabProps) {
                 Delete
               </button>
             </div>
-          </div>
-        </div>
+          }
+        >
+          <ModalBody>
+            <p className="text-[var(--color-muted-foreground)]">
+              This action cannot be undone. The selected chore assignments will be permanently
+              removed.
+            </p>
+          </ModalBody>
+        </ModalPortal>
       )}
     </div>
   );

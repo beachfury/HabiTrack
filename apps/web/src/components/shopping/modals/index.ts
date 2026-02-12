@@ -2,3 +2,4 @@
 export { CatalogBrowserModal } from './CatalogBrowserModal';
 export { StoreSelectModal } from './StoreSelectModal';
 export { NewItemModal } from './NewItemModal';
+export { EditListItemModal } from './EditListItemModal';

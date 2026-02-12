@@ -1,6 +1,7 @@
 // apps/web/src/components/calendar/DayDetailModal.tsx
-import { X, Plus, Clock, MapPin, Check, SkipForward, Calendar } from 'lucide-react';
+import { Plus, Clock, MapPin, Check, SkipForward, Calendar } from 'lucide-react';
 import type { CalendarEvent, ChoreInstance } from '../../types';
+import { ModalPortal, ModalBody } from '../common/ModalPortal';
 
 interface DayDetailModalProps {
   date: Date;
@@ -42,23 +43,14 @@ export function DayDetailModal({
   };
 
   return (
-    <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
-      <div className="bg-white dark:bg-gray-800 rounded-2xl w-full max-w-md max-h-[80vh] overflow-hidden flex flex-col shadow-xl">
-        <div className="p-4 border-b border-gray-100 dark:border-gray-700 flex items-center justify-between flex-shrink-0">
-          <div>
-            <h2 className="text-lg font-semibold text-gray-900 dark:text-white">
-              {formatFullDate(date)}
-            </h2>
-          </div>
-          <button
-            onClick={onClose}
-            className="p-1 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg"
-          >
-            <X size={20} />
-          </button>
-        </div>
-
-        <div className="flex-1 overflow-y-auto p-4 space-y-4">
+    <ModalPortal
+      isOpen={true}
+      onClose={onClose}
+      title={formatFullDate(date)}
+      size="md"
+    >
+      <ModalBody>
+        <div className="space-y-4">
           {/* Add Event Button */}
           <button
             onClick={onAddEvent}
@@ -196,7 +188,7 @@ export function DayDetailModal({
             </div>
           )}
         </div>
-      </div>
-    </div>
+      </ModalBody>
+    </ModalPortal>
   );
 }

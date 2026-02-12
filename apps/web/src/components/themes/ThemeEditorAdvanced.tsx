@@ -4,6 +4,7 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { X, Save, Undo2, Palette, Layout, Type, Layers, Wand2, Upload, Image, Trash2 } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
+import { useTheme } from '../../context/ThemeContext';
 import type {
   Theme,
   ThemeColors,
@@ -48,6 +49,7 @@ interface ThemeEditorAdvancedProps {
 
 export function ThemeEditorAdvanced({ theme, onSave, onClose }: ThemeEditorAdvancedProps) {
   const { user } = useAuth();
+  const { resolvedTheme } = useTheme();
   const isAdmin = user?.role === 'admin';
   const isEditing = !!theme;
   const isSystemTheme = theme?.isSystemTheme === true;
@@ -80,7 +82,8 @@ export function ThemeEditorAdvanced({ theme, onSave, onClose }: ThemeEditorAdvan
 
   // UI state
   const [activeTab, setActiveTab] = useState<EditorTab>('elements');
-  const [colorMode, setColorMode] = useState<'light' | 'dark'>('light');
+  // Initialize color mode from app's current theme mode
+  const [colorMode, setColorMode] = useState<'light' | 'dark'>(resolvedTheme);
   const [selectedElement, setSelectedElement] = useState<ThemeableElement | null>(null);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);

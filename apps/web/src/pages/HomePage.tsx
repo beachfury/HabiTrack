@@ -5,6 +5,7 @@ import { Plus, Settings, RotateCcw, GripVertical, X } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { dashboardApi, WidgetLayout, DashboardWidget, DashboardData } from '../api/dashboard';
 import { widgetComponents } from '../components/dashboard/widgets';
+import { ModalPortal, ModalBody } from '../components/common/ModalPortal';
 
 import 'react-grid-layout/css/styles.css';
 
@@ -376,50 +377,42 @@ export function HomePage() {
 
       {/* Widget Picker Modal */}
       {showWidgetPicker && (
-        <div className="themed-modal-backdrop fixed inset-0 flex items-center justify-center z-50">
-          <div className="themed-modal max-w-lg w-full mx-4 max-h-[80vh] overflow-hidden">
-            <div className="flex items-center justify-between p-4 border-b border-[var(--color-border)]">
-              <h2 className="text-lg font-semibold text-[var(--color-foreground)]">
-                Add Widget
-              </h2>
-              <button
-                onClick={() => setShowWidgetPicker(false)}
-                className="p-1 text-[var(--color-muted-foreground)] hover:text-[var(--color-foreground)]"
-              >
-                <X size={20} />
-              </button>
-            </div>
-            <div className="p-4 overflow-y-auto max-h-[60vh]">
-              {hiddenWidgets.length === 0 ? (
-                <p className="text-center text-[var(--color-muted-foreground)] py-8">
-                  All widgets are already on your dashboard!
-                </p>
-              ) : (
-                <div className="grid grid-cols-2 gap-3">
-                  {hiddenWidgets.map((widget) => (
-                    <button
-                      key={widget.id}
-                      onClick={() => handleAddWidget(widget.id)}
-                      className="flex flex-col items-start p-3 bg-[var(--color-muted)] rounded-[var(--radius-md)] border border-[var(--color-border)] hover:border-[var(--color-primary)] hover:bg-[var(--color-primary)]/10 transition-colors text-left"
-                    >
-                      <span className="font-medium text-[var(--color-foreground)]">
-                        {widget.name}
+        <ModalPortal
+          isOpen={true}
+          onClose={() => setShowWidgetPicker(false)}
+          title="Add Widget"
+          size="lg"
+        >
+          <ModalBody>
+            {hiddenWidgets.length === 0 ? (
+              <p className="text-center text-[var(--color-muted-foreground)] py-8">
+                All widgets are already on your dashboard!
+              </p>
+            ) : (
+              <div className="grid grid-cols-2 gap-3">
+                {hiddenWidgets.map((widget) => (
+                  <button
+                    key={widget.id}
+                    onClick={() => handleAddWidget(widget.id)}
+                    className="flex flex-col items-start p-3 bg-[var(--color-muted)] rounded-[var(--radius-md)] border border-[var(--color-border)] hover:border-[var(--color-primary)] hover:bg-[var(--color-primary)]/10 transition-colors text-left"
+                  >
+                    <span className="font-medium text-[var(--color-foreground)]">
+                      {widget.name}
+                    </span>
+                    {widget.description && (
+                      <span className="text-xs text-[var(--color-muted-foreground)] mt-1">
+                        {widget.description}
                       </span>
-                      {widget.description && (
-                        <span className="text-xs text-[var(--color-muted-foreground)] mt-1">
-                          {widget.description}
-                        </span>
-                      )}
-                      <span className="text-xs text-[var(--color-primary)] mt-2 capitalize">
-                        {widget.category}
-                      </span>
-                    </button>
-                  ))}
-                </div>
-              )}
-            </div>
-          </div>
-        </div>
+                    )}
+                    <span className="text-xs text-[var(--color-primary)] mt-2 capitalize">
+                      {widget.category}
+                    </span>
+                  </button>
+                ))}
+              </div>
+            )}
+          </ModalBody>
+        </ModalPortal>
       )}
     </div>
   );

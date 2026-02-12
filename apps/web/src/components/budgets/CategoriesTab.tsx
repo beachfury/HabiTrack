@@ -68,16 +68,16 @@ export function CategoriesTab({
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
-          <h3 className="text-lg font-semibold text-gray-900 dark:text-white">
+          <h3 className="text-lg font-semibold text-[var(--color-foreground)]">
             Budget Categories
           </h3>
-          <p className="text-sm text-gray-500 dark:text-gray-400">
+          <p className="text-sm text-[var(--color-muted-foreground)]">
             Organize your budgets into categories
           </p>
         </div>
         <button
           onClick={onAddCategory}
-          className="inline-flex items-center px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-colors"
+          className="inline-flex items-center px-4 py-2 bg-[var(--color-primary)] text-white rounded-lg hover:opacity-90 transition-opacity"
         >
           <Plus className="w-4 h-4 mr-2" />
           Add Category
@@ -94,7 +94,7 @@ export function CategoriesTab({
             return (
               <div
                 key={category.id}
-                className="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 overflow-hidden group"
+                className="themed-card rounded-xl shadow-sm overflow-hidden group"
               >
                 {/* Color bar */}
                 <div
@@ -115,10 +115,10 @@ export function CategoriesTab({
                         />
                       </div>
                       <div>
-                        <h4 className="font-semibold text-gray-900 dark:text-white">
+                        <h4 className="font-semibold text-[var(--color-foreground)]">
                           {category.name}
                         </h4>
-                        <p className="text-sm text-gray-500 dark:text-gray-400">
+                        <p className="text-sm text-[var(--color-muted-foreground)]">
                           {budgetCount} budget{budgetCount !== 1 ? 's' : ''}
                         </p>
                       </div>
@@ -127,7 +127,7 @@ export function CategoriesTab({
                     <div className="flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
                       <button
                         onClick={() => onEditCategory(category)}
-                        className="p-1.5 text-gray-400 hover:text-purple-600 dark:hover:text-purple-400 hover:bg-gray-100 dark:hover:bg-gray-700 rounded"
+                        className="p-1.5 text-[var(--color-muted-foreground)] hover:text-[var(--color-primary)] hover:bg-[var(--color-primary)]/10 rounded"
                         title="Edit category"
                       >
                         <Edit className="w-4 h-4" />
@@ -135,7 +135,7 @@ export function CategoriesTab({
                       <button
                         onClick={() => onDeleteCategory(category.id)}
                         disabled={budgetCount > 0}
-                        className="p-1.5 text-gray-400 hover:text-red-600 dark:hover:text-red-400 hover:bg-gray-100 dark:hover:bg-gray-700 rounded disabled:opacity-50 disabled:cursor-not-allowed"
+                        className="p-1.5 text-[var(--color-muted-foreground)] hover:text-[var(--color-destructive)] hover:bg-[var(--color-destructive)]/10 rounded disabled:opacity-50 disabled:cursor-not-allowed"
                         title={budgetCount > 0 ? 'Cannot delete - has budgets' : 'Delete category'}
                       >
                         <Trash2 className="w-4 h-4" />
@@ -145,10 +145,10 @@ export function CategoriesTab({
 
                   {/* Stats */}
                   {budgetCount > 0 && (
-                    <div className="mt-4 pt-4 border-t border-gray-100 dark:border-gray-700">
+                    <div className="mt-4 pt-4 border-t border-[var(--color-border)]">
                       <div className="flex items-center justify-between text-sm">
-                        <span className="text-gray-500 dark:text-gray-400">Total Budget</span>
-                        <span className="font-medium text-gray-900 dark:text-white">
+                        <span className="text-[var(--color-muted-foreground)]">Total Budget</span>
+                        <span className="font-medium text-[var(--color-foreground)]">
                           {formatCurrency(totalBudget)}
                         </span>
                       </div>
@@ -160,17 +160,17 @@ export function CategoriesTab({
           })}
         </div>
       ) : (
-        <div className="text-center py-12 bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700">
-          <FolderOpen className="w-16 h-16 mx-auto text-gray-400 mb-4" />
-          <h3 className="text-lg font-medium text-gray-900 dark:text-white mb-2">
+        <div className="text-center py-12 themed-card rounded-xl">
+          <FolderOpen className="w-16 h-16 mx-auto text-[var(--color-muted-foreground)] mb-4" />
+          <h3 className="text-lg font-medium text-[var(--color-foreground)] mb-2">
             No Categories Yet
           </h3>
-          <p className="text-gray-500 dark:text-gray-400 mb-6">
+          <p className="text-[var(--color-muted-foreground)] mb-6">
             Create categories to organize your budgets
           </p>
           <button
             onClick={onAddCategory}
-            className="inline-flex items-center px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-colors"
+            className="inline-flex items-center px-4 py-2 bg-[var(--color-primary)] text-white rounded-lg hover:opacity-90 transition-opacity"
           >
             <Plus className="w-4 h-4 mr-2" />
             Create Category
@@ -179,15 +179,15 @@ export function CategoriesTab({
       )}
 
       {/* Color Legend */}
-      <div className="bg-gray-50 dark:bg-gray-800/50 rounded-lg p-4">
-        <h4 className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-3">
+      <div className="bg-[var(--color-muted)] rounded-lg p-4">
+        <h4 className="text-sm font-medium text-[var(--color-foreground)] mb-3">
           Available Colors
         </h4>
         <div className="flex flex-wrap gap-2">
           {COLOR_OPTIONS.map((color) => (
             <div
               key={color}
-              className="w-6 h-6 rounded-full border-2 border-white dark:border-gray-700 shadow-sm"
+              className="w-6 h-6 rounded-full border-2 border-[var(--color-card)] shadow-sm"
               style={{ backgroundColor: color }}
               title={color}
             />

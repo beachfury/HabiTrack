@@ -92,16 +92,16 @@ export function BudgetsTab({
     }
   };
 
-  const getStatusColor = (percentUsed: number) => {
-    if (percentUsed > 100) return 'text-red-600 dark:text-red-400';
-    if (percentUsed > 80) return 'text-amber-600 dark:text-amber-400';
-    return 'text-green-600 dark:text-green-400';
+  const getStatusStyle = (percentUsed: number) => {
+    if (percentUsed > 100) return { color: 'var(--color-destructive)' };
+    if (percentUsed > 80) return { color: 'var(--color-warning)' };
+    return { color: 'var(--color-success)' };
   };
 
-  const getProgressColor = (percentUsed: number) => {
-    if (percentUsed > 100) return 'bg-red-500';
-    if (percentUsed > 80) return 'bg-amber-500';
-    return 'bg-green-500';
+  const getProgressStyle = (percentUsed: number) => {
+    if (percentUsed > 100) return { backgroundColor: 'var(--color-destructive)' };
+    if (percentUsed > 80) return { backgroundColor: 'var(--color-warning)' };
+    return { backgroundColor: 'var(--color-success)' };
   };
 
   // Calculate due date for a bill
@@ -142,7 +142,7 @@ export function BudgetsTab({
           <select
             value={filterCategory || ''}
             onChange={(e) => setFilterCategory(e.target.value ? Number(e.target.value) : null)}
-            className="px-3 py-2 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-lg text-sm"
+            className="px-3 py-2 bg-[var(--color-card)] border border-[var(--color-border)] rounded-lg text-sm text-[var(--color-foreground)]"
           >
             <option value="">All Categories</option>
             {categories.map((cat) => (
@@ -156,7 +156,7 @@ export function BudgetsTab({
           <select
             value={sortBy}
             onChange={(e) => setSortBy(e.target.value as any)}
-            className="px-3 py-2 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-lg text-sm"
+            className="px-3 py-2 bg-[var(--color-card)] border border-[var(--color-border)] rounded-lg text-sm text-[var(--color-foreground)]"
           >
             <option value="name">Sort by Name</option>
             <option value="amount">Sort by Amount</option>
@@ -166,7 +166,7 @@ export function BudgetsTab({
 
           <button
             onClick={() => setSortOrder(sortOrder === 'asc' ? 'desc' : 'asc')}
-            className="p-2 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-lg"
+            className="p-2 bg-[var(--color-card)] border border-[var(--color-border)] rounded-lg text-[var(--color-foreground)]"
           >
             {sortOrder === 'asc' ? (
               <ChevronUp className="w-4 h-4" />
@@ -178,7 +178,7 @@ export function BudgetsTab({
 
         <button
           onClick={onAddBudget}
-          className="inline-flex items-center px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-colors"
+          className="inline-flex items-center px-4 py-2 bg-[var(--color-primary)] text-white rounded-lg hover:opacity-90 transition-opacity"
         >
           <Plus className="w-4 h-4 mr-2" />
           Add Budget
@@ -196,10 +196,10 @@ export function BudgetsTab({
                   className="w-4 h-4 rounded-full"
                   style={{ backgroundColor: category.color || '#6b7280' }}
                 />
-                <h3 className="font-semibold text-gray-900 dark:text-white">
+                <h3 className="font-semibold text-[var(--color-foreground)]">
                   {category.name}
                 </h3>
-                <span className="text-sm text-gray-500 dark:text-gray-400">
+                <span className="text-sm text-[var(--color-muted-foreground)]">
                   ({budgets.length} budget{budgets.length !== 1 ? 's' : ''})
                 </span>
               </div>
@@ -209,21 +209,21 @@ export function BudgetsTab({
                 {budgets.map((budget) => (
                   <div
                     key={budget.id}
-                    className="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 overflow-hidden"
+                    className="themed-card rounded-xl shadow-sm overflow-hidden"
                   >
                     {/* Header */}
-                    <div className="p-4 border-b border-gray-100 dark:border-gray-700">
+                    <div className="p-4 border-b border-[var(--color-border)]">
                       <div className="flex items-start justify-between">
                         <div>
-                          <h4 className="font-semibold text-gray-900 dark:text-white">
+                          <h4 className="font-semibold text-[var(--color-foreground)]">
                             {budget.name}
                           </h4>
                           <div className="flex items-center gap-2 mt-1">
-                            <span className="text-xs px-2 py-0.5 bg-gray-100 dark:bg-gray-700 rounded text-gray-600 dark:text-gray-400">
+                            <span className="text-xs px-2 py-0.5 bg-[var(--color-muted)] rounded text-[var(--color-muted-foreground)]">
                               {getPeriodLabel(budget.periodType)}
                             </span>
                             {budget.budgetType === 'bill' && budget.dueDay && (
-                              <span className="text-xs text-gray-500 dark:text-gray-400 flex items-center gap-1">
+                              <span className="text-xs text-[var(--color-muted-foreground)] flex items-center gap-1">
                                 <Calendar className="w-3 h-3" />
                                 {budget.isPaidThisPeriod
                                   ? `Next: ${formatDueDate(getDueDate(budget, true)!)}`
@@ -236,21 +236,21 @@ export function BudgetsTab({
                         <div className="flex gap-1">
                           <button
                             onClick={() => onAddEntry(budget.id)}
-                            className="p-1.5 text-gray-400 hover:text-green-600 dark:hover:text-green-400 hover:bg-gray-100 dark:hover:bg-gray-700 rounded"
+                            className="p-1.5 text-[var(--color-muted-foreground)] hover:text-[var(--color-success)] hover:bg-[var(--color-success)]/10 rounded"
                             title="Record payment"
                           >
                             <Receipt className="w-4 h-4" />
                           </button>
                           <button
                             onClick={() => onEditBudget(budget)}
-                            className="p-1.5 text-gray-400 hover:text-purple-600 dark:hover:text-purple-400 hover:bg-gray-100 dark:hover:bg-gray-700 rounded"
+                            className="p-1.5 text-[var(--color-muted-foreground)] hover:text-[var(--color-primary)] hover:bg-[var(--color-primary)]/10 rounded"
                             title="Edit budget"
                           >
                             <Edit className="w-4 h-4" />
                           </button>
                           <button
                             onClick={() => onDeleteBudget(budget.id)}
-                            className="p-1.5 text-gray-400 hover:text-red-600 dark:hover:text-red-400 hover:bg-gray-100 dark:hover:bg-gray-700 rounded"
+                            className="p-1.5 text-[var(--color-muted-foreground)] hover:text-[var(--color-destructive)] hover:bg-[var(--color-destructive)]/10 rounded"
                             title="Delete budget"
                           >
                             <Trash2 className="w-4 h-4" />
@@ -266,37 +266,36 @@ export function BudgetsTab({
                         <>
                           {/* Spending Budget - show percentage and progress */}
                           <div className="flex items-center justify-between mb-3">
-                            <span className="text-2xl font-bold text-gray-900 dark:text-white">
+                            <span className="text-2xl font-bold text-[var(--color-foreground)]">
                               {formatCurrency(budget.budgetAmount)}
                             </span>
-                            <span className={`text-lg font-semibold ${getStatusColor(budget.percentUsed)}`}>
+                            <span className="text-lg font-semibold" style={getStatusStyle(budget.percentUsed)}>
                               {budget.percentUsed.toFixed(0)}%
                             </span>
                           </div>
 
                           {/* Progress Bar */}
-                          <div className="bg-gray-200 dark:bg-gray-700 rounded-full h-2 mb-3 overflow-hidden">
+                          <div className="bg-[var(--color-muted)] rounded-full h-2 mb-3 overflow-hidden">
                             <div
-                              className={`h-full rounded-full transition-all ${getProgressColor(budget.percentUsed)}`}
-                              style={{ width: `${Math.min(budget.percentUsed, 100)}%` }}
+                              className="h-full rounded-full transition-all"
+                              style={{ ...getProgressStyle(budget.percentUsed), width: `${Math.min(budget.percentUsed, 100)}%` }}
                             />
                           </div>
 
                           {/* Stats */}
                           <div className="flex justify-between text-sm">
                             <div>
-                              <span className="text-gray-500 dark:text-gray-400">Spent</span>
-                              <p className="font-medium text-gray-900 dark:text-white">
+                              <span className="text-[var(--color-muted-foreground)]">Spent</span>
+                              <p className="font-medium text-[var(--color-foreground)]">
                                 {formatCurrency(budget.currentSpent)}
                               </p>
                             </div>
                             <div className="text-right">
-                              <span className="text-gray-500 dark:text-gray-400">Remaining</span>
-                              <p className={`font-medium ${
-                                budget.remainingAmount >= 0
-                                  ? 'text-green-600 dark:text-green-400'
-                                  : 'text-red-600 dark:text-red-400'
-                              }`}>
+                              <span className="text-[var(--color-muted-foreground)]">Remaining</span>
+                              <p
+                                className="font-medium"
+                                style={{ color: budget.remainingAmount >= 0 ? 'var(--color-success)' : 'var(--color-destructive)' }}
+                              >
                                 {formatCurrency(budget.remainingAmount)}
                               </p>
                             </div>
@@ -306,16 +305,22 @@ export function BudgetsTab({
                         <>
                           {/* Bill - show paid/unpaid status */}
                           <div className="flex items-center justify-between mb-3">
-                            <span className="text-2xl font-bold text-gray-900 dark:text-white">
+                            <span className="text-2xl font-bold text-[var(--color-foreground)]">
                               {formatCurrency(budget.budgetAmount)}
                             </span>
                             {budget.isPaidThisPeriod ? (
-                              <span className="inline-flex items-center gap-1.5 px-3 py-1 text-sm font-medium bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-400 rounded-full">
+                              <span
+                                className="inline-flex items-center gap-1.5 px-3 py-1 text-sm font-medium rounded-full"
+                                style={{ backgroundColor: 'color-mix(in srgb, var(--color-success) 15%, transparent)', color: 'var(--color-success)' }}
+                              >
                                 <CheckCircle className="w-4 h-4" />
                                 Paid
                               </span>
                             ) : (
-                              <span className="inline-flex items-center gap-1.5 px-3 py-1 text-sm font-medium bg-amber-100 dark:bg-amber-900/30 text-amber-700 dark:text-amber-400 rounded-full">
+                              <span
+                                className="inline-flex items-center gap-1.5 px-3 py-1 text-sm font-medium rounded-full"
+                                style={{ backgroundColor: 'color-mix(in srgb, var(--color-warning) 15%, transparent)', color: 'var(--color-warning)' }}
+                              >
                                 Unpaid
                               </span>
                             )}
@@ -323,7 +328,7 @@ export function BudgetsTab({
 
                           {/* Payment info for bills */}
                           {budget.isPaidThisPeriod && budget.currentSpent > 0 && (
-                            <div className="text-sm text-gray-600 dark:text-gray-400">
+                            <div className="text-sm text-[var(--color-muted-foreground)]">
                               Paid: {formatCurrency(budget.currentSpent)}
                               {budget.currentSpent !== budget.budgetAmount && (
                                 <span className="text-xs ml-1">
@@ -336,14 +341,14 @@ export function BudgetsTab({
                       )}
 
                       {/* Entry count and Pay button */}
-                      <div className="mt-3 pt-3 border-t border-gray-100 dark:border-gray-700 flex items-center justify-between">
-                        <span className="text-xs text-gray-500 dark:text-gray-400">
+                      <div className="mt-3 pt-3 border-t border-[var(--color-border)] flex items-center justify-between">
+                        <span className="text-xs text-[var(--color-muted-foreground)]">
                           {budget.entryCount} entr{budget.entryCount === 1 ? 'y' : 'ies'} this period
                         </span>
                         {budget.budgetType === 'spending' ? (
                           <button
                             onClick={() => onAddEntry(budget.id)}
-                            className="inline-flex items-center gap-1.5 px-3 py-1.5 text-sm bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+                            className="inline-flex items-center gap-1.5 px-3 py-1.5 text-sm bg-[var(--color-info)] text-white rounded-lg hover:opacity-90 transition-opacity"
                           >
                             <Receipt className="w-4 h-4" />
                             Add Expense
@@ -351,7 +356,7 @@ export function BudgetsTab({
                         ) : !budget.isPaidThisPeriod ? (
                           <button
                             onClick={() => onAddEntry(budget.id)}
-                            className="inline-flex items-center gap-1.5 px-3 py-1.5 text-sm bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors"
+                            className="inline-flex items-center gap-1.5 px-3 py-1.5 text-sm bg-[var(--color-success)] text-white rounded-lg hover:opacity-90 transition-opacity"
                           >
                             <CheckCircle className="w-4 h-4" />
                             Mark Paid
@@ -359,7 +364,7 @@ export function BudgetsTab({
                         ) : (
                           <button
                             onClick={() => onAddEntry(budget.id)}
-                            className="inline-flex items-center gap-1.5 px-3 py-1.5 text-sm bg-gray-200 dark:bg-gray-700 text-gray-600 dark:text-gray-400 rounded-lg hover:bg-gray-300 dark:hover:bg-gray-600 transition-colors"
+                            className="inline-flex items-center gap-1.5 px-3 py-1.5 text-sm bg-[var(--color-muted)] text-[var(--color-muted-foreground)] rounded-lg hover:opacity-80 transition-opacity"
                           >
                             <Receipt className="w-4 h-4" />
                             Add Payment
@@ -375,18 +380,18 @@ export function BudgetsTab({
         </div>
       ) : (
         <div className="text-center py-12">
-          <Wallet className="w-16 h-16 mx-auto text-gray-400 mb-4" />
-          <h3 className="text-lg font-medium text-gray-900 dark:text-white mb-2">
+          <Wallet className="w-16 h-16 mx-auto text-[var(--color-muted-foreground)] mb-4" />
+          <h3 className="text-lg font-medium text-[var(--color-foreground)] mb-2">
             No Budgets Found
           </h3>
-          <p className="text-gray-500 dark:text-gray-400 mb-6">
+          <p className="text-[var(--color-muted-foreground)] mb-6">
             {filterCategory
               ? 'No budgets in this category. Try a different filter.'
               : 'Get started by creating your first budget.'}
           </p>
           <button
             onClick={onAddBudget}
-            className="inline-flex items-center px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-colors"
+            className="inline-flex items-center px-4 py-2 bg-[var(--color-primary)] text-white rounded-lg hover:opacity-90 transition-opacity"
           >
             <Plus className="w-4 h-4 mr-2" />
             Create Budget

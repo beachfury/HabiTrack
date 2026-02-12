@@ -1,8 +1,9 @@
 // Add/Edit Entry Modal
 
 import { useState, useEffect } from 'react';
-import { X, Receipt, DollarSign, Calendar, Store, FileText } from 'lucide-react';
+import { Receipt, DollarSign, Calendar, Store, FileText } from 'lucide-react';
 import type { Budget, BudgetEntry, CreateEntryData } from '../../../types/budget';
+import { ModalPortal, ModalBody } from '../../common/ModalPortal';
 
 interface AddEntryModalProps {
   budgets: Budget[];
@@ -110,38 +111,46 @@ export function AddEntryModal({
     'Other',
   ];
 
-  return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50">
-      <div className="bg-white dark:bg-gray-800 rounded-xl shadow-xl w-full max-w-md max-h-[90vh] overflow-y-auto">
-        {/* Header */}
-        <div className="flex items-center justify-between p-4 border-b border-gray-200 dark:border-gray-700">
-          <div className="flex items-center gap-2">
-            <Receipt className="w-5 h-5 text-green-600 dark:text-green-400" />
-            <h2 className="text-lg font-semibold text-gray-900 dark:text-white">
-              {entry ? 'Edit Entry' : 'Add Expense'}
-            </h2>
-          </div>
-          <button
-            onClick={onClose}
-            className="p-1 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300"
-          >
-            <X className="w-5 h-5" />
-          </button>
-        </div>
+  const footer = (
+    <div className="flex gap-3">
+      <button
+        type="button"
+        onClick={onClose}
+        className="flex-1 px-4 py-2 bg-[var(--color-muted)] text-[var(--color-muted-foreground)] rounded-lg hover:opacity-80 transition-opacity"
+      >
+        Cancel
+      </button>
+      <button
+        type="submit"
+        form="entry-form"
+        disabled={submitting}
+        className="flex-1 px-4 py-2 bg-[var(--color-success)] text-white rounded-lg hover:opacity-90 transition-opacity disabled:opacity-50 disabled:cursor-not-allowed"
+      >
+        {submitting ? 'Saving...' : entry ? 'Update Entry' : 'Add Entry'}
+      </button>
+    </div>
+  );
 
-        {/* Form */}
-        <form onSubmit={handleSubmit} className="p-4 space-y-4">
+  return (
+    <ModalPortal
+      isOpen={true}
+      onClose={onClose}
+      title={entry ? 'Edit Entry' : 'Add Expense'}
+      size="md"
+      footer={footer}
+    >
+      <ModalBody>
+        <form id="entry-form" onSubmit={handleSubmit} className="space-y-4">
           {/* Budget */}
           <div>
-            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+            <label className="block text-sm font-medium text-[var(--color-foreground)] mb-1">
               Budget *
             </label>
             <select
               value={formData.budgetId}
               onChange={(e) => setFormData({ ...formData, budgetId: e.target.value ? Number(e.target.value) : '' })}
-              className={`w-full px-3 py-2 bg-white dark:bg-gray-700 border rounded-lg focus:ring-2 focus:ring-green-500 ${
-                errors.budgetId ? 'border-red-500' : 'border-gray-300 dark:border-gray-600'
-              }`}
+              className="w-full px-3 py-2 bg-[var(--color-card)] border border-[var(--color-border)] rounded-lg text-[var(--color-foreground)]"
+              style={errors.budgetId ? { borderColor: 'var(--color-destructive)' } : {}}
             >
               <option value="">Select a budget</option>
               {budgets.map((budget) => (
@@ -151,10 +160,10 @@ export function AddEntryModal({
               ))}
             </select>
             {errors.budgetId && (
-              <p className="text-red-500 text-sm mt-1">{errors.budgetId}</p>
+              <p className="text-[var(--color-destructive)] text-sm mt-1">{errors.budgetId}</p>
             )}
             {selectedBudget && (
-              <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">
+              <p className="text-sm text-[var(--color-muted-foreground)] mt-1">
                 Remaining: ${Number(selectedBudget.remainingAmount || 0).toFixed(2)} of ${Number(selectedBudget.budgetAmount || 0).toFixed(2)}
               </p>
             )}
@@ -162,11 +171,11 @@ export function AddEntryModal({
 
           {/* Amount */}
           <div>
-            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+            <label className="block text-sm font-medium text-[var(--color-foreground)] mb-1">
               Amount *
             </label>
             <div className="relative">
-              <DollarSign className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400" />
+              <DollarSign className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-[var(--color-muted-foreground)]" />
               <input
                 type="number"
                 step="0.01"
@@ -174,63 +183,61 @@ export function AddEntryModal({
                 value={formData.amount}
                 onChange={(e) => setFormData({ ...formData, amount: e.target.value })}
                 placeholder="0.00"
-                className={`w-full pl-9 pr-3 py-2 bg-white dark:bg-gray-700 border rounded-lg focus:ring-2 focus:ring-green-500 ${
-                  errors.amount ? 'border-red-500' : 'border-gray-300 dark:border-gray-600'
-                }`}
+                className="w-full pl-9 pr-3 py-2 bg-[var(--color-card)] border border-[var(--color-border)] rounded-lg text-[var(--color-foreground)]"
+                style={errors.amount ? { borderColor: 'var(--color-destructive)' } : {}}
               />
             </div>
             {errors.amount && (
-              <p className="text-red-500 text-sm mt-1">{errors.amount}</p>
+              <p className="text-[var(--color-destructive)] text-sm mt-1">{errors.amount}</p>
             )}
           </div>
 
           {/* Date */}
           <div>
-            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+            <label className="block text-sm font-medium text-[var(--color-foreground)] mb-1">
               Date *
             </label>
             <div className="relative">
-              <Calendar className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400" />
+              <Calendar className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-[var(--color-muted-foreground)]" />
               <input
                 type="date"
                 value={formData.transactionDate}
                 onChange={(e) => setFormData({ ...formData, transactionDate: e.target.value })}
-                className={`w-full pl-9 pr-3 py-2 bg-white dark:bg-gray-700 border rounded-lg focus:ring-2 focus:ring-green-500 ${
-                  errors.transactionDate ? 'border-red-500' : 'border-gray-300 dark:border-gray-600'
-                }`}
+                className="w-full pl-9 pr-3 py-2 bg-[var(--color-card)] border border-[var(--color-border)] rounded-lg text-[var(--color-foreground)]"
+                style={errors.transactionDate ? { borderColor: 'var(--color-destructive)' } : {}}
               />
             </div>
             {errors.transactionDate && (
-              <p className="text-red-500 text-sm mt-1">{errors.transactionDate}</p>
+              <p className="text-[var(--color-destructive)] text-sm mt-1">{errors.transactionDate}</p>
             )}
           </div>
 
           {/* Vendor */}
           <div>
-            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+            <label className="block text-sm font-medium text-[var(--color-foreground)] mb-1">
               Vendor/Merchant (optional)
             </label>
             <div className="relative">
-              <Store className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400" />
+              <Store className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-[var(--color-muted-foreground)]" />
               <input
                 type="text"
                 value={formData.vendor}
                 onChange={(e) => setFormData({ ...formData, vendor: e.target.value })}
                 placeholder="e.g., Duke Energy, Shell, Walmart"
-                className="w-full pl-9 pr-3 py-2 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-green-500"
+                className="w-full pl-9 pr-3 py-2 bg-[var(--color-card)] border border-[var(--color-border)] rounded-lg text-[var(--color-foreground)]"
               />
             </div>
           </div>
 
           {/* Payment Method */}
           <div>
-            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+            <label className="block text-sm font-medium text-[var(--color-foreground)] mb-1">
               Payment Method (optional)
             </label>
             <select
               value={formData.paymentMethod}
               onChange={(e) => setFormData({ ...formData, paymentMethod: e.target.value })}
-              className="w-full px-3 py-2 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-green-500"
+              className="w-full px-3 py-2 bg-[var(--color-card)] border border-[var(--color-border)] rounded-lg text-[var(--color-foreground)]"
             >
               <option value="">Select method</option>
               {paymentMethods.map((method) => (
@@ -243,7 +250,7 @@ export function AddEntryModal({
 
           {/* Description */}
           <div>
-            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+            <label className="block text-sm font-medium text-[var(--color-foreground)] mb-1">
               Description (optional)
             </label>
             <input
@@ -251,47 +258,29 @@ export function AddEntryModal({
               value={formData.description}
               onChange={(e) => setFormData({ ...formData, description: e.target.value })}
               placeholder="Brief description of the expense"
-              className="w-full px-3 py-2 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-green-500"
+              className="w-full px-3 py-2 bg-[var(--color-card)] border border-[var(--color-border)] rounded-lg text-[var(--color-foreground)]"
             />
           </div>
 
           {/* Notes */}
           <div>
-            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+            <label className="block text-sm font-medium text-[var(--color-foreground)] mb-1">
               Notes (optional)
             </label>
             <div className="relative">
-              <FileText className="absolute left-3 top-3 w-4 h-4 text-gray-400" />
+              <FileText className="absolute left-3 top-3 w-4 h-4 text-[var(--color-muted-foreground)]" />
               <textarea
                 value={formData.notes}
                 onChange={(e) => setFormData({ ...formData, notes: e.target.value })}
                 placeholder="Additional notes..."
                 rows={2}
-                className="w-full pl-9 pr-3 py-2 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-green-500"
+                className="w-full pl-9 pr-3 py-2 bg-[var(--color-card)] border border-[var(--color-border)] rounded-lg text-[var(--color-foreground)]"
               />
             </div>
           </div>
-
-          {/* Actions */}
-          <div className="flex gap-3 pt-4">
-            <button
-              type="button"
-              onClick={onClose}
-              className="flex-1 px-4 py-2 border border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors"
-            >
-              Cancel
-            </button>
-            <button
-              type="submit"
-              disabled={submitting}
-              className="flex-1 px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-            >
-              {submitting ? 'Saving...' : entry ? 'Update Entry' : 'Add Entry'}
-            </button>
-          </div>
         </form>
-      </div>
-    </div>
+      </ModalBody>
+    </ModalPortal>
   );
 }
 
