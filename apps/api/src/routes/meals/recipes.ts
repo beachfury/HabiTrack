@@ -17,6 +17,9 @@ import {
   validationError,
   forbidden,
 } from '../../utils';
+import { createLogger } from '../../services/logger';
+
+const log = createLogger('meals');
 
 type RecipeStatus = 'pending' | 'approved' | 'rejected';
 type RecipeDifficulty = 'easy' | 'medium' | 'hard';
@@ -273,6 +276,8 @@ export async function createRecipe(req: Request, res: Response) {
       );
     }
 
+    log.info('Recipe created', { recipeId, name: name.trim(), status, createdBy: user.id });
+
     await logAudit({
       action: 'recipe.create',
       result: 'ok',
@@ -463,6 +468,8 @@ export async function updateRecipe(req: Request, res: Response) {
       }
     }
 
+    log.info('Recipe updated', { recipeId, updatedBy: user.id });
+
     await logAudit({
       action: 'recipe.update',
       result: 'ok',
@@ -472,6 +479,7 @@ export async function updateRecipe(req: Request, res: Response) {
 
     return success(res, { success: true });
   } catch (err) {
+    log.error('Failed to update recipe', { recipeId, error: String(err) });
     return serverError(res, err as Error);
   }
 }
@@ -493,6 +501,8 @@ export async function deleteRecipe(req: Request, res: Response) {
   try {
     await q(`UPDATE recipes SET active = 0 WHERE id = ?`, [recipeId]);
 
+    log.info('Recipe deleted', { recipeId, deletedBy: user.id });
+
     await logAudit({
       action: 'recipe.delete',
       result: 'ok',
@@ -502,6 +512,7 @@ export async function deleteRecipe(req: Request, res: Response) {
 
     return success(res, { success: true });
   } catch (err) {
+    log.error('Failed to delete recipe', { recipeId, error: String(err) });
     return serverError(res, err as Error);
   }
 }
@@ -534,6 +545,8 @@ export async function approveRecipe(req: Request, res: Response) {
       `UPDATE recipes SET status = 'approved', approvedBy = ?, approvedAt = NOW() WHERE id = ?`,
       [user.id, recipeId],
     );
+
+    log.info('Recipe approved', { recipeId, recipeName: recipe.name, approvedBy: user.id });
 
     await logAudit({
       action: 'recipe.approve',
@@ -607,6 +620,8 @@ export async function rejectRecipe(req: Request, res: Response) {
     }
 
     await q(`UPDATE recipes SET status = 'rejected' WHERE id = ?`, [recipeId]);
+
+    log.info('Recipe rejected', { recipeId, recipeName: recipe.name, rejectedBy: user.id, reason });
 
     await logAudit({
       action: 'recipe.reject',

@@ -13,6 +13,8 @@ import {
   X,
   Bell,
   Mail,
+  Bug,
+  Info,
 } from 'lucide-react';
 
 import { useAuth } from '../context/AuthContext';
@@ -21,6 +23,8 @@ import { ColorPicker } from '../components/common/ColorPicker';
 import { ThemePicker, KidThemePicker } from '../components/themes';
 import { NotificationsTab } from '../components/settings/NotificationsTab';
 import { EmailSettingsTab } from '../components/settings/EmailSettingsTab';
+import { DebugSettingsTab } from '../components/settings/DebugSettingsTab';
+import { AboutTab } from '../components/settings/AboutTab';
 
 const API_BASE = (import.meta.env.VITE_API_BASE_URL as string) || '';
 
@@ -117,7 +121,7 @@ const api = {
 // Default color for new profiles/settings (HabiTrack Green)
 const DEFAULT_COLOR = '#3cb371';
 
-type Tab = 'profile' | 'themes' | 'security' | 'notifications' | 'household' | 'email';
+type Tab = 'profile' | 'themes' | 'security' | 'notifications' | 'household' | 'email' | 'debug' | 'about';
 
 export function SettingsPage() {
   const { user } = useAuth();
@@ -343,6 +347,8 @@ export function SettingsPage() {
     { id: 'security' as Tab, icon: Lock, label: 'Security' },
     ...(isAdmin ? [{ id: 'household' as Tab, icon: Home, label: 'Household' }] : []),
     ...(isAdmin ? [{ id: 'email' as Tab, icon: Mail, label: 'Email' }] : []),
+    ...(isAdmin ? [{ id: 'debug' as Tab, icon: Bug, label: 'Debug' }] : []),
+    { id: 'about' as Tab, icon: Info, label: 'About' },
   ];
 
   return (
@@ -659,6 +665,16 @@ export function SettingsPage() {
                 </button>
               </form>
             </div>
+          )}
+
+          {/* Debug Settings Tab (Admin only) */}
+          {activeTab === 'debug' && isAdmin && (
+            <DebugSettingsTab />
+          )}
+
+          {/* About Tab */}
+          {activeTab === 'about' && (
+            <AboutTab />
           )}
         </div>
       </div>

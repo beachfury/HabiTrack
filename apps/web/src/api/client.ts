@@ -1,6 +1,8 @@
 // apps/web/src/api/client.ts
 // Base API client class with common functionality
 
+import { reportError } from '../utils/errorReporter';
+
 const API_BASE = import.meta.env.VITE_API_URL || '/api';
 
 export interface ApiError {
@@ -34,6 +36,13 @@ export class ApiClient {
       const error = new Error(errorData.error?.message || `Request failed: ${response.status}`);
       (error as any).code = errorData.error?.code || 'UNKNOWN_ERROR';
       (error as any).status = response.status;
+      (error as any).endpoint = endpoint;
+
+      // Report API errors to debug logging (except auth errors which are expected)
+      if (response.status >= 500 || (response.status >= 400 && response.status !== 401 && response.status !== 403)) {
+        reportError(error, { type: 'error' });
+      }
+
       throw error;
     }
 

@@ -5,17 +5,11 @@ import { Router } from 'express';
 import type { Request, Response } from 'express';
 import { q } from '../db';
 import { requireAuth } from '../middleware.auth';
+import { getUser } from '../utils/auth';
+import { authRequired, invalidInput, notFound, serverError } from '../utils/errors';
+import { createLogger } from '../services/logger';
 
-// Helper to get user from request
-function getUser(req: Request) {
-  return (req as any).user as
-    | {
-        id: number;
-        displayName: string;
-        roleId: 'admin' | 'member' | 'kid' | 'kiosk';
-      }
-    | undefined;
-}
+const log = createLogger('colors');
 
 const router = Router();
 
@@ -42,7 +36,7 @@ router.get('/swatches', async (req: Request, res: Response) => {
     res.json({ swatches: rows });
   } catch (err) {
     console.error('Failed to get swatches:', err);
-    res.status(500).json({ error: 'Failed to get swatches' });
+    serverError(res, 'Failed to get swatches');
   }
 });
 
@@ -53,13 +47,13 @@ router.post('/swatches', async (req: Request, res: Response) => {
   try {
     const user = getUser(req);
     if (!user) {
-      return res.status(401).json({ error: 'Authentication required' });
+      return authRequired(res);
     }
 
     const { name, hexColor } = req.body;
 
     if (!hexColor || !/^#[0-9A-Fa-f]{6}$/.test(hexColor)) {
-      return res.status(400).json({ error: 'Invalid hex color format' });
+      return invalidInput(res, 'Invalid hex color format');
     }
 
     // Check if user already has this color
@@ -69,7 +63,7 @@ router.post('/swatches', async (req: Request, res: Response) => {
     );
 
     if (existing.length > 0) {
-      return res.status(400).json({ error: 'Color already saved' });
+      return invalidInput(res, 'Color already saved');
     }
 
     const result = await q<any>(
@@ -85,7 +79,7 @@ router.post('/swatches', async (req: Request, res: Response) => {
     });
   } catch (err) {
     console.error('Failed to create swatch:', err);
-    res.status(500).json({ error: 'Failed to create swatch' });
+    serverError(res, 'Failed to create swatch');
   }
 });
 
@@ -96,7 +90,7 @@ router.delete('/swatches/:id', async (req: Request, res: Response) => {
   try {
     const user = getUser(req);
     if (!user) {
-      return res.status(401).json({ error: 'Authentication required' });
+      return authRequired(res);
     }
 
     const { id } = req.params;
@@ -108,13 +102,13 @@ router.delete('/swatches/:id', async (req: Request, res: Response) => {
     );
 
     if (result.affectedRows === 0) {
-      return res.status(404).json({ error: 'Swatch not found or cannot be deleted' });
+      return notFound(res, 'Swatch');
     }
 
     res.json({ success: true });
   } catch (err) {
     console.error('Failed to delete swatch:', err);
-    res.status(500).json({ error: 'Failed to delete swatch' });
+    serverError(res, 'Failed to delete swatch');
   }
 });
 
@@ -140,7 +134,7 @@ router.get('/recent', async (req: Request, res: Response) => {
     res.json({ colors: rows });
   } catch (err) {
     console.error('Failed to get recent colors:', err);
-    res.status(500).json({ error: 'Failed to get recent colors' });
+    serverError(res, 'Failed to get recent colors');
   }
 });
 
@@ -151,13 +145,13 @@ router.post('/recent', async (req: Request, res: Response) => {
   try {
     const user = getUser(req);
     if (!user) {
-      return res.status(401).json({ error: 'Authentication required' });
+      return authRequired(res);
     }
 
     const { hexColor } = req.body;
 
     if (!hexColor || !/^#[0-9A-Fa-f]{6}$/.test(hexColor)) {
-      return res.status(400).json({ error: 'Invalid hex color format' });
+      return invalidInput(res, 'Invalid hex color format');
     }
 
     const normalizedColor = hexColor.toUpperCase();
@@ -188,7 +182,7 @@ router.post('/recent', async (req: Request, res: Response) => {
     res.json({ success: true });
   } catch (err) {
     console.error('Failed to track recent color:', err);
-    res.status(500).json({ error: 'Failed to track recent color' });
+    serverError(res, 'Failed to track recent color');
   }
 });
 

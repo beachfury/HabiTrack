@@ -9,17 +9,9 @@ import fs from 'fs/promises';
 import { existsSync, mkdirSync } from 'fs';
 import { v4 as uuidv4 } from 'uuid';
 import { q } from '../../db';
-
-// Helper to get user from request
-function getUser(req: Request) {
-  return (req as any).user as
-    | {
-        id: number;
-        displayName: string;
-        roleId: 'admin' | 'member' | 'kid' | 'kiosk';
-      }
-    | undefined;
-}
+import { getUser } from '../../utils/auth';
+import { authRequired, forbidden, invalidInput, notFound, serverError } from '../../utils/errors';
+import { UPLOAD } from '../../utils/constants';
 
 // Ensure upload directories exist - use UPLOAD_DIR env var if available (Docker)
 const UPLOAD_BASE = process.env.UPLOAD_DIR || path.join(process.cwd(), 'uploads');
@@ -41,8 +33,7 @@ if (!existsSync(THEME_UPLOAD_DIR)) {
 const storage = multer.memoryStorage();
 
 const imageFilter = (req: Request, file: Express.Multer.File, cb: multer.FileFilterCallback) => {
-  const allowedTypes = ['image/jpeg', 'image/png', 'image/webp', 'image/gif'];
-  if (allowedTypes.includes(file.mimetype)) {
+  if ((UPLOAD.ALLOWED_IMAGE_TYPES as readonly string[]).includes(file.mimetype)) {
     cb(null, true);
   } else {
     cb(new Error('Invalid file type. Only JPEG, PNG, WebP, and GIF are allowed.'));
@@ -52,17 +43,17 @@ const imageFilter = (req: Request, file: Express.Multer.File, cb: multer.FileFil
 const upload = multer({
   storage,
   limits: {
-    fileSize: 5 * 1024 * 1024, // 5MB limit
+    fileSize: UPLOAD.MAX_IMAGE_SIZE,
   },
   fileFilter: imageFilter,
 });
 
 // Image size presets for different use cases
 const IMAGE_PRESETS = {
-  thumbnail: { width: 400, height: 300, fit: 'cover' as const },
-  sidebar: { width: 400, height: 800, fit: 'cover' as const },
-  background: { width: 1920, height: 1080, fit: 'cover' as const },
-  'background-pattern': { width: 200, height: 200, fit: 'cover' as const },
+  thumbnail: { ...UPLOAD.PRESETS.thumbnail, fit: 'cover' as const },
+  sidebar: { ...UPLOAD.PRESETS.sidebar, fit: 'cover' as const },
+  background: { ...UPLOAD.PRESETS.background, fit: 'cover' as const },
+  'background-pattern': { ...UPLOAD.PRESETS['background-pattern'], fit: 'cover' as const },
 };
 
 type ImagePreset = keyof typeof IMAGE_PRESETS;
@@ -77,18 +68,18 @@ export const uploadThemeImage: RequestHandler[] = [
     try {
       const user = getUser(req);
       if (!user) {
-        res.status(401).json({ error: 'Authentication required' });
+        authRequired(res);
         return;
       }
 
       // Kids cannot upload images
       if (user.roleId === 'kid' || user.roleId === 'kiosk') {
-        res.status(403).json({ error: 'Permission denied' });
+        forbidden(res, 'Permission denied');
         return;
       }
 
       if (!req.file) {
-        res.status(400).json({ error: 'No file uploaded' });
+        invalidInput(res, 'No file uploaded');
         return;
       }
 
@@ -101,7 +92,7 @@ export const uploadThemeImage: RequestHandler[] = [
 
       // Validate preset
       if (!Object.keys(IMAGE_PRESETS).includes(preset)) {
-        res.status(400).json({ error: 'Invalid image preset' });
+        invalidInput(res, 'Invalid image preset');
         return;
       }
 
@@ -153,10 +144,10 @@ export const uploadThemeImage: RequestHandler[] = [
     } catch (err: any) {
       console.error('Upload failed:', err);
       if (err.message?.includes('Invalid file type')) {
-        res.status(400).json({ error: err.message });
+        invalidInput(res, err.message);
         return;
       }
-      res.status(500).json({ error: 'Upload failed' });
+      serverError(res);
     }
   },
 ];
@@ -169,7 +160,7 @@ export async function deleteThemeImage(req: Request, res: Response): Promise<voi
   try {
     const user = getUser(req);
     if (!user) {
-      res.status(401).json({ error: 'Authentication required' });
+      authRequired(res);
       return;
     }
 
@@ -182,12 +173,12 @@ export async function deleteThemeImage(req: Request, res: Response): Promise<voi
     );
 
     if (!asset) {
-      res.status(404).json({ error: 'Image not found' });
+      notFound(res, 'Image');
       return;
     }
 
     if (asset.uploadedBy !== user.id && user.roleId !== 'admin') {
-      res.status(403).json({ error: 'Permission denied' });
+      forbidden(res, 'Permission denied');
       return;
     }
 
@@ -205,7 +196,7 @@ export async function deleteThemeImage(req: Request, res: Response): Promise<voi
     res.json({ success: true });
   } catch (err) {
     console.error('Delete failed:', err);
-    res.status(500).json({ error: 'Delete failed' });
+    serverError(res);
   }
 }
 
@@ -217,7 +208,7 @@ export async function getThemeAssets(req: Request, res: Response): Promise<void>
   try {
     const user = getUser(req);
     if (!user) {
-      res.status(401).json({ error: 'Authentication required' });
+      authRequired(res);
       return;
     }
 
@@ -243,7 +234,7 @@ export async function getThemeAssets(req: Request, res: Response): Promise<void>
     res.json({ assets });
   } catch (err) {
     console.error('Failed to get assets:', err);
-    res.status(500).json({ error: 'Failed to get assets' });
+    serverError(res);
   }
 }
 
@@ -255,7 +246,7 @@ export async function getMyAssets(req: Request, res: Response): Promise<void> {
   try {
     const user = getUser(req);
     if (!user) {
-      res.status(401).json({ error: 'Authentication required' });
+      authRequired(res);
       return;
     }
 
@@ -281,7 +272,7 @@ export async function getMyAssets(req: Request, res: Response): Promise<void> {
     res.json({ assets });
   } catch (err) {
     console.error('Failed to get assets:', err);
-    res.status(500).json({ error: 'Failed to get assets' });
+    serverError(res);
   }
 }
 
@@ -295,7 +286,7 @@ export async function getThemeLibrary(req: Request, res: Response): Promise<void
   try {
     const user = getUser(req);
     if (!user) {
-      res.status(401).json({ error: 'Authentication required' });
+      authRequired(res);
       return;
     }
 
@@ -354,7 +345,7 @@ export async function getThemeLibrary(req: Request, res: Response): Promise<void
     res.json({ assets });
   } catch (err) {
     console.error('Failed to get theme library:', err);
-    res.status(500).json({ error: 'Failed to get theme library' });
+    serverError(res);
   }
 }
 
@@ -366,7 +357,7 @@ export async function getCategories(req: Request, res: Response): Promise<void> 
   try {
     const user = getUser(req);
     if (!user) {
-      res.status(401).json({ error: 'Authentication required' });
+      authRequired(res);
       return;
     }
 
@@ -400,7 +391,7 @@ export async function getCategories(req: Request, res: Response): Promise<void> 
     });
   } catch (err) {
     console.error('Failed to get categories:', err);
-    res.status(500).json({ error: 'Failed to get categories' });
+    serverError(res);
   }
 }
 
@@ -412,7 +403,7 @@ export async function updateThemeImage(req: Request, res: Response): Promise<voi
   try {
     const user = getUser(req);
     if (!user) {
-      res.status(401).json({ error: 'Authentication required' });
+      authRequired(res);
       return;
     }
 
@@ -426,12 +417,12 @@ export async function updateThemeImage(req: Request, res: Response): Promise<voi
     );
 
     if (!asset) {
-      res.status(404).json({ error: 'Image not found' });
+      notFound(res, 'Image');
       return;
     }
 
     if (asset.uploadedBy !== user.id && user.roleId !== 'admin') {
-      res.status(403).json({ error: 'Permission denied' });
+      forbidden(res, 'Permission denied');
       return;
     }
 
@@ -456,6 +447,6 @@ export async function updateThemeImage(req: Request, res: Response): Promise<voi
     res.json({ success: true });
   } catch (err) {
     console.error('Update failed:', err);
-    res.status(500).json({ error: 'Update failed' });
+    serverError(res);
   }
 }

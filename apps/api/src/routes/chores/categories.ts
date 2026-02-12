@@ -12,6 +12,9 @@ import {
   serverError,
   validationError,
 } from '../../utils';
+import { createLogger } from '../../services/logger';
+
+const log = createLogger('chores');
 
 interface Category {
   id: number;

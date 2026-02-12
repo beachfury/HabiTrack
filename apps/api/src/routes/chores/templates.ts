@@ -16,6 +16,9 @@ import {
 } from '../../utils';
 import { getTodayLocal, getTimezone } from '../../utils/date';
 import { queueEmail, getUserEmail } from '../../email/queue';
+import { createLogger } from '../../services/logger';
+
+const log = createLogger('chores');
 
 interface ChoreTemplate {
   id: number;

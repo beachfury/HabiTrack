@@ -32,6 +32,7 @@ import * as budgets from './routes/budgets';
 import * as meals from './routes/meals';
 import { deleteDirectMessage, deleteConversation } from './routes/messages/direct';
 import notificationsRouter from './routes/notifications';
+import * as debug from './routes/debug';
 
 const router = Router();
 
@@ -39,6 +40,19 @@ const router = Router();
 // PUBLIC ROUTES (no auth required)
 // =============================================================================
 router.get('/branding', settings.getBranding);
+router.get('/version', debug.getVersion);
+
+// =============================================================================
+// DEBUG & DIAGNOSTICS ROUTES (admin only)
+// =============================================================================
+router.get('/debug/settings', requireAuth('admin'), debug.getDebugSettings);
+router.put('/debug/settings', requireAuth('admin'), debug.updateDebugSettings);
+router.get('/debug/logs', requireAuth('admin'), debug.getLogs);
+router.get('/debug/logs/export', requireAuth('admin'), debug.exportLogsFile);
+router.delete('/debug/logs', requireAuth('admin'), debug.clearLogs);
+router.get('/debug/logs/file/:filename', requireAuth('admin'), debug.downloadLogFile);
+router.get('/debug/system', requireAuth('admin'), debug.getSystemInfo);
+router.post('/debug/frontend-errors', requireAuth(), debug.receiveFrontendErrors);
 
 // =============================================================================
 // AUTH ROUTES

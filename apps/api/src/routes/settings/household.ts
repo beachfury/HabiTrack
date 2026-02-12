@@ -6,6 +6,9 @@ import type { Request, Response } from 'express';
 import { q } from '../../db';
 import { logAudit } from '../../audit';
 import { getUser, success, forbidden, serverError } from '../../utils';
+import { createLogger } from '../../services/logger';
+
+const log = createLogger('settings');
 
 interface HouseholdSettings {
   id: number;
@@ -86,6 +89,8 @@ export async function updateHouseholdSettings(req: Request, res: Response) {
     if (updates.length > 0) {
       params.push(1); // WHERE id = 1
       await q(`UPDATE settings SET ${updates.join(', ')}, updatedAt = NOW(3) WHERE id = ?`, params);
+
+      log.info('Household settings updated', { userId: user.id, fields: updates.map(u => u.split(' ')[0]) });
     }
 
     await logAudit({
@@ -97,6 +102,7 @@ export async function updateHouseholdSettings(req: Request, res: Response) {
 
     return success(res, { success: true });
   } catch (err) {
+    log.error('Failed to update household settings', { error: String(err) });
     return serverError(res, err as Error);
   }
 }

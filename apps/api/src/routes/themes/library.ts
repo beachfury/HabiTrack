@@ -4,17 +4,8 @@
 import type { Request, Response } from 'express';
 import { q } from '../../db';
 import { v4 as uuidv4 } from 'uuid';
-
-// Helper to get user from request
-function getUser(req: Request) {
-  return (req as any).user as
-    | {
-        id: number;
-        displayName: string;
-        roleId: 'admin' | 'member' | 'kid' | 'kiosk';
-      }
-    | undefined;
-}
+import { getUser } from '../../utils/auth';
+import { authRequired, forbidden, invalidInput, notFound, serverError } from '../../utils/errors';
 
 // ============================================
 // GET /api/themes - List all themes
@@ -23,7 +14,7 @@ export async function listThemes(req: Request, res: Response) {
   try {
     const user = getUser(req);
     if (!user) {
-      return res.status(401).json({ error: 'Authentication required' });
+      return authRequired(res);
     }
 
     const { filter } = req.query;
@@ -65,7 +56,7 @@ export async function listThemes(req: Request, res: Response) {
     res.json({ themes: parsedThemes });
   } catch (err) {
     console.error('Failed to list themes:', err);
-    res.status(500).json({ error: 'Failed to list themes' });
+    serverError(res, 'Failed to list themes');
   }
 }
 
@@ -76,7 +67,7 @@ export async function getTheme(req: Request, res: Response) {
   try {
     const user = getUser(req);
     if (!user) {
-      return res.status(401).json({ error: 'Authentication required' });
+      return authRequired(res);
     }
 
     const { id } = req.params;
@@ -95,14 +86,14 @@ export async function getTheme(req: Request, res: Response) {
     );
 
     if (themes.length === 0) {
-      return res.status(404).json({ error: 'Theme not found' });
+      return notFound(res, 'Theme');
     }
 
     const theme = parseThemeRow(themes[0]);
     res.json({ theme });
   } catch (err) {
     console.error('Failed to get theme:', err);
-    res.status(500).json({ error: 'Failed to get theme' });
+    serverError(res, 'Failed to get theme');
   }
 }
 
@@ -113,12 +104,12 @@ export async function createTheme(req: Request, res: Response) {
   try {
     const user = getUser(req);
     if (!user) {
-      return res.status(401).json({ error: 'Authentication required' });
+      return authRequired(res);
     }
 
     // Only member and admin can create themes
     if (user.roleId === 'kid' || user.roleId === 'kiosk') {
-      return res.status(403).json({ error: 'Permission denied' });
+      return forbidden(res, 'Permission denied');
     }
 
     const {
@@ -144,7 +135,7 @@ export async function createTheme(req: Request, res: Response) {
 
     // Validate required fields
     if (!name || !layout || !colorsLight || !colorsDark || !typography || !pageBackground || !ui || !icons) {
-      return res.status(400).json({ error: 'Missing required fields' });
+      return invalidInput(res, 'Missing required fields');
     }
 
     const id = uuidv4();
@@ -187,7 +178,7 @@ export async function createTheme(req: Request, res: Response) {
     res.status(201).json({ theme });
   } catch (err) {
     console.error('Failed to create theme:', err);
-    res.status(500).json({ error: 'Failed to create theme' });
+    serverError(res, 'Failed to create theme');
   }
 }
 
@@ -198,7 +189,7 @@ export async function updateTheme(req: Request, res: Response) {
   try {
     const user = getUser(req);
     if (!user) {
-      return res.status(401).json({ error: 'Authentication required' });
+      return authRequired(res);
     }
 
     const { id } = req.params;
@@ -206,12 +197,12 @@ export async function updateTheme(req: Request, res: Response) {
     // Check ownership or admin
     const existing = await q<any[]>('SELECT createdBy, isDefault, isSystemTheme FROM themes WHERE id = ?', [id]);
     if (existing.length === 0) {
-      return res.status(404).json({ error: 'Theme not found' });
+      return notFound(res, 'Theme');
     }
 
     // Cannot edit system themes (HabiTrack Classic)
     if (existing[0].isSystemTheme) {
-      return res.status(403).json({ error: 'Cannot modify system themes' });
+      return forbidden(res, 'Cannot modify system themes');
     }
 
     const isOwner = existing[0].createdBy === user.id;
@@ -219,11 +210,11 @@ export async function updateTheme(req: Request, res: Response) {
 
     // Only admins can edit default themes (like Household Brand)
     if (existing[0].isDefault && !isAdmin) {
-      return res.status(403).json({ error: 'Only administrators can modify the household theme' });
+      return forbidden(res, 'Only administrators can modify the household theme');
     }
 
     if (!isOwner && !isAdmin) {
-      return res.status(403).json({ error: 'Permission denied' });
+      return forbidden(res, 'Permission denied');
     }
 
     const {
@@ -333,7 +324,7 @@ export async function updateTheme(req: Request, res: Response) {
     }
 
     if (updates.length === 0) {
-      return res.status(400).json({ error: 'No fields to update' });
+      return invalidInput(res, 'No fields to update');
     }
 
     params.push(id);
@@ -346,7 +337,7 @@ export async function updateTheme(req: Request, res: Response) {
     res.json({ theme });
   } catch (err) {
     console.error('Failed to update theme:', err);
-    res.status(500).json({ error: 'Failed to update theme' });
+    serverError(res, 'Failed to update theme');
   }
 }
 
@@ -357,7 +348,7 @@ export async function deleteTheme(req: Request, res: Response) {
   try {
     const user = getUser(req);
     if (!user) {
-      return res.status(401).json({ error: 'Authentication required' });
+      return authRequired(res);
     }
 
     const { id } = req.params;
@@ -365,24 +356,24 @@ export async function deleteTheme(req: Request, res: Response) {
     // Check ownership or admin
     const existing = await q<any[]>('SELECT createdBy, isDefault, isSystemTheme FROM themes WHERE id = ?', [id]);
     if (existing.length === 0) {
-      return res.status(404).json({ error: 'Theme not found' });
+      return notFound(res, 'Theme');
     }
 
     // Cannot delete system themes (HabiTrack Classic)
     if (existing[0].isSystemTheme) {
-      return res.status(400).json({ error: 'Cannot delete system themes' });
+      return invalidInput(res, 'Cannot delete system themes');
     }
 
     // Cannot delete default theme (Household Brand)
     if (existing[0].isDefault) {
-      return res.status(400).json({ error: 'Cannot delete the household default theme' });
+      return invalidInput(res, 'Cannot delete the household default theme');
     }
 
     const isOwner = existing[0].createdBy === user.id;
     const isAdmin = user.roleId === 'admin';
 
     if (!isOwner && !isAdmin) {
-      return res.status(403).json({ error: 'Permission denied' });
+      return forbidden(res, 'Permission denied');
     }
 
     await q('DELETE FROM themes WHERE id = ?', [id]);
@@ -390,7 +381,7 @@ export async function deleteTheme(req: Request, res: Response) {
     res.json({ success: true });
   } catch (err) {
     console.error('Failed to delete theme:', err);
-    res.status(500).json({ error: 'Failed to delete theme' });
+    serverError(res, 'Failed to delete theme');
   }
 }
 
@@ -401,11 +392,11 @@ export async function duplicateTheme(req: Request, res: Response) {
   try {
     const user = getUser(req);
     if (!user) {
-      return res.status(401).json({ error: 'Authentication required' });
+      return authRequired(res);
     }
 
     if (user.roleId === 'kid' || user.roleId === 'kiosk') {
-      return res.status(403).json({ error: 'Permission denied' });
+      return forbidden(res, 'Permission denied');
     }
 
     const { id } = req.params;
@@ -418,7 +409,7 @@ export async function duplicateTheme(req: Request, res: Response) {
     ]);
 
     if (themes.length === 0) {
-      return res.status(404).json({ error: 'Theme not found' });
+      return notFound(res, 'Theme');
     }
 
     const original = themes[0];
@@ -462,7 +453,7 @@ export async function duplicateTheme(req: Request, res: Response) {
     res.status(201).json({ theme });
   } catch (err) {
     console.error('Failed to duplicate theme:', err);
-    res.status(500).json({ error: 'Failed to duplicate theme' });
+    serverError(res, 'Failed to duplicate theme');
   }
 }
 
@@ -473,25 +464,25 @@ export async function toggleKidApproval(req: Request, res: Response) {
   try {
     const user = getUser(req);
     if (!user) {
-      return res.status(401).json({ error: 'Authentication required' });
+      return authRequired(res);
     }
 
     // Only admins can approve themes for kids
     if (user.roleId !== 'admin') {
-      return res.status(403).json({ error: 'Only administrators can approve themes for kids' });
+      return forbidden(res, 'Only administrators can approve themes for kids');
     }
 
     const { id } = req.params;
     const { approved } = req.body;
 
     if (typeof approved !== 'boolean') {
-      return res.status(400).json({ error: 'approved field must be a boolean' });
+      return invalidInput(res, 'approved field must be a boolean');
     }
 
     // Check theme exists
     const existing = await q<any[]>('SELECT id FROM themes WHERE id = ?', [id]);
     if (existing.length === 0) {
-      return res.status(404).json({ error: 'Theme not found' });
+      return notFound(res, 'Theme');
     }
 
     await q('UPDATE themes SET isApprovedForKids = ? WHERE id = ?', [approved ? 1 : 0, id]);
@@ -503,7 +494,7 @@ export async function toggleKidApproval(req: Request, res: Response) {
     res.json({ theme });
   } catch (err) {
     console.error('Failed to toggle kid approval:', err);
-    res.status(500).json({ error: 'Failed to toggle kid approval' });
+    serverError(res, 'Failed to toggle kid approval');
   }
 }
 

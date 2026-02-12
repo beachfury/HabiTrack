@@ -7,6 +7,9 @@ import { q } from '../../db';
 import { success, serverError, validationError } from '../../utils';
 import { logAudit } from '../../audit';
 import { renderTemplate, TEST_EMAIL } from '../../email/templates';
+import { createLogger } from '../../services/logger';
+
+const log = createLogger('email-settings');
 
 /**
  * Email settings type (without password for response)
@@ -85,9 +88,10 @@ export async function getEmailSettings(req: Request, res: Response) {
       lastTestResult: settings.lastTestResult,
     };
 
+    log.debug('Email settings retrieved', { userId: req.user?.id });
     return success(res, { settings: response });
   } catch (err) {
-    console.error('[getEmailSettings] error', err);
+    log.error('Failed to get email settings', { error: String(err) });
     return serverError(res, err as Error);
   }
 }
@@ -192,6 +196,9 @@ export async function updateEmailSettings(req: Request, res: Response) {
     if (fields.length > 0) {
       await q(`UPDATE email_settings SET ${fields.join(', ')} WHERE id = 1`, values);
 
+      const updatedFields = fields.map(f => f.split(' ')[0]);
+      log.info('Email settings updated', { userId: req.user.id, fields: updatedFields });
+
       // Audit log
       await logAudit({
         action: 'settings.email_updated',
@@ -199,14 +206,14 @@ export async function updateEmailSettings(req: Request, res: Response) {
         actorId: req.user.id,
         ip: req.ip || 'unknown',
         ua: req.get('user-agent') || 'unknown',
-        details: { fields: fields.map(f => f.split(' ')[0]) },
+        details: { fields: updatedFields },
       });
     }
 
     // Return updated settings (without password)
     return getEmailSettings(req, res);
   } catch (err) {
-    console.error('[updateEmailSettings] error', err);
+    log.error('Failed to update email settings', { error: String(err) });
     return serverError(res, err as Error);
   }
 }
@@ -326,12 +333,18 @@ export async function sendTestEmail(req: Request, res: Response) {
       details: { toEmail, result: testResult },
     });
 
+    if (success_) {
+      log.info('Test email sent successfully', { userId: req.user.id, toEmail });
+    } else {
+      log.warn('Test email failed', { userId: req.user.id, toEmail, result: testResult });
+    }
+
     return success(res, {
       success: success_,
       message: testResult,
     });
   } catch (err) {
-    console.error('[sendTestEmail] error', err);
+    log.error('Failed to send test email', { error: String(err) });
     return serverError(res, err as Error);
   }
 }

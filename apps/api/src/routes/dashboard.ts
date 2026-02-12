@@ -3,11 +3,9 @@
 
 import { Request, Response } from 'express';
 import { q } from '../db';
-
-// Helper to get user from request
-function getUser(req: Request) {
-  return (req as any).user as { id: number; roleId: string } | undefined;
-}
+import { getUser } from '../utils/auth';
+import { authRequired, invalidInput, notFound, serverError } from '../utils/errors';
+import { LIMITS } from '../utils/constants';
 
 // Widget type definitions
 interface Widget {
@@ -61,7 +59,7 @@ export async function getAvailableWidgets(req: Request, res: Response) {
   try {
     const user = getUser(req);
     if (!user) {
-      return res.status(401).json({ error: 'Authentication required' });
+      return authRequired(res);
     }
 
     let widgets: Widget[];
@@ -87,7 +85,7 @@ export async function getAvailableWidgets(req: Request, res: Response) {
     res.json({ widgets: filteredWidgets });
   } catch (err) {
     console.error('Failed to get available widgets:', err);
-    res.status(500).json({ error: 'Failed to get available widgets' });
+    serverError(res, 'Failed to get available widgets');
   }
 }
 
@@ -98,7 +96,7 @@ export async function getDashboardLayout(req: Request, res: Response) {
   try {
     const user = getUser(req);
     if (!user) {
-      return res.status(401).json({ error: 'Authentication required' });
+      return authRequired(res);
     }
 
     // Try to get user's custom layout, handle table not existing
@@ -167,7 +165,7 @@ export async function getDashboardLayout(req: Request, res: Response) {
     });
   } catch (err) {
     console.error('Failed to get dashboard layout:', err);
-    res.status(500).json({ error: 'Failed to get dashboard layout' });
+    serverError(res, 'Failed to get dashboard layout');
   }
 }
 
@@ -232,13 +230,13 @@ export async function saveDashboardLayout(req: Request, res: Response) {
   try {
     const user = getUser(req);
     if (!user) {
-      return res.status(401).json({ error: 'Authentication required' });
+      return authRequired(res);
     }
 
     const { layout } = req.body as { layout: UserWidgetLayout[] };
 
     if (!Array.isArray(layout)) {
-      return res.status(400).json({ error: 'Layout must be an array' });
+      return invalidInput(res, 'Layout must be an array');
     }
 
     // Clear existing layout
@@ -268,7 +266,7 @@ export async function saveDashboardLayout(req: Request, res: Response) {
     res.json({ success: true });
   } catch (err) {
     console.error('Failed to save dashboard layout:', err);
-    res.status(500).json({ error: 'Failed to save dashboard layout' });
+    serverError(res, 'Failed to save dashboard layout');
   }
 }
 
@@ -279,7 +277,7 @@ export async function addWidget(req: Request, res: Response) {
   try {
     const user = getUser(req);
     if (!user) {
-      return res.status(401).json({ error: 'Authentication required' });
+      return authRequired(res);
     }
 
     const { widgetId } = req.body;
@@ -288,7 +286,7 @@ export async function addWidget(req: Request, res: Response) {
     const widgets = await q<Widget[]>('SELECT * FROM dashboard_widgets WHERE id = ? AND active = 1', [widgetId]);
 
     if (widgets.length === 0) {
-      return res.status(404).json({ error: 'Widget not found' });
+      return notFound(res, 'Widget');
     }
 
     const widget = widgets[0];
@@ -318,7 +316,7 @@ export async function addWidget(req: Request, res: Response) {
     res.json({ success: true });
   } catch (err) {
     console.error('Failed to add widget:', err);
-    res.status(500).json({ error: 'Failed to add widget' });
+    serverError(res, 'Failed to add widget');
   }
 }
 
@@ -329,7 +327,7 @@ export async function removeWidget(req: Request, res: Response) {
   try {
     const user = getUser(req);
     if (!user) {
-      return res.status(401).json({ error: 'Authentication required' });
+      return authRequired(res);
     }
 
     const { widgetId } = req.params;
@@ -339,7 +337,7 @@ export async function removeWidget(req: Request, res: Response) {
     res.json({ success: true });
   } catch (err) {
     console.error('Failed to remove widget:', err);
-    res.status(500).json({ error: 'Failed to remove widget' });
+    serverError(res, 'Failed to remove widget');
   }
 }
 
@@ -350,7 +348,7 @@ export async function updateWidgetConfig(req: Request, res: Response) {
   try {
     const user = getUser(req);
     if (!user) {
-      return res.status(401).json({ error: 'Authentication required' });
+      return authRequired(res);
     }
 
     const { widgetId } = req.params;
@@ -365,7 +363,7 @@ export async function updateWidgetConfig(req: Request, res: Response) {
     res.json({ success: true });
   } catch (err) {
     console.error('Failed to update widget config:', err);
-    res.status(500).json({ error: 'Failed to update widget config' });
+    serverError(res, 'Failed to update widget config');
   }
 }
 
@@ -376,7 +374,7 @@ export async function resetDashboard(req: Request, res: Response) {
   try {
     const user = getUser(req);
     if (!user) {
-      return res.status(401).json({ error: 'Authentication required' });
+      return authRequired(res);
     }
 
     // Delete all user's widget layouts
@@ -385,7 +383,7 @@ export async function resetDashboard(req: Request, res: Response) {
     res.json({ success: true });
   } catch (err) {
     console.error('Failed to reset dashboard:', err);
-    res.status(500).json({ error: 'Failed to reset dashboard' });
+    serverError(res, 'Failed to reset dashboard');
   }
 }
 
@@ -407,7 +405,7 @@ export async function getDashboardData(req: Request, res: Response) {
   try {
     const user = getUser(req);
     if (!user) {
-      return res.status(401).json({ error: 'Authentication required' });
+      return authRequired(res);
     }
 
     // Get user info
@@ -579,6 +577,6 @@ export async function getDashboardData(req: Request, res: Response) {
     });
   } catch (err) {
     console.error('Failed to get dashboard data:', err);
-    res.status(500).json({ error: 'Failed to get dashboard data' });
+    serverError(res, 'Failed to get dashboard data');
   }
 }

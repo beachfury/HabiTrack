@@ -3,11 +3,8 @@
 
 import { Request, Response } from 'express';
 import { q } from '../../db';
-
-// Helper to get user from request
-function getUser(req: Request) {
-  return (req as any).user as { id: number; roleId: string } | undefined;
-}
+import { getUser } from '../../utils/auth';
+import { authRequired, invalidInput, notFound, serverError } from '../../utils/errors';
 
 // ============================================
 // GET ALL CATEGORIES
@@ -16,7 +13,7 @@ export async function getCategories(req: Request, res: Response) {
   try {
     const user = getUser(req);
     if (!user) {
-      return res.status(401).json({ error: 'Authentication required' });
+      return authRequired(res);
     }
 
     const categories = await q<any[]>(`
@@ -38,7 +35,7 @@ export async function getCategories(req: Request, res: Response) {
     res.json({ categories });
   } catch (err) {
     console.error('Failed to get budget categories:', err);
-    res.status(500).json({ error: 'Failed to get budget categories' });
+    serverError(res, 'Failed to get budget categories');
   }
 }
 
@@ -49,13 +46,13 @@ export async function createCategory(req: Request, res: Response) {
   try {
     const user = getUser(req);
     if (!user) {
-      return res.status(401).json({ error: 'Authentication required' });
+      return authRequired(res);
     }
 
     const { name, icon, color, parentId, sortOrder } = req.body;
 
     if (!name || name.trim().length === 0) {
-      return res.status(400).json({ error: 'Category name is required' });
+      return invalidInput(res, 'Category name is required');
     }
 
     const result = await q<any>(`
@@ -69,7 +66,7 @@ export async function createCategory(req: Request, res: Response) {
     });
   } catch (err) {
     console.error('Failed to create budget category:', err);
-    res.status(500).json({ error: 'Failed to create budget category' });
+    serverError(res, 'Failed to create budget category');
   }
 }
 
@@ -80,7 +77,7 @@ export async function updateCategory(req: Request, res: Response) {
   try {
     const user = getUser(req);
     if (!user) {
-      return res.status(401).json({ error: 'Authentication required' });
+      return authRequired(res);
     }
 
     const { id } = req.params;
@@ -92,7 +89,7 @@ export async function updateCategory(req: Request, res: Response) {
     `, [id]);
 
     if (existing.length === 0) {
-      return res.status(404).json({ error: 'Category not found' });
+      return notFound(res, 'Category');
     }
 
     // Build update query dynamically
@@ -125,7 +122,7 @@ export async function updateCategory(req: Request, res: Response) {
     }
 
     if (updates.length === 0) {
-      return res.status(400).json({ error: 'No fields to update' });
+      return invalidInput(res, 'No fields to update');
     }
 
     params.push(id);
@@ -138,7 +135,7 @@ export async function updateCategory(req: Request, res: Response) {
     res.json({ success: true, message: 'Category updated successfully' });
   } catch (err) {
     console.error('Failed to update budget category:', err);
-    res.status(500).json({ error: 'Failed to update budget category' });
+    serverError(res, 'Failed to update budget category');
   }
 }
 
@@ -149,7 +146,7 @@ export async function deleteCategory(req: Request, res: Response) {
   try {
     const user = getUser(req);
     if (!user) {
-      return res.status(401).json({ error: 'Authentication required' });
+      return authRequired(res);
     }
 
     const { id } = req.params;
@@ -160,7 +157,7 @@ export async function deleteCategory(req: Request, res: Response) {
     `, [id]);
 
     if (existing.length === 0) {
-      return res.status(404).json({ error: 'Category not found' });
+      return notFound(res, 'Category');
     }
 
     // Check if category has budgets
@@ -169,9 +166,7 @@ export async function deleteCategory(req: Request, res: Response) {
     `, [id]);
 
     if (budgetCount[0].count > 0) {
-      return res.status(400).json({
-        error: 'Cannot delete category with active budgets. Move or delete the budgets first.'
-      });
+      return invalidInput(res, 'Cannot delete category with active budgets. Move or delete the budgets first.');
     }
 
     // Soft delete
@@ -182,6 +177,6 @@ export async function deleteCategory(req: Request, res: Response) {
     res.json({ success: true, message: 'Category deleted successfully' });
   } catch (err) {
     console.error('Failed to delete budget category:', err);
-    res.status(500).json({ error: 'Failed to delete budget category' });
+    serverError(res, 'Failed to delete budget category');
   }
 }

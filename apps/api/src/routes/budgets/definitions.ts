@@ -3,11 +3,11 @@
 
 import { Request, Response } from 'express';
 import { q } from '../../db';
+import { getUser } from '../../utils/auth';
+import { authRequired, invalidInput, notFound, serverError } from '../../utils/errors';
+import { createLogger } from '../../services/logger';
 
-// Helper to get user from request
-function getUser(req: Request) {
-  return (req as any).user as { id: number; roleId: string } | undefined;
-}
+const log = createLogger('budgets');
 
 // Helper to get current period dates based on periodType
 function getCurrentPeriodDates(periodType: string): { startDate: Date; endDate: Date } {
@@ -51,7 +51,7 @@ export async function getBudgets(req: Request, res: Response) {
   try {
     const user = getUser(req);
     if (!user) {
-      return res.status(401).json({ error: 'Authentication required' });
+      return authRequired(res);
     }
 
     const { categoryId, active } = req.query;
@@ -133,7 +133,7 @@ export async function getBudgets(req: Request, res: Response) {
     res.json({ budgets: budgetsWithSpending });
   } catch (err) {
     console.error('Failed to get budgets:', err);
-    res.status(500).json({ error: 'Failed to get budgets' });
+    serverError(res, 'Failed to get budgets');
   }
 }
 
@@ -144,7 +144,7 @@ export async function getBudget(req: Request, res: Response) {
   try {
     const user = getUser(req);
     if (!user) {
-      return res.status(401).json({ error: 'Authentication required' });
+      return authRequired(res);
     }
 
     const { id } = req.params;
@@ -176,7 +176,7 @@ export async function getBudget(req: Request, res: Response) {
     `, [id]);
 
     if (budgets.length === 0) {
-      return res.status(404).json({ error: 'Budget not found' });
+      return notFound(res, 'Budget');
     }
 
     const budget = budgets[0];
@@ -230,7 +230,7 @@ export async function getBudget(req: Request, res: Response) {
     });
   } catch (err) {
     console.error('Failed to get budget:', err);
-    res.status(500).json({ error: 'Failed to get budget' });
+    serverError(res, 'Failed to get budget');
   }
 }
 
@@ -241,7 +241,7 @@ export async function createBudget(req: Request, res: Response) {
   try {
     const user = getUser(req);
     if (!user) {
-      return res.status(401).json({ error: 'Authentication required' });
+      return authRequired(res);
     }
 
     const {
@@ -259,13 +259,13 @@ export async function createBudget(req: Request, res: Response) {
 
     // Validation
     if (!categoryId) {
-      return res.status(400).json({ error: 'Category is required' });
+      return invalidInput(res, 'Category is required');
     }
     if (!name || name.trim().length === 0) {
-      return res.status(400).json({ error: 'Budget name is required' });
+      return invalidInput(res, 'Budget name is required');
     }
     if (budgetAmount === undefined || budgetAmount === null || budgetAmount < 0) {
-      return res.status(400).json({ error: 'Valid budget amount is required' });
+      return invalidInput(res, 'Valid budget amount is required');
     }
 
     // Check category exists
@@ -274,7 +274,7 @@ export async function createBudget(req: Request, res: Response) {
     `, [categoryId]);
 
     if (category.length === 0) {
-      return res.status(400).json({ error: 'Invalid category' });
+      return invalidInput(res, 'Invalid category');
     }
 
     const result = await q<any>(`
@@ -297,13 +297,15 @@ export async function createBudget(req: Request, res: Response) {
       user.id
     ]);
 
+    log.info('Budget created', { budgetId: result.insertId, name, budgetAmount, createdBy: user.id });
+
     res.status(201).json({
       id: result.insertId,
       message: 'Budget created successfully'
     });
   } catch (err) {
-    console.error('Failed to create budget:', err);
-    res.status(500).json({ error: 'Failed to create budget' });
+    log.error('Failed to create budget', { error: String(err) });
+    serverError(res, 'Failed to create budget');
   }
 }
 
@@ -314,7 +316,7 @@ export async function updateBudget(req: Request, res: Response) {
   try {
     const user = getUser(req);
     if (!user) {
-      return res.status(401).json({ error: 'Authentication required' });
+      return authRequired(res);
     }
 
     const { id } = req.params;
@@ -338,7 +340,7 @@ export async function updateBudget(req: Request, res: Response) {
     `, [id]);
 
     if (existing.length === 0) {
-      return res.status(404).json({ error: 'Budget not found' });
+      return notFound(res, 'Budget');
     }
 
     const oldBudget = existing[0];
@@ -401,7 +403,7 @@ export async function updateBudget(req: Request, res: Response) {
     }
 
     if (updates.length === 0) {
-      return res.status(400).json({ error: 'No fields to update' });
+      return invalidInput(res, 'No fields to update');
     }
 
     params.push(id);
@@ -411,10 +413,12 @@ export async function updateBudget(req: Request, res: Response) {
       WHERE id = ?
     `, params);
 
+    log.info('Budget updated', { budgetId: id, updatedBy: user.id });
+
     res.json({ success: true, message: 'Budget updated successfully' });
   } catch (err) {
-    console.error('Failed to update budget:', err);
-    res.status(500).json({ error: 'Failed to update budget' });
+    log.error('Failed to update budget', { budgetId: id, error: String(err) });
+    serverError(res, 'Failed to update budget');
   }
 }
 
@@ -425,7 +429,7 @@ export async function deleteBudget(req: Request, res: Response) {
   try {
     const user = getUser(req);
     if (!user) {
-      return res.status(401).json({ error: 'Authentication required' });
+      return authRequired(res);
     }
 
     const { id } = req.params;
@@ -436,7 +440,7 @@ export async function deleteBudget(req: Request, res: Response) {
     `, [id]);
 
     if (existing.length === 0) {
-      return res.status(404).json({ error: 'Budget not found' });
+      return notFound(res, 'Budget');
     }
 
     // Soft delete
@@ -447,7 +451,7 @@ export async function deleteBudget(req: Request, res: Response) {
     res.json({ success: true, message: 'Budget deleted successfully' });
   } catch (err) {
     console.error('Failed to delete budget:', err);
-    res.status(500).json({ error: 'Failed to delete budget' });
+    serverError(res, 'Failed to delete budget');
   }
 }
 
@@ -458,7 +462,7 @@ export async function getBudgetHistory(req: Request, res: Response) {
   try {
     const user = getUser(req);
     if (!user) {
-      return res.status(401).json({ error: 'Authentication required' });
+      return authRequired(res);
     }
 
     const { id } = req.params;
@@ -469,7 +473,7 @@ export async function getBudgetHistory(req: Request, res: Response) {
     `, [id]);
 
     if (existing.length === 0) {
-      return res.status(404).json({ error: 'Budget not found' });
+      return notFound(res, 'Budget');
     }
 
     const history = await q<any[]>(`
@@ -494,6 +498,6 @@ export async function getBudgetHistory(req: Request, res: Response) {
     });
   } catch (err) {
     console.error('Failed to get budget history:', err);
-    res.status(500).json({ error: 'Failed to get budget history' });
+    serverError(res, 'Failed to get budget history');
   }
 }
