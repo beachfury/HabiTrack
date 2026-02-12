@@ -417,7 +417,7 @@ export async function updateBudget(req: Request, res: Response) {
 
     res.json({ success: true, message: 'Budget updated successfully' });
   } catch (err) {
-    log.error('Failed to update budget', { budgetId: id, error: String(err) });
+    log.error('Failed to update budget', { budgetId: req.params.id, error: String(err) });
     serverError(res, 'Failed to update budget');
   }
 }

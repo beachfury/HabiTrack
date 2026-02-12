@@ -198,7 +198,7 @@ export async function updateUserThemePreferences(req: Request, res: Response) {
       activeTheme,
     });
   } catch (err) {
-    log.error('Failed to update theme preferences', { userId: user?.id, error: String(err) });
+    log.error('Failed to update theme preferences', { error: String(err) });
     serverError(res, 'Failed to update theme preferences');
   }
 }

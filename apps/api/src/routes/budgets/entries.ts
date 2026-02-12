@@ -332,7 +332,7 @@ export async function updateEntry(req: Request, res: Response) {
 
     res.json({ success: true, message: 'Entry updated successfully' });
   } catch (err) {
-    log.error('Failed to update budget entry', { entryId: id, error: String(err) });
+    log.error('Failed to update budget entry', { entryId: req.params.id, error: String(err) });
     serverError(res, 'Failed to update budget entry');
   }
 }
@@ -367,7 +367,7 @@ export async function deleteEntry(req: Request, res: Response) {
 
     res.json({ success: true, message: 'Entry deleted successfully' });
   } catch (err) {
-    log.error('Failed to delete budget entry', { entryId: id, error: String(err) });
+    log.error('Failed to delete budget entry', { entryId: req.params.id, error: String(err) });
     serverError(res, 'Failed to delete budget entry');
   }
 }

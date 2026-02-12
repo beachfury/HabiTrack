@@ -226,7 +226,7 @@ export async function updatePaidChore(req: Request, res: Response) {
     const chores = await q<any[]>('SELECT * FROM paid_chores WHERE id = ?', [id]);
     res.json({ chore: chores[0] });
   } catch (err) {
-    log.error('Failed to update paid chore', { choreId: id, error: String(err) });
+    log.error('Failed to update paid chore', { choreId: req.params.id, error: String(err) });
     serverError(res, 'Failed to update paid chore');
   }
 }
@@ -259,7 +259,7 @@ export async function deletePaidChore(req: Request, res: Response) {
 
     res.json({ success: true });
   } catch (err) {
-    log.error('Failed to delete paid chore', { choreId: id, error: String(err) });
+    log.error('Failed to delete paid chore', { choreId: req.params.id, error: String(err) });
     serverError(res, 'Failed to delete paid chore');
   }
 }
