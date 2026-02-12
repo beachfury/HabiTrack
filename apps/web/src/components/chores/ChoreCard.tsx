@@ -1,6 +1,7 @@
 // apps/web/src/components/chores/ChoreCard.tsx
 import { Check, Clock, MoreVertical, X } from 'lucide-react';
 import type { ChoreInstance } from '../../types';
+import { getDifficultyStyle } from '../../utils';
 
 interface ChoreCardProps {
   instance: ChoreInstance;
@@ -14,27 +15,6 @@ interface ChoreCardProps {
   isUpcoming?: boolean;
   showDate?: boolean;
 }
-
-// Difficulty styles using CSS variables
-const getDifficultyStyle = (difficulty: string) => {
-  switch (difficulty) {
-    case 'easy':
-      return {
-        backgroundColor: 'color-mix(in srgb, var(--color-success) 15%, transparent)',
-        color: 'var(--color-success)',
-      };
-    case 'hard':
-      return {
-        backgroundColor: 'color-mix(in srgb, var(--color-destructive) 15%, transparent)',
-        color: 'var(--color-destructive)',
-      };
-    default: // medium
-      return {
-        backgroundColor: 'color-mix(in srgb, var(--color-warning) 15%, transparent)',
-        color: 'var(--color-warning)',
-      };
-  }
-};
 
 export function ChoreCard({
   instance,

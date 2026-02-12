@@ -36,72 +36,19 @@ import {
   getMealStatusLabel,
   getMealStatusStyle,
 } from '../types/meals';
+import {
+  formatDateLocal,
+  getWeekStart,
+  getWeekEnd,
+  getMonthStart,
+  getMonthEnd,
+  getMonthDays,
+  DAYS_FULL,
+  DAYS_SHORT,
+} from '../utils';
 
-const DAYS = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
-const SHORT_DAYS = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
-
-// Helper to format date as YYYY-MM-DD
-function formatDateLocal(date: Date): string {
-  const year = date.getFullYear();
-  const month = String(date.getMonth() + 1).padStart(2, '0');
-  const day = String(date.getDate()).padStart(2, '0');
-  return `${year}-${month}-${day}`;
-}
-
-// Get start of week (Sunday)
-function getWeekStart(date: Date): Date {
-  const d = new Date(date);
-  d.setDate(d.getDate() - d.getDay());
-  d.setHours(0, 0, 0, 0);
-  return d;
-}
-
-// Get end of week (Saturday)
-function getWeekEnd(date: Date): Date {
-  const d = new Date(date);
-  d.setDate(d.getDate() + (6 - d.getDay()));
-  d.setHours(23, 59, 59, 999);
-  return d;
-}
-
-// Get start of month
-function getMonthStart(date: Date): Date {
-  return new Date(date.getFullYear(), date.getMonth(), 1);
-}
-
-// Get end of month
-function getMonthEnd(date: Date): Date {
-  return new Date(date.getFullYear(), date.getMonth() + 1, 0, 23, 59, 59, 999);
-}
-
-// Get all days to display in month view (includes padding days from prev/next months)
-function getMonthDays(date: Date): Date[] {
-  const firstDay = getMonthStart(date);
-  const lastDay = getMonthEnd(date);
-  const startingDay = firstDay.getDay();
-  const totalDays = lastDay.getDate();
-
-  const days: Date[] = [];
-
-  // Add days from previous month
-  const prevMonth = new Date(date.getFullYear(), date.getMonth(), 0);
-  for (let i = startingDay - 1; i >= 0; i--) {
-    days.push(new Date(date.getFullYear(), date.getMonth() - 1, prevMonth.getDate() - i));
-  }
-
-  // Add days of current month
-  for (let i = 1; i <= totalDays; i++) {
-    days.push(new Date(date.getFullYear(), date.getMonth(), i));
-  }
-
-  // Add days from next month to complete the grid (6 rows = 42 days)
-  const remainingDays = 42 - days.length;
-  for (let i = 1; i <= remainingDays; i++) {
-    days.push(new Date(date.getFullYear(), date.getMonth() + 1, i));
-  }
-
-  return days;
-}
+const DAYS = DAYS_FULL;
+const SHORT_DAYS = DAYS_SHORT;
 
 type ViewMode = 'week' | 'month';
 
