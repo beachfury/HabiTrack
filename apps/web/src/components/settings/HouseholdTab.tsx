@@ -77,7 +77,7 @@ export function HouseholdTab({
               Logo, brand colors, and login page appearance are now configured in the Theme Editor.
             </p>
             <Link
-              to="/settings?tab=appearance"
+              to="/settings?tab=themes"
               className="inline-block mt-2 text-sm font-medium text-[var(--color-primary)] hover:underline"
             >
               Go to Theme Editor →

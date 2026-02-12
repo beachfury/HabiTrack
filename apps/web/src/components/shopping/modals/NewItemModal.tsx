@@ -3,6 +3,7 @@ import { useState, useRef, useEffect } from 'react';
 import { X, Camera, RefreshCw, DollarSign, Trash2 } from 'lucide-react';
 import { shoppingApi } from '../../../api';
 import type { ShoppingCategory, ShoppingStore, CatalogItem } from '../../../types';
+import { ModalPortal, ModalBody } from '../../common/ModalPortal';
 
 interface NewItemModalProps {
   categories: ShoppingCategory[];
@@ -143,20 +144,26 @@ export function NewItemModal({
     return 'Submit Request';
   };
 
-  return (
-    <div className="fixed inset-0 bg-black/50 flex items-end sm:items-center justify-center z-50">
-      <div className="bg-white dark:bg-gray-800 w-full sm:max-w-lg sm:rounded-2xl max-h-[90vh] overflow-hidden flex flex-col rounded-t-2xl">
-        <div className="p-4 border-b border-gray-100 dark:border-gray-700 flex items-center justify-between flex-shrink-0">
-          <h2 className="text-lg font-semibold text-gray-900 dark:text-white">{getTitle()}</h2>
-          <button
-            onClick={onClose}
-            className="p-1 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg"
-          >
-            <X size={20} />
-          </button>
-        </div>
+  const footer = (
+    <button
+      onClick={handleSubmit}
+      disabled={!name.trim() || submitting}
+      className="w-full py-3 bg-orange-500 text-white rounded-xl font-medium hover:bg-orange-600 transition-colors disabled:opacity-50"
+    >
+      {getButtonText()}
+    </button>
+  );
 
-        <div className="flex-1 overflow-y-auto p-4 space-y-4">
+  return (
+    <ModalPortal
+      isOpen={true}
+      onClose={onClose}
+      title={getTitle()}
+      size="lg"
+      footer={footer}
+    >
+      <ModalBody>
+        <div className="space-y-4">
           {!isAdmin && !isEditMode && (
             <div className="p-3 bg-blue-50 dark:bg-blue-900/20 rounded-xl text-sm text-blue-700 dark:text-blue-300">
               Your request will be sent to an admin for approval.
@@ -324,17 +331,7 @@ export function NewItemModal({
             </div>
           )}
         </div>
-
-        <div className="p-4 border-t border-gray-100 dark:border-gray-700 flex-shrink-0">
-          <button
-            onClick={handleSubmit}
-            disabled={!name.trim() || submitting}
-            className="w-full py-3 bg-orange-500 text-white rounded-xl font-medium hover:bg-orange-600 transition-colors disabled:opacity-50"
-          >
-            {getButtonText()}
-          </button>
-        </div>
-      </div>
-    </div>
+      </ModalBody>
+    </ModalPortal>
   );
 }

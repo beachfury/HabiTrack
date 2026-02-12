@@ -3,6 +3,7 @@
 
 import { q } from '../db';
 import { createNotification } from '../routes/messages';
+import { queueEmail, getUserEmail } from '../email/queue';
 
 interface UpcomingEvent {
   id: number;
@@ -66,6 +67,23 @@ export async function sendEventReminders() {
           relatedId: event.id,
           relatedType: 'calendar_reminder',
         });
+
+        // Send email reminder as well
+        const assigneeEmail = await getUserEmail(event.assignedTo);
+        if (assigneeEmail) {
+          await queueEmail({
+            userId: event.assignedTo,
+            toEmail: assigneeEmail,
+            template: 'EVENT_REMINDER',
+            variables: {
+              userName: event.assignedToName || 'there',
+              eventName: event.title,
+              eventTime: `in ${window.label} at ${eventTime}`,
+              location: '',
+              description: '',
+            },
+          });
+        }
 
         console.log(
           `[calendar-reminder] Sent ${window.label} reminder for event ${event.id} to user ${event.assignedTo}`,

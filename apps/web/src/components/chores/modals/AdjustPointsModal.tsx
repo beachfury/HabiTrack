@@ -1,7 +1,8 @@
 // apps/web/src/components/chores/modals/AdjustPointsModal.tsx
 import { useState } from 'react';
-import { X, Star, Plus, Minus, TrendingUp, TrendingDown } from 'lucide-react';
+import { Star, Plus, Minus, TrendingUp, TrendingDown } from 'lucide-react';
 import { choresApi } from '../../../api';
+import { ModalPortal, ModalBody } from '../../common/ModalPortal';
 
 interface User {
   id: number;
@@ -60,26 +61,46 @@ export function AdjustPointsModal({ user, onSuccess, onClose }: AdjustPointsModa
 
   const quickAmounts = [5, 10, 25, 50, 100];
 
-  return (
-    <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
-      <div className="bg-white dark:bg-gray-800 rounded-2xl w-full max-w-md shadow-xl">
-        {/* Header */}
-        <div className="p-4 border-b border-gray-100 dark:border-gray-700 flex items-center justify-between">
-          <h2 className="text-lg font-semibold text-gray-900 dark:text-white flex items-center gap-2">
-            <Star className="text-yellow-500" size={20} />
-            Adjust Points
-          </h2>
-          <button
-            onClick={onClose}
-            className="p-1 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg"
-          >
-            <X size={20} />
-          </button>
-        </div>
+  const footer = (
+    <div className="flex gap-3">
+      <button
+        onClick={onClose}
+        className="flex-1 px-4 py-3 text-[var(--color-muted-foreground)] hover:bg-[var(--color-muted)] rounded-xl transition-colors"
+      >
+        Cancel
+      </button>
+      <button
+        onClick={handleSubmit}
+        disabled={saving || amount <= 0 || !reason.trim()}
+        className="flex-1 px-4 py-3 rounded-xl font-medium transition-colors flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed text-white"
+        style={{
+          backgroundColor: mode === 'add' ? 'var(--color-success)' : 'var(--color-destructive)',
+        }}
+      >
+        {saving ? (
+          'Saving...'
+        ) : (
+          <>
+            {mode === 'add' ? <Plus size={18} /> : <Minus size={18} />}
+            {mode === 'add' ? 'Add' : 'Subtract'} {amount} pts
+          </>
+        )}
+      </button>
+    </div>
+  );
 
-        <div className="p-4 space-y-4">
+  return (
+    <ModalPortal
+      isOpen={true}
+      onClose={onClose}
+      title="Adjust Points"
+      size="md"
+      footer={footer}
+    >
+      <ModalBody>
+        <div className="space-y-4">
           {/* User Info */}
-          <div className="flex items-center gap-3 p-3 bg-gray-50 dark:bg-gray-700 rounded-xl">
+          <div className="flex items-center gap-3 p-3 bg-[var(--color-muted)] rounded-xl">
             <div
               className="w-12 h-12 rounded-full flex items-center justify-center text-white text-lg font-semibold"
               style={{ backgroundColor: user.color || '#8b5cf6' }}
@@ -87,15 +108,23 @@ export function AdjustPointsModal({ user, onSuccess, onClose }: AdjustPointsModa
               {displayName.charAt(0).toUpperCase()}
             </div>
             <div>
-              <p className="font-semibold text-gray-900 dark:text-white">{displayName}</p>
-              <p className="text-sm text-gray-500">
-                Current points: <span className="font-medium text-yellow-600">{currentPoints}</span>
+              <p className="font-semibold text-[var(--color-foreground)]">{displayName}</p>
+              <p className="text-sm text-[var(--color-muted-foreground)]">
+                Current points: <span className="font-medium text-[var(--color-warning)]">{currentPoints}</span>
               </p>
             </div>
           </div>
 
           {error && (
-            <div className="p-3 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-xl text-red-600 dark:text-red-400 text-sm">
+            <div
+              className="p-3 rounded-xl text-sm"
+              style={{
+                backgroundColor: 'color-mix(in srgb, var(--color-destructive) 10%, transparent)',
+                borderColor: 'color-mix(in srgb, var(--color-destructive) 30%, transparent)',
+                color: 'var(--color-destructive)',
+                border: '1px solid',
+              }}
+            >
               {error}
             </div>
           )}
@@ -104,22 +133,38 @@ export function AdjustPointsModal({ user, onSuccess, onClose }: AdjustPointsModa
           <div className="flex gap-2">
             <button
               onClick={() => setMode('add')}
-              className={`flex-1 p-3 rounded-xl flex items-center justify-center gap-2 font-medium transition-colors ${
+              className="flex-1 p-3 rounded-xl flex items-center justify-center gap-2 font-medium transition-colors"
+              style={
                 mode === 'add'
-                  ? 'bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-300 ring-2 ring-green-500'
-                  : 'bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-400 hover:bg-gray-200 dark:hover:bg-gray-600'
-              }`}
+                  ? {
+                      backgroundColor: 'color-mix(in srgb, var(--color-success) 15%, transparent)',
+                      color: 'var(--color-success)',
+                      boxShadow: '0 0 0 2px var(--color-success)',
+                    }
+                  : {
+                      backgroundColor: 'var(--color-muted)',
+                      color: 'var(--color-muted-foreground)',
+                    }
+              }
             >
               <TrendingUp size={18} />
               Add Points
             </button>
             <button
               onClick={() => setMode('subtract')}
-              className={`flex-1 p-3 rounded-xl flex items-center justify-center gap-2 font-medium transition-colors ${
+              className="flex-1 p-3 rounded-xl flex items-center justify-center gap-2 font-medium transition-colors"
+              style={
                 mode === 'subtract'
-                  ? 'bg-red-100 dark:bg-red-900/30 text-red-700 dark:text-red-300 ring-2 ring-red-500'
-                  : 'bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-400 hover:bg-gray-200 dark:hover:bg-gray-600'
-              }`}
+                  ? {
+                      backgroundColor: 'color-mix(in srgb, var(--color-destructive) 15%, transparent)',
+                      color: 'var(--color-destructive)',
+                      boxShadow: '0 0 0 2px var(--color-destructive)',
+                    }
+                  : {
+                      backgroundColor: 'var(--color-muted)',
+                      color: 'var(--color-muted-foreground)',
+                    }
+              }
             >
               <TrendingDown size={18} />
               Subtract Points
@@ -128,7 +173,7 @@ export function AdjustPointsModal({ user, onSuccess, onClose }: AdjustPointsModa
 
           {/* Amount Input */}
           <div>
-            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+            <label className="block text-sm font-medium text-[var(--color-foreground)] mb-2">
               Amount
             </label>
             <div className="relative">
@@ -137,10 +182,10 @@ export function AdjustPointsModal({ user, onSuccess, onClose }: AdjustPointsModa
                 min="0"
                 value={amount || ''}
                 onChange={(e) => setAmount(Math.max(0, parseInt(e.target.value) || 0))}
-                className="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-xl bg-white dark:bg-gray-800 focus:ring-2 focus:ring-purple-500 text-lg font-semibold text-center"
+                className="w-full px-4 py-3 border border-[var(--color-border)] rounded-xl bg-[var(--color-card)] text-[var(--color-foreground)] focus:ring-2 focus:ring-[var(--color-primary)] text-lg font-semibold text-center"
                 placeholder="0"
               />
-              <div className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400">pts</div>
+              <div className="absolute right-3 top-1/2 -translate-y-1/2 text-[var(--color-muted-foreground)]">pts</div>
             </div>
           </div>
 
@@ -150,13 +195,18 @@ export function AdjustPointsModal({ user, onSuccess, onClose }: AdjustPointsModa
               <button
                 key={quickAmount}
                 onClick={() => setAmount(quickAmount)}
-                className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
+                className="px-4 py-2 rounded-lg text-sm font-medium transition-colors"
+                style={
                   amount === quickAmount
-                    ? mode === 'add'
-                      ? 'bg-green-500 text-white'
-                      : 'bg-red-500 text-white'
-                    : 'bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600'
-                }`}
+                    ? {
+                        backgroundColor: mode === 'add' ? 'var(--color-success)' : 'var(--color-destructive)',
+                        color: 'white',
+                      }
+                    : {
+                        backgroundColor: 'var(--color-muted)',
+                        color: 'var(--color-foreground)',
+                      }
+                }
               >
                 {mode === 'add' ? '+' : '-'}
                 {quickAmount}
@@ -166,14 +216,14 @@ export function AdjustPointsModal({ user, onSuccess, onClose }: AdjustPointsModa
 
           {/* Reason */}
           <div>
-            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+            <label className="block text-sm font-medium text-[var(--color-foreground)] mb-2">
               Reason *
             </label>
             <input
               type="text"
               value={reason}
               onChange={(e) => setReason(e.target.value)}
-              className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-xl bg-white dark:bg-gray-800 focus:ring-2 focus:ring-purple-500"
+              className="w-full px-4 py-2 border border-[var(--color-border)] rounded-xl bg-[var(--color-card)] text-[var(--color-foreground)] focus:ring-2 focus:ring-[var(--color-primary)]"
               placeholder={
                 mode === 'add'
                   ? 'e.g., Bonus for helping out'
@@ -185,11 +235,18 @@ export function AdjustPointsModal({ user, onSuccess, onClose }: AdjustPointsModa
           {/* Preview */}
           {amount > 0 && (
             <div
-              className={`p-3 rounded-xl text-center ${
+              className="p-3 rounded-xl text-center"
+              style={
                 mode === 'add'
-                  ? 'bg-green-50 dark:bg-green-900/20 text-green-700 dark:text-green-300'
-                  : 'bg-red-50 dark:bg-red-900/20 text-red-700 dark:text-red-300'
-              }`}
+                  ? {
+                      backgroundColor: 'color-mix(in srgb, var(--color-success) 10%, transparent)',
+                      color: 'var(--color-success)',
+                    }
+                  : {
+                      backgroundColor: 'color-mix(in srgb, var(--color-destructive) 10%, transparent)',
+                      color: 'var(--color-destructive)',
+                    }
+              }
             >
               <p className="text-sm">
                 {displayName}'s points will change from{' '}
@@ -201,36 +258,8 @@ export function AdjustPointsModal({ user, onSuccess, onClose }: AdjustPointsModa
               </p>
             </div>
           )}
-
-          {/* Actions */}
-          <div className="flex gap-3 pt-2">
-            <button
-              onClick={onClose}
-              className="flex-1 px-4 py-3 text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-xl transition-colors"
-            >
-              Cancel
-            </button>
-            <button
-              onClick={handleSubmit}
-              disabled={saving || amount <= 0 || !reason.trim()}
-              className={`flex-1 px-4 py-3 rounded-xl font-medium transition-colors flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed ${
-                mode === 'add'
-                  ? 'bg-green-600 hover:bg-green-700 text-white'
-                  : 'bg-red-600 hover:bg-red-700 text-white'
-              }`}
-            >
-              {saving ? (
-                'Saving...'
-              ) : (
-                <>
-                  {mode === 'add' ? <Plus size={18} /> : <Minus size={18} />}
-                  {mode === 'add' ? 'Add' : 'Subtract'} {amount} pts
-                </>
-              )}
-            </button>
-          </div>
         </div>
-      </div>
-    </div>
+      </ModalBody>
+    </ModalPortal>
   );
 }

@@ -1,10 +1,21 @@
 // apps/web/src/components/shopping/CatalogTab.tsx
 import { useState } from 'react';
-import { Plus, Search, Edit, Package, ChevronDown, ChevronRight } from 'lucide-react';
+import {
+  Plus,
+  Search,
+  Edit,
+  Package,
+  ChevronDown,
+  ChevronRight,
+  AlertCircle,
+  Check,
+  X,
+  Send,
+} from 'lucide-react';
 import { ItemImage } from './ItemImage';
 import { NewItemModal } from './modals/NewItemModal';
 import { shoppingApi } from '../../api';
-import type { CatalogItem, ShoppingCategory, ShoppingStore } from '../../types';
+import type { CatalogItem, ShoppingCategory, ShoppingStore, ShoppingRequest } from '../../types';
 
 interface CatalogTabProps {
   items: CatalogItem[];
@@ -18,6 +29,11 @@ interface CatalogTabProps {
   onRefresh: () => void;
   isAdmin: boolean;
   isKid: boolean;
+  // Integrated request handling
+  pendingRequests?: ShoppingRequest[];
+  onApproveRequest?: (request: ShoppingRequest) => void;
+  onDenyRequest?: (id: number) => void;
+  onCreateRequest?: (data: { name: string; brand?: string; categoryId?: number }) => Promise<void>;
 }
 
 export function CatalogTab({
@@ -32,12 +48,22 @@ export function CatalogTab({
   onRefresh,
   isAdmin,
   isKid,
+  pendingRequests = [],
+  onApproveRequest,
+  onDenyRequest,
+  onCreateRequest,
 }: CatalogTabProps) {
   const [selectedCategory, setSelectedCategory] = useState<number | null>(null);
   const [expandedCategories, setExpandedCategories] = useState<Set<number | 'uncategorized'>>(
     new Set(),
   );
   const [editingItem, setEditingItem] = useState<CatalogItem | null>(null);
+  const [showQuickRequest, setShowQuickRequest] = useState(false);
+  const [quickRequestName, setQuickRequestName] = useState('');
+  const [quickRequestBrand, setQuickRequestBrand] = useState('');
+  const [quickRequestCategory, setQuickRequestCategory] = useState<number | undefined>(undefined);
+  const [submittingRequest, setSubmittingRequest] = useState(false);
+  const [showPendingRequests, setShowPendingRequests] = useState(true);
 
   const filteredItems = selectedCategory
     ? items.filter((i) => i.categoryId === selectedCategory)
@@ -73,6 +99,35 @@ export function CatalogTab({
 
   const isCategoryExpanded = (catName: string) => {
     return expandedCategories.has(getCategoryId(catName));
+  };
+
+  // Handle quick request submission
+  const handleQuickRequest = async () => {
+    if (!quickRequestName.trim() || !onCreateRequest) return;
+
+    setSubmittingRequest(true);
+    try {
+      await onCreateRequest({
+        name: quickRequestName.trim(),
+        brand: quickRequestBrand.trim() || undefined,
+        categoryId: quickRequestCategory,
+      });
+      // Reset form
+      setQuickRequestName('');
+      setQuickRequestBrand('');
+      setQuickRequestCategory(undefined);
+      setShowQuickRequest(false);
+    } catch (err) {
+      console.error('Failed to submit request:', err);
+    } finally {
+      setSubmittingRequest(false);
+    }
+  };
+
+  // Pre-fill quick request with search term when showing
+  const handleShowQuickRequest = () => {
+    setQuickRequestName(searchTerm);
+    setShowQuickRequest(true);
   };
 
   // Handle saving edited item - uses same format as NewItemModal
@@ -112,10 +167,101 @@ export function CatalogTab({
 
   return (
     <div className="space-y-3">
+      {/* Pending Requests Panel (Admin only) */}
+      {isAdmin && pendingRequests.length > 0 && (
+        <div
+          className="rounded-xl border overflow-hidden"
+          style={{
+            backgroundColor: 'color-mix(in srgb, var(--color-warning) 10%, transparent)',
+            borderColor: 'color-mix(in srgb, var(--color-warning) 30%, transparent)',
+          }}
+        >
+          <button
+            onClick={() => setShowPendingRequests(!showPendingRequests)}
+            className="w-full p-3 flex items-center justify-between"
+          >
+            <div className="flex items-center gap-3">
+              <AlertCircle size={20} className="text-[var(--color-warning)]" />
+              <div className="text-left">
+                <p className="font-semibold text-[var(--color-warning)]">Pending Requests</p>
+                <p
+                  className="text-sm"
+                  style={{
+                    color: 'color-mix(in srgb, var(--color-warning) 80%, var(--color-foreground))',
+                  }}
+                >
+                  {pendingRequests.length} awaiting approval
+                </p>
+              </div>
+            </div>
+            {showPendingRequests ? (
+              <ChevronDown size={20} className="text-[var(--color-warning)]" />
+            ) : (
+              <ChevronRight size={20} className="text-[var(--color-warning)]" />
+            )}
+          </button>
+
+          {showPendingRequests && (
+            <div
+              className="border-t"
+              style={{ borderColor: 'color-mix(in srgb, var(--color-warning) 30%, transparent)' }}
+            >
+              {pendingRequests.map((request) => (
+                <div
+                  key={request.id}
+                  className="p-3 flex items-start gap-3 hover:bg-[var(--color-warning)]/10"
+                >
+                  {request.imageKey ? (
+                    <img
+                      src={request.imageKey}
+                      alt=""
+                      className="w-12 h-12 object-cover rounded-lg flex-shrink-0"
+                    />
+                  ) : (
+                    <div className="w-12 h-12 bg-[var(--color-muted)] rounded-lg flex items-center justify-center flex-shrink-0">
+                      <Package size={20} className="text-[var(--color-muted-foreground)]" />
+                    </div>
+                  )}
+                  <div className="flex-1 min-w-0">
+                    <p className="font-semibold text-[var(--color-foreground)] truncate">
+                      {request.name}
+                    </p>
+                    <p className="text-sm text-[var(--color-muted-foreground)] truncate">
+                      {request.brand && `${request.brand} • `}
+                      {request.requestType} • by {request.requestedByName}
+                    </p>
+                  </div>
+                  <div className="flex gap-1 flex-shrink-0">
+                    {onApproveRequest && (
+                      <button
+                        onClick={() => onApproveRequest(request)}
+                        className="p-2 text-[var(--color-success)] hover:bg-[var(--color-success)]/10 rounded-lg"
+                        title="Approve & add to catalog"
+                      >
+                        <Check size={18} />
+                      </button>
+                    )}
+                    {onDenyRequest && (
+                      <button
+                        onClick={() => onDenyRequest(request.id)}
+                        className="p-2 text-[var(--color-destructive)] hover:bg-[var(--color-destructive)]/10 rounded-lg"
+                        title="Deny request"
+                      >
+                        <X size={18} />
+                      </button>
+                    )}
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+      )}
+
       {/* Action Buttons */}
       <button
         onClick={isAdmin ? onAddNewItem : onRequestItem}
-        className="w-full p-3 border-2 border-dashed border-gray-300 dark:border-gray-600 rounded-xl text-gray-500 dark:text-gray-400 hover:border-orange-500 hover:text-orange-500 transition-colors flex items-center justify-center gap-2"
+        className="w-full p-3 border-2 border-dashed border-[var(--color-border)] rounded-xl text-[var(--color-muted-foreground)] hover:border-[var(--color-primary)] hover:text-[var(--color-primary)] transition-colors flex items-center justify-center gap-2"
       >
         <Plus size={20} /> {isAdmin ? 'Add New Item' : 'Request New Item'}
       </button>
@@ -123,19 +269,22 @@ export function CatalogTab({
       {/* Search & Filter */}
       <div className="flex gap-2">
         <div className="flex-1 relative">
-          <Search size={18} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
+          <Search
+            size={18}
+            className="absolute left-3 top-1/2 -translate-y-1/2 text-[var(--color-muted-foreground)]"
+          />
           <input
             type="text"
             value={searchTerm}
             onChange={(e) => onSearch(e.target.value)}
-            placeholder="Search..."
-            className="w-full pl-10 pr-4 py-2 border border-gray-200 dark:border-gray-700 rounded-xl bg-white dark:bg-gray-800"
+            placeholder="Search catalog..."
+            className="w-full pl-10 pr-4 py-2 border border-[var(--color-border)] rounded-xl bg-[var(--color-card)] text-[var(--color-foreground)]"
           />
         </div>
         <select
           value={selectedCategory || ''}
           onChange={(e) => setSelectedCategory(e.target.value ? Number(e.target.value) : null)}
-          className="px-3 py-2 border border-gray-200 dark:border-gray-700 rounded-xl bg-white dark:bg-gray-800 text-sm"
+          className="px-3 py-2 border border-[var(--color-border)] rounded-xl bg-[var(--color-card)] text-[var(--color-foreground)] text-sm"
         >
           <option value="">All</option>
           {categories.map((cat) => (
@@ -148,9 +297,97 @@ export function CatalogTab({
 
       {/* Items - Collapsible by Category */}
       {Object.keys(itemsByCategory).length === 0 ? (
-        <div className="bg-white dark:bg-gray-800 rounded-xl p-8 text-center">
-          <Package size={48} className="mx-auto mb-3 text-gray-300 dark:text-gray-600" />
-          <p className="text-gray-500 dark:text-gray-400">No items found</p>
+        <div className="themed-card p-6 text-center">
+          <Package
+            size={48}
+            className="mx-auto mb-3 text-[var(--color-muted-foreground)] opacity-50"
+          />
+          <p className="text-[var(--color-muted-foreground)] mb-4">
+            {searchTerm ? `No items found for "${searchTerm}"` : 'No items found'}
+          </p>
+
+          {/* Quick Request Form (non-admin users) */}
+          {!isAdmin && onCreateRequest && (
+            <>
+              {!showQuickRequest ? (
+                <button
+                  onClick={handleShowQuickRequest}
+                  className="inline-flex items-center gap-2 px-4 py-2 bg-[var(--color-primary)] text-[var(--color-primary-foreground)] rounded-lg hover:opacity-90 transition-opacity"
+                >
+                  <Send size={16} />
+                  Request "{searchTerm || 'this item'}"
+                </button>
+              ) : (
+                <div className="mt-4 text-left space-y-3 max-w-sm mx-auto">
+                  <p className="text-sm font-medium text-[var(--color-foreground)]">
+                    Request a new item
+                  </p>
+                  <input
+                    type="text"
+                    value={quickRequestName}
+                    onChange={(e) => setQuickRequestName(e.target.value)}
+                    placeholder="Item name *"
+                    className="w-full px-3 py-2 border border-[var(--color-border)] rounded-lg bg-[var(--color-card)] text-[var(--color-foreground)] text-sm"
+                    autoFocus
+                  />
+                  <input
+                    type="text"
+                    value={quickRequestBrand}
+                    onChange={(e) => setQuickRequestBrand(e.target.value)}
+                    placeholder="Brand (optional)"
+                    className="w-full px-3 py-2 border border-[var(--color-border)] rounded-lg bg-[var(--color-card)] text-[var(--color-foreground)] text-sm"
+                  />
+                  <select
+                    value={quickRequestCategory || ''}
+                    onChange={(e) =>
+                      setQuickRequestCategory(e.target.value ? Number(e.target.value) : undefined)
+                    }
+                    className="w-full px-3 py-2 border border-[var(--color-border)] rounded-lg bg-[var(--color-card)] text-[var(--color-foreground)] text-sm"
+                  >
+                    <option value="">Category (optional)</option>
+                    {categories.map((cat) => (
+                      <option key={cat.id} value={cat.id}>
+                        {cat.name}
+                      </option>
+                    ))}
+                  </select>
+                  <div className="flex gap-2">
+                    <button
+                      onClick={() => setShowQuickRequest(false)}
+                      className="flex-1 px-3 py-2 border border-[var(--color-border)] rounded-lg text-sm text-[var(--color-muted-foreground)] hover:bg-[var(--color-muted)]"
+                    >
+                      Cancel
+                    </button>
+                    <button
+                      onClick={handleQuickRequest}
+                      disabled={!quickRequestName.trim() || submittingRequest}
+                      className="flex-1 px-3 py-2 bg-[var(--color-primary)] text-[var(--color-primary-foreground)] rounded-lg text-sm hover:opacity-90 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+                    >
+                      {submittingRequest ? (
+                        'Submitting...'
+                      ) : (
+                        <>
+                          <Send size={14} />
+                          Submit Request
+                        </>
+                      )}
+                    </button>
+                  </div>
+                </div>
+              )}
+            </>
+          )}
+
+          {/* Admin can add directly */}
+          {isAdmin && (
+            <button
+              onClick={onAddNewItem}
+              className="inline-flex items-center gap-2 px-4 py-2 bg-[var(--color-primary)] text-[var(--color-primary-foreground)] rounded-lg hover:opacity-90 transition-opacity"
+            >
+              <Plus size={16} />
+              Add to Catalog
+            </button>
+          )}
         </div>
       ) : (
         Object.entries(itemsByCategory).map(([catName, catItems]) => {
@@ -158,56 +395,65 @@ export function CatalogTab({
           const category = categories.find((c) => c.name === catName);
 
           return (
-            <div
-              key={catName}
-              className="bg-white dark:bg-gray-800 rounded-xl border border-gray-100 dark:border-gray-700 overflow-hidden"
-            >
+            <div key={catName} className="themed-card overflow-hidden">
               {/* Category Header - Clickable to expand/collapse */}
               <button
                 onClick={() => toggleCategory(catName)}
-                className="w-full flex items-center gap-3 p-3 hover:bg-gray-50 dark:hover:bg-gray-700/50 transition-colors"
+                className="w-full flex items-center gap-3 p-3 hover:bg-[var(--color-muted)] transition-colors"
               >
                 {isExpanded ? (
-                  <ChevronDown size={20} className="text-gray-400 flex-shrink-0" />
+                  <ChevronDown
+                    size={20}
+                    className="text-[var(--color-muted-foreground)] flex-shrink-0"
+                  />
                 ) : (
-                  <ChevronRight size={20} className="text-gray-400 flex-shrink-0" />
+                  <ChevronRight
+                    size={20}
+                    className="text-[var(--color-muted-foreground)] flex-shrink-0"
+                  />
                 )}
                 <span
                   className="w-3 h-3 rounded-full flex-shrink-0"
-                  style={{ backgroundColor: category?.color || '#f97316' }}
+                  style={{ backgroundColor: category?.color || 'var(--color-primary)' }}
                 />
-                <span className="font-semibold text-gray-700 dark:text-gray-300">{catName}</span>
-                <span className="text-sm text-gray-500">({catItems.length})</span>
+                <span className="font-semibold text-[var(--color-foreground)]">{catName}</span>
+                <span className="text-sm text-[var(--color-muted-foreground)]">
+                  ({catItems.length})
+                </span>
               </button>
 
               {/* Category Items - Shown when expanded */}
               {isExpanded && (
-                <div className="border-t border-gray-100 dark:border-gray-700 p-3">
+                <div className="border-t border-[var(--color-border)] p-3">
                   <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
                     {catItems.map((item) => (
                       <div
                         key={item.id}
-                        className="bg-gray-50 dark:bg-gray-700/50 rounded-xl p-3 relative group"
+                        className="bg-[var(--color-muted)] rounded-xl p-3 relative group"
                       >
                         <ItemImage url={item.imageUrl} size="lg" />
-                        <p className="font-medium text-gray-900 dark:text-white mt-2 truncate text-sm">
+                        <p className="font-medium text-[var(--color-foreground)] mt-2 truncate text-sm">
                           {item.name}
                         </p>
                         {item.brand && (
-                          <p className="text-xs text-gray-500 truncate">{item.brand}</p>
+                          <p className="text-xs text-[var(--color-muted-foreground)] truncate">
+                            {item.brand}
+                          </p>
                         )}
                         <div className="flex items-center justify-between mt-2">
                           {item.lowestPrice ? (
-                            <span className="text-sm text-green-600 font-medium">
+                            <span className="text-sm text-[var(--color-success)] font-medium">
                               ${Number(item.lowestPrice).toFixed(2)}
                             </span>
                           ) : (
-                            <span className="text-xs text-gray-400">No price</span>
+                            <span className="text-xs text-[var(--color-muted-foreground)]">
+                              No price
+                            </span>
                           )}
                           <div className="flex gap-1">
                             <button
                               onClick={() => onAddToList(item)}
-                              className="p-1.5 text-orange-600 hover:bg-orange-100 dark:hover:bg-orange-900/30 rounded-lg"
+                              className="p-1.5 text-[var(--color-primary)] hover:bg-[var(--color-primary)]/10 rounded-lg"
                               title="Add to list"
                             >
                               <Plus size={16} />
@@ -215,7 +461,7 @@ export function CatalogTab({
                             {isAdmin && (
                               <button
                                 onClick={() => setEditingItem(item)}
-                                className="p-1.5 text-blue-600 hover:bg-blue-100 dark:hover:bg-blue-900/30 rounded-lg"
+                                className="p-1.5 text-[var(--color-primary)] hover:bg-[var(--color-primary)]/10 rounded-lg"
                                 title="Edit"
                               >
                                 <Edit size={16} />

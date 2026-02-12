@@ -4,6 +4,7 @@
 import type { Request, Response } from 'express';
 import { q } from '../../db';
 import { logAudit } from '../../audit';
+import { createNotification } from '../messages';
 import {
   getUser,
   isValidString,
@@ -14,6 +15,7 @@ import {
   notFound,
 } from '../../utils';
 import { getTodayLocal, getTimezone } from '../../utils/date';
+import { queueEmail, getUserEmail } from '../../email/queue';
 
 interface ChoreTemplate {
   id: number;
@@ -57,6 +59,7 @@ async function generateChoreInstances(
   startDate: string,
   endDate?: string | null,
   daysAhead: number = 30,
+  choreTitle?: string,
 ): Promise<number> {
   const instances: Array<{ choreId: number; dueDate: string; assignedTo: number | null }> = [];
 
@@ -120,6 +123,53 @@ async function generateChoreInstances(
     const values = instances.map(() => '(?, ?, ?)').join(', ');
     const params = instances.flatMap((i) => [i.choreId, i.dueDate, i.assignedTo]);
     await q(`INSERT INTO chore_instances (choreId, dueDate, assignedTo) VALUES ${values}`, params);
+
+    // Send notification to the assigned user about new chore assignments
+    if (assignedTo && choreTitle) {
+      const firstDueDate = instances[0].dueDate;
+      const title = choreTitle;
+      const instanceText = instances.length > 1
+        ? `${instances.length} upcoming instances`
+        : `due ${new Date(firstDueDate).toLocaleDateString()}`;
+
+      // In-app notification
+      await createNotification({
+        userId: assignedTo,
+        type: 'chore',
+        title: 'New chore assigned to you',
+        body: `"${title}" has been assigned to you (${instanceText})`,
+        link: '/chores',
+        relatedId: choreId,
+        relatedType: 'chore',
+      });
+
+      // Email notification
+      const assigneeEmail = await getUserEmail(assignedTo);
+      if (assigneeEmail) {
+        // Get assignee name for email
+        const [assigneeInfo] = await q<Array<{ displayName: string }>>(
+          'SELECT displayName FROM users WHERE id = ?',
+          [assignedTo],
+        );
+
+        await queueEmail({
+          userId: assignedTo,
+          toEmail: assigneeEmail,
+          template: 'CHORE_ASSIGNED',
+          variables: {
+            userName: assigneeInfo?.displayName || 'there',
+            choreName: title,
+            dueDate: new Date(firstDueDate).toLocaleDateString('en-US', {
+              weekday: 'short',
+              month: 'short',
+              day: 'numeric',
+            }),
+            points: 0,
+            description: '',
+          },
+        });
+      }
+    }
   }
 
   return instances.length;
@@ -496,7 +546,7 @@ export async function applyTemplate(req: Request, res: Response) {
 
     const choreId = result.insertId;
 
-    // Generate instances for this chore
+    // Generate instances for this chore (with notification)
     const instanceCount = await generateChoreInstances(
       choreId,
       recurrenceType as RecurrenceType,
@@ -505,6 +555,7 @@ export async function applyTemplate(req: Request, res: Response) {
       effectiveStartDate,
       endDate || null,
       30, // Default 30 days if no end date
+      template.name, // Pass name to trigger notification
     );
 
     await logAudit({

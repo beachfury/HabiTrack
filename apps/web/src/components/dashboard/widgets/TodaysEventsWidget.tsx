@@ -21,13 +21,24 @@ export function TodaysEventsWidget({ events = [] }: TodaysEventsWidgetProps) {
     return date.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' });
   };
 
+  // Format today's date for header
+  const today = new Date();
+  const todayFormatted = today.toLocaleDateString('en-US', {
+    weekday: 'short',
+    month: 'short',
+    day: 'numeric',
+  });
+
   return (
     <div className="h-full flex flex-col">
       <div className="flex items-center justify-between mb-3">
-        <h3 className="font-semibold text-[var(--color-foreground)] flex items-center gap-2">
-          <Calendar size={18} className="text-[var(--color-primary)]" />
-          Today's Events
-        </h3>
+        <div>
+          <h3 className="font-semibold text-[var(--color-foreground)] flex items-center gap-2">
+            <Calendar size={18} className="text-[var(--color-primary)]" />
+            Today's Events
+          </h3>
+          <p className="text-xs text-[var(--color-muted-foreground)]">{todayFormatted}</p>
+        </div>
         <Link to="/calendar" className="text-sm text-[var(--color-primary)] hover:opacity-80">
           View All
         </Link>

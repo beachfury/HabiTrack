@@ -5,6 +5,7 @@ import React from 'react';
 import { WelcomeWidget } from './WelcomeWidget';
 import { QuickStatsWidget } from './QuickStatsWidget';
 import { TodaysEventsWidget } from './TodaysEventsWidget';
+import { UpcomingEventsWidget } from './UpcomingEventsWidget';
 import { TodaysChoresWidget } from './TodaysChoresWidget';
 import { MyChoresWidget } from './MyChoresWidget';
 import { ShoppingListWidget } from './ShoppingListWidget';
@@ -20,6 +21,7 @@ export {
   WelcomeWidget,
   QuickStatsWidget,
   TodaysEventsWidget,
+  UpcomingEventsWidget,
   TodaysChoresWidget,
   MyChoresWidget,
   ShoppingListWidget,
@@ -37,7 +39,7 @@ export const widgetComponents: Record<string, React.ComponentType<any>> = {
   'welcome': WelcomeWidget,
   'quick-stats': QuickStatsWidget,
   'todays-events': TodaysEventsWidget,
-  'upcoming-events': TodaysEventsWidget, // Reuses TodaysEventsWidget with different data
+  'upcoming-events': UpcomingEventsWidget, // Separate widget for upcoming events with dates
   'todays-chores': TodaysChoresWidget,
   'my-chores': MyChoresWidget,
   'chore-leaderboard': ChoreLeaderboardWidget,

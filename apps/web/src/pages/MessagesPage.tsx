@@ -21,6 +21,7 @@ import {
   AlertCircle,
   ChevronLeft,
 } from 'lucide-react';
+import { ModalPortal, ModalBody } from '../components/common/ModalPortal';
 import { api } from '../api';
 import { useAuth } from '../context/AuthContext';
 import { dispatchMessageReadEvent } from '../components/Layout';
@@ -43,16 +44,16 @@ const filterOptions: { value: FilterType; label: string; icon?: any }[] = [
 function getTypeIcon(type: string) {
   switch (type) {
     case 'chore':
-      return <CheckSquare size={18} className="text-green-500" />;
+      return <CheckSquare size={18} className="text-[var(--color-success)]" />;
     case 'calendar':
-      return <Calendar size={18} className="text-blue-500" />;
+      return <Calendar size={18} className="text-[var(--color-info)]" />;
     case 'shopping':
-      return <ShoppingCart size={18} className="text-orange-500" />;
+      return <ShoppingCart size={18} className="text-[var(--color-warning)]" />;
     case 'family':
-      return <Users size={18} className="text-purple-500" />;
+      return <Users size={18} className="text-[var(--color-primary)]" />;
     case 'system':
     default:
-      return <Info size={18} className="text-gray-500" />;
+      return <Info size={18} className="text-[var(--color-muted-foreground)]" />;
   }
 }
 
@@ -79,9 +80,9 @@ function formatDate(dateStr: string) {
 function getPriorityIcon(priority: string) {
   switch (priority) {
     case 'urgent':
-      return <AlertTriangle size={16} className="text-red-500" />;
+      return <AlertTriangle size={16} className="text-[var(--color-destructive)]" />;
     case 'high':
-      return <AlertCircle size={16} className="text-orange-500" />;
+      return <AlertCircle size={16} className="text-[var(--color-warning)]" />;
     default:
       return null;
   }
@@ -884,15 +885,36 @@ function CreateAnnouncementModal({
     }
   };
 
+  const footer = (
+    <div className="flex justify-end gap-3">
+      <button
+        type="button"
+        onClick={onClose}
+        className="themed-btn-secondary"
+      >
+        Cancel
+      </button>
+      <button
+        type="submit"
+        form="announcement-form"
+        disabled={loading || !title.trim() || !body.trim()}
+        className="themed-btn-primary disabled:opacity-50"
+      >
+        {loading ? 'Sending...' : 'Send Announcement'}
+      </button>
+    </div>
+  );
+
   return (
-    <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
-      <div className="themed-card w-full max-w-lg">
-        <div className="p-4 border-b border-[var(--color-border)]">
-          <h2 className="text-lg font-semibold text-[var(--color-foreground)]">
-            New Announcement
-          </h2>
-        </div>
-        <form onSubmit={handleSubmit} className="p-4 space-y-4">
+    <ModalPortal
+      isOpen={true}
+      onClose={onClose}
+      title="New Announcement"
+      size="lg"
+      footer={footer}
+    >
+      <ModalBody>
+        <form id="announcement-form" onSubmit={handleSubmit} className="space-y-4">
           <div>
             <label className="block text-sm font-medium text-[var(--color-foreground)] mb-1">
               Title
@@ -933,25 +955,9 @@ function CreateAnnouncementModal({
               <option value="urgent">Urgent</option>
             </select>
           </div>
-          <div className="flex justify-end gap-3 pt-2">
-            <button
-              type="button"
-              onClick={onClose}
-              className="themed-btn-secondary"
-            >
-              Cancel
-            </button>
-            <button
-              type="submit"
-              disabled={loading || !title.trim() || !body.trim()}
-              className="themed-btn-primary disabled:opacity-50"
-            >
-              {loading ? 'Sending...' : 'Send Announcement'}
-            </button>
-          </div>
         </form>
-      </div>
-    </div>
+      </ModalBody>
+    </ModalPortal>
   );
 }
 
@@ -985,15 +991,14 @@ function NewConversationModal({
   }, [currentUserId]);
 
   return (
-    <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
-      <div className="themed-card w-full max-w-sm">
-        <div className="p-4 border-b border-[var(--color-border)] flex items-center justify-between">
-          <h2 className="text-lg font-semibold text-[var(--color-foreground)]">New Message</h2>
-          <button onClick={onClose} className="text-[var(--color-muted-foreground)] hover:text-[var(--color-foreground)]">
-            ✕
-          </button>
-        </div>
-        <div className="p-2 max-h-80 overflow-y-auto">
+    <ModalPortal
+      isOpen={true}
+      onClose={onClose}
+      title="New Message"
+      size="sm"
+    >
+      <ModalBody>
+        <div className="max-h-80 overflow-y-auto -mx-4 px-4">
           {loading ? (
             <div className="text-center py-8 text-[var(--color-muted-foreground)]">Loading...</div>
           ) : users.length === 0 ? (
@@ -1018,7 +1023,7 @@ function NewConversationModal({
             ))
           )}
         </div>
-      </div>
-    </div>
+      </ModalBody>
+    </ModalPortal>
   );
 }

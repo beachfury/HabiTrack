@@ -6,6 +6,7 @@ import { q } from '../../db';
 import { logAudit } from '../../audit';
 import { createNotification } from '../messages';
 import { getUser, success, notFound, serverError, validationError, created } from '../../utils';
+import { queueEmail, getUserEmail } from '../../email/queue';
 
 interface CalendarEvent {
   id: number;
@@ -198,32 +199,78 @@ export async function createEvent(req: Request, res: Response) {
     const eventId = result.insertId;
     const eventDate = formatEventDate(start);
 
-    // FIXED: Always notify if there's an assignee (including self)
-    if (assignedTo) {
-      if (assignedTo === user.id) {
-        // User created event for themselves - send confirmation/reminder
-        await createNotification({
-          userId: user.id,
-          type: 'calendar',
-          title: 'Event created',
-          body: `"${title}" on ${eventDate}`,
-          link: `/calendar?date=${start.split('T')[0]}`,
-          relatedId: eventId,
-          relatedType: 'calendar_event',
-        });
-      } else {
-        // Event assigned to someone else
-        await createNotification({
+    // Get creator's display name for email
+    const [creatorInfo] = await q<Array<{ displayName: string; email: string | null }>>(
+      'SELECT displayName, email FROM users WHERE id = ?',
+      [user.id],
+    );
+    const creatorName = creatorInfo?.displayName || 'Someone';
+    const creatorEmail = creatorInfo?.email;
+
+    // Format event time for email
+    const eventTime = allDay
+      ? `${eventDate} (All day)`
+      : `${eventDate} at ${new Date(start).toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' })}`;
+
+    // Send notifications based on assignment
+    if (assignedTo && assignedTo !== user.id) {
+      // Event assigned to someone else - notify them
+      await createNotification({
+        userId: assignedTo,
+        type: 'calendar',
+        title: 'New event assigned to you',
+        body: `"${title}" on ${eventDate}`,
+        link: `/calendar?date=${start.split('T')[0]}`,
+        relatedId: eventId,
+        relatedType: 'calendar_event',
+      });
+
+      // Queue email for the assignee
+      const assigneeEmail = await getUserEmail(assignedTo);
+      if (assigneeEmail) {
+        await queueEmail({
           userId: assignedTo,
-          type: 'calendar',
-          title: 'New event assigned to you',
-          body: `"${title}" on ${eventDate}`,
-          link: `/calendar?date=${start.split('T')[0]}`,
-          relatedId: eventId,
-          relatedType: 'calendar_event',
+          toEmail: assigneeEmail,
+          template: 'EVENT_CREATED',
+          variables: {
+            eventName: title,
+            eventTime,
+            createdBy: creatorName,
+            location: location || '',
+          },
         });
       }
     }
+
+    // ALWAYS send email to the creator when they create an event (confirmation)
+    console.log(`[calendar] Creator email: ${creatorEmail || 'NOT SET'}`);
+    if (creatorEmail) {
+      const emailResult = await queueEmail({
+        userId: user.id,
+        toEmail: creatorEmail,
+        template: 'EVENT_CREATED',
+        variables: {
+          eventName: title,
+          eventTime,
+          createdBy: 'You',
+          location: location || '',
+        },
+      });
+      console.log(`[calendar] Email queue result:`, emailResult);
+    } else {
+      console.log(`[calendar] Skipping email - no email address for user ${user.id}`);
+    }
+
+    // Create in-app notification for creator
+    await createNotification({
+      userId: user.id,
+      type: 'calendar',
+      title: 'Event created',
+      body: `"${title}" on ${eventDate}`,
+      link: `/calendar?date=${start.split('T')[0]}`,
+      relatedId: eventId,
+      relatedType: 'calendar_event',
+    });
 
     await logAudit({
       action: 'calendar.create',
@@ -291,6 +338,26 @@ export async function updateEvent(req: Request, res: Response) {
         relatedId: eventId,
         relatedType: 'calendar_event',
       });
+
+      // Send email notification for event reassignment
+      const assigneeEmail = await getUserEmail(assignedTo);
+      if (assigneeEmail) {
+        const [assigneeInfo] = await q<Array<{ displayName: string }>>(
+          'SELECT displayName FROM users WHERE id = ?',
+          [assignedTo],
+        );
+        await queueEmail({
+          userId: assignedTo,
+          toEmail: assigneeEmail,
+          template: 'EVENT_UPDATED',
+          variables: {
+            userName: assigneeInfo?.displayName || 'there',
+            eventName: title,
+            message: 'This event has been assigned to you.',
+            eventTime: eventDate,
+          },
+        });
+      }
     }
 
     await logAudit({
@@ -342,6 +409,25 @@ export async function deleteEvent(req: Request, res: Response) {
         body: `"${event.title}" has been cancelled`,
         link: '/calendar',
       });
+
+      // Send email notification for event cancellation
+      const assigneeEmail = await getUserEmail(event.assignedTo);
+      if (assigneeEmail) {
+        const [assigneeInfo] = await q<Array<{ displayName: string }>>(
+          'SELECT displayName FROM users WHERE id = ?',
+          [event.assignedTo],
+        );
+        await queueEmail({
+          userId: event.assignedTo,
+          toEmail: assigneeEmail,
+          template: 'EVENT_CANCELLED',
+          variables: {
+            userName: assigneeInfo?.displayName || 'there',
+            eventName: event.title,
+            eventTime: 'N/A',
+          },
+        });
+      }
     }
 
     await logAudit({

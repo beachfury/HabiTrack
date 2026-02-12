@@ -6,6 +6,7 @@ import { q } from '../../db';
 import { logAudit } from '../../audit';
 import { createNotification } from '../messages';
 import { getUser, success, notFound, serverError, validationError } from '../../utils';
+import { queueEmail, getUserEmail } from '../../email/queue';
 
 interface LeaderboardEntry {
   userId: number;
@@ -165,6 +166,22 @@ export async function adjustPoints(req: Request, res: Response) {
         : `${user.displayName} adjusted your points by ${pointsAmount}${reason ? `: ${reason}` : ''}`,
       link: '/chores?tab=leaderboard',
     });
+
+    // Send email notification for points adjustment
+    const targetEmail = await getUserEmail(userId);
+    if (targetEmail) {
+      await queueEmail({
+        userId: userId,
+        toEmail: targetEmail,
+        template: 'POINTS_ADJUSTED',
+        variables: {
+          userName: targetUser.displayName,
+          change: isPositive ? `+${pointsAmount}` : String(pointsAmount),
+          reason: reason || 'Manual adjustment',
+          newTotal: newTotal,
+        },
+      });
+    }
 
     await logAudit({
       action: 'chore.points.adjust',

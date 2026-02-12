@@ -113,6 +113,9 @@ export async function getMe(req: Request, res: Response) {
     return res.status(401).json({ error: { code: 'AUTH_REQUIRED' } });
   }
 
+  // Check if this is a kiosk session
+  const isKioskSession = !!(req as any).isKioskSession;
+
   // Get full user details
   const [user] = await q<
     Array<{
@@ -143,6 +146,7 @@ export async function getMe(req: Request, res: Response) {
       avatarUrl: user.avatarUrl,
       theme: user.theme,
       accentColor: user.accentColor,
+      isKiosk: isKioskSession,
     },
   });
 }

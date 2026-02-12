@@ -8,10 +8,9 @@ import {
   DEFAULT_CARD_STYLE,
   DEFAULT_WIDGET_STYLE,
   DEFAULT_BUTTON_STYLE,
-  DEFAULT_ELEMENT_STYLE,
-  DEFAULT_COLORS_LIGHT,
 } from '../../types/theme';
 import { ColorPickerModal } from '../common/ColorPickerModal';
+import { ModalPortal, ModalBody } from '../common/ModalPortal';
 
 // Helper to resolve image URLs - converts relative API paths to full URLs
 const API_BASE = import.meta.env.VITE_API_BASE_URL || 'http://localhost:3000';
@@ -26,63 +25,58 @@ function resolveImageUrl(url: string | undefined): string | undefined {
 }
 
 // HabiTrack Classic default styles for each element type
-// These include explicit background colors to override any custom theme colors
+// These do NOT include explicit background colors - colors come from the theme's
+// colorsLight/colorsDark which are mode-aware. Only structural properties are set here.
 const HABITRACK_DEFAULT_STYLES: Partial<Record<ThemeableElement, ElementStyle>> = {
   card: {
     ...DEFAULT_CARD_STYLE,
-    backgroundColor: DEFAULT_COLORS_LIGHT.card, // White
-    borderColor: DEFAULT_COLORS_LIGHT.border,
+    // No backgroundColor - falls back to theme's colors.card (mode-aware)
   },
   widget: {
     ...DEFAULT_WIDGET_STYLE,
-    backgroundColor: DEFAULT_COLORS_LIGHT.muted, // Light gray
+    // No backgroundColor - falls back to theme's colors.muted (mode-aware)
   },
   'button-primary': {
     ...DEFAULT_BUTTON_STYLE,
-    backgroundColor: DEFAULT_COLORS_LIGHT.primary, // HabiTrack Green
-    textColor: DEFAULT_COLORS_LIGHT.primaryForeground,
+    // No backgroundColor/textColor - falls back to theme's colors.primary (mode-aware)
   },
   'button-secondary': {
     ...DEFAULT_BUTTON_STYLE,
-    backgroundColor: DEFAULT_COLORS_LIGHT.secondary,
-    textColor: DEFAULT_COLORS_LIGHT.secondaryForeground,
+    // No backgroundColor/textColor - falls back to theme's colors.secondary (mode-aware)
   },
   input: {
     borderRadius: 8,
     borderWidth: 1,
-    borderColor: DEFAULT_COLORS_LIGHT.border,
-    backgroundColor: DEFAULT_COLORS_LIGHT.background,
     padding: '8px 12px',
+    // No backgroundColor/borderColor - falls back to theme colors (mode-aware)
   },
   modal: {
     borderRadius: 16,
     boxShadow: 'strong',
     padding: '24px',
-    backgroundColor: DEFAULT_COLORS_LIGHT.card,
+    // No backgroundColor - falls back to theme's colors.card (mode-aware)
   },
   sidebar: {
-    backgroundColor: DEFAULT_COLORS_LIGHT.card,
+    // No backgroundColor - falls back to theme colors (mode-aware)
   },
   header: {
-    backgroundColor: DEFAULT_COLORS_LIGHT.card,
+    // No backgroundColor - falls back to theme colors (mode-aware)
   },
   'page-background': {
-    backgroundColor: DEFAULT_COLORS_LIGHT.background,
+    // No backgroundColor - falls back to theme's colors.background (mode-aware)
   },
   // Calendar page elements use card/widget defaults
   'calendar-grid': {
     ...DEFAULT_CARD_STYLE,
-    backgroundColor: DEFAULT_COLORS_LIGHT.card,
-    borderColor: DEFAULT_COLORS_LIGHT.border,
+    // No backgroundColor - falls back to theme's colors.card (mode-aware)
   },
   'calendar-meal-widget': {
     ...DEFAULT_WIDGET_STYLE,
-    backgroundColor: DEFAULT_COLORS_LIGHT.muted,
+    // No backgroundColor - falls back to theme's colors.muted (mode-aware)
   },
   'calendar-user-card': {
     ...DEFAULT_CARD_STYLE,
-    backgroundColor: DEFAULT_COLORS_LIGHT.card,
-    borderColor: DEFAULT_COLORS_LIGHT.border,
+    // No backgroundColor - falls back to theme's colors.card (mode-aware)
   },
 };
 
@@ -253,22 +247,24 @@ export function ElementStyleEditor({
 
   const resetStyle = () => {
     if (isReadOnly) return;
-    // Reset to HabiTrack Classic defaults for this element type
-    // Explicitly clear ALL properties first, then apply defaults
-    // This ensures text overrides and other custom properties are fully removed
+    // Reset by clearing ALL custom styles for this element
+    // This makes the element fall back to the theme's base colors (colorsLight/colorsDark)
+    // which are mode-aware and will show correctly in both light and dark modes
+
+    // Get only structural defaults (border radius, shadow, etc.) - no colors
     const defaultStyle = HABITRACK_DEFAULT_STYLES[element] || HABITRACK_DEFAULT_STYLES[globalElement] || {};
 
-    // Create a clean style object with only the default properties
-    // Text properties are explicitly NOT included in defaults, so they'll be absent (undefined)
-    // This ensures they reset to "Inherit from Theme"
+    // Create a clean style object with only structural properties (no colors)
     const resetStyleObj: ElementStyle = {
-      // Clear ALL possible properties first by NOT including them
-      // Then spread only the default values
       ...defaultStyle,
     };
 
-    // Ensure text properties are NOT in the object (removes any lingering values)
+    // Ensure NO color properties are in the object - they should fall back to theme colors
+    delete (resetStyleObj as any).backgroundColor;
     delete (resetStyleObj as any).textColor;
+    delete (resetStyleObj as any).borderColor;
+    delete (resetStyleObj as any).backgroundGradient;
+    delete (resetStyleObj as any).backgroundImage;
     delete (resetStyleObj as any).fontFamily;
     delete (resetStyleObj as any).fontWeight;
     delete (resetStyleObj as any).textSize;
@@ -1180,24 +1176,16 @@ function MediaLibraryModal({
   }
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50">
-      <div className="bg-white dark:bg-gray-800 rounded-xl shadow-2xl w-[90vw] max-w-4xl max-h-[80vh] flex flex-col">
-        {/* Header */}
-        <div className="flex items-center justify-between p-4 border-b border-gray-200 dark:border-gray-700">
-          <h3 className="text-lg font-semibold text-gray-900 dark:text-white">
-            Image Library
-          </h3>
-          <button
-            onClick={onClose}
-            className="p-1.5 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700"
-          >
-            <X size={20} />
-          </button>
-        </div>
-
+    <ModalPortal
+      isOpen={true}
+      onClose={onClose}
+      title="Image Library"
+      size="xl"
+    >
+      <ModalBody>
         {/* Category tabs */}
         {categoryTabs.length > 1 && (
-          <div className="px-4 pt-3 flex flex-wrap gap-1 border-b border-gray-200 dark:border-gray-700 pb-3">
+          <div className="flex flex-wrap gap-1 pb-3 mb-4 border-b border-gray-200 dark:border-gray-700">
             {categoryTabs.map((cat) => (
               <button
                 key={cat.id}
@@ -1218,7 +1206,7 @@ function MediaLibraryModal({
         )}
 
         {/* Content */}
-        <div className="flex-1 overflow-y-auto p-4">
+        <div className="max-h-[50vh] overflow-y-auto">
           {loading ? (
             <div className="flex items-center justify-center py-12">
               <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-emerald-500" />
@@ -1272,14 +1260,14 @@ function MediaLibraryModal({
           )}
         </div>
 
-        {/* Footer */}
-        <div className="p-4 border-t border-gray-200 dark:border-gray-700 text-center">
+        {/* Footer info */}
+        <div className="pt-4 mt-4 border-t border-gray-200 dark:border-gray-700 text-center">
           <p className="text-xs text-gray-500 dark:text-gray-400">
             {assets.length} image{assets.length !== 1 ? 's' : ''} {selectedCategory !== 'all' && `in "${selectedCategory}"`}
           </p>
         </div>
-      </div>
-    </div>
+      </ModalBody>
+    </ModalPortal>
   );
 }
 
@@ -1387,12 +1375,38 @@ function ImageUploadSection({
     <div className="space-y-3">
       {/* Upload Form Modal */}
       {showUploadForm && pendingFile && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50">
-          <div className="bg-white dark:bg-gray-800 rounded-xl shadow-2xl w-[90vw] max-w-md p-4">
-            <h4 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">
-              Upload Image
-            </h4>
-
+        <ModalPortal
+          isOpen={true}
+          onClose={cancelUpload}
+          title="Upload Image"
+          size="md"
+          footer={
+            <div className="flex gap-2">
+              <button
+                onClick={cancelUpload}
+                disabled={uploading}
+                className="flex-1 px-4 py-2 text-sm font-medium text-gray-700 dark:text-gray-300 bg-gray-100 dark:bg-gray-700 rounded-lg hover:bg-gray-200 dark:hover:bg-gray-600 transition-colors"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={handleFileUpload}
+                disabled={uploading}
+                className="flex-1 px-4 py-2 text-sm font-medium text-white bg-emerald-600 rounded-lg hover:bg-emerald-700 transition-colors disabled:opacity-50 flex items-center justify-center gap-2"
+              >
+                {uploading ? (
+                  <>
+                    <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white" />
+                    Uploading...
+                  </>
+                ) : (
+                  'Upload'
+                )}
+              </button>
+            </div>
+          }
+        >
+          <ModalBody>
             {/* Preview */}
             <div className="mb-4">
               <img
@@ -1439,35 +1453,10 @@ function ImageUploadSection({
 
             {/* Error */}
             {error && (
-              <p className="text-xs text-red-500 mb-3">{error}</p>
+              <p className="text-xs text-red-500">{error}</p>
             )}
-
-            {/* Actions */}
-            <div className="flex gap-2">
-              <button
-                onClick={cancelUpload}
-                disabled={uploading}
-                className="flex-1 px-4 py-2 text-sm font-medium text-gray-700 dark:text-gray-300 bg-gray-100 dark:bg-gray-700 rounded-lg hover:bg-gray-200 dark:hover:bg-gray-600 transition-colors"
-              >
-                Cancel
-              </button>
-              <button
-                onClick={handleFileUpload}
-                disabled={uploading}
-                className="flex-1 px-4 py-2 text-sm font-medium text-white bg-emerald-600 rounded-lg hover:bg-emerald-700 transition-colors disabled:opacity-50 flex items-center justify-center gap-2"
-              >
-                {uploading ? (
-                  <>
-                    <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white" />
-                    Uploading...
-                  </>
-                ) : (
-                  'Upload'
-                )}
-              </button>
-            </div>
-          </div>
-        </div>
+          </ModalBody>
+        </ModalPortal>
       )}
 
       {/* Action buttons row */}

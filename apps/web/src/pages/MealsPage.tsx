@@ -20,6 +20,7 @@ import {
   Sparkles,
   UtensilsCrossed,
 } from 'lucide-react';
+import { ModalPortal, ModalBody } from '../components/common/ModalPortal';
 import { useAuth } from '../context/AuthContext';
 import { mealsApi } from '../api/meals';
 import type {
@@ -878,6 +879,11 @@ function PlanMealModal({
   const isViewOnly = existingMeal && !canEdit;
   const isSuggestionMode = !existingMeal && !isAdmin;
 
+  // Determine modal title
+  const modalTitle = existingMeal
+    ? (isViewOnly ? 'Meal Details' : 'Edit Meal Plan')
+    : (isSuggestionMode ? 'Suggest a Meal' : 'Plan Dinner');
+
   // Handle non-admin suggestion submission
   const handleSuggest = async () => {
     if (mode === 'recipe' && !selectedRecipeId) {
@@ -918,22 +924,13 @@ function PlanMealModal({
   };
 
   return (
-    <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
-      <div className="themed-card w-full max-w-lg p-6 max-h-[90vh] overflow-y-auto m-4">
-        <div className="flex items-center justify-between mb-4">
-          <h2 className="text-xl font-semibold text-[var(--color-foreground)]">
-            {existingMeal
-              ? (isViewOnly ? 'Meal Details' : 'Edit Meal Plan')
-              : (isSuggestionMode ? 'Suggest a Meal' : 'Plan Dinner')}
-          </h2>
-          <button
-            onClick={onClose}
-            className="p-2 hover:bg-[var(--color-muted)] rounded-lg transition-colors"
-          >
-            <X size={20} className="text-[var(--color-muted-foreground)]" />
-          </button>
-        </div>
-
+    <ModalPortal
+      isOpen={true}
+      onClose={onClose}
+      title={modalTitle}
+      size="lg"
+    >
+      <ModalBody>
         <p className="text-[var(--color-muted-foreground)] mb-4">{formattedDate}</p>
 
         {error && (
@@ -1307,8 +1304,8 @@ function PlanMealModal({
             </div>
           </>
         )}
-      </div>
-    </div>
+      </ModalBody>
+    </ModalPortal>
   );
 }
 
@@ -1445,24 +1442,22 @@ function VotingModal({
   // Sort suggestions by vote count
   const sortedSuggestions = [...suggestions].sort((a, b) => b.voteCount - a.voteCount);
 
-  return (
-    <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
-      <div className="themed-card w-full max-w-lg p-6 max-h-[90vh] overflow-y-auto m-4">
-        <div className="flex items-center justify-between mb-4">
-          <div>
-            <h2 className="text-xl font-semibold text-[var(--color-foreground)]">
-              Vote for Dinner
-            </h2>
-            <p className="text-sm text-[var(--color-muted-foreground)]">{formattedDate}</p>
-          </div>
-          <button
-            onClick={onClose}
-            className="p-2 hover:bg-[var(--color-muted)] rounded-lg transition-colors"
-          >
-            <X size={20} className="text-[var(--color-muted-foreground)]" />
-          </button>
-        </div>
+  // Build title with date
+  const titleContent = (
+    <div>
+      <div>Vote for Dinner</div>
+      <p className="text-sm text-[var(--color-muted-foreground)] font-normal">{formattedDate}</p>
+    </div>
+  );
 
+  return (
+    <ModalPortal
+      isOpen={true}
+      onClose={onClose}
+      title={titleContent}
+      size="lg"
+    >
+      <ModalBody>
         {error && (
           <div className="mb-4 p-3 rounded-xl bg-[var(--color-destructive)]/10 text-[var(--color-destructive)] text-sm">
             {error}
@@ -1601,8 +1596,8 @@ function VotingModal({
             )}
           </>
         )}
-      </div>
-    </div>
+      </ModalBody>
+    </ModalPortal>
   );
 }
 

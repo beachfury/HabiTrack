@@ -1,7 +1,6 @@
 // apps/web/src/components/chores/modals/AddChoreModal.tsx
 import { useState, useEffect } from 'react';
 import {
-  X,
   Plus,
   FileText,
   ChevronDown,
@@ -20,11 +19,20 @@ import type {
   ChoreDifficulty,
   ChoreRecurrenceType,
 } from '../../../types';
+import { ModalPortal, ModalBody } from '../../common/ModalPortal';
 
-const DIFFICULTY_COLORS: Record<string, string> = {
-  easy: 'bg-green-100 text-green-700',
-  medium: 'bg-yellow-100 text-yellow-700',
-  hard: 'bg-red-100 text-red-700',
+// Helper function to get difficulty badge styles
+const getDifficultyStyle = (difficulty: string) => {
+  switch (difficulty) {
+    case 'easy':
+      return { backgroundColor: 'color-mix(in srgb, var(--color-success) 15%, transparent)', color: 'var(--color-success)' };
+    case 'medium':
+      return { backgroundColor: 'color-mix(in srgb, var(--color-warning) 15%, transparent)', color: 'var(--color-warning)' };
+    case 'hard':
+      return { backgroundColor: 'color-mix(in srgb, var(--color-destructive) 15%, transparent)', color: 'var(--color-destructive)' };
+    default:
+      return { backgroundColor: 'var(--color-muted)', color: 'var(--color-muted-foreground)' };
+  }
 };
 
 interface AddChoreModalProps {
@@ -218,27 +226,40 @@ export function AddChoreModal({
   // Check if we should show the interval input
   const showIntervalInput = ['daily', 'weekly', 'monthly', 'custom'].includes(form.recurrenceType);
 
-  return (
-    <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
-      <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-xl w-full max-w-lg max-h-[90vh] overflow-hidden flex flex-col">
-        <div className="p-4 border-b border-gray-100 dark:border-gray-700 flex items-center justify-between flex-shrink-0">
-          <h2 className="text-xl font-semibold text-gray-900 dark:text-white">Add Chore</h2>
-          <button
-            onClick={onClose}
-            className="p-2 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg"
-          >
-            <X size={20} />
-          </button>
-        </div>
+  const footer = mode === 'custom' ? (
+    <div className="flex gap-2">
+      <button
+        onClick={onClose}
+        className="flex-1 py-2 bg-[var(--color-muted)] text-[var(--color-muted-foreground)] rounded-xl font-medium hover:opacity-80 transition-opacity"
+      >
+        Cancel
+      </button>
+      <button
+        onClick={handleSubmit}
+        disabled={saving}
+        className="flex-1 py-2 bg-[var(--color-primary)] text-[var(--color-primary-foreground)] rounded-xl font-medium hover:opacity-90 disabled:opacity-50"
+      >
+        {saving ? 'Creating...' : 'Create'}
+      </button>
+    </div>
+  ) : undefined;
 
-        {/* Mode Tabs */}
-        <div className="flex border-b border-gray-100 dark:border-gray-700 flex-shrink-0">
+  return (
+    <ModalPortal
+      isOpen={true}
+      onClose={onClose}
+      title="Add Chore"
+      size="lg"
+      footer={footer}
+    >
+      {/* Mode Tabs */}
+      <div className="flex border-b border-[var(--color-border)] flex-shrink-0 -mx-4 -mt-4 mb-4">
           <button
             onClick={() => setMode('custom')}
             className={`flex-1 py-3 text-sm font-medium transition-colors ${
               mode === 'custom'
-                ? 'text-purple-600 border-b-2 border-purple-600'
-                : 'text-gray-500 hover:text-gray-700'
+                ? 'text-[var(--color-primary)] border-b-2 border-[var(--color-primary)]'
+                : 'text-[var(--color-muted-foreground)] hover:text-[var(--color-foreground)]'
             }`}
           >
             <Plus size={16} className="inline mr-1" />
@@ -248,8 +269,8 @@ export function AddChoreModal({
             onClick={() => setMode('template')}
             className={`flex-1 py-3 text-sm font-medium transition-colors ${
               mode === 'template'
-                ? 'text-purple-600 border-b-2 border-purple-600'
-                : 'text-gray-500 hover:text-gray-700'
+                ? 'text-[var(--color-primary)] border-b-2 border-[var(--color-primary)]'
+                : 'text-[var(--color-muted-foreground)] hover:text-[var(--color-foreground)]'
             }`}
           >
             <FileText size={16} className="inline mr-1" />
@@ -257,9 +278,17 @@ export function AddChoreModal({
           </button>
         </div>
 
-        <div className="flex-1 overflow-y-auto p-4">
+        <ModalBody>
           {error && (
-            <div className="mb-4 p-3 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-xl text-red-600 dark:text-red-400 text-sm">
+            <div
+              className="mb-4 p-3 rounded-xl text-sm"
+              style={{
+                backgroundColor: 'color-mix(in srgb, var(--color-destructive) 10%, transparent)',
+                borderColor: 'color-mix(in srgb, var(--color-destructive) 30%, transparent)',
+                color: 'var(--color-destructive)',
+                border: '1px solid',
+              }}
+            >
               {error}
             </div>
           )}
@@ -268,27 +297,27 @@ export function AddChoreModal({
             <div className="space-y-4">
               {/* Title */}
               <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                <label className="block text-sm font-medium text-[var(--color-foreground)] mb-1">
                   Title *
                 </label>
                 <input
                   type="text"
                   value={form.title}
                   onChange={(e) => setForm({ ...form, title: e.target.value })}
-                  className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-xl bg-white dark:bg-gray-800 focus:ring-2 focus:ring-purple-500"
+                  className="w-full px-3 py-2 border border-[var(--color-border)] rounded-xl bg-[var(--color-card)] text-[var(--color-foreground)] focus:ring-2 focus:ring-[var(--color-primary)]"
                   placeholder="e.g., Take out trash"
                 />
               </div>
 
               {/* Description */}
               <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                <label className="block text-sm font-medium text-[var(--color-foreground)] mb-1">
                   Description
                 </label>
                 <textarea
                   value={form.description}
                   onChange={(e) => setForm({ ...form, description: e.target.value })}
-                  className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-xl bg-white dark:bg-gray-800 focus:ring-2 focus:ring-purple-500 resize-none"
+                  className="w-full px-3 py-2 border border-[var(--color-border)] rounded-xl bg-[var(--color-card)] text-[var(--color-foreground)] focus:ring-2 focus:ring-[var(--color-primary)] resize-none"
                   rows={2}
                   placeholder="Optional details..."
                 />
@@ -297,12 +326,12 @@ export function AddChoreModal({
               {/* Category */}
               <div>
                 <div className="flex items-center justify-between mb-1">
-                  <label className="text-sm font-medium text-gray-700 dark:text-gray-300">
+                  <label className="text-sm font-medium text-[var(--color-foreground)]">
                     Category
                   </label>
                   <button
                     onClick={onShowCategoryModal}
-                    className="text-xs text-purple-600 hover:text-purple-700 flex items-center gap-1"
+                    className="text-xs text-[var(--color-primary)] hover:opacity-80 flex items-center gap-1"
                   >
                     <FolderPlus size={12} /> New
                   </button>
@@ -310,7 +339,7 @@ export function AddChoreModal({
                 <select
                   value={form.categoryId}
                   onChange={(e) => setForm({ ...form, categoryId: e.target.value })}
-                  className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-xl bg-white dark:bg-gray-800"
+                  className="w-full px-3 py-2 border border-[var(--color-border)] rounded-xl bg-[var(--color-card)] text-[var(--color-foreground)]"
                 >
                   <option value="">No category</option>
                   {categories.map((cat) => (
@@ -324,7 +353,7 @@ export function AddChoreModal({
               {/* Difficulty & Points */}
               <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                  <label className="block text-sm font-medium text-[var(--color-foreground)] mb-1">
                     Difficulty
                   </label>
                   <select
@@ -332,7 +361,7 @@ export function AddChoreModal({
                     onChange={(e) =>
                       setForm({ ...form, difficulty: e.target.value as ChoreDifficulty })
                     }
-                    className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-xl bg-white dark:bg-gray-800"
+                    className="w-full px-3 py-2 border border-[var(--color-border)] rounded-xl bg-[var(--color-card)] text-[var(--color-foreground)]"
                   >
                     <option value="easy">Easy</option>
                     <option value="medium">Medium</option>
@@ -340,14 +369,14 @@ export function AddChoreModal({
                   </select>
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                  <label className="block text-sm font-medium text-[var(--color-foreground)] mb-1">
                     Points
                   </label>
                   <input
                     type="number"
                     value={form.points}
                     onChange={(e) => setForm({ ...form, points: e.target.value })}
-                    className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-xl bg-white dark:bg-gray-800"
+                    className="w-full px-3 py-2 border border-[var(--color-border)] rounded-xl bg-[var(--color-card)] text-[var(--color-foreground)]"
                     min="0"
                   />
                 </div>
@@ -355,14 +384,14 @@ export function AddChoreModal({
 
               {/* Estimated Time */}
               <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                <label className="block text-sm font-medium text-[var(--color-foreground)] mb-1">
                   Estimated Minutes
                 </label>
                 <input
                   type="number"
                   value={form.estimatedMinutes}
                   onChange={(e) => setForm({ ...form, estimatedMinutes: e.target.value })}
-                  className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-xl bg-white dark:bg-gray-800"
+                  className="w-full px-3 py-2 border border-[var(--color-border)] rounded-xl bg-[var(--color-card)] text-[var(--color-foreground)]"
                   placeholder="Optional"
                   min="0"
                 />
@@ -370,7 +399,7 @@ export function AddChoreModal({
 
               {/* Recurrence */}
               <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                <label className="block text-sm font-medium text-[var(--color-foreground)] mb-1">
                   Recurrence
                 </label>
                 <select
@@ -382,7 +411,7 @@ export function AddChoreModal({
                       recurrenceInterval: '1',
                     })
                   }
-                  className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-xl bg-white dark:bg-gray-800"
+                  className="w-full px-3 py-2 border border-[var(--color-border)] rounded-xl bg-[var(--color-card)] text-[var(--color-foreground)]"
                 >
                   <option value="once">One time</option>
                   <option value="daily">Daily</option>
@@ -395,7 +424,7 @@ export function AddChoreModal({
               {/* Interval */}
               {showIntervalInput && (
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                  <label className="block text-sm font-medium text-[var(--color-foreground)] mb-1">
                     Every
                   </label>
                   <div className="flex items-center gap-2">
@@ -403,10 +432,10 @@ export function AddChoreModal({
                       type="number"
                       value={form.recurrenceInterval}
                       onChange={(e) => setForm({ ...form, recurrenceInterval: e.target.value })}
-                      className="w-24 px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-xl bg-white dark:bg-gray-800"
+                      className="w-24 px-3 py-2 border border-[var(--color-border)] rounded-xl bg-[var(--color-card)] text-[var(--color-foreground)]"
                       min="1"
                     />
-                    <span className="text-gray-600 dark:text-gray-400">{getIntervalLabel()}</span>
+                    <span className="text-[var(--color-muted-foreground)]">{getIntervalLabel()}</span>
                   </div>
                 </div>
               )}
@@ -414,7 +443,7 @@ export function AddChoreModal({
               {/* Weekly day selection */}
               {form.recurrenceType === 'weekly' && (
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                  <label className="block text-sm font-medium text-[var(--color-foreground)] mb-2">
                     Days of Week
                   </label>
                   <div className="flex flex-wrap gap-2">
@@ -423,18 +452,19 @@ export function AddChoreModal({
                         key={day.key}
                         type="button"
                         onClick={() => toggleWeeklyDay(day.key)}
-                        className={`px-3 py-2 rounded-lg text-sm font-medium transition-colors ${
+                        className="px-3 py-2 rounded-lg text-sm font-medium transition-colors"
+                        style={
                           form.weeklyDays.includes(day.key)
-                            ? 'bg-purple-600 text-white'
-                            : 'bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600'
-                        }`}
+                            ? { backgroundColor: 'var(--color-primary)', color: 'var(--color-primary-foreground)' }
+                            : { backgroundColor: 'var(--color-muted)', color: 'var(--color-foreground)' }
+                        }
                       >
                         {day.label}
                       </button>
                     ))}
                   </div>
                   {form.weeklyDays.length === 0 && (
-                    <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
+                    <p className="text-xs text-[var(--color-muted-foreground)] mt-1">
                       Select at least one day
                     </p>
                   )}
@@ -444,38 +474,38 @@ export function AddChoreModal({
               {/* Start/End Date */}
               <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                  <label className="block text-sm font-medium text-[var(--color-foreground)] mb-1">
                     Start Date
                   </label>
                   <input
                     type="date"
                     value={form.startDate}
                     onChange={(e) => setForm({ ...form, startDate: e.target.value })}
-                    className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-xl bg-white dark:bg-gray-800"
+                    className="w-full px-3 py-2 border border-[var(--color-border)] rounded-xl bg-[var(--color-card)] text-[var(--color-foreground)]"
                   />
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                  <label className="block text-sm font-medium text-[var(--color-foreground)] mb-1">
                     End Date
                   </label>
                   <input
                     type="date"
                     value={form.endDate}
                     onChange={(e) => setForm({ ...form, endDate: e.target.value })}
-                    className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-xl bg-white dark:bg-gray-800"
+                    className="w-full px-3 py-2 border border-[var(--color-border)] rounded-xl bg-[var(--color-card)] text-[var(--color-foreground)]"
                   />
                 </div>
               </div>
 
               {/* Assign To */}
               <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                <label className="block text-sm font-medium text-[var(--color-foreground)] mb-1">
                   Assign To
                 </label>
                 <select
                   value={form.assignedTo}
                   onChange={(e) => setForm({ ...form, assignedTo: e.target.value })}
-                  className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-xl bg-white dark:bg-gray-800"
+                  className="w-full px-3 py-2 border border-[var(--color-border)] rounded-xl bg-[var(--color-card)] text-[var(--color-foreground)]"
                 >
                   <option value="">Anyone (Unassigned)</option>
                   {users.map((u) => (
@@ -493,11 +523,12 @@ export function AddChoreModal({
                   id="requireApproval"
                   checked={form.requireApproval}
                   onChange={(e) => setForm({ ...form, requireApproval: e.target.checked })}
-                  className="w-4 h-4 text-purple-600 rounded focus:ring-purple-500"
+                  className="w-4 h-4 rounded focus:ring-[var(--color-primary)]"
+                  style={{ accentColor: 'var(--color-primary)' }}
                 />
                 <label
                   htmlFor="requireApproval"
-                  className="text-sm text-gray-700 dark:text-gray-300"
+                  className="text-sm text-[var(--color-foreground)]"
                 >
                   Require approval before awarding points
                 </label>
@@ -508,22 +539,25 @@ export function AddChoreModal({
             <div className="space-y-4">
               {templates.length === 0 ? (
                 <div className="text-center py-8">
-                  <FileText size={48} className="mx-auto text-gray-300 mb-3" />
-                  <p className="text-gray-500">No templates available</p>
-                  <p className="text-sm text-gray-400 mt-1">Create templates in the Manage tab</p>
+                  <FileText size={48} className="mx-auto text-[var(--color-muted-foreground)] opacity-50 mb-3" />
+                  <p className="text-[var(--color-muted-foreground)]">No templates available</p>
+                  <p className="text-sm text-[var(--color-muted-foreground)] opacity-70 mt-1">Create templates in the Manage tab</p>
                 </div>
               ) : (
                 <>
                   {/* Settings for templates */}
-                  <div className="bg-purple-50 dark:bg-purple-900/20 p-3 rounded-xl space-y-3">
+                  <div
+                    className="p-3 rounded-xl space-y-3"
+                    style={{ backgroundColor: 'color-mix(in srgb, var(--color-primary) 10%, transparent)' }}
+                  >
                     <div>
-                      <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                      <label className="block text-sm font-medium text-[var(--color-foreground)] mb-1">
                         Assign To
                       </label>
                       <select
                         value={form.assignedTo}
                         onChange={(e) => setForm({ ...form, assignedTo: e.target.value })}
-                        className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-xl bg-white dark:bg-gray-800"
+                        className="w-full px-3 py-2 border border-[var(--color-border)] rounded-xl bg-[var(--color-card)] text-[var(--color-foreground)]"
                       >
                         <option value="">Anyone (Unassigned)</option>
                         {users.map((u) => (
@@ -535,7 +569,7 @@ export function AddChoreModal({
                     </div>
 
                     <div>
-                      <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                      <label className="block text-sm font-medium text-[var(--color-foreground)] mb-1">
                         Recurrence
                       </label>
                       <select
@@ -547,7 +581,7 @@ export function AddChoreModal({
                             recurrenceInterval: '1',
                           })
                         }
-                        className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-xl bg-white dark:bg-gray-800"
+                        className="w-full px-3 py-2 border border-[var(--color-border)] rounded-xl bg-[var(--color-card)] text-[var(--color-foreground)]"
                       >
                         <option value="once">One time</option>
                         <option value="daily">Daily</option>
@@ -559,7 +593,7 @@ export function AddChoreModal({
 
                     {showIntervalInput && (
                       <div>
-                        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                        <label className="block text-sm font-medium text-[var(--color-foreground)] mb-1">
                           Every
                         </label>
                         <div className="flex items-center gap-2">
@@ -569,10 +603,10 @@ export function AddChoreModal({
                             onChange={(e) =>
                               setForm({ ...form, recurrenceInterval: e.target.value })
                             }
-                            className="w-24 px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-xl bg-white dark:bg-gray-800"
+                            className="w-24 px-3 py-2 border border-[var(--color-border)] rounded-xl bg-[var(--color-card)] text-[var(--color-foreground)]"
                             min="1"
                           />
-                          <span className="text-gray-600 dark:text-gray-400">
+                          <span className="text-[var(--color-muted-foreground)]">
                             {getIntervalLabel()}
                           </span>
                         </div>
@@ -582,7 +616,7 @@ export function AddChoreModal({
                     {/* Weekly day selection for templates */}
                     {form.recurrenceType === 'weekly' && (
                       <div>
-                        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                        <label className="block text-sm font-medium text-[var(--color-foreground)] mb-2">
                           Days of Week
                         </label>
                         <div className="flex flex-wrap gap-2">
@@ -591,11 +625,12 @@ export function AddChoreModal({
                               key={day.key}
                               type="button"
                               onClick={() => toggleWeeklyDay(day.key)}
-                              className={`px-3 py-1.5 rounded-lg text-sm font-medium transition-colors ${
+                              className="px-3 py-1.5 rounded-lg text-sm font-medium transition-colors"
+                              style={
                                 form.weeklyDays.includes(day.key)
-                                  ? 'bg-purple-600 text-white'
-                                  : 'bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300 border border-gray-300 dark:border-gray-600 hover:bg-gray-100 dark:hover:bg-gray-700'
-                              }`}
+                                  ? { backgroundColor: 'var(--color-primary)', color: 'var(--color-primary-foreground)' }
+                                  : { backgroundColor: 'var(--color-card)', color: 'var(--color-foreground)', border: '1px solid var(--color-border)' }
+                              }
                             >
                               {day.label}
                             </button>
@@ -606,25 +641,25 @@ export function AddChoreModal({
 
                     <div className="grid grid-cols-2 gap-3">
                       <div>
-                        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                        <label className="block text-sm font-medium text-[var(--color-foreground)] mb-1">
                           Start Date
                         </label>
                         <input
                           type="date"
                           value={form.startDate}
                           onChange={(e) => setForm({ ...form, startDate: e.target.value })}
-                          className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-xl bg-white dark:bg-gray-800"
+                          className="w-full px-3 py-2 border border-[var(--color-border)] rounded-xl bg-[var(--color-card)] text-[var(--color-foreground)]"
                         />
                       </div>
                       <div>
-                        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                        <label className="block text-sm font-medium text-[var(--color-foreground)] mb-1">
                           End Date
                         </label>
                         <input
                           type="date"
                           value={form.endDate}
                           onChange={(e) => setForm({ ...form, endDate: e.target.value })}
-                          className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-xl bg-white dark:bg-gray-800"
+                          className="w-full px-3 py-2 border border-[var(--color-border)] rounded-xl bg-[var(--color-card)] text-[var(--color-foreground)]"
                         />
                       </div>
                     </div>
@@ -640,29 +675,29 @@ export function AddChoreModal({
                     return (
                       <div
                         key={cat.id}
-                        className="bg-white dark:bg-gray-800 rounded-xl border border-gray-100 dark:border-gray-700 overflow-hidden"
+                        className="themed-card overflow-hidden"
                       >
                         <button
                           onClick={() => toggleCategory(cat.id)}
-                          className="w-full flex items-center gap-3 p-3 hover:bg-gray-50 dark:hover:bg-gray-700/50"
+                          className="w-full flex items-center gap-3 p-3 hover:bg-[var(--color-muted)] transition-colors"
                         >
                           {isExpanded ? (
-                            <ChevronDown size={20} className="text-gray-400" />
+                            <ChevronDown size={20} className="text-[var(--color-muted-foreground)]" />
                           ) : (
-                            <ChevronRight size={20} className="text-gray-400" />
+                            <ChevronRight size={20} className="text-[var(--color-muted-foreground)]" />
                           )}
                           <span
                             className="w-3 h-3 rounded-full"
                             style={{ backgroundColor: cat.color || '#6b7280' }}
                           />
-                          <span className="font-medium text-gray-900 dark:text-white">
+                          <span className="font-medium text-[var(--color-foreground)]">
                             {cat.name}
                           </span>
-                          <span className="text-sm text-gray-500">({catTemplates.length})</span>
+                          <span className="text-sm text-[var(--color-muted-foreground)]">({catTemplates.length})</span>
                         </button>
 
                         {isExpanded && (
-                          <div className="border-t border-gray-100 dark:border-gray-700 p-2 space-y-2">
+                          <div className="border-t border-[var(--color-border)] p-2 space-y-2">
                             {catTemplates.map((template) => (
                               <TemplateCard
                                 key={template.id}
@@ -690,27 +725,27 @@ export function AddChoreModal({
 
                   {/* Uncategorized templates */}
                   {uncategorizedTemplates.length > 0 && (
-                    <div className="bg-white dark:bg-gray-800 rounded-xl border border-gray-100 dark:border-gray-700 overflow-hidden">
+                    <div className="themed-card overflow-hidden">
                       <button
                         onClick={() => toggleCategory(null)}
-                        className="w-full flex items-center gap-3 p-3 hover:bg-gray-50 dark:hover:bg-gray-700/50"
+                        className="w-full flex items-center gap-3 p-3 hover:bg-[var(--color-muted)] transition-colors"
                       >
                         {expandedCategories.has(null) ? (
-                          <ChevronDown size={20} className="text-gray-400" />
+                          <ChevronDown size={20} className="text-[var(--color-muted-foreground)]" />
                         ) : (
-                          <ChevronRight size={20} className="text-gray-400" />
+                          <ChevronRight size={20} className="text-[var(--color-muted-foreground)]" />
                         )}
-                        <span className="w-3 h-3 rounded-full bg-gray-400" />
-                        <span className="font-medium text-gray-900 dark:text-white">
+                        <span className="w-3 h-3 rounded-full bg-[var(--color-muted-foreground)]" />
+                        <span className="font-medium text-[var(--color-foreground)]">
                           Uncategorized
                         </span>
-                        <span className="text-sm text-gray-500">
+                        <span className="text-sm text-[var(--color-muted-foreground)]">
                           ({uncategorizedTemplates.length})
                         </span>
                       </button>
 
                       {expandedCategories.has(null) && (
-                        <div className="border-t border-gray-100 dark:border-gray-700 p-2 space-y-2">
+                        <div className="border-t border-[var(--color-border)] p-2 space-y-2">
                           {uncategorizedTemplates.map((template) => (
                             <TemplateCard
                               key={template.id}
@@ -737,27 +772,8 @@ export function AddChoreModal({
               )}
             </div>
           )}
-        </div>
-
-        {mode === 'custom' && (
-          <div className="p-4 border-t border-gray-100 dark:border-gray-700 flex gap-2 flex-shrink-0">
-            <button
-              onClick={onClose}
-              className="flex-1 py-2 bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 rounded-xl font-medium"
-            >
-              Cancel
-            </button>
-            <button
-              onClick={handleSubmit}
-              disabled={saving}
-              className="flex-1 py-2 bg-purple-600 text-white rounded-xl font-medium hover:bg-purple-700 disabled:opacity-50"
-            >
-              {saving ? 'Creating...' : 'Create'}
-            </button>
-          </div>
-        )}
-      </div>
-    </div>
+        </ModalBody>
+    </ModalPortal>
   );
 }
 
@@ -778,21 +794,22 @@ function TemplateCard({
   assignedToName?: string;
 }) {
   return (
-    <div className="bg-gray-50 dark:bg-gray-700/50 rounded-xl overflow-hidden">
+    <div className="bg-[var(--color-muted)] rounded-xl overflow-hidden">
       <button
         onClick={onToggle}
-        className="w-full flex items-center gap-2 p-3 text-left hover:bg-gray-100 dark:hover:bg-gray-700"
+        className="w-full flex items-center gap-2 p-3 text-left hover:opacity-80 transition-opacity"
       >
         {expanded ? (
-          <ChevronUp size={16} className="text-gray-400 flex-shrink-0" />
+          <ChevronUp size={16} className="text-[var(--color-muted-foreground)] flex-shrink-0" />
         ) : (
-          <ChevronDown size={16} className="text-gray-400 flex-shrink-0" />
+          <ChevronDown size={16} className="text-[var(--color-muted-foreground)] flex-shrink-0" />
         )}
         <div className="flex-1 min-w-0">
-          <p className="font-medium text-gray-900 dark:text-white truncate">{template.name}</p>
-          <div className="flex items-center gap-2 text-xs text-gray-500">
+          <p className="font-medium text-[var(--color-foreground)] truncate">{template.name}</p>
+          <div className="flex items-center gap-2 text-xs text-[var(--color-muted-foreground)]">
             <span
-              className={`px-1.5 py-0.5 rounded ${DIFFICULTY_COLORS[template.difficulty || 'medium']}`}
+              className="px-1.5 py-0.5 rounded"
+              style={getDifficultyStyle(template.difficulty || 'medium')}
             >
               {template.difficulty || 'medium'}
             </span>
@@ -811,12 +828,12 @@ function TemplateCard({
       {expanded && (
         <div className="px-3 pb-3 space-y-2">
           {template.description && (
-            <p className="text-sm text-gray-600 dark:text-gray-400">{template.description}</p>
+            <p className="text-sm text-[var(--color-muted-foreground)]">{template.description}</p>
           )}
           <button
             onClick={onApply}
             disabled={saving}
-            className="w-full py-2 bg-purple-600 text-white rounded-lg text-sm font-medium hover:bg-purple-700 disabled:opacity-50 flex items-center justify-center gap-2"
+            className="w-full py-2 bg-[var(--color-primary)] text-[var(--color-primary-foreground)] rounded-lg text-sm font-medium hover:opacity-90 disabled:opacity-50 flex items-center justify-center gap-2"
           >
             <Calendar size={14} />
             {saving

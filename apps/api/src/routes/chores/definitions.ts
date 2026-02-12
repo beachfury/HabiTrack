@@ -16,6 +16,7 @@ import {
   validationError,
 } from '../../utils';
 import { getTodayLocal, getTimezone } from '../../utils/date';
+import { queueEmail, getUserEmail } from '../../email/queue';
 
 type Difficulty = 'easy' | 'medium' | 'hard';
 type RecurrenceType = 'once' | 'daily' | 'weekly' | 'monthly' | 'custom' | 'x_days';
@@ -130,6 +131,7 @@ async function generateChoreInstances(
         ? `${instances.length} upcoming instances`
         : `due ${new Date(firstDueDate).toLocaleDateString()}`;
 
+      // In-app notification
       await createNotification({
         userId: assignedTo,
         type: 'chore',
@@ -139,6 +141,33 @@ async function generateChoreInstances(
         relatedId: choreId,
         relatedType: 'chore',
       });
+
+      // Email notification
+      const assigneeEmail = await getUserEmail(assignedTo);
+      if (assigneeEmail) {
+        // Get assignee name for email
+        const [assigneeInfo] = await q<Array<{ displayName: string }>>(
+          'SELECT displayName FROM users WHERE id = ?',
+          [assignedTo],
+        );
+
+        await queueEmail({
+          userId: assignedTo,
+          toEmail: assigneeEmail,
+          template: 'CHORE_ASSIGNED',
+          variables: {
+            userName: assigneeInfo?.displayName || 'there',
+            choreName: title,
+            dueDate: new Date(firstDueDate).toLocaleDateString('en-US', {
+              weekday: 'short',
+              month: 'short',
+              day: 'numeric',
+            }),
+            points: 0, // Points aren't available here, using 0
+            description: '',
+          },
+        });
+      }
     }
   }
 

@@ -109,7 +109,7 @@ export function EntriesTab({
         <div className="flex flex-wrap gap-2">
           {/* Search */}
           <div className="relative">
-            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400" />
+            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-[var(--color-muted-foreground)]" />
             <input
               type="text"
               placeholder="Search entries..."
@@ -118,7 +118,7 @@ export function EntriesTab({
                 setSearchTerm(e.target.value);
                 handleFilterChange();
               }}
-              className="pl-10 pr-4 py-2 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-lg text-sm w-48"
+              className="pl-10 pr-4 py-2 bg-[var(--color-card)] border border-[var(--color-border)] rounded-lg text-sm w-48 text-[var(--color-foreground)]"
             />
           </div>
 
@@ -129,7 +129,7 @@ export function EntriesTab({
               setFilterBudget(e.target.value ? Number(e.target.value) : null);
               handleFilterChange();
             }}
-            className="px-3 py-2 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-lg text-sm"
+            className="px-3 py-2 bg-[var(--color-card)] border border-[var(--color-border)] rounded-lg text-sm text-[var(--color-foreground)]"
           >
             <option value="">All Budgets</option>
             {budgets.map((b) => (
@@ -146,7 +146,7 @@ export function EntriesTab({
               setFilterCategory(e.target.value ? Number(e.target.value) : null);
               handleFilterChange();
             }}
-            className="px-3 py-2 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-lg text-sm"
+            className="px-3 py-2 bg-[var(--color-card)] border border-[var(--color-border)] rounded-lg text-sm text-[var(--color-foreground)]"
           >
             <option value="">All Categories</option>
             {categories.map((cat) => (
@@ -165,9 +165,9 @@ export function EntriesTab({
                 setDateRange((prev) => ({ ...prev, start: e.target.value }));
                 handleFilterChange();
               }}
-              className="px-2 py-2 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-lg text-sm"
+              className="px-2 py-2 bg-[var(--color-card)] border border-[var(--color-border)] rounded-lg text-sm text-[var(--color-foreground)]"
             />
-            <span className="text-gray-400">-</span>
+            <span className="text-[var(--color-muted-foreground)]">-</span>
             <input
               type="date"
               value={dateRange.end}
@@ -175,14 +175,14 @@ export function EntriesTab({
                 setDateRange((prev) => ({ ...prev, end: e.target.value }));
                 handleFilterChange();
               }}
-              className="px-2 py-2 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-lg text-sm"
+              className="px-2 py-2 bg-[var(--color-card)] border border-[var(--color-border)] rounded-lg text-sm text-[var(--color-foreground)]"
             />
           </div>
         </div>
 
         <button
           onClick={onAddEntry}
-          className="inline-flex items-center px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors"
+          className="inline-flex items-center px-4 py-2 bg-[var(--color-success)] text-white rounded-lg hover:opacity-90 transition-opacity"
         >
           <Plus className="w-4 h-4 mr-2" />
           Add Entry
@@ -190,15 +190,15 @@ export function EntriesTab({
       </div>
 
       {/* Summary */}
-      <div className="bg-gray-50 dark:bg-gray-800/50 rounded-lg p-4 flex flex-wrap items-center justify-between gap-4">
+      <div className="bg-[var(--color-muted)] rounded-lg p-4 flex flex-wrap items-center justify-between gap-4">
         <div>
-          <span className="text-sm text-gray-500 dark:text-gray-400">
+          <span className="text-sm text-[var(--color-muted-foreground)]">
             Showing {filteredEntries.length} entries
           </span>
         </div>
         <div className="text-right">
-          <span className="text-sm text-gray-500 dark:text-gray-400 mr-2">Total:</span>
-          <span className="font-bold text-gray-900 dark:text-white">
+          <span className="text-sm text-[var(--color-muted-foreground)] mr-2">Total:</span>
+          <span className="font-bold text-[var(--color-foreground)]">
             {formatCurrency(filteredTotal)}
           </span>
         </div>
@@ -206,39 +206,39 @@ export function EntriesTab({
 
       {/* Entries Table */}
       {paginatedEntries.length > 0 ? (
-        <div className="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 overflow-hidden">
+        <div className="themed-card rounded-xl shadow-sm overflow-hidden">
           <div className="overflow-x-auto">
             <table className="w-full">
               <thead>
-                <tr className="border-b border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-900/50">
-                  <th className="text-left px-4 py-3 text-sm font-medium text-gray-500 dark:text-gray-400">
+                <tr className="border-b border-[var(--color-border)] bg-[var(--color-muted)]">
+                  <th className="text-left px-4 py-3 text-sm font-medium text-[var(--color-muted-foreground)]">
                     Date
                   </th>
-                  <th className="text-left px-4 py-3 text-sm font-medium text-gray-500 dark:text-gray-400">
+                  <th className="text-left px-4 py-3 text-sm font-medium text-[var(--color-muted-foreground)]">
                     Description
                   </th>
-                  <th className="text-left px-4 py-3 text-sm font-medium text-gray-500 dark:text-gray-400">
+                  <th className="text-left px-4 py-3 text-sm font-medium text-[var(--color-muted-foreground)]">
                     Budget
                   </th>
-                  <th className="text-left px-4 py-3 text-sm font-medium text-gray-500 dark:text-gray-400">
+                  <th className="text-left px-4 py-3 text-sm font-medium text-[var(--color-muted-foreground)]">
                     Vendor
                   </th>
-                  <th className="text-right px-4 py-3 text-sm font-medium text-gray-500 dark:text-gray-400">
+                  <th className="text-right px-4 py-3 text-sm font-medium text-[var(--color-muted-foreground)]">
                     Amount
                   </th>
-                  <th className="text-right px-4 py-3 text-sm font-medium text-gray-500 dark:text-gray-400">
+                  <th className="text-right px-4 py-3 text-sm font-medium text-[var(--color-muted-foreground)]">
                     Actions
                   </th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-gray-100 dark:divide-gray-700">
+              <tbody className="divide-y divide-[var(--color-border)]">
                 {paginatedEntries.map((entry) => (
                   <tr
                     key={entry.id}
-                    className="hover:bg-gray-50 dark:hover:bg-gray-700/50 transition-colors"
+                    className="hover:bg-[var(--color-muted)]/50 transition-colors"
                   >
                     <td className="px-4 py-3">
-                      <span className="text-sm text-gray-900 dark:text-white">
+                      <span className="text-sm text-[var(--color-foreground)]">
                         {formatDate(entry.transactionDate)}
                       </span>
                     </td>
@@ -248,23 +248,23 @@ export function EntriesTab({
                           className="w-2 h-2 rounded-full flex-shrink-0"
                           style={{ backgroundColor: entry.categoryColor || '#6b7280' }}
                         />
-                        <span className="text-sm text-gray-900 dark:text-white">
+                        <span className="text-sm text-[var(--color-foreground)]">
                           {entry.description || '-'}
                         </span>
                       </div>
                     </td>
                     <td className="px-4 py-3">
-                      <span className="text-sm text-gray-600 dark:text-gray-400">
+                      <span className="text-sm text-[var(--color-muted-foreground)]">
                         {entry.budgetName}
                       </span>
                     </td>
                     <td className="px-4 py-3">
-                      <span className="text-sm text-gray-600 dark:text-gray-400">
+                      <span className="text-sm text-[var(--color-muted-foreground)]">
                         {entry.vendor || '-'}
                       </span>
                     </td>
                     <td className="px-4 py-3 text-right">
-                      <span className="text-sm font-medium text-gray-900 dark:text-white">
+                      <span className="text-sm font-medium text-[var(--color-foreground)]">
                         {formatCurrency(entry.amount)}
                       </span>
                     </td>
@@ -272,14 +272,14 @@ export function EntriesTab({
                       <div className="flex items-center justify-end gap-1">
                         <button
                           onClick={() => onEditEntry(entry)}
-                          className="p-1.5 text-gray-400 hover:text-purple-600 dark:hover:text-purple-400 hover:bg-gray-100 dark:hover:bg-gray-700 rounded"
+                          className="p-1.5 text-[var(--color-muted-foreground)] hover:text-[var(--color-primary)] hover:bg-[var(--color-primary)]/10 rounded"
                           title="Edit entry"
                         >
                           <Edit className="w-4 h-4" />
                         </button>
                         <button
                           onClick={() => onDeleteEntry(entry.id)}
-                          className="p-1.5 text-gray-400 hover:text-red-600 dark:hover:text-red-400 hover:bg-gray-100 dark:hover:bg-gray-700 rounded"
+                          className="p-1.5 text-[var(--color-muted-foreground)] hover:text-[var(--color-destructive)] hover:bg-[var(--color-destructive)]/10 rounded"
                           title="Delete entry"
                         >
                           <Trash2 className="w-4 h-4" />
@@ -294,22 +294,22 @@ export function EntriesTab({
 
           {/* Pagination */}
           {totalPages > 1 && (
-            <div className="px-4 py-3 border-t border-gray-200 dark:border-gray-700 flex items-center justify-between">
+            <div className="px-4 py-3 border-t border-[var(--color-border)] flex items-center justify-between">
               <button
                 onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
                 disabled={currentPage === 1}
-                className="flex items-center gap-1 px-3 py-1.5 text-sm text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white disabled:opacity-50 disabled:cursor-not-allowed"
+                className="flex items-center gap-1 px-3 py-1.5 text-sm text-[var(--color-muted-foreground)] hover:text-[var(--color-foreground)] disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 <ChevronLeft className="w-4 h-4" />
                 Previous
               </button>
-              <span className="text-sm text-gray-500 dark:text-gray-400">
+              <span className="text-sm text-[var(--color-muted-foreground)]">
                 Page {currentPage} of {totalPages}
               </span>
               <button
                 onClick={() => setCurrentPage((p) => Math.min(totalPages, p + 1))}
                 disabled={currentPage === totalPages}
-                className="flex items-center gap-1 px-3 py-1.5 text-sm text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white disabled:opacity-50 disabled:cursor-not-allowed"
+                className="flex items-center gap-1 px-3 py-1.5 text-sm text-[var(--color-muted-foreground)] hover:text-[var(--color-foreground)] disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 Next
                 <ChevronRight className="w-4 h-4" />
@@ -318,19 +318,19 @@ export function EntriesTab({
           )}
         </div>
       ) : (
-        <div className="text-center py-12 bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700">
-          <Receipt className="w-16 h-16 mx-auto text-gray-400 mb-4" />
-          <h3 className="text-lg font-medium text-gray-900 dark:text-white mb-2">
+        <div className="text-center py-12 themed-card rounded-xl">
+          <Receipt className="w-16 h-16 mx-auto text-[var(--color-muted-foreground)] mb-4" />
+          <h3 className="text-lg font-medium text-[var(--color-foreground)] mb-2">
             No Entries Found
           </h3>
-          <p className="text-gray-500 dark:text-gray-400 mb-6">
+          <p className="text-[var(--color-muted-foreground)] mb-6">
             {searchTerm || filterBudget || filterCategory || dateRange.start || dateRange.end
               ? 'No entries match your filters. Try adjusting them.'
               : 'Start tracking expenses by adding your first entry.'}
           </p>
           <button
             onClick={onAddEntry}
-            className="inline-flex items-center px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors"
+            className="inline-flex items-center px-4 py-2 bg-[var(--color-success)] text-white rounded-lg hover:opacity-90 transition-opacity"
           >
             <Plus className="w-4 h-4 mr-2" />
             Add Entry

@@ -5,6 +5,7 @@ import type { Request, Response } from 'express';
 import { q } from '../../db';
 import { logAudit } from '../../audit';
 import { createNotification } from '../messages';
+import { queueEmail, getActiveUsersWithEmail } from '../../email/queue';
 import {
   getUser,
   isValidString,
@@ -632,6 +633,24 @@ export async function finalizeMealPlan(req: Request, res: Response) {
         relatedId: mealPlanId,
         relatedType: 'meal',
       });
+    }
+
+    // Send email notifications
+    const activeUsers = await getActiveUsersWithEmail();
+    const mealName = customMealName || (recipeId ? 'a recipe' : 'the meal');
+    for (const recipient of activeUsers) {
+      if (recipient.id !== user.id) {
+        await queueEmail({
+          userId: recipient.id,
+          toEmail: recipient.email,
+          template: 'MEAL_FINALIZED',
+          variables: {
+            userName: recipient.displayName,
+            mealName,
+            mealDate: mealPlan.date,
+          },
+        });
+      }
     }
 
     return success(res, { success: true, suggestionsGenerated });

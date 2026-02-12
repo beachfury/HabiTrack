@@ -7,20 +7,20 @@ import {
   Palette,
   Lock,
   Home,
-  Sun,
-  Moon,
-  Monitor,
   Check,
   AlertCircle,
   Camera,
   X,
+  Bell,
+  Mail,
 } from 'lucide-react';
 
 import { useAuth } from '../context/AuthContext';
-import { useTheme } from '../context/ThemeContext';
 import { UserSettings, HouseholdSettings } from '../types';
 import { ColorPicker } from '../components/common/ColorPicker';
 import { ThemePicker, KidThemePicker } from '../components/themes';
+import { NotificationsTab } from '../components/settings/NotificationsTab';
+import { EmailSettingsTab } from '../components/settings/EmailSettingsTab';
 
 const API_BASE = (import.meta.env.VITE_API_BASE_URL as string) || '';
 
@@ -117,11 +117,10 @@ const api = {
 // Default color for new profiles/settings (HabiTrack Green)
 const DEFAULT_COLOR = '#3cb371';
 
-type Tab = 'profile' | 'themes' | 'appearance' | 'security' | 'household';
+type Tab = 'profile' | 'themes' | 'security' | 'notifications' | 'household' | 'email';
 
 export function SettingsPage() {
   const { user } = useAuth();
-  const { theme, setTheme, accentColor, setAccentColor } = useTheme();
   const [activeTab, setActiveTab] = useState<Tab>('profile');
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
@@ -340,9 +339,10 @@ export function SettingsPage() {
   const tabs = [
     { id: 'profile' as Tab, icon: User, label: 'Profile' },
     { id: 'themes' as Tab, icon: Palette, label: 'Themes' },
-    { id: 'appearance' as Tab, icon: Settings, label: 'Appearance' },
+    { id: 'notifications' as Tab, icon: Bell, label: 'Notifications' },
     { id: 'security' as Tab, icon: Lock, label: 'Security' },
     ...(isAdmin ? [{ id: 'household' as Tab, icon: Home, label: 'Household' }] : []),
+    ...(isAdmin ? [{ id: 'email' as Tab, icon: Mail, label: 'Email' }] : []),
   ];
 
   return (
@@ -504,66 +504,6 @@ export function SettingsPage() {
             </div>
           )}
 
-          {/* Appearance Tab */}
-          {activeTab === 'appearance' && (
-            <div className="space-y-6">
-              <h2 className="text-xl font-semibold text-[var(--color-foreground)] mb-6">Appearance</h2>
-
-              {/* Theme */}
-              <div>
-                <label className="block text-sm font-medium text-[var(--color-foreground)] mb-3">Theme</label>
-                <div className="flex gap-3">
-                  <button
-                    onClick={() => setTheme('light')}
-                    className={`flex items-center gap-2 px-4 py-3 rounded-xl border-2 transition-colors ${
-                      theme === 'light'
-                        ? 'border-[var(--color-primary)] bg-[var(--color-primary)]/10 text-[var(--color-primary)]'
-                        : 'border-[var(--color-border)] hover:border-[var(--color-border)]/80 text-[var(--color-foreground)]'
-                    }`}
-                  >
-                    <Sun size={20} />
-                    Light
-                  </button>
-                  <button
-                    onClick={() => setTheme('dark')}
-                    className={`flex items-center gap-2 px-4 py-3 rounded-xl border-2 transition-colors ${
-                      theme === 'dark'
-                        ? 'border-[var(--color-primary)] bg-[var(--color-primary)]/10 text-[var(--color-primary)]'
-                        : 'border-[var(--color-border)] hover:border-[var(--color-border)]/80 text-[var(--color-foreground)]'
-                    }`}
-                  >
-                    <Moon size={20} />
-                    Dark
-                  </button>
-                  <button
-                    onClick={() => setTheme('system')}
-                    className={`flex items-center gap-2 px-4 py-3 rounded-xl border-2 transition-colors ${
-                      theme === 'system'
-                        ? 'border-[var(--color-primary)] bg-[var(--color-primary)]/10 text-[var(--color-primary)]'
-                        : 'border-[var(--color-border)] hover:border-[var(--color-border)]/80 text-[var(--color-foreground)]'
-                    }`}
-                  >
-                    <Monitor size={20} />
-                    System
-                  </button>
-                </div>
-              </div>
-
-              {/* Accent Color */}
-              <div>
-                <ColorPicker
-                  color={accentColor}
-                  onChange={setAccentColor}
-                  label="Accent Color"
-                  className="max-w-md"
-                />
-                <p className="text-sm text-[var(--color-muted-foreground)] mt-2">
-                  This color will be used for buttons and highlights throughout the app.
-                </p>
-              </div>
-            </div>
-          )}
-
           {/* Security Tab */}
           {activeTab === 'security' && (
             <form onSubmit={handleChangePassword} className="space-y-6">
@@ -622,6 +562,16 @@ export function SettingsPage() {
                 {saving ? 'Changing...' : 'Change Password'}
               </button>
             </form>
+          )}
+
+          {/* Notifications Tab */}
+          {activeTab === 'notifications' && (
+            <NotificationsTab />
+          )}
+
+          {/* Email Settings Tab (Admin only) */}
+          {activeTab === 'email' && isAdmin && (
+            <EmailSettingsTab />
           )}
 
           {/* Household Tab (Admin only) */}

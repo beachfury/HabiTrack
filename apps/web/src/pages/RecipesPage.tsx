@@ -20,6 +20,7 @@ import {
   ImagePlus,
   Image,
 } from 'lucide-react';
+import { ModalPortal, ModalBody } from '../components/common/ModalPortal';
 import { useAuth } from '../context/AuthContext';
 import { mealsApi } from '../api/meals';
 import type {
@@ -645,21 +646,41 @@ function AddRecipeModal({
     });
   };
 
-  return (
-    <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
-      <div className="themed-card w-full max-w-lg p-6 max-h-[90vh] overflow-y-auto m-4">
-        <div className="flex items-center justify-between mb-6">
-          <h2 className="text-xl font-semibold text-[var(--color-foreground)]">
-            Add Recipe
-          </h2>
-          <button
-            onClick={onClose}
-            className="p-2 hover:bg-[var(--color-muted)] rounded-lg transition-colors"
-          >
-            <X size={20} className="text-[var(--color-muted-foreground)]" />
-          </button>
-        </div>
+  const footer = (
+    <div className="flex gap-3">
+      <button type="button" onClick={onClose} className="themed-btn-secondary flex-1">
+        Cancel
+      </button>
+      <button
+        type="submit"
+        form="add-recipe-form"
+        disabled={saving}
+        className="themed-btn-primary flex-1 flex items-center justify-center gap-2"
+      >
+        {saving ? (
+          <>
+            <Loader2 size={18} className="animate-spin" />
+            Saving...
+          </>
+        ) : (
+          <>
+            <Plus size={18} />
+            {isAdmin ? 'Add Recipe' : 'Submit for Approval'}
+          </>
+        )}
+      </button>
+    </div>
+  );
 
+  return (
+    <ModalPortal
+      isOpen={true}
+      onClose={onClose}
+      title="Add Recipe"
+      size="lg"
+      footer={footer}
+    >
+      <ModalBody>
         {error && (
           <div className="mb-4 p-3 rounded-xl bg-[var(--color-destructive)]/10 text-[var(--color-destructive)] text-sm">
             {error}
@@ -672,7 +693,7 @@ function AddRecipeModal({
           </div>
         )}
 
-        <form onSubmit={handleSubmit} className="space-y-4">
+        <form id="add-recipe-form" onSubmit={handleSubmit} className="space-y-4">
           {/* Recipe Image */}
           <div>
             <label className="block text-sm font-medium text-[var(--color-foreground)] mb-2">
@@ -1041,31 +1062,9 @@ function AddRecipeModal({
             )}
           </div>
 
-          <div className="flex gap-3 pt-4">
-            <button type="button" onClick={onClose} className="themed-btn-secondary flex-1">
-              Cancel
-            </button>
-            <button
-              type="submit"
-              disabled={saving}
-              className="themed-btn-primary flex-1 flex items-center justify-center gap-2"
-            >
-              {saving ? (
-                <>
-                  <Loader2 size={18} className="animate-spin" />
-                  Saving...
-                </>
-              ) : (
-                <>
-                  <Plus size={18} />
-                  {isAdmin ? 'Add Recipe' : 'Submit for Approval'}
-                </>
-              )}
-            </button>
-          </div>
         </form>
-      </div>
-    </div>
+      </ModalBody>
+    </ModalPortal>
   );
 }
 
@@ -1326,32 +1325,30 @@ function RecipeDetailModal({
 
   const totalTime = formatCookTime(recipe.prepTimeMinutes, recipe.cookTimeMinutes);
 
-  return (
-    <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
-      <div className="themed-card w-full max-w-2xl p-6 max-h-[90vh] overflow-y-auto m-4">
-        <div className="flex items-center justify-between mb-4">
-          <h2 className="text-xl font-semibold text-[var(--color-foreground)]">
-            {isEditing ? 'Edit Recipe' : recipe.name}
-          </h2>
-          <div className="flex items-center gap-2">
-            {canEdit && !isEditing && !loading && (
-              <button
-                onClick={() => setIsEditing(true)}
-                className="p-2 hover:bg-[var(--color-muted)] rounded-lg transition-colors"
-                title="Edit recipe"
-              >
-                <Pencil size={20} className="text-[var(--color-primary)]" />
-              </button>
-            )}
-            <button
-              onClick={onClose}
-              className="p-2 hover:bg-[var(--color-muted)] rounded-lg transition-colors"
-            >
-              <X size={20} className="text-[var(--color-muted-foreground)]" />
-            </button>
-          </div>
-        </div>
+  // Build title with edit button for view mode
+  const titleContent = (
+    <div className="flex items-center gap-2">
+      <span>{isEditing ? 'Edit Recipe' : recipe.name}</span>
+      {canEdit && !isEditing && !loading && (
+        <button
+          onClick={() => setIsEditing(true)}
+          className="p-1.5 hover:bg-[var(--color-muted)] rounded-lg transition-colors"
+          title="Edit recipe"
+        >
+          <Pencil size={18} className="text-[var(--color-primary)]" />
+        </button>
+      )}
+    </div>
+  );
 
+  return (
+    <ModalPortal
+      isOpen={true}
+      onClose={onClose}
+      title={titleContent}
+      size="xl"
+    >
+      <ModalBody>
         {error && (
           <div className="mb-4 p-3 rounded-xl bg-[var(--color-destructive)]/10 text-[var(--color-destructive)] text-sm flex items-center gap-2">
             <AlertCircle size={16} />
@@ -1878,8 +1875,8 @@ function RecipeDetailModal({
             </button>
           </div>
         )}
-      </div>
-    </div>
+      </ModalBody>
+    </ModalPortal>
   );
 }
 
@@ -1900,13 +1897,50 @@ function ApprovalModal({
   const [rejectReason, setRejectReason] = useState('');
   const [showRejectForm, setShowRejectForm] = useState(false);
 
-  return (
-    <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
-      <div className="themed-card w-full max-w-md p-6 m-4">
-        <h2 className="text-xl font-semibold text-[var(--color-foreground)] mb-4">
-          Review Recipe
-        </h2>
+  const footer = showRejectForm ? (
+    <div className="flex gap-3">
+      <button
+        onClick={() => setShowRejectForm(false)}
+        className="themed-btn-secondary flex-1"
+      >
+        Back
+      </button>
+      <button
+        onClick={() => onReject(rejectReason)}
+        className="flex-1 py-2 rounded-xl bg-[var(--color-destructive)] text-white hover:bg-[var(--color-destructive)]/90"
+      >
+        Reject Recipe
+      </button>
+    </div>
+  ) : (
+    <div className="flex gap-3">
+      <button onClick={onClose} className="themed-btn-secondary flex-1">
+        Cancel
+      </button>
+      <button
+        onClick={() => setShowRejectForm(true)}
+        className="flex-1 py-2 rounded-xl border border-[var(--color-destructive)] text-[var(--color-destructive)] hover:bg-[var(--color-destructive)]/10"
+      >
+        Reject
+      </button>
+      <button
+        onClick={onApprove}
+        className="flex-1 py-2 rounded-xl bg-[var(--color-success)] text-white hover:bg-[var(--color-success)]/90"
+      >
+        Approve
+      </button>
+    </div>
+  );
 
+  return (
+    <ModalPortal
+      isOpen={true}
+      onClose={onClose}
+      title="Review Recipe"
+      size="md"
+      footer={footer}
+    >
+      <ModalBody>
         <div className="mb-4 p-4 bg-[var(--color-muted)] rounded-xl">
           <h3 className="font-medium text-[var(--color-foreground)]">{recipe.name}</h3>
           {recipe.description && (
@@ -1919,55 +1953,21 @@ function ApprovalModal({
           </p>
         </div>
 
-        {showRejectForm ? (
-          <div className="space-y-4">
-            <div>
-              <label className="block text-sm font-medium text-[var(--color-foreground)] mb-1">
-                Reason for rejection (optional)
-              </label>
-              <textarea
-                value={rejectReason}
-                onChange={(e) => setRejectReason(e.target.value)}
-                className="themed-input w-full"
-                placeholder="Enter reason..."
-                rows={3}
-              />
-            </div>
-            <div className="flex gap-3">
-              <button
-                onClick={() => setShowRejectForm(false)}
-                className="themed-btn-secondary flex-1"
-              >
-                Back
-              </button>
-              <button
-                onClick={() => onReject(rejectReason)}
-                className="flex-1 py-2 rounded-xl bg-[var(--color-destructive)] text-white hover:bg-[var(--color-destructive)]/90"
-              >
-                Reject Recipe
-              </button>
-            </div>
-          </div>
-        ) : (
-          <div className="flex gap-3">
-            <button onClick={onClose} className="themed-btn-secondary flex-1">
-              Cancel
-            </button>
-            <button
-              onClick={() => setShowRejectForm(true)}
-              className="flex-1 py-2 rounded-xl border border-[var(--color-destructive)] text-[var(--color-destructive)] hover:bg-[var(--color-destructive)]/10"
-            >
-              Reject
-            </button>
-            <button
-              onClick={onApprove}
-              className="flex-1 py-2 rounded-xl bg-[var(--color-success)] text-white hover:bg-[var(--color-success)]/90"
-            >
-              Approve
-            </button>
+        {showRejectForm && (
+          <div>
+            <label className="block text-sm font-medium text-[var(--color-foreground)] mb-1">
+              Reason for rejection (optional)
+            </label>
+            <textarea
+              value={rejectReason}
+              onChange={(e) => setRejectReason(e.target.value)}
+              className="themed-input w-full"
+              placeholder="Enter reason..."
+              rows={3}
+            />
           </div>
         )}
-      </div>
-    </div>
+      </ModalBody>
+    </ModalPortal>
   );
 }

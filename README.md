@@ -50,6 +50,7 @@
 - Product catalog with favorites
 - Member request system with admin approval
 - Smart predictions based on purchase history
+- Inline item editing (tap to edit name, quantity, notes)
 - Barcode scanning support (planned)
 
 ### 📅 Calendar
@@ -68,10 +69,12 @@
 
 ### 💵 Budgets
 - Admin-only budget tracking
+- Multiple budget types: monthly, yearly, one-time
 - Categories for bills, utilities, groceries, etc.
-- Monthly spending overview
-- Budget vs. actual comparison
+- Monthly spending overview with analytics
+- Budget vs. actual comparison charts
 - Expense history and trends
+- Entry management with filters and search
 
 ### 💬 Messaging
 - System notifications for chore completions, events, etc.
@@ -83,24 +86,34 @@
 ### 👨‍👩‍👧‍👦 Family Management
 - Add and manage family members
 - Role-based permissions (Admin, Member, Kid, Kiosk)
-- Custom avatars with color selection
-- Password management
+- Custom avatars with image upload or color selection
+- Password and PIN management
 - Activity tracking
 
 ### 🎨 Advanced Theming System
 HabiTrack features a powerful theming system that allows deep customization:
 
 - **Light/Dark/System modes** with per-user preference
-- **Global color palette** customization (primary, accent, background, card, etc.)
+- **Mode-aware colors** — separate color palettes for light and dark modes
+- **Global color palette** customization (primary, accent, background, card, muted, border, destructive, success, warning)
 - **Per-element styling** — customize cards, widgets, buttons, inputs, modals individually
 - **Per-page backgrounds** — different backgrounds for each section of the app
 - **Page-specific element overrides** — style the calendar grid differently than the chores card
 - **Background images** with opacity control and media library
 - **Typography control** — custom fonts, sizes, line heights
 - **Border radius and shadow** presets
-- **Live preview** in the theme editor
+- **Live preview** in the theme editor with all app pages
 - **Theme library** — save, duplicate, and share themes
 - **Kid-safe themes** — admins can approve themes for kids to use
+- **Two default themes**: HabiTrack Classic (uneditable) and Household Brand (customizable)
+
+### ⚙️ Settings
+- **Profile**: Nickname, email, avatar, profile color
+- **Themes**: Full theme editor with live preview
+- **Notifications**: Configure notification preferences
+- **Security**: Password management
+- **Household** (Admin): Household name, timezone settings
+- **Email** (Admin): SMTP configuration for notifications
 
 ### 🖥️ Kiosk Mode
 - PIN-based quick login for shared household screens
@@ -174,7 +187,7 @@ pnpm -F web dev
 
 | Service  | Default URL           |
 | -------- | --------------------- |
-| Frontend | http://localhost:3000 |
+| Frontend | http://localhost:5173 |
 | API      | http://localhost:3001 |
 
 ---
@@ -403,6 +416,15 @@ docker compose exec db mysqldump -u root -p habitrackdb > backup_$(date +%Y%m%d)
 docker compose exec -T db mysql -u root -p habitrackdb < backup_file.sql
 ```
 
+#### Running Migrations
+
+Migrations run automatically on API startup, but you can also run them manually:
+
+```bash
+cd apps/api
+npm run db:migrate
+```
+
 #### Troubleshooting
 
 **Container won't start:**
@@ -588,6 +610,8 @@ habitrack/
 │           │   ├── themes/         # Theme editor components
 │           │   ├── dashboard/      # Dashboard widgets
 │           │   ├── chores/         # Chores components
+│           │   ├── settings/       # Settings tab components
+│           │   ├── common/         # Shared components (modals, color pickers)
 │           │   └── ...
 │           ├── pages/              # Page components
 │           ├── context/            # React contexts (Auth, Theme)
@@ -617,7 +641,7 @@ DB_PASSWORD=changeme
 API_PORT=3001
 API_SECRET=change-this-to-a-long-random-string
 SESSION_SECRET=change-this-too
-CORS_ORIGIN=http://localhost:3000
+CORS_ORIGIN=http://localhost:5173
 
 # Frontend (build-time)
 VITE_API_URL=http://localhost:3001/api
@@ -635,7 +659,7 @@ WEATHER_API_KEY=your-openweathermap-api-key
 | -------- | ---------------------------------------------------------------------- |
 | `admin`  | Full access — manage members, chores, shopping, budgets, themes, settings |
 | `member` | Standard access — own chores, shared lists, calendar, messaging        |
-| `kid`    | Limited access — own chores and events, can request items, paid chores |
+| `kid`    | Limited access — own chores and events, can request items, paid chores, kid-approved themes only |
 | `kiosk`  | PIN-only login for shared screens, display-only                        |
 
 ---
@@ -647,20 +671,32 @@ HabiTrack includes a powerful theming system that goes beyond simple color chang
 ### Theme Editor Features
 
 - **Color Palette**: Customize primary, secondary, accent, background, card, muted, border, and semantic colors (success, warning, destructive)
+- **Mode-Aware Colors**: Separate palettes for light and dark modes — the editor respects your current mode
 - **Typography**: Choose font family, base size, and line height
-- **UI Presets**: Border radius (none, small, medium, large, full) and shadow intensity (none, subtle, medium, strong)
-- **Element Styles**: Per-element customization for cards, widgets, buttons, inputs, modals
+- **UI Presets**: Border radius (none, small, medium, large) and shadow intensity (none, subtle, medium, strong)
+- **Element Styles**: Per-element customization for cards, widgets, buttons, inputs, modals, sidebar
 - **Page Backgrounds**: Set different backgrounds (solid, gradient, or image) for each page
-- **Live Preview**: See changes in real-time across all preview pages
+- **Live Preview**: See changes in real-time across all preview pages (Home, Calendar, Chores, Shopping, Messages, Settings, Login)
 - **Media Library**: Upload and manage background images with category organization
+- **Reset to Defaults**: Easily reset elements to theme defaults while preserving mode-awareness
+
+### Default Themes
+
+1. **HabiTrack Classic** — The official theme, cannot be modified (ensures a consistent fallback)
+2. **Household Brand** — Your household's custom theme, fully customizable by admins
 
 ### Creating Themes
 
 1. Go to **Settings → Themes**
 2. Click **Create Theme** or **Duplicate** an existing theme
 3. Use the theme editor to customize colors, typography, and element styles
-4. Preview your changes across different pages
-5. Save and apply your theme
+4. Toggle between Light/Dark mode in the preview to customize both palettes
+5. Preview your changes across different pages
+6. Save and apply your theme
+
+### Kid-Safe Themes
+
+Admins can mark themes as "Approved for Kids" using the shield icon. Kids will only see and be able to use approved themes.
 
 ### Theme Structure
 
@@ -671,12 +707,14 @@ Themes are stored as JSON in the database and include:
   name: string;
   description: string;
   layout: { type, sidebarWidth, navStyle };
-  colorsLight: { primary, secondary, accent, background, ... };
-  colorsDark: { ... };
+  colorsLight: { primary, secondary, accent, background, card, muted, border, destructive, success, warning, ... };
+  colorsDark: { primary, secondary, accent, background, card, muted, border, destructive, success, warning, ... };
   typography: { fontFamily, baseFontSize, lineHeight };
   ui: { borderRadius, shadowIntensity };
+  sidebar: { backgroundType, backgroundColor, gradientFrom, gradientTo, imageUrl };
+  pageBackground: { type, color, gradientFrom, gradientTo, imageUrl };
   elementStyles: {
-    card: { backgroundColor, borderRadius, boxShadow, ... },
+    card: { borderRadius, boxShadow, ... },
     widget: { ... },
     'button-primary': { ... },
     // Per-page elements
@@ -686,6 +724,35 @@ Themes are stored as JSON in the database and include:
   };
   loginPage: { backgroundType, gradientFrom, gradientTo, ... };
 }
+```
+
+### CSS Variables
+
+The theme system uses CSS custom properties (variables) for all colors, making it easy to create consistent, mode-aware interfaces:
+
+```css
+/* Base colors */
+--color-primary
+--color-primary-foreground
+--color-secondary
+--color-secondary-foreground
+--color-accent
+--color-accent-foreground
+--color-background
+--color-foreground
+--color-card
+--color-card-foreground
+--color-muted
+--color-muted-foreground
+--color-border
+
+/* Semantic colors */
+--color-destructive
+--color-destructive-foreground
+--color-success
+--color-success-foreground
+--color-warning
+--color-warning-foreground
 ```
 
 ---
@@ -701,10 +768,15 @@ HabiTrack provides a RESTful API for all operations:
 | `GET /api/me` | Get current user |
 | `GET /api/chores` | List chores |
 | `GET /api/shopping/items` | List shopping items |
+| `PATCH /api/shopping/items/:id` | Update shopping item (inline edit) |
 | `GET /api/calendar/events` | List calendar events |
+| `GET /api/budgets` | List budgets |
+| `GET /api/budgets/:id/entries` | List budget entries |
 | `GET /api/themes` | List available themes |
 | `POST /api/themes` | Create a new theme |
 | `PUT /api/themes/:id` | Update a theme |
+| `POST /api/themes/:id/duplicate` | Duplicate a theme |
+| `PUT /api/themes/:id/kid-approval` | Toggle kid approval for a theme |
 | ... | See API source for full documentation |
 
 ---

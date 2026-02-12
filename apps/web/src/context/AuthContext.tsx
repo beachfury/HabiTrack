@@ -8,6 +8,8 @@ interface User {
   color?: string | null;
   nickname?: string | null;
   avatarUrl?: string | null;
+  /** True if this is a kiosk session (PIN login from local network) */
+  isKiosk?: boolean;
 }
 
 interface ImpersonationState {

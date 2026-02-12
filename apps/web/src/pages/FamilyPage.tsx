@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { Users, Plus, Edit2, Key, Hash, Trash2, X, Check, AlertCircle } from 'lucide-react';
+import { ModalPortal, ModalBody } from '../components/common/ModalPortal';
 import { api, type FamilyMember } from '../api';
 import { useAuth } from '../context/AuthContext';
 
@@ -8,6 +9,20 @@ const ROLES = [
   { value: 'member', label: 'Member', description: 'Can manage events and lists' },
   { value: 'kid', label: 'Kid', description: 'Limited access, own events only' },
 ];
+
+// Helper function for role badge styles
+const getRoleStyle = (role: string) => {
+  switch (role) {
+    case 'admin':
+      return { backgroundColor: 'color-mix(in srgb, var(--color-primary) 15%, transparent)', color: 'var(--color-primary)' };
+    case 'member':
+      return { backgroundColor: 'color-mix(in srgb, var(--color-info) 15%, transparent)', color: 'var(--color-info)' };
+    case 'kid':
+      return { backgroundColor: 'color-mix(in srgb, var(--color-success) 15%, transparent)', color: 'var(--color-success)' };
+    default:
+      return { backgroundColor: 'var(--color-muted)', color: 'var(--color-muted-foreground)' };
+  }
+};
 
 type ModalType = 'add' | 'edit' | 'password' | 'pin' | null;
 
@@ -228,7 +243,7 @@ export function FamilyPage() {
   if (loading) {
     return (
       <div className="p-8 flex items-center justify-center">
-        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-purple-600"></div>
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-[var(--color-primary)]"></div>
       </div>
     );
   }
@@ -238,15 +253,15 @@ export function FamilyPage() {
       {/* Header */}
       <div className="flex items-center justify-between mb-8">
         <div>
-          <h1 className="text-3xl font-bold text-gray-900 flex items-center gap-3">
-            <Users className="text-purple-600" />
+          <h1 className="text-3xl font-bold text-[var(--color-foreground)] flex items-center gap-3">
+            <Users className="text-[var(--color-primary)]" />
             Family Members
           </h1>
-          <p className="text-gray-500 mt-1">Manage your household members and their access</p>
+          <p className="text-[var(--color-muted-foreground)] mt-1">Manage your household members and their access</p>
         </div>
         <button
           onClick={openAddModal}
-          className="flex items-center gap-2 bg-purple-600 hover:bg-purple-700 text-white px-4 py-2 rounded-xl transition-colors"
+          className="flex items-center gap-2 bg-[var(--color-primary)] hover:opacity-90 text-[var(--color-primary-foreground)] px-4 py-2 rounded-xl transition-opacity"
         >
           <Plus size={20} />
           Add Member
@@ -255,24 +270,32 @@ export function FamilyPage() {
 
       {/* Success message */}
       {success && (
-        <div className="mb-6 p-4 bg-green-50 border border-green-200 rounded-xl text-green-700 flex items-center gap-2">
+        <div
+          className="mb-6 p-4 rounded-xl flex items-center gap-2"
+          style={{
+            backgroundColor: 'color-mix(in srgb, var(--color-success) 10%, transparent)',
+            borderColor: 'color-mix(in srgb, var(--color-success) 30%, transparent)',
+            color: 'var(--color-success)',
+            border: '1px solid',
+          }}
+        >
           <Check size={20} />
           {success}
         </div>
       )}
 
       {/* Members list */}
-      <div className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
-        <div className="divide-y divide-gray-100">
+      <div className="themed-card rounded-2xl overflow-hidden">
+        <div className="divide-y divide-[var(--color-border)]">
           {members.map((member) => (
             <div
               key={member.id}
-              className={`p-6 flex items-center gap-4 ${!member.active ? 'opacity-50 bg-gray-50' : ''}`}
+              className={`p-6 flex items-center gap-4 ${!member.active ? 'opacity-50 bg-[var(--color-muted)]' : ''}`}
             >
               {/* Avatar */}
               <div
                 className="w-12 h-12 rounded-full flex items-center justify-center text-white font-bold text-lg"
-                style={{ backgroundColor: member.color || '#8b5cf6' }}
+                style={{ backgroundColor: member.color || 'var(--color-primary)' }}
               >
                 {(member.nickname || member.displayName).charAt(0).toUpperCase()}
               </div>
@@ -280,44 +303,53 @@ export function FamilyPage() {
               {/* Info */}
               <div className="flex-1">
                 <div className="flex items-center gap-2">
-                  <h3 className="font-semibold text-gray-900">{member.displayName}</h3>
+                  <h3 className="font-semibold text-[var(--color-foreground)]">{member.displayName}</h3>
                   {member.nickname && (
-                    <span className="text-sm text-gray-500">({member.nickname})</span>
+                    <span className="text-sm text-[var(--color-muted-foreground)]">({member.nickname})</span>
                   )}
                   {member.id === user?.id && (
-                    <span className="text-xs bg-purple-100 text-purple-700 px-2 py-0.5 rounded-full">
+                    <span
+                      className="text-xs px-2 py-0.5 rounded-full"
+                      style={{
+                        backgroundColor: 'color-mix(in srgb, var(--color-primary) 15%, transparent)',
+                        color: 'var(--color-primary)',
+                      }}
+                    >
                       You
                     </span>
                   )}
                   {!member.active && (
-                    <span className="text-xs bg-red-100 text-red-700 px-2 py-0.5 rounded-full">
+                    <span
+                      className="text-xs px-2 py-0.5 rounded-full"
+                      style={{
+                        backgroundColor: 'color-mix(in srgb, var(--color-destructive) 15%, transparent)',
+                        color: 'var(--color-destructive)',
+                      }}
+                    >
                       Inactive
                     </span>
                   )}
                 </div>
                 <div className="flex items-center gap-4 mt-1">
                   <span
-                    className={`text-sm px-2 py-0.5 rounded-full ${
-                      member.role === 'admin'
-                        ? 'bg-purple-100 text-purple-700'
-                        : member.role === 'member'
-                          ? 'bg-blue-100 text-blue-700'
-                          : 'bg-green-100 text-green-700'
-                    }`}
+                    className="text-sm px-2 py-0.5 rounded-full"
+                    style={getRoleStyle(member.role)}
                   >
                     {member.role.charAt(0).toUpperCase() + member.role.slice(1)}
                   </span>
-                  {member.email && <span className="text-sm text-gray-500">{member.email}</span>}
+                  {member.email && <span className="text-sm text-[var(--color-muted-foreground)]">{member.email}</span>}
                 </div>
                 <div className="flex items-center gap-3 mt-2">
                   <span
-                    className={`text-xs flex items-center gap-1 ${member.hasPassword ? 'text-green-600' : 'text-gray-400'}`}
+                    className="text-xs flex items-center gap-1"
+                    style={{ color: member.hasPassword ? 'var(--color-success)' : 'var(--color-muted-foreground)' }}
                   >
                     <Key size={12} />
                     {member.hasPassword ? 'Password set' : 'No password'}
                   </span>
                   <span
-                    className={`text-xs flex items-center gap-1 ${member.hasPin ? 'text-green-600' : 'text-gray-400'}`}
+                    className="text-xs flex items-center gap-1"
+                    style={{ color: member.hasPin ? 'var(--color-success)' : 'var(--color-muted-foreground)' }}
                   >
                     <Hash size={12} />
                     {member.hasPin ? 'PIN set' : 'No PIN'}
@@ -330,21 +362,21 @@ export function FamilyPage() {
                 <div className="flex items-center gap-2">
                   <button
                     onClick={() => openEditModal(member)}
-                    className="p-2 text-gray-400 hover:text-purple-600 hover:bg-purple-50 rounded-lg transition-colors"
+                    className="p-2 text-[var(--color-muted-foreground)] hover:text-[var(--color-primary)] hover:bg-[var(--color-primary)]/10 rounded-lg transition-colors"
                     title="Edit member"
                   >
                     <Edit2 size={18} />
                   </button>
                   <button
                     onClick={() => openPasswordModal(member)}
-                    className="p-2 text-gray-400 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-colors"
+                    className="p-2 text-[var(--color-muted-foreground)] hover:text-[var(--color-info)] hover:bg-[var(--color-info)]/10 rounded-lg transition-colors"
                     title="Set password"
                   >
                     <Key size={18} />
                   </button>
                   <button
                     onClick={() => openPinModal(member)}
-                    className="p-2 text-gray-400 hover:text-teal-600 hover:bg-teal-50 rounded-lg transition-colors"
+                    className="p-2 text-[var(--color-muted-foreground)] hover:text-[var(--color-warning)] hover:bg-[var(--color-warning)]/10 rounded-lg transition-colors"
                     title="Set PIN"
                   >
                     <Hash size={18} />
@@ -352,7 +384,7 @@ export function FamilyPage() {
                   {member.id !== user?.id && (
                     <button
                       onClick={() => handleDeleteMember(member)}
-                      className="p-2 text-gray-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors"
+                      className="p-2 text-[var(--color-muted-foreground)] hover:text-[var(--color-destructive)] hover:bg-[var(--color-destructive)]/10 rounded-lg transition-colors"
                       title="Deactivate member"
                     >
                       <Trash2 size={18} />
@@ -364,7 +396,7 @@ export function FamilyPage() {
           ))}
 
           {members.length === 0 && (
-            <div className="p-12 text-center text-gray-500">
+            <div className="p-12 text-center text-[var(--color-muted-foreground)]">
               <Users size={48} className="mx-auto mb-4 opacity-50" />
               <p>No family members yet. Add your first member to get started!</p>
             </div>
@@ -374,72 +406,95 @@ export function FamilyPage() {
 
       {/* Add/Edit Member Modal */}
       {(modalType === 'add' || modalType === 'edit') && (
-        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
-          <div className="bg-white rounded-2xl shadow-xl w-full max-w-lg p-6 max-h-[90vh] overflow-y-auto">
-            <div className="flex items-center justify-between mb-6">
-              <h2 className="text-xl font-semibold text-gray-900">
-                {modalType === 'add' ? 'Add Family Member' : 'Edit Family Member'}
-              </h2>
-              <button onClick={closeModal} className="p-2 hover:bg-gray-100 rounded-lg">
-                <X size={20} />
+        <ModalPortal
+          isOpen={true}
+          onClose={closeModal}
+          title={modalType === 'add' ? 'Add Family Member' : 'Edit Family Member'}
+          size="lg"
+          footer={
+            <div className="flex gap-3">
+              <button
+                type="button"
+                onClick={closeModal}
+                className="flex-1 px-4 py-2 bg-[var(--color-muted)] text-[var(--color-muted-foreground)] hover:opacity-80 rounded-xl transition-opacity"
+              >
+                Cancel
+              </button>
+              <button
+                type="submit"
+                form="member-form"
+                className="flex-1 px-4 py-2 bg-[var(--color-primary)] hover:opacity-90 text-[var(--color-primary-foreground)] rounded-xl transition-opacity"
+              >
+                {modalType === 'add' ? 'Add Member' : 'Save Changes'}
               </button>
             </div>
-
+          }
+        >
+          <ModalBody>
             {error && (
-              <div className="mb-4 p-3 bg-red-50 border border-red-200 rounded-xl text-red-600 text-sm flex items-center gap-2">
+              <div
+                className="mb-4 p-3 rounded-xl text-sm flex items-center gap-2"
+                style={{
+                  backgroundColor: 'color-mix(in srgb, var(--color-destructive) 10%, transparent)',
+                  borderColor: 'color-mix(in srgb, var(--color-destructive) 30%, transparent)',
+                  color: 'var(--color-destructive)',
+                  border: '1px solid',
+                }}
+              >
                 <AlertCircle size={16} />
                 {error}
               </div>
             )}
 
             <form
+              id="member-form"
               onSubmit={modalType === 'add' ? handleAddMember : handleUpdateMember}
               className="space-y-4"
             >
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
+                <label className="block text-sm font-medium text-[var(--color-foreground)] mb-1">
                   Display Name *
                 </label>
                 <input
                   type="text"
                   value={formData.displayName}
                   onChange={(e) => setFormData({ ...formData, displayName: e.target.value })}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-xl focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+                  className="w-full px-3 py-2 border border-[var(--color-border)] rounded-xl bg-[var(--color-card)] text-[var(--color-foreground)] focus:ring-2 focus:ring-[var(--color-primary)]"
                   placeholder="Full name"
                   required
                 />
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Nickname</label>
+                <label className="block text-sm font-medium text-[var(--color-foreground)] mb-1">Nickname</label>
                 <input
                   type="text"
                   value={formData.nickname}
                   onChange={(e) => setFormData({ ...formData, nickname: e.target.value })}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-xl focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+                  className="w-full px-3 py-2 border border-[var(--color-border)] rounded-xl bg-[var(--color-card)] text-[var(--color-foreground)] focus:ring-2 focus:ring-[var(--color-primary)]"
                   placeholder="Short name for calendar"
                 />
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Email</label>
+                <label className="block text-sm font-medium text-[var(--color-foreground)] mb-1">Email</label>
                 <input
                   type="email"
                   value={formData.email}
                   onChange={(e) => setFormData({ ...formData, email: e.target.value })}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-xl focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+                  className="w-full px-3 py-2 border border-[var(--color-border)] rounded-xl bg-[var(--color-card)] text-[var(--color-foreground)] focus:ring-2 focus:ring-[var(--color-primary)]"
                   placeholder="For login and notifications"
                 />
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Role *</label>
+                <label className="block text-sm font-medium text-[var(--color-foreground)] mb-1">Role *</label>
                 <select
                   value={formData.role}
                   onChange={(e) =>
                     setFormData({ ...formData, role: e.target.value as 'admin' | 'member' | 'kid' })
                   }
-                  className="w-full px-3 py-2 border border-gray-300 rounded-xl focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+                  className="w-full px-3 py-2 border border-[var(--color-border)] rounded-xl bg-[var(--color-card)] text-[var(--color-foreground)] focus:ring-2 focus:ring-[var(--color-primary)]"
                 >
                   {ROLES.map((role) => (
                     <option key={role.value} value={role.value}>
@@ -451,28 +506,28 @@ export function FamilyPage() {
 
               {modalType === 'add' && (
                 <>
-                  <div className="border-t border-gray-200 pt-4 mt-4">
-                    <h3 className="text-sm font-medium text-gray-700 mb-3">
+                  <div className="border-t border-[var(--color-border)] pt-4 mt-4">
+                    <h3 className="text-sm font-medium text-[var(--color-foreground)] mb-3">
                       Login Credentials (Optional)
                     </h3>
 
                     <div className="space-y-3">
                       <div>
-                        <label className="block text-sm text-gray-600 mb-1">
+                        <label className="block text-sm text-[var(--color-muted-foreground)] mb-1">
                           Password (8+ characters)
                         </label>
                         <input
                           type="password"
                           value={formData.password}
                           onChange={(e) => setFormData({ ...formData, password: e.target.value })}
-                          className="w-full px-3 py-2 border border-gray-300 rounded-xl focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+                          className="w-full px-3 py-2 border border-[var(--color-border)] rounded-xl bg-[var(--color-card)] text-[var(--color-foreground)] focus:ring-2 focus:ring-[var(--color-primary)]"
                           placeholder="Leave blank to set later"
                         />
                       </div>
 
                       {formData.password && (
                         <div>
-                          <label className="block text-sm text-gray-600 mb-1">
+                          <label className="block text-sm text-[var(--color-muted-foreground)] mb-1">
                             Confirm Password
                           </label>
                           <input
@@ -481,13 +536,13 @@ export function FamilyPage() {
                             onChange={(e) =>
                               setFormData({ ...formData, confirmPassword: e.target.value })
                             }
-                            className="w-full px-3 py-2 border border-gray-300 rounded-xl focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+                            className="w-full px-3 py-2 border border-[var(--color-border)] rounded-xl bg-[var(--color-card)] text-[var(--color-foreground)] focus:ring-2 focus:ring-[var(--color-primary)]"
                           />
                         </div>
                       )}
 
                       <div>
-                        <label className="block text-sm text-gray-600 mb-1">
+                        <label className="block text-sm text-[var(--color-muted-foreground)] mb-1">
                           Kiosk PIN (4-6 digits)
                         </label>
                         <input
@@ -499,7 +554,7 @@ export function FamilyPage() {
                               pin: e.target.value.replace(/\D/g, '').slice(0, 6),
                             })
                           }
-                          className="w-full px-3 py-2 border border-gray-300 rounded-xl focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+                          className="w-full px-3 py-2 border border-[var(--color-border)] rounded-xl bg-[var(--color-card)] text-[var(--color-foreground)] focus:ring-2 focus:ring-[var(--color-primary)]"
                           placeholder="For quick kiosk login"
                           maxLength={6}
                         />
@@ -508,55 +563,61 @@ export function FamilyPage() {
                   </div>
                 </>
               )}
-
-              <div className="flex gap-3 pt-4">
-                <button
-                  type="button"
-                  onClick={closeModal}
-                  className="flex-1 px-4 py-2 text-gray-700 hover:bg-gray-100 rounded-xl transition-colors"
-                >
-                  Cancel
-                </button>
-                <button
-                  type="submit"
-                  className="flex-1 px-4 py-2 bg-purple-600 hover:bg-purple-700 text-white rounded-xl transition-colors"
-                >
-                  {modalType === 'add' ? 'Add Member' : 'Save Changes'}
-                </button>
-              </div>
             </form>
-          </div>
-        </div>
+          </ModalBody>
+        </ModalPortal>
       )}
 
       {/* Password Modal */}
       {modalType === 'password' && selectedMember && (
-        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
-          <div className="bg-white rounded-2xl shadow-xl w-full max-w-md p-6">
-            <div className="flex items-center justify-between mb-6">
-              <h2 className="text-xl font-semibold text-gray-900">
-                Set Password for {selectedMember.nickname || selectedMember.displayName}
-              </h2>
-              <button onClick={closeModal} className="p-2 hover:bg-gray-100 rounded-lg">
-                <X size={20} />
+        <ModalPortal
+          isOpen={true}
+          onClose={closeModal}
+          title={`Set Password for ${selectedMember.nickname || selectedMember.displayName}`}
+          size="md"
+          footer={
+            <div className="flex gap-3">
+              <button
+                type="button"
+                onClick={closeModal}
+                className="flex-1 px-4 py-2 bg-[var(--color-muted)] text-[var(--color-muted-foreground)] hover:opacity-80 rounded-xl transition-opacity"
+              >
+                Cancel
+              </button>
+              <button
+                type="submit"
+                form="password-form"
+                className="flex-1 px-4 py-2 bg-[var(--color-primary)] hover:opacity-90 text-[var(--color-primary-foreground)] rounded-xl transition-opacity"
+              >
+                Set Password
               </button>
             </div>
-
+          }
+        >
+          <ModalBody>
             {error && (
-              <div className="mb-4 p-3 bg-red-50 border border-red-200 rounded-xl text-red-600 text-sm flex items-center gap-2">
+              <div
+                className="mb-4 p-3 rounded-xl text-sm flex items-center gap-2"
+                style={{
+                  backgroundColor: 'color-mix(in srgb, var(--color-destructive) 10%, transparent)',
+                  borderColor: 'color-mix(in srgb, var(--color-destructive) 30%, transparent)',
+                  color: 'var(--color-destructive)',
+                  border: '1px solid',
+                }}
+              >
                 <AlertCircle size={16} />
                 {error}
               </div>
             )}
 
-            <form onSubmit={handleSetPassword} className="space-y-4">
+            <form id="password-form" onSubmit={handleSetPassword} className="space-y-4">
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">New Password</label>
+                <label className="block text-sm font-medium text-[var(--color-foreground)] mb-1">New Password</label>
                 <input
                   type="password"
                   value={formData.password}
                   onChange={(e) => setFormData({ ...formData, password: e.target.value })}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-xl focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+                  className="w-full px-3 py-2 border border-[var(--color-border)] rounded-xl bg-[var(--color-card)] text-[var(--color-foreground)] focus:ring-2 focus:ring-[var(--color-primary)]"
                   placeholder="At least 8 characters"
                   required
                   minLength={8}
@@ -564,61 +625,67 @@ export function FamilyPage() {
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
+                <label className="block text-sm font-medium text-[var(--color-foreground)] mb-1">
                   Confirm Password
                 </label>
                 <input
                   type="password"
                   value={formData.confirmPassword}
                   onChange={(e) => setFormData({ ...formData, confirmPassword: e.target.value })}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-xl focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+                  className="w-full px-3 py-2 border border-[var(--color-border)] rounded-xl bg-[var(--color-card)] text-[var(--color-foreground)] focus:ring-2 focus:ring-[var(--color-primary)]"
                   required
                 />
               </div>
-
-              <div className="flex gap-3 pt-4">
-                <button
-                  type="button"
-                  onClick={closeModal}
-                  className="flex-1 px-4 py-2 text-gray-700 hover:bg-gray-100 rounded-xl transition-colors"
-                >
-                  Cancel
-                </button>
-                <button
-                  type="submit"
-                  className="flex-1 px-4 py-2 bg-purple-600 hover:bg-purple-700 text-white rounded-xl transition-colors"
-                >
-                  Set Password
-                </button>
-              </div>
             </form>
-          </div>
-        </div>
+          </ModalBody>
+        </ModalPortal>
       )}
 
       {/* PIN Modal */}
       {modalType === 'pin' && selectedMember && (
-        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
-          <div className="bg-white rounded-2xl shadow-xl w-full max-w-md p-6">
-            <div className="flex items-center justify-between mb-6">
-              <h2 className="text-xl font-semibold text-gray-900">
-                Set PIN for {selectedMember.nickname || selectedMember.displayName}
-              </h2>
-              <button onClick={closeModal} className="p-2 hover:bg-gray-100 rounded-lg">
-                <X size={20} />
+        <ModalPortal
+          isOpen={true}
+          onClose={closeModal}
+          title={`Set PIN for ${selectedMember.nickname || selectedMember.displayName}`}
+          size="md"
+          footer={
+            <div className="flex gap-3">
+              <button
+                type="button"
+                onClick={closeModal}
+                className="flex-1 px-4 py-2 bg-[var(--color-muted)] text-[var(--color-muted-foreground)] hover:opacity-80 rounded-xl transition-opacity"
+              >
+                Cancel
+              </button>
+              <button
+                type="submit"
+                form="pin-form"
+                className="flex-1 px-4 py-2 bg-[var(--color-primary)] hover:opacity-90 text-[var(--color-primary-foreground)] rounded-xl transition-opacity"
+              >
+                {formData.pin ? 'Set PIN' : 'Clear PIN'}
               </button>
             </div>
-
+          }
+        >
+          <ModalBody>
             {error && (
-              <div className="mb-4 p-3 bg-red-50 border border-red-200 rounded-xl text-red-600 text-sm flex items-center gap-2">
+              <div
+                className="mb-4 p-3 rounded-xl text-sm flex items-center gap-2"
+                style={{
+                  backgroundColor: 'color-mix(in srgb, var(--color-destructive) 10%, transparent)',
+                  borderColor: 'color-mix(in srgb, var(--color-destructive) 30%, transparent)',
+                  color: 'var(--color-destructive)',
+                  border: '1px solid',
+                }}
+              >
                 <AlertCircle size={16} />
                 {error}
               </div>
             )}
 
-            <form onSubmit={handleSetPin} className="space-y-4">
+            <form id="pin-form" onSubmit={handleSetPin} className="space-y-4">
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
+                <label className="block text-sm font-medium text-[var(--color-foreground)] mb-1">
                   Kiosk PIN (4-6 digits)
                 </label>
                 <input
@@ -627,33 +694,17 @@ export function FamilyPage() {
                   onChange={(e) =>
                     setFormData({ ...formData, pin: e.target.value.replace(/\D/g, '').slice(0, 6) })
                   }
-                  className="w-full px-3 py-2 border border-gray-300 rounded-xl focus:ring-2 focus:ring-purple-500 focus:border-transparent text-center text-2xl tracking-widest"
+                  className="w-full px-3 py-2 border border-[var(--color-border)] rounded-xl bg-[var(--color-card)] text-[var(--color-foreground)] text-center text-2xl tracking-widest focus:ring-2 focus:ring-[var(--color-primary)]"
                   placeholder="••••"
                   maxLength={6}
                 />
-                <p className="text-xs text-gray-500 mt-1">
+                <p className="text-xs text-[var(--color-muted-foreground)] mt-1">
                   Leave blank to clear existing PIN. PINs must be unique across all family members.
                 </p>
               </div>
-
-              <div className="flex gap-3 pt-4">
-                <button
-                  type="button"
-                  onClick={closeModal}
-                  className="flex-1 px-4 py-2 text-gray-700 hover:bg-gray-100 rounded-xl transition-colors"
-                >
-                  Cancel
-                </button>
-                <button
-                  type="submit"
-                  className="flex-1 px-4 py-2 bg-purple-600 hover:bg-purple-700 text-white rounded-xl transition-colors"
-                >
-                  {formData.pin ? 'Set PIN' : 'Clear PIN'}
-                </button>
-              </div>
             </form>
-          </div>
-        </div>
+          </ModalBody>
+        </ModalPortal>
       )}
     </div>
   );

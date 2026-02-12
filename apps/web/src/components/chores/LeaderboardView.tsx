@@ -28,7 +28,7 @@ export function LeaderboardView({
 
   if (leaderboard.length === 0) {
     return (
-      <div className="bg-white dark:bg-gray-800 rounded-xl p-8 text-center text-gray-500 border border-gray-100 dark:border-gray-700">
+      <div className="themed-card p-8 text-center text-[var(--color-muted-foreground)]">
         <Trophy size={48} className="mx-auto mb-3 opacity-30" />
         <p>No leaderboard data yet</p>
         <p className="text-sm mt-1">Complete chores to earn points!</p>
@@ -40,7 +40,7 @@ export function LeaderboardView({
     <div className="space-y-4">
       {/* Admin hint */}
       {isAdmin && (
-        <div className="text-sm text-gray-500 dark:text-gray-400 text-center">
+        <div className="text-sm text-[var(--color-muted-foreground)] text-center">
           Click on a user to adjust their points
         </div>
       )}
@@ -59,11 +59,11 @@ export function LeaderboardView({
             >
               {(leaderboard[1]?.nickname || leaderboard[1]?.displayName || '?').charAt(0)}
             </div>
-            <Award className="text-gray-400 mb-1" size={24} />
-            <p className="font-semibold text-gray-900 dark:text-white text-sm truncate w-full text-center">
+            <Award className="text-[var(--color-muted-foreground)] mb-1" size={24} />
+            <p className="font-semibold text-[var(--color-foreground)] text-sm truncate w-full text-center">
               {leaderboard[1]?.nickname || leaderboard[1]?.displayName}
             </p>
-            <p className="text-gray-500 text-sm">{leaderboard[1]?.totalPoints} pts</p>
+            <p className="text-[var(--color-muted-foreground)] text-sm">{leaderboard[1]?.totalPoints} pts</p>
           </div>
 
           {/* 1st Place */}
@@ -71,17 +71,17 @@ export function LeaderboardView({
             className={`flex flex-col items-center ${isAdmin ? 'cursor-pointer hover:opacity-80 transition-opacity' : ''}`}
             onClick={() => isAdmin && setAdjustingUser(leaderboard[0])}
           >
-            <Crown className="text-yellow-500 mb-2" size={28} />
+            <Crown className="text-[var(--color-warning)] mb-2" size={28} />
             <div
-              className="w-20 h-20 rounded-full flex items-center justify-center text-white text-2xl font-bold mb-2 ring-4 ring-yellow-400"
+              className="w-20 h-20 rounded-full flex items-center justify-center text-white text-2xl font-bold mb-2 ring-4 ring-[var(--color-warning)]"
               style={{ backgroundColor: leaderboard[0]?.color || '#8b5cf6' }}
             >
               {(leaderboard[0]?.nickname || leaderboard[0]?.displayName || '?').charAt(0)}
             </div>
-            <p className="font-bold text-gray-900 dark:text-white truncate w-full text-center">
+            <p className="font-bold text-[var(--color-foreground)] truncate w-full text-center">
               {leaderboard[0]?.nickname || leaderboard[0]?.displayName}
             </p>
-            <p className="text-yellow-600 font-semibold">{leaderboard[0]?.totalPoints} pts</p>
+            <p className="text-[var(--color-warning)] font-semibold">{leaderboard[0]?.totalPoints} pts</p>
           </div>
 
           {/* 3rd Place */}
@@ -95,36 +95,41 @@ export function LeaderboardView({
             >
               {(leaderboard[2]?.nickname || leaderboard[2]?.displayName || '?').charAt(0)}
             </div>
-            <Award className="text-orange-400 mb-1" size={20} />
-            <p className="font-medium text-gray-900 dark:text-white text-sm truncate w-full text-center">
+            <Award
+              size={20}
+              className="mb-1"
+              style={{ color: 'color-mix(in srgb, var(--color-warning) 80%, var(--color-destructive))' }}
+            />
+            <p className="font-medium text-[var(--color-foreground)] text-sm truncate w-full text-center">
               {leaderboard[2]?.nickname || leaderboard[2]?.displayName}
             </p>
-            <p className="text-gray-500 text-sm">{leaderboard[2]?.totalPoints} pts</p>
+            <p className="text-[var(--color-muted-foreground)] text-sm">{leaderboard[2]?.totalPoints} pts</p>
           </div>
         </div>
       )}
 
       {/* Full List */}
-      <div className="bg-white dark:bg-gray-800 rounded-xl border border-gray-100 dark:border-gray-700 overflow-hidden">
+      <div className="themed-card overflow-hidden">
         {leaderboard.map((entry, index) => (
           <div
             key={entry.userId}
             onClick={() => isAdmin && setAdjustingUser(entry)}
-            className={`p-4 flex items-center gap-4 border-b border-gray-100 dark:border-gray-700 last:border-0 ${
-              entry.userId === currentUserId ? 'bg-purple-50 dark:bg-purple-900/20' : ''
-            } ${isAdmin ? 'cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-700/50 transition-colors' : ''}`}
+            className={`p-4 flex items-center gap-4 border-b border-[var(--color-border)] last:border-0 ${
+              entry.userId === currentUserId ? 'bg-[var(--color-primary)]/10' : ''
+            } ${isAdmin ? 'cursor-pointer hover:bg-[var(--color-muted)] transition-colors' : ''}`}
           >
             {/* Rank */}
             <div
-              className={`w-8 h-8 rounded-full flex items-center justify-center font-bold ${
+              className="w-8 h-8 rounded-full flex items-center justify-center font-bold"
+              style={
                 index === 0
-                  ? 'bg-yellow-100 text-yellow-700'
+                  ? { backgroundColor: 'color-mix(in srgb, var(--color-warning) 20%, transparent)', color: 'var(--color-warning)' }
                   : index === 1
-                    ? 'bg-gray-100 text-gray-600'
+                    ? { backgroundColor: 'var(--color-muted)', color: 'var(--color-muted-foreground)' }
                     : index === 2
-                      ? 'bg-orange-100 text-orange-700'
-                      : 'bg-gray-50 text-gray-500'
-              }`}
+                      ? { backgroundColor: 'color-mix(in srgb, var(--color-warning) 15%, color-mix(in srgb, var(--color-destructive) 15%, transparent))', color: 'color-mix(in srgb, var(--color-warning) 70%, var(--color-destructive))' }
+                      : { backgroundColor: 'var(--color-muted)', color: 'var(--color-muted-foreground)' }
+              }
             >
               {index + 1}
             </div>
@@ -139,14 +144,14 @@ export function LeaderboardView({
 
             {/* Name */}
             <div className="flex-1 min-w-0">
-              <p className="font-semibold text-gray-900 dark:text-white truncate">
+              <p className="font-semibold text-[var(--color-foreground)] truncate">
                 {entry.nickname || entry.displayName}
               </p>
-              <div className="flex items-center gap-3 text-sm text-gray-500">
+              <div className="flex items-center gap-3 text-sm text-[var(--color-muted-foreground)]">
                 <span>{entry.completedCount} completed</span>
                 {(entry as any).streak > 0 && (
                   <span className="flex items-center gap-1">
-                    <Flame size={14} className="text-orange-500" />
+                    <Flame size={14} style={{ color: 'color-mix(in srgb, var(--color-warning) 70%, var(--color-destructive))' }} />
                     {(entry as any).streak} day streak
                   </span>
                 )}
@@ -156,10 +161,10 @@ export function LeaderboardView({
             {/* Points */}
             <div className="text-right flex items-center gap-2">
               <div>
-                <p className="text-xl font-bold text-purple-600">{entry.totalPoints}</p>
-                <p className="text-xs text-gray-500">points</p>
+                <p className="text-xl font-bold text-[var(--color-primary)]">{entry.totalPoints}</p>
+                <p className="text-xs text-[var(--color-muted-foreground)]">points</p>
               </div>
-              {isAdmin && <Settings size={16} className="text-gray-400" />}
+              {isAdmin && <Settings size={16} className="text-[var(--color-muted-foreground)]" />}
             </div>
           </div>
         ))}

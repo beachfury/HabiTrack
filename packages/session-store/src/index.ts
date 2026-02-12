@@ -11,6 +11,8 @@ export interface SessionRow {
   lastSeenAt: Date;
   expiresAt: Date;
   impersonatedBy?: number | null;
+  isKiosk?: boolean;
+  clientIp?: string | null;
 }
 
 export interface SessionNew {
@@ -18,6 +20,8 @@ export interface SessionNew {
   role: RoleId;
   ttlMinutes: number;
   impersonatedBy?: number | null;
+  isKiosk?: boolean;
+  clientIp?: string | null;
 }
 
 export interface SessionStore {
@@ -65,9 +69,19 @@ export class MariaDbSessionStore implements SessionStore {
     const expires = new Date(now.getTime() + data.ttlMinutes * 60_000);
 
     await this.pool.query(
-      `INSERT INTO sessions (sid, user_id, role, created_at, last_seen_at, expires_at, impersonated_by)
-       VALUES (?,?,?,?,?,?,?)`,
-      [sid, data.userId, data.role, now, now, expires, data.impersonatedBy ?? null],
+      `INSERT INTO sessions (sid, user_id, role, created_at, last_seen_at, expires_at, impersonated_by, is_kiosk, client_ip)
+       VALUES (?,?,?,?,?,?,?,?,?)`,
+      [
+        sid,
+        data.userId,
+        data.role,
+        now,
+        now,
+        expires,
+        data.impersonatedBy ?? null,
+        data.isKiosk ? 1 : 0,
+        data.clientIp ?? null,
+      ],
     );
 
     return {
@@ -78,6 +92,8 @@ export class MariaDbSessionStore implements SessionStore {
       lastSeenAt: now,
       expiresAt: expires,
       impersonatedBy: data.impersonatedBy ?? null,
+      isKiosk: data.isKiosk ?? false,
+      clientIp: data.clientIp ?? null,
     };
   }
 
@@ -85,7 +101,7 @@ export class MariaDbSessionStore implements SessionStore {
     const [rows] = await this.pool.query(
       `SELECT sid, user_id AS userId, role,
               created_at AS createdAt, last_seen_at AS lastSeenAt, expires_at AS expiresAt,
-              impersonated_by AS impersonatedBy
+              impersonated_by AS impersonatedBy, is_kiosk AS isKiosk, client_ip AS clientIp
        FROM sessions WHERE sid = ? LIMIT 1`,
       [sid],
     );
@@ -97,6 +113,9 @@ export class MariaDbSessionStore implements SessionStore {
       await this.destroy(sid);
       return null;
     }
+
+    // Convert is_kiosk from 0/1 to boolean
+    r.isKiosk = !!r.isKiosk;
 
     return r as SessionRow;
   }

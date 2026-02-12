@@ -1,6 +1,7 @@
 // apps/web/src/components/common/ColorPickerModal.tsx
 import { useState, useEffect, useCallback } from 'react';
-import { X, Pipette, Plus, Check, RotateCcw, Palette } from 'lucide-react';
+import { X, Plus, Check, RotateCcw } from 'lucide-react';
+import { ModalPortal, ModalBody } from './ModalPortal';
 
 // ============================================
 // Types
@@ -267,24 +268,34 @@ export function ColorPickerModal({ currentColor, onSelect, onClose }: ColorPicke
     setHsl(rgbToHsl(newRgb.r, newRgb.g, newRgb.b));
   };
 
-  return (
-    <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
-      <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-xl w-full max-w-md overflow-hidden">
-        {/* Header */}
-        <div className="p-4 border-b border-gray-100 dark:border-gray-700 flex items-center justify-between">
-          <h2 className="text-lg font-semibold text-gray-900 dark:text-white flex items-center gap-2">
-            <Palette size={20} className="text-purple-600" />
-            Choose Color
-          </h2>
-          <button
-            onClick={onClose}
-            className="p-2 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg"
-          >
-            <X size={20} />
-          </button>
-        </div>
+  const footer = (
+    <div className="flex gap-2">
+      <button
+        onClick={onClose}
+        className="flex-1 py-2 px-4 border border-gray-300 dark:border-gray-600 rounded-xl text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700"
+      >
+        Cancel
+      </button>
+      <button
+        onClick={handleSelect}
+        className="flex-1 py-2 px-4 bg-purple-600 text-white rounded-xl hover:bg-purple-700 flex items-center justify-center gap-2"
+      >
+        <Check size={18} />
+        Select Color
+      </button>
+    </div>
+  );
 
-        <div className="p-4 space-y-4">
+  return (
+    <ModalPortal
+      isOpen={true}
+      onClose={onClose}
+      title="Choose Color"
+      size="md"
+      footer={footer}
+    >
+      <ModalBody>
+        <div className="space-y-4">
           {/* Mode Tabs */}
           <div className="flex gap-2">
             <button
@@ -663,25 +674,8 @@ export function ColorPickerModal({ currentColor, onSelect, onClose }: ColorPicke
             </div>
           )}
         </div>
-
-        {/* Footer */}
-        <div className="p-4 border-t border-gray-100 dark:border-gray-700 flex gap-2">
-          <button
-            onClick={onClose}
-            className="flex-1 py-2 px-4 border border-gray-300 dark:border-gray-600 rounded-xl text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700"
-          >
-            Cancel
-          </button>
-          <button
-            onClick={handleSelect}
-            className="flex-1 py-2 px-4 bg-purple-600 text-white rounded-xl hover:bg-purple-700 flex items-center justify-center gap-2"
-          >
-            <Check size={18} />
-            Select Color
-          </button>
-        </div>
-      </div>
-    </div>
+      </ModalBody>
+    </ModalPortal>
   );
 }
 

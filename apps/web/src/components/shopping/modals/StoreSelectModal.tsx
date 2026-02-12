@@ -1,9 +1,10 @@
 // apps/web/src/components/shopping/modals/StoreSelectModal.tsx
 import { useState, useEffect } from 'react';
-import { X, Store, RefreshCw } from 'lucide-react';
+import { Store, RefreshCw } from 'lucide-react';
 import { ItemImage } from '../ItemImage';
 import { shoppingApi } from '../../../api';
 import type { CatalogItem, CatalogItemPrice, ShoppingStore, ListType } from '../../../types';
+import { ModalPortal, ModalBody } from '../../common/ModalPortal';
 
 interface StoreSelectModalProps {
   item: CatalogItem;
@@ -57,22 +58,32 @@ export function StoreSelectModal({ item, stores, onClose, onAdd, isAdmin }: Stor
   const selectedPrice = selectedStoreId ? getPriceForStore(selectedStoreId) : null;
   const totalPrice = selectedPrice ? Number(selectedPrice.price) * quantity : 0;
 
-  return (
-    <div className="fixed inset-0 bg-black/50 flex items-end sm:items-center justify-center z-50">
-      <div className="bg-white dark:bg-gray-800 w-full sm:max-w-md sm:rounded-2xl max-h-[90vh] overflow-hidden flex flex-col rounded-t-2xl">
-        <div className="p-4 border-b border-gray-100 dark:border-gray-700 flex items-center justify-between flex-shrink-0">
-          <h2 className="text-lg font-semibold text-gray-900 dark:text-white">
-            Add to Shopping List
-          </h2>
-          <button
-            onClick={onClose}
-            className="p-1 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg"
-          >
-            <X size={20} />
-          </button>
-        </div>
+  const footer = (
+    <button
+      onClick={() =>
+        onAdd({
+          catalogItemId: item.id,
+          storeId: selectedStoreId,
+          listType,
+          quantity,
+        })
+      }
+      className="w-full py-3 bg-orange-500 text-white rounded-xl font-medium hover:bg-orange-600 transition-colors"
+    >
+      Add to List
+    </button>
+  );
 
-        <div className="flex-1 overflow-y-auto p-4 space-y-4">
+  return (
+    <ModalPortal
+      isOpen={true}
+      onClose={onClose}
+      title="Add to Shopping List"
+      size="md"
+      footer={footer}
+    >
+      <ModalBody>
+        <div className="space-y-4">
           {/* Item Info */}
           <div className="flex items-center gap-3 p-3 bg-gray-50 dark:bg-gray-700 rounded-xl">
             <ItemImage url={item.imageUrl} />
@@ -216,23 +227,7 @@ export function StoreSelectModal({ item, stores, onClose, onAdd, isAdmin }: Stor
             </div>
           )}
         </div>
-
-        <div className="p-4 border-t border-gray-100 dark:border-gray-700 flex-shrink-0">
-          <button
-            onClick={() =>
-              onAdd({
-                catalogItemId: item.id,
-                storeId: selectedStoreId,
-                listType,
-                quantity,
-              })
-            }
-            className="w-full py-3 bg-orange-500 text-white rounded-xl font-medium hover:bg-orange-600 transition-colors"
-          >
-            Add to List
-          </button>
-        </div>
-      </div>
-    </div>
+      </ModalBody>
+    </ModalPortal>
   );
 }

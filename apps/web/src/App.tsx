@@ -1,5 +1,5 @@
-import { useState, useEffect } from 'react';
-import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
+import { useState, useEffect, useCallback } from 'react';
+import { BrowserRouter, Routes, Route, Navigate, useNavigate } from 'react-router-dom';
 import { AuthProvider, useAuth } from './context/AuthContext';
 import { Layout } from './components/Layout';
 import { HomePage } from './pages/HomePage';
@@ -17,9 +17,35 @@ import { PaidChoresPage } from './pages/PaidChoresPage';
 import { BudgetPage } from './pages/BudgetPage';
 import { RecipesPage } from './pages/RecipesPage';
 import { MealsPage } from './pages/MealsPage';
+import { useKioskIdleTimeout } from './hooks';
 
 function ProtectedRoute({ children }: { children: React.ReactNode }) {
   const { user, loading } = useAuth();
+  const navigate = useNavigate();
+  const [showIdleWarning, setShowIdleWarning] = useState(false);
+
+  // Handle kiosk idle timeout
+  const handleIdleWarning = useCallback((secondsRemaining: number) => {
+    setShowIdleWarning(true);
+  }, []);
+
+  const handleIdleLogout = useCallback(() => {
+    setShowIdleWarning(false);
+    navigate('/kiosk');
+  }, [navigate]);
+
+  const { resetTimer } = useKioskIdleTimeout({
+    enabled: !!user?.isKiosk,
+    timeoutMs: 15 * 60 * 1000, // 15 minutes
+    onWarning: handleIdleWarning,
+    onLogout: handleIdleLogout,
+  });
+
+  // Dismiss warning and reset timer
+  const handleDismissWarning = useCallback(() => {
+    setShowIdleWarning(false);
+    resetTimer();
+  }, [resetTimer]);
 
   if (loading) {
     return <LoadingScreen />;
@@ -29,7 +55,29 @@ function ProtectedRoute({ children }: { children: React.ReactNode }) {
     return <Navigate to="/login" replace />;
   }
 
-  return <Layout>{children}</Layout>;
+  return (
+    <Layout>
+      {children}
+      {/* Kiosk idle warning modal */}
+      {showIdleWarning && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
+          <div className="bg-white dark:bg-gray-800 rounded-lg p-6 max-w-md mx-4 text-center shadow-xl">
+            <div className="text-4xl mb-4">⏰</div>
+            <h2 className="text-xl font-bold mb-2">Still there?</h2>
+            <p className="text-gray-600 dark:text-gray-400 mb-4">
+              You'll be logged out in 1 minute due to inactivity.
+            </p>
+            <button
+              onClick={handleDismissWarning}
+              className="px-6 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-colors"
+            >
+              I'm still here
+            </button>
+          </div>
+        </div>
+      )}
+    </Layout>
+  );
 }
 
 function LoadingScreen() {

@@ -14,6 +14,7 @@ import {
   created,
 } from '../../utils';
 import { createNotification } from './notifications';
+import { queueEmail, getUserEmail, getActiveUsersWithEmail } from '../../email/queue';
 
 // =============================================================================
 // ANNOUNCEMENTS (Admin -> All Users)
@@ -42,6 +43,13 @@ export async function createAnnouncementInternal(params: CreateAnnouncementParam
 
   const announcementId = result.insertId;
 
+  // Get sender name for emails
+  const [sender] = await q<Array<{ displayName: string }>>(
+    'SELECT displayName FROM users WHERE id = ?',
+    [fromUserId],
+  );
+  const fromName = sender?.displayName || 'Admin';
+
   // Create notifications for all active users (except the sender)
   const users = await q<Array<{ id: number }>>(
     `SELECT id FROM users WHERE active = 1 AND id != ?`,
@@ -58,6 +66,24 @@ export async function createAnnouncementInternal(params: CreateAnnouncementParam
       relatedId: announcementId,
       relatedType: 'announcement',
     });
+  }
+
+  // Send email notifications to all active users with email (except sender)
+  const activeUsers = await getActiveUsersWithEmail();
+  for (const recipient of activeUsers) {
+    if (recipient.id !== fromUserId) {
+      await queueEmail({
+        userId: recipient.id,
+        toEmail: recipient.email,
+        template: 'ANNOUNCEMENT',
+        variables: {
+          userName: recipient.displayName,
+          title,
+          body: body.substring(0, 500),
+          fromName,
+        },
+      });
+    }
   }
 
   return announcementId;
@@ -106,6 +132,24 @@ export async function createAnnouncement(req: Request, res: Response) {
         relatedId: announcementId,
         relatedType: 'announcement',
       });
+    }
+
+    // Send email notifications to all active users with email (except sender)
+    const activeUsers = await getActiveUsersWithEmail();
+    for (const recipient of activeUsers) {
+      if (recipient.id !== user.id) {
+        await queueEmail({
+          userId: recipient.id,
+          toEmail: recipient.email,
+          template: 'ANNOUNCEMENT',
+          variables: {
+            userName: recipient.displayName,
+            title,
+            body: body.substring(0, 500),
+            fromName: user.displayName || 'Admin',
+          },
+        });
+      }
     }
 
     await logAudit({
@@ -300,6 +344,22 @@ export async function sendDirectMessage(req: Request, res: Response) {
       relatedId: messageId,
       relatedType: 'direct_message',
     });
+
+    // Send email notification for new direct message
+    const recipientEmail = await getUserEmail(toUserId);
+    if (recipientEmail) {
+      await queueEmail({
+        userId: toUserId,
+        toEmail: recipientEmail,
+        template: 'NEW_MESSAGE',
+        variables: {
+          userName: recipient.displayName,
+          senderName: user.displayName || 'Someone',
+          messagePreview: body.substring(0, 100) + (body.length > 100 ? '...' : ''),
+          messageTitle: title || 'New message',
+        },
+      });
+    }
 
     await logAudit({
       action: 'message.direct.send',

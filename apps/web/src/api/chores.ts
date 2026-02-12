@@ -226,6 +226,7 @@ export const choresApi = {
       assignedTo?: number;
       recurrenceType?: string;
       recurrenceInterval?: number;
+      recurrenceDays?: string;
       startDate?: string;
       endDate?: string;
     },

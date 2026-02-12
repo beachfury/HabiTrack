@@ -136,19 +136,19 @@ export function ThemePicker({ userRole = 'member' }: ThemePickerProps) {
     <>
       <div className="space-y-6">
         {/* Header */}
-        <div className="p-4 bg-gray-50 dark:bg-gray-700 rounded-xl">
-          <h3 className="font-medium text-gray-900 dark:text-white mb-1 flex items-center gap-2">
+        <div className="p-4 bg-[var(--color-muted)] rounded-xl">
+          <h3 className="font-medium text-[var(--color-foreground)] mb-1 flex items-center gap-2">
             <Palette size={18} />
             Theme Settings
           </h3>
-          <p className="text-sm text-gray-500 dark:text-gray-400">
+          <p className="text-sm text-[var(--color-muted-foreground)]">
             Choose a theme and color mode for your interface
           </p>
         </div>
 
         {/* Mode Selector */}
         <div>
-          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-3">
+          <label className="block text-sm font-medium text-[var(--color-foreground)] mb-3">
             Color Mode
           </label>
           <div className="grid grid-cols-3 gap-3">
@@ -159,18 +159,18 @@ export function ThemePicker({ userRole = 'member' }: ThemePickerProps) {
                 className={`
                   p-4 rounded-xl border-2 transition-colors flex flex-col items-center gap-2
                   ${mode === m.id
-                    ? 'border-emerald-500 bg-emerald-50 dark:bg-emerald-900/20'
-                    : 'border-gray-200 dark:border-gray-700 hover:border-gray-300'
+                    ? 'border-[var(--color-primary)] bg-[var(--color-primary)]/10'
+                    : 'border-[var(--color-border)] hover:border-[var(--color-border)]/80'
                   }
                 `}
               >
                 <m.icon
                   size={24}
-                  className={mode === m.id ? 'text-emerald-600' : 'text-gray-500'}
+                  className={mode === m.id ? 'text-[var(--color-primary)]' : 'text-[var(--color-muted-foreground)]'}
                 />
                 <span
                   className={`text-sm font-medium ${
-                    mode === m.id ? 'text-emerald-600' : 'text-gray-700 dark:text-gray-300'
+                    mode === m.id ? 'text-[var(--color-primary)]' : 'text-[var(--color-foreground)]'
                   }`}
                 >
                   {m.label}
@@ -185,7 +185,7 @@ export function ThemePicker({ userRole = 'member' }: ThemePickerProps) {
           <div className="flex gap-2">
             <button
               onClick={handleCreateTheme}
-              className="flex items-center gap-2 px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg transition-colors"
+              className="flex items-center gap-2 px-4 py-2 bg-[var(--color-primary)] hover:opacity-90 text-[var(--color-primary-foreground)] rounded-lg transition-colors"
             >
               <Plus size={18} />
               Create Theme
@@ -194,7 +194,7 @@ export function ThemePicker({ userRole = 'member' }: ThemePickerProps) {
               <>
                 <button
                   onClick={handleEditTheme}
-                  className="flex items-center gap-2 px-4 py-2 bg-gray-100 dark:bg-gray-700 hover:bg-gray-200 dark:hover:bg-gray-600 text-gray-700 dark:text-gray-300 rounded-lg transition-colors"
+                  className="flex items-center gap-2 px-4 py-2 bg-[var(--color-muted)] hover:opacity-80 text-[var(--color-foreground)] rounded-lg transition-colors"
                 >
                   <Edit2 size={18} />
                   Edit Current
@@ -202,7 +202,7 @@ export function ThemePicker({ userRole = 'member' }: ThemePickerProps) {
                 <button
                   onClick={handleDuplicateTheme}
                   disabled={applying === 'duplicate'}
-                  className="flex items-center gap-2 px-4 py-2 bg-gray-100 dark:bg-gray-700 hover:bg-gray-200 dark:hover:bg-gray-600 text-gray-700 dark:text-gray-300 rounded-lg transition-colors disabled:opacity-50"
+                  className="flex items-center gap-2 px-4 py-2 bg-[var(--color-muted)] hover:opacity-80 text-[var(--color-foreground)] rounded-lg transition-colors disabled:opacity-50"
                 >
                   <Copy size={18} />
                   {applying === 'duplicate' ? 'Duplicating...' : 'Duplicate'}
@@ -215,13 +215,13 @@ export function ThemePicker({ userRole = 'member' }: ThemePickerProps) {
         {/* Theme Library */}
         <div>
           <div className="flex items-center justify-between mb-3">
-            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">
+            <label className="block text-sm font-medium text-[var(--color-foreground)]">
               Theme Library
             </label>
             <button
               onClick={() => loadThemes()}
               disabled={loading}
-              className="text-sm text-emerald-600 hover:text-emerald-700 flex items-center gap-1"
+              className="text-sm text-[var(--color-primary)] hover:opacity-80 flex items-center gap-1"
             >
               <RefreshCw size={14} className={loading ? 'animate-spin' : ''} />
               Refresh
@@ -229,7 +229,13 @@ export function ThemePicker({ userRole = 'member' }: ThemePickerProps) {
           </div>
 
           {error && (
-            <div className="mb-4 p-3 bg-red-50 dark:bg-red-900/20 text-red-600 dark:text-red-400 text-sm rounded-lg">
+            <div
+              className="mb-4 p-3 text-sm rounded-lg"
+              style={{
+                backgroundColor: 'color-mix(in srgb, var(--color-destructive) 10%, transparent)',
+                color: 'var(--color-destructive)',
+              }}
+            >
               {error}
             </div>
           )}
@@ -239,12 +245,12 @@ export function ThemePicker({ userRole = 'member' }: ThemePickerProps) {
               {[1, 2, 3, 4, 5, 6].map((i) => (
                 <div
                   key={i}
-                  className="h-40 rounded-xl bg-gray-100 dark:bg-gray-700 animate-pulse"
+                  className="h-40 rounded-xl bg-[var(--color-muted)] animate-pulse"
                 />
               ))}
             </div>
           ) : filteredThemes.length === 0 ? (
-            <div className="text-center py-8 text-gray-500 dark:text-gray-400">
+            <div className="text-center py-8 text-[var(--color-muted-foreground)]">
               <Palette size={48} className="mx-auto mb-3 opacity-50" />
               <p>No themes available</p>
               {userRole === 'kid' ? (
@@ -276,8 +282,8 @@ export function ThemePicker({ userRole = 'member' }: ThemePickerProps) {
                       className={`
                         absolute top-2 right-2 p-1.5 rounded-lg transition-colors z-10
                         ${theme.isApprovedForKids
-                          ? 'bg-green-500 hover:bg-green-600 text-white'
-                          : 'bg-gray-200 dark:bg-gray-700 hover:bg-gray-300 dark:hover:bg-gray-600 text-gray-500 dark:text-gray-400'
+                          ? 'bg-[var(--color-success)] text-[var(--color-success-foreground)] hover:opacity-90'
+                          : 'bg-[var(--color-muted)] hover:opacity-80 text-[var(--color-muted-foreground)]'
                         }
                         ${togglingKidApproval === theme.id ? 'opacity-50 cursor-wait' : ''}
                       `}
@@ -297,8 +303,14 @@ export function ThemePicker({ userRole = 'member' }: ThemePickerProps) {
 
         {/* Info for kids */}
         {userRole === 'kid' && (
-          <div className="p-4 bg-blue-50 dark:bg-blue-900/20 rounded-xl">
-            <p className="text-sm text-blue-700 dark:text-blue-300">
+          <div
+            className="p-4 rounded-xl"
+            style={{
+              backgroundColor: 'color-mix(in srgb, var(--color-primary) 10%, transparent)',
+              border: '1px solid color-mix(in srgb, var(--color-primary) 20%, transparent)',
+            }}
+          >
+            <p className="text-sm text-[var(--color-foreground)]">
               Only themes approved by your parents are shown here. Ask them to add more themes if you want more options!
             </p>
           </div>
@@ -306,26 +318,32 @@ export function ThemePicker({ userRole = 'member' }: ThemePickerProps) {
 
         {/* Admin kid approval info */}
         {isAdmin && (
-          <div className="p-4 bg-emerald-50 dark:bg-emerald-900/20 rounded-xl">
-            <h4 className="font-medium text-emerald-700 dark:text-emerald-300 mb-2 flex items-center gap-2">
-              <ShieldCheck size={18} />
+          <div
+            className="p-4 rounded-xl"
+            style={{
+              backgroundColor: 'color-mix(in srgb, var(--color-success) 10%, transparent)',
+              border: '1px solid color-mix(in srgb, var(--color-success) 20%, transparent)',
+            }}
+          >
+            <h4 className="font-medium text-[var(--color-foreground)] mb-2 flex items-center gap-2">
+              <ShieldCheck size={18} className="text-[var(--color-success)]" />
               Kid Approval Controls
             </h4>
-            <p className="text-sm text-emerald-600 dark:text-emerald-400 mb-2">
+            <p className="text-sm text-[var(--color-muted-foreground)] mb-2">
               Click the shield icon on any theme to toggle whether it's available for kids.
             </p>
             <div className="flex items-center gap-4 text-sm">
               <span className="flex items-center gap-1.5">
-                <span className="inline-flex items-center justify-center w-6 h-6 rounded bg-green-500 text-white">
+                <span className="inline-flex items-center justify-center w-6 h-6 rounded bg-[var(--color-success)] text-[var(--color-success-foreground)]">
                   <ShieldCheck size={14} />
                 </span>
-                <span className="text-emerald-600 dark:text-emerald-400">Approved for kids</span>
+                <span className="text-[var(--color-muted-foreground)]">Approved for kids</span>
               </span>
               <span className="flex items-center gap-1.5">
-                <span className="inline-flex items-center justify-center w-6 h-6 rounded bg-gray-200 dark:bg-gray-700 text-gray-500">
+                <span className="inline-flex items-center justify-center w-6 h-6 rounded bg-[var(--color-muted)] text-[var(--color-muted-foreground)]">
                   <ShieldOff size={14} />
                 </span>
-                <span className="text-emerald-600 dark:text-emerald-400">Not approved</span>
+                <span className="text-[var(--color-muted-foreground)]">Not approved</span>
               </span>
             </div>
           </div>

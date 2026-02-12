@@ -5,6 +5,7 @@ import type { Request, Response } from 'express';
 import { q } from '../../db';
 import { logAudit } from '../../audit';
 import { createNotification } from '../messages';
+import { queueEmail, getActiveUsersWithEmail } from '../../email/queue';
 import {
   getUser,
   success,
@@ -81,6 +82,23 @@ export async function openVoting(req: Request, res: Response) {
         relatedId: mealPlanId,
         relatedType: 'meal',
       });
+    }
+
+    // Send email notifications
+    const activeUsers = await getActiveUsersWithEmail();
+    for (const recipient of activeUsers) {
+      if (recipient.id !== user.id) {
+        await queueEmail({
+          userId: recipient.id,
+          toEmail: recipient.email,
+          template: 'VOTING_OPENED',
+          variables: {
+            userName: recipient.displayName,
+            mealDate: mealPlan.date,
+            deadline: deadline || 'soon',
+          },
+        });
+      }
     }
 
     return success(res, { success: true });
@@ -405,6 +423,38 @@ export async function sendVotingReminders(req: Request, res: Response) {
             relatedType: 'meal',
           });
           reminderCount++;
+        }
+      }
+    }
+
+    // Also send email reminders to users who haven't voted
+    const activeUsersEmail = await getActiveUsersWithEmail();
+    for (const meal of mealsWithDeadline) {
+      const suggestions = await q<{ id: number }[]>(
+        `SELECT id FROM meal_suggestions WHERE mealPlanId = ?`,
+        [meal.id],
+      );
+      const suggestionIds = suggestions.map((s) => s.id);
+
+      for (const recipient of activeUsersEmail) {
+        const [hasVoted] = await q<{ count: number }[]>(
+          `SELECT COUNT(*) as count FROM meal_votes
+           WHERE mealSuggestionId IN (${suggestionIds.length > 0 ? suggestionIds.map(() => '?').join(',') : '0'})
+             AND userId = ?`,
+          [...suggestionIds, recipient.id],
+        );
+
+        if (!hasVoted || hasVoted.count === 0) {
+          await queueEmail({
+            userId: recipient.id,
+            toEmail: recipient.email,
+            template: 'VOTING_OPENED',
+            variables: {
+              userName: recipient.displayName,
+              mealDate: meal.date,
+              deadline: 'less than 24 hours',
+            },
+          });
         }
       }
     }
