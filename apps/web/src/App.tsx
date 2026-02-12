@@ -18,6 +18,7 @@ import { BudgetPage } from './pages/BudgetPage';
 import { RecipesPage } from './pages/RecipesPage';
 import { MealsPage } from './pages/MealsPage';
 import { useKioskIdleTimeout } from './hooks';
+import { ErrorBoundary } from './components/ErrorBoundary';
 
 function ProtectedRoute({ children }: { children: React.ReactNode }) {
   const { user, loading } = useAuth();
@@ -231,7 +232,9 @@ function AppWithBootstrapCheck() {
 
   return (
     <AuthProvider>
-      <AppRoutes />
+      <ErrorBoundary>
+        <AppRoutes />
+      </ErrorBoundary>
     </AuthProvider>
   );
 }

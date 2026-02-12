@@ -15,6 +15,9 @@ import {
   validationError,
 } from '../../utils';
 import { queueEmail, getUserEmail } from '../../email/queue';
+import { createLogger } from '../../services/logger';
+
+const log = createLogger('chores');
 
 interface ChoreInstance {
   id: number;
@@ -144,6 +147,8 @@ export async function completeInstance(req: Request, res: Response) {
       // Notify admins...
       // (keep existing notification code)
 
+      log.info('Chore completed (awaiting approval)', { instanceId, completedBy: user.id });
+
       await logAudit({
         action: 'chore.complete',
         result: 'ok',
@@ -168,6 +173,8 @@ export async function completeInstance(req: Request, res: Response) {
         pointsRecipient, // <-- Uses forUserId if provided, else assignedTo, else current user
       ]);
 
+      log.info('Chore completed', { instanceId, completedBy: user.id, points: totalPoints, recipient: pointsRecipient });
+
       await logAudit({
         action: 'chore.complete',
         result: 'ok',
@@ -189,6 +196,7 @@ export async function completeInstance(req: Request, res: Response) {
       });
     }
   } catch (err) {
+    log.error('Failed to complete chore', { instanceId, error: String(err) });
     return serverError(res, err as Error);
   }
 }
@@ -270,6 +278,8 @@ export async function approveInstance(req: Request, res: Response) {
       }
     }
 
+    log.info('Chore approved', { instanceId, approvedBy: user.id, points });
+
     await logAudit({
       action: 'chore.approve',
       result: 'ok',
@@ -279,6 +289,7 @@ export async function approveInstance(req: Request, res: Response) {
 
     return success(res, { success: true, pointsAwarded: points });
   } catch (err) {
+    log.error('Failed to approve chore', { instanceId, error: String(err) });
     return serverError(res, err as Error);
   }
 }
@@ -349,6 +360,8 @@ export async function rejectInstance(req: Request, res: Response) {
       }
     }
 
+    log.info('Chore rejected', { instanceId, rejectedBy: user.id, reason });
+
     await logAudit({
       action: 'chore.reject',
       result: 'ok',
@@ -358,6 +371,7 @@ export async function rejectInstance(req: Request, res: Response) {
 
     return success(res, { success: true });
   } catch (err) {
+    log.error('Failed to reject chore', { instanceId, error: String(err) });
     return serverError(res, err as Error);
   }
 }

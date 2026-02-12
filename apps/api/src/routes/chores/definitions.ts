@@ -17,6 +17,9 @@ import {
 } from '../../utils';
 import { getTodayLocal, getTimezone } from '../../utils/date';
 import { queueEmail, getUserEmail } from '../../email/queue';
+import { createLogger } from '../../services/logger';
+
+const log = createLogger('chores');
 
 type Difficulty = 'easy' | 'medium' | 'hard';
 type RecurrenceType = 'once' | 'daily' | 'weekly' | 'monthly' | 'custom' | 'x_days';
@@ -317,6 +320,8 @@ export async function createChore(req: Request, res: Response) {
       title.trim(),
     );
 
+    log.info('Chore created', { choreId, title: title.trim(), createdBy: user.id, instances: instanceCount });
+
     await logAudit({
       action: 'chore.create',
       result: 'ok',
@@ -326,6 +331,7 @@ export async function createChore(req: Request, res: Response) {
 
     return created(res, { id: choreId, instancesCreated: instanceCount });
   } catch (err) {
+    log.error('Failed to create chore', { error: String(err) });
     return serverError(res, err as Error);
   }
 }
@@ -425,6 +431,8 @@ export async function updateChore(req: Request, res: Response) {
       );
     }
 
+    log.info('Chore updated', { choreId, updatedBy: user.id });
+
     await logAudit({
       action: 'chore.update',
       result: 'ok',
@@ -434,6 +442,7 @@ export async function updateChore(req: Request, res: Response) {
 
     return success(res, { success: true });
   } catch (err) {
+    log.error('Failed to update chore', { choreId, error: String(err) });
     return serverError(res, err as Error);
   }
 }
@@ -458,6 +467,8 @@ export async function deleteChore(req: Request, res: Response) {
       [choreId, today],
     );
 
+    log.info('Chore deleted (soft)', { choreId, deletedBy: user.id });
+
     await logAudit({
       action: 'chore.delete',
       result: 'ok',
@@ -467,6 +478,7 @@ export async function deleteChore(req: Request, res: Response) {
 
     return success(res, { success: true });
   } catch (err) {
+    log.error('Failed to delete chore', { choreId, error: String(err) });
     return serverError(res, err as Error);
   }
 }

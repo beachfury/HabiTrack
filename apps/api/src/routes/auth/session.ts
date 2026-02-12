@@ -12,6 +12,9 @@ import {
   clearSessionCookie,
 } from '../../cookie-config';
 import { success, serverError } from '../../utils';
+import { createLogger } from '../../services/logger';
+
+const log = createLogger('auth');
 
 /**
  * Get client metadata from request
@@ -54,6 +57,8 @@ export async function postLogin(req: Request, res: Response) {
 
   setSessionCookie(res, sess.sid);
 
+  log.info('User logged in (dev mode)', { userId, role: u.roleId });
+
   await logAudit({
     action: 'auth.login.dev',
     result: 'ok',
@@ -81,6 +86,8 @@ export async function postLogout(req: Request, res: Response) {
       await sessionStore.destroy(sid).catch(() => {});
     }
 
+    log.info('User logged out', { userId: user?.id });
+
     await logAudit({
       action: 'auth.logout',
       result: 'ok',
@@ -91,6 +98,7 @@ export async function postLogout(req: Request, res: Response) {
 
     return res.status(204).end();
   } catch (e) {
+    log.error('Logout failed', { error: String(e) });
     await logAudit({
       action: 'auth.logout',
       result: 'error',

@@ -7,6 +7,9 @@ import { logAudit } from '../../audit';
 import { createNotification } from '../messages';
 import { getUser, success, notFound, serverError, validationError, created } from '../../utils';
 import { queueEmail, getUserEmail } from '../../email/queue';
+import { createLogger } from '../../services/logger';
+
+const log = createLogger('calendar');
 
 interface CalendarEvent {
   id: number;
@@ -272,6 +275,8 @@ export async function createEvent(req: Request, res: Response) {
       relatedType: 'calendar_event',
     });
 
+    log.info('Calendar event created', { eventId, title, createdBy: user.id });
+
     await logAudit({
       action: 'calendar.create',
       result: 'ok',
@@ -283,6 +288,7 @@ export async function createEvent(req: Request, res: Response) {
       event: { id: eventId, title, start, end, allDay, color, location, assignedTo },
     });
   } catch (err) {
+    log.error('Failed to create calendar event', { error: String(err) });
     return serverError(res, err as Error);
   }
 }

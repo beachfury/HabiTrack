@@ -6,6 +6,9 @@ import { q } from '../../db';
 import { logAudit } from '../../audit';
 import { hashSecret, verifyHash } from '../../crypto';
 import { getUser, isValidString, isValidPin, success, created, notFound, forbidden, serverError, validationError } from '../../utils';
+import { createLogger } from '../../services/logger';
+
+const log = createLogger('family');
 
 interface FamilyMember {
   id: number;
@@ -204,6 +207,8 @@ export async function createMember(req: Request, res: Response) {
       );
     }
 
+    log.info('Family member created', { userId, displayName: displayName.trim(), role, createdBy: admin.id });
+
     await logAudit({
       action: 'family.member.create',
       result: 'ok',
@@ -291,6 +296,8 @@ export async function updateMember(req: Request, res: Response) {
     if (updates.length > 0) {
       params.push(memberId);
       await q(`UPDATE users SET ${updates.join(', ')} WHERE id = ?`, params);
+
+      log.info('Family member updated', { memberId, updatedBy: admin.id, fields: updates.map(u => u.split(' ')[0]) });
     }
 
     await logAudit({
@@ -302,6 +309,7 @@ export async function updateMember(req: Request, res: Response) {
 
     return res.status(204).end();
   } catch (err) {
+    log.error('Failed to update family member', { memberId, error: String(err) });
     return serverError(res, err as Error);
   }
 }
@@ -331,6 +339,8 @@ export async function deleteMember(req: Request, res: Response) {
   try {
     await q('UPDATE users SET active = 0 WHERE id = ?', [memberId]);
 
+    log.info('Family member deactivated', { memberId, deactivatedBy: admin.id });
+
     await logAudit({
       action: 'family.member.delete',
       result: 'ok',
@@ -340,6 +350,7 @@ export async function deleteMember(req: Request, res: Response) {
 
     return res.status(204).end();
   } catch (err) {
+    log.error('Failed to delete family member', { memberId, error: String(err) });
     return serverError(res, err as Error);
   }
 }

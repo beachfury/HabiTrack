@@ -3,17 +3,11 @@
 
 import type { Request, Response } from 'express';
 import { q } from '../../db';
+import { getUser } from '../../utils/auth';
+import { authRequired, forbidden, invalidInput, notFound, serverError } from '../../utils/errors';
+import { createLogger } from '../../services/logger';
 
-// Helper to get user from request
-function getUser(req: Request) {
-  return (req as any).user as
-    | {
-        id: number;
-        displayName: string;
-        roleId: 'admin' | 'member' | 'kid' | 'kiosk';
-      }
-    | undefined;
-}
+const log = createLogger('themes');
 
 // ============================================
 // GET /api/settings/theme - Get user's theme preferences
@@ -22,7 +16,7 @@ export async function getUserThemePreferences(req: Request, res: Response) {
   try {
     const user = getUser(req);
     if (!user) {
-      return res.status(401).json({ error: 'Authentication required' });
+      return authRequired(res);
     }
 
     // Get user's preferences
@@ -84,7 +78,7 @@ export async function getUserThemePreferences(req: Request, res: Response) {
     });
   } catch (err) {
     console.error('Failed to get theme preferences:', err);
-    res.status(500).json({ error: 'Failed to get theme preferences' });
+    serverError(res, 'Failed to get theme preferences');
   }
 }
 
@@ -95,7 +89,7 @@ export async function updateUserThemePreferences(req: Request, res: Response) {
   try {
     const user = getUser(req);
     if (!user) {
-      return res.status(401).json({ error: 'Authentication required' });
+      return authRequired(res);
     }
 
     const { themeId, mode, overrides, accentColorOverride } = req.body;
@@ -108,7 +102,7 @@ export async function updateUserThemePreferences(req: Request, res: Response) {
           themeId,
         ]);
         if (themes.length === 0) {
-          return res.status(403).json({ error: 'Theme not available for kids' });
+          return forbidden(res, 'Theme not available for kids');
         }
       } else {
         // Check theme exists and is accessible
@@ -117,7 +111,7 @@ export async function updateUserThemePreferences(req: Request, res: Response) {
           user.id,
         ]);
         if (themes.length === 0) {
-          return res.status(404).json({ error: 'Theme not found' });
+          return notFound(res, 'Theme');
         }
       }
     }
@@ -125,7 +119,7 @@ export async function updateUserThemePreferences(req: Request, res: Response) {
     // Validate mode
     const validModes = ['light', 'dark', 'system', 'auto'];
     if (mode !== undefined && !validModes.includes(mode)) {
-      return res.status(400).json({ error: 'Invalid mode' });
+      return invalidInput(res, 'Invalid mode');
     }
 
     // Build update query
@@ -166,7 +160,7 @@ export async function updateUserThemePreferences(req: Request, res: Response) {
     }
 
     if (updates.length === 0) {
-      return res.status(400).json({ error: 'No fields to update' });
+      return invalidInput(res, 'No fields to update');
     }
 
     // Upsert preferences
@@ -197,13 +191,15 @@ export async function updateUserThemePreferences(req: Request, res: Response) {
       }
     }
 
+    log.info('Theme preferences updated', { userId: user.id, themeId, mode, accentColorOverride });
+
     res.json({
       ...preferences,
       activeTheme,
     });
   } catch (err) {
-    console.error('Failed to update theme preferences:', err);
-    res.status(500).json({ error: 'Failed to update theme preferences' });
+    log.error('Failed to update theme preferences', { userId: user?.id, error: String(err) });
+    serverError(res, 'Failed to update theme preferences');
   }
 }
 

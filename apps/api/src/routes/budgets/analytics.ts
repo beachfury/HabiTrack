@@ -3,11 +3,8 @@
 
 import { Request, Response } from 'express';
 import { q } from '../../db';
-
-// Helper to get user from request
-function getUser(req: Request) {
-  return (req as any).user as { id: number; roleId: string } | undefined;
-}
+import { getUser } from '../../utils/auth';
+import { authRequired, serverError } from '../../utils/errors';
 
 // ============================================
 // GET ANALYTICS DATA
@@ -16,7 +13,7 @@ export async function getAnalytics(req: Request, res: Response) {
   try {
     const user = getUser(req);
     if (!user) {
-      return res.status(401).json({ error: 'Authentication required' });
+      return authRequired(res);
     }
 
     const { period = 'month', year, month, months = 6 } = req.query;
@@ -208,7 +205,7 @@ export async function getAnalytics(req: Request, res: Response) {
     });
   } catch (err) {
     console.error('Failed to get budget analytics:', err);
-    res.status(500).json({ error: 'Failed to get budget analytics' });
+    serverError(res, 'Failed to get budget analytics');
   }
 }
 
@@ -219,7 +216,7 @@ export async function getSummary(req: Request, res: Response) {
   try {
     const user = getUser(req);
     if (!user) {
-      return res.status(401).json({ error: 'Authentication required' });
+      return authRequired(res);
     }
 
     const now = new Date();
@@ -321,6 +318,6 @@ export async function getSummary(req: Request, res: Response) {
     });
   } catch (err) {
     console.error('Failed to get budget summary:', err);
-    res.status(500).json({ error: 'Failed to get budget summary' });
+    serverError(res, 'Failed to get budget summary');
   }
 }

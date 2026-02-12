@@ -15,6 +15,9 @@ import {
   serverError,
   validationError,
 } from '../../utils';
+import { createLogger } from '../../services/logger';
+
+const log = createLogger('shopping');
 
 // =============================================================================
 // CATEGORIES

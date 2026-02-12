@@ -6,6 +6,9 @@ import { q } from '../../db';
 import { logAudit } from '../../audit';
 import { getUser, success, created, notFound, serverError, validationError } from '../../utils';
 import { queueEmail, getActiveUsersWithEmail } from '../../email/queue';
+import { createLogger } from '../../services/logger';
+
+const log = createLogger('shopping');
 
 /**
  * Track when an item is added to the shopping list
@@ -173,6 +176,8 @@ export async function addToList(req: Request, res: Response) {
       }
     }
 
+    log.info('Item added to shopping list', { listItemId: result.insertId, itemName: itemInfo?.name, addedBy: user.id });
+
     await logAudit({
       action: 'shopping.list.add',
       result: 'ok',
@@ -182,6 +187,7 @@ export async function addToList(req: Request, res: Response) {
 
     return created(res, { id: result.insertId });
   } catch (err) {
+    log.error('Failed to add item to shopping list', { error: String(err) });
     return serverError(res, err as Error);
   }
 }
@@ -316,6 +322,8 @@ export async function markPurchased(req: Request, res: Response) {
       );
     }
 
+    log.info('Item purchased', { listItemId, catalogItemId: item.catalogItemId, purchasedBy: user.id, price });
+
     await logAudit({
       action: 'shopping.list.purchase',
       result: 'ok',
@@ -325,6 +333,7 @@ export async function markPurchased(req: Request, res: Response) {
 
     return success(res, { success: true });
   } catch (err) {
+    log.error('Failed to mark item as purchased', { listItemId, error: String(err) });
     return serverError(res, err as Error);
   }
 }

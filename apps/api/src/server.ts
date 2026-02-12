@@ -26,6 +26,12 @@ import { startReminderService } from './services/calendarReminders';
 // Import and start chore reminder service
 import { startChoreReminderService } from './services/choreReminders';
 
+// Import logger service
+import { configureLogger, createLogger } from './services/logger';
+import { getVersionInfo } from './utils/version';
+
+const appLogger = createLogger('server');
+
 // Import email notification worker (starts automatically on import)
 import './workers/send-notifications';
 
@@ -135,9 +141,11 @@ app.use((err: any, _req: express.Request, res: express.Response, _next: express.
 // Initialize timezone from settings
 const PORT = parseInt(process.env.PORT || '4000', 10);
 app.listen(PORT, '0.0.0.0', () => {
-  console.log(`🚀 HabiTrack API running on port ${PORT}`);
+  const versionInfo = getVersionInfo();
+  console.log(`🚀 HabiTrack API v${versionInfo.version} running on port ${PORT}`);
   console.log(`   Environment: ${process.env.NODE_ENV || 'development'}`);
   console.log(`   Base URL: ${cfg.HABITRACK_BASE_URL}`);
+  appLogger.info('Server started', { port: PORT, version: versionInfo.version });
 });
 
 // Initialize timezone from settings
@@ -160,11 +168,83 @@ async function initializeTimezone() {
 // Call it after database connection is established:
 // e.g., after your app.listen() or database init:
 initializeTimezone();
+initializeLogger();
 
 // Start calendar reminder service
 startReminderService();
 
 // Start chore reminder service
 startChoreReminderService();
+
+// Initialize logger from database settings
+async function initializeLogger() {
+  try {
+    const [settings] = await q<Array<{
+      debugMode: number;
+      logLevel: 'error' | 'warn' | 'info' | 'debug';
+      logToFile: number;
+    }>>(
+      `SELECT debugMode, logLevel, logToFile FROM settings WHERE id = 1 LIMIT 1`,
+    );
+
+    if (settings) {
+      const isDebugMode = Boolean(settings.debugMode);
+      const logLevel = settings.logLevel || 'info';
+
+      configureLogger({
+        enabled: true, // Always enabled - level controls what gets logged
+        level: isDebugMode ? logLevel : 'info', // Use setting's level when debug mode is on
+        writeToFile: Boolean(settings.logToFile),
+      });
+
+      console.log(`[logger] Initialized: debugMode=${isDebugMode}, level=${logLevel}, logToFile=${Boolean(settings.logToFile)}`);
+      appLogger.info('Logger initialized from database settings', {
+        debugMode: isDebugMode,
+        logLevel: logLevel,
+      });
+    } else {
+      // No settings row, use defaults but keep enabled
+      configureLogger({
+        enabled: true,
+        level: 'info',
+        writeToFile: false,
+      });
+      console.log('[logger] Using default settings (no settings row found)');
+    }
+  } catch (err) {
+    // Columns might not exist yet if migration hasn't run
+    // Enable with default settings anyway
+    configureLogger({
+      enabled: true,
+      level: 'info',
+      writeToFile: false,
+    });
+    console.log('[logger] Using default settings (migration may not have run yet)');
+  }
+}
+
+// Refresh logger settings periodically (every 30 seconds)
+setInterval(async () => {
+  try {
+    const [settings] = await q<Array<{
+      debugMode: number;
+      logLevel: 'error' | 'warn' | 'info' | 'debug';
+      logToFile: number;
+    }>>(
+      `SELECT debugMode, logLevel, logToFile FROM settings WHERE id = 1 LIMIT 1`,
+    );
+
+    if (settings) {
+      const isDebugMode = Boolean(settings.debugMode);
+      configureLogger({
+        enabled: true,
+        level: isDebugMode ? (settings.logLevel || 'info') : 'info',
+        writeToFile: Boolean(settings.logToFile),
+      });
+    }
+  } catch {
+    // Silently fail - keep existing settings
+  }
+}, 30 * 1000);
 
 export default app;

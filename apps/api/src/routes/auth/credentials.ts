@@ -22,6 +22,9 @@ import { checkLockout, recordLoginAttempt, clearFailedAttempts } from '../../loc
 import { Notifier } from '../../notify';
 import { makeOnboardToken } from '../../onboard/token';
 import { success, serverError, validationError } from '../../utils';
+import { createLogger } from '../../services/logger';
+
+const log = createLogger('auth');
 
 const cfg = parseEnv(process.env);
 
@@ -54,6 +57,8 @@ export async function postRegister(req: Request, res: Response) {
   }
 
   await updateUserPassword(userId, secret);
+
+  log.info('User credentials registered', { userId });
 
   await logAudit({
     action: 'auth.register',
@@ -105,6 +110,8 @@ export async function postLogin(req: Request, res: Response) {
     // Check lockout
     const lockoutStatus = await checkLockout(resolvedUserId);
     if (lockoutStatus.isLocked) {
+      log.warn('Login blocked - account locked', { userId: resolvedUserId });
+
       await logAudit({
         action: 'auth.lockout',
         result: 'deny',
@@ -131,6 +138,8 @@ export async function postLogin(req: Request, res: Response) {
     // Verify password
     const ok = await verifyUserPassword(resolvedUserId, secret);
     if (!ok) {
+      log.warn('Login failed - invalid credentials', { userId: resolvedUserId });
+
       await recordLoginAttempt(resolvedUserId, false, ip);
 
       await logAudit({
@@ -144,6 +153,7 @@ export async function postLogin(req: Request, res: Response) {
 
       const newStatus = await checkLockout(resolvedUserId);
       if (newStatus.isLocked) {
+        log.warn('Account locked due to failed attempts', { userId: resolvedUserId });
         return res.status(423).json({
           error: {
             code: 'ACCOUNT_LOCKED',
@@ -188,6 +198,8 @@ export async function postLogin(req: Request, res: Response) {
 
     setSessionCookie(res, sess.sid);
 
+    log.info('User logged in successfully', { userId: resolvedUserId, role });
+
     await logAudit({
       action: 'auth.login.ok',
       result: 'ok',
@@ -199,7 +211,7 @@ export async function postLogin(req: Request, res: Response) {
 
     return res.status(204).end();
   } catch (e) {
-    console.error('[postLogin] error', e);
+    log.error('Login error', { error: String(e) });
     return serverError(res, e as Error);
   }
 }
@@ -248,6 +260,8 @@ export async function postChangePassword(req: Request, res: Response) {
   const role = await getUserRole(userId);
   const newSess = await sessionStore.create({ userId, role, ttlMinutes: SESSION_TTL_MINUTES });
   setSessionCookie(res, newSess.sid);
+
+  log.info('User changed password', { userId });
 
   await logAudit({
     action: 'auth.password.change',

@@ -17,6 +17,9 @@ import {
   validationError,
   forbidden,
 } from '../../utils';
+import { createLogger } from '../../services/logger';
+
+const log = createLogger('meals');
 
 type MealPlanStatus = 'planned' | 'voting' | 'finalized';
 
@@ -317,6 +320,8 @@ export async function createMealPlan(req: Request, res: Response) {
       ],
     );
 
+    log.info('Meal plan created', { mealPlanId: result.insertId, date, status, createdBy: user.id });
+
     await logAudit({
       action: 'meal.plan.create',
       result: 'ok',
@@ -326,6 +331,7 @@ export async function createMealPlan(req: Request, res: Response) {
 
     return created(res, { id: result.insertId });
   } catch (err) {
+    log.error('Failed to create meal plan', { date, error: String(err) });
     return serverError(res, err as Error);
   }
 }
@@ -397,6 +403,8 @@ export async function updateMealPlan(req: Request, res: Response) {
     params.push(mealPlanId);
     await q(`UPDATE meal_plans SET ${updates.join(', ')} WHERE id = ?`, params);
 
+    log.info('Meal plan updated', { mealPlanId, updatedBy: user.id });
+
     await logAudit({
       action: 'meal.plan.update',
       result: 'ok',
@@ -406,6 +414,7 @@ export async function updateMealPlan(req: Request, res: Response) {
 
     return success(res, { success: true });
   } catch (err) {
+    log.error('Failed to update meal plan', { mealPlanId, error: String(err) });
     return serverError(res, err as Error);
   }
 }
@@ -428,6 +437,8 @@ export async function deleteMealPlan(req: Request, res: Response) {
     // Cascade delete will remove suggestions and votes
     await q(`DELETE FROM meal_plans WHERE id = ?`, [mealPlanId]);
 
+    log.info('Meal plan deleted', { mealPlanId, deletedBy: user.id });
+
     await logAudit({
       action: 'meal.plan.delete',
       result: 'ok',
@@ -437,6 +448,7 @@ export async function deleteMealPlan(req: Request, res: Response) {
 
     return success(res, { success: true });
   } catch (err) {
+    log.error('Failed to delete meal plan', { mealPlanId, error: String(err) });
     return serverError(res, err as Error);
   }
 }
@@ -470,6 +482,8 @@ export async function setFendForYourself(req: Request, res: Response) {
       [message || getRandomFFYMessage(), user.id, mealPlanId],
     );
 
+    log.info('Meal plan set to Fend For Yourself', { mealPlanId, setBy: user.id });
+
     await logAudit({
       action: 'meal.plan.ffy',
       result: 'ok',
@@ -479,6 +493,7 @@ export async function setFendForYourself(req: Request, res: Response) {
 
     return success(res, { success: true });
   } catch (err) {
+    log.error('Failed to set FFY', { mealPlanId, error: String(err) });
     return serverError(res, err as Error);
   }
 }
@@ -612,6 +627,8 @@ export async function finalizeMealPlan(req: Request, res: Response) {
         householdSize,
       );
     }
+
+    log.info('Meal plan finalized', { mealPlanId, date: mealPlan.date, recipeId, customMealName, finalizedBy: user.id });
 
     await logAudit({
       action: 'meal.plan.finalize',

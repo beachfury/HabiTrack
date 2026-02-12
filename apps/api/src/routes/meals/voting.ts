@@ -15,6 +15,9 @@ import {
   validationError,
   forbidden,
 } from '../../utils';
+import { createLogger } from '../../services/logger';
+
+const log = createLogger('meals');
 
 interface MealPlan {
   id: number;

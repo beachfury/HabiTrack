@@ -114,6 +114,16 @@ HabiTrack features a powerful theming system that allows deep customization:
 - **Security**: Password management
 - **Household** (Admin): Household name, timezone settings
 - **Email** (Admin): SMTP configuration for notifications
+- **Debug** (Admin): System diagnostics and logging
+- **About**: Version info and system requirements
+
+### 🔍 Debug & Diagnostics (Admin)
+- Toggle debug mode on/off
+- Configure log levels (Error, Warning, Info, Debug)
+- View recent system logs with filtering
+- Monitor frontend JavaScript errors
+- System information display (Node version, memory, uptime)
+- Log retention settings (1-30 days)
 
 ### 🖥️ Kiosk Mode
 - PIN-based quick login for shared household screens

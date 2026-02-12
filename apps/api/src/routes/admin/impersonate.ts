@@ -6,17 +6,7 @@ import { q } from '../../db';
 import { logAudit } from '../../audit';
 import { sessionStore } from '../../session-store';
 import { SESSION_COOKIE_NAME, SESSION_TTL_MINUTES, setSessionCookie } from '../../cookie-config';
-
-// Helper to get user from request
-function getUser(req: Request) {
-  return (req as any).user as
-    | {
-        id: number;
-        displayName: string;
-        roleId: 'admin' | 'member' | 'kid' | 'kiosk';
-      }
-    | undefined;
-}
+import { getUser } from '../../utils/auth';
 
 /**
  * POST /api/admin/impersonate/:userId

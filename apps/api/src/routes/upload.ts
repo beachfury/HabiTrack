@@ -7,17 +7,12 @@ import { logAudit } from '../audit';
 import * as fs from 'fs';
 import * as path from 'path';
 import * as crypto from 'crypto';
+import { getUser } from '../utils/auth';
+import { authRequired, invalidInput, notFound, forbidden, serverError } from '../utils/errors';
+import { UPLOAD } from '../utils/constants';
+import { createLogger } from '../services/logger';
 
-// Helper to get user from request
-function getUser(req: Request) {
-  return (req as any).user as
-    | {
-        id: number;
-        displayName: string;
-        roleId: 'admin' | 'member' | 'kid' | 'kiosk';
-      }
-    | undefined;
-}
+const log = createLogger('uploads');
 
 // Ensure upload directory exists
 const UPLOAD_DIR = process.env.UPLOAD_DIR || '/app/uploads';
@@ -33,9 +28,9 @@ const RECIPE_DIR = path.join(UPLOAD_DIR, 'recipes');
   }
 });
 
-// Allowed image types
-const ALLOWED_TYPES = ['image/jpeg', 'image/png', 'image/gif', 'image/webp'];
-const MAX_SIZE = 5 * 1024 * 1024; // 5MB
+// Use centralized constants
+const ALLOWED_TYPES = UPLOAD.ALLOWED_IMAGE_TYPES;
+const MAX_SIZE = UPLOAD.MAX_IMAGE_SIZE;
 
 // =============================================================================
 // POST /api/upload/avatar
@@ -44,25 +39,18 @@ const MAX_SIZE = 5 * 1024 * 1024; // 5MB
 export async function uploadAvatar(req: Request, res: Response) {
   const user = getUser(req);
   if (!user) {
-    return res.status(401).json({ error: { code: 'AUTH_REQUIRED' } });
+    return authRequired(res);
   }
 
   try {
     if (!req.body || !req.body.image) {
-      return res.status(400).json({
-        error: { code: 'INVALID_INPUT', message: 'No image provided' },
-      });
+      return invalidInput(res, 'No image provided');
     }
 
     const { image, mimeType } = req.body;
 
     if (!ALLOWED_TYPES.includes(mimeType)) {
-      return res.status(400).json({
-        error: {
-          code: 'INVALID_INPUT',
-          message: 'Invalid image type. Allowed: JPEG, PNG, GIF, WebP',
-        },
-      });
+      return invalidInput(res, 'Invalid image type. Allowed: JPEG, PNG, GIF, WebP');
     }
 
     // Decode base64 image
@@ -70,9 +58,7 @@ export async function uploadAvatar(req: Request, res: Response) {
     const buffer = Buffer.from(base64Data, 'base64');
 
     if (buffer.length > MAX_SIZE) {
-      return res.status(400).json({
-        error: { code: 'INVALID_INPUT', message: 'Image too large. Maximum size is 5MB' },
-      });
+      return invalidInput(res, 'Image too large. Maximum size is 5MB');
     }
 
     // Generate unique filename
@@ -99,6 +85,8 @@ export async function uploadAvatar(req: Request, res: Response) {
     const avatarUrl = `/uploads/avatars/${filename}`;
     await q('UPDATE users SET avatarUrl = ? WHERE id = ?', [avatarUrl, user.id]);
 
+    log.info('Avatar uploaded', { userId: user.id, avatarUrl });
+
     await logAudit({
       action: 'upload.avatar',
       result: 'ok',
@@ -107,8 +95,8 @@ export async function uploadAvatar(req: Request, res: Response) {
 
     return res.json({ success: true, avatarUrl });
   } catch (err) {
-    console.error('[uploadAvatar] error', err);
-    return res.status(500).json({ error: { code: 'SERVER_ERROR' } });
+    log.error('Avatar upload failed', { userId: user?.id, error: String(err) });
+    return serverError(res);
   }
 }
 
@@ -119,7 +107,7 @@ export async function uploadAvatar(req: Request, res: Response) {
 export async function deleteAvatar(req: Request, res: Response) {
   const user = getUser(req);
   if (!user) {
-    return res.status(401).json({ error: { code: 'AUTH_REQUIRED' } });
+    return authRequired(res);
   }
 
   try {
@@ -146,7 +134,7 @@ export async function deleteAvatar(req: Request, res: Response) {
     return res.json({ success: true });
   } catch (err) {
     console.error('[deleteAvatar] error', err);
-    return res.status(500).json({ error: { code: 'SERVER_ERROR' } });
+    return serverError(res);
   }
 }
 
@@ -157,25 +145,18 @@ export async function deleteAvatar(req: Request, res: Response) {
 export async function uploadLogo(req: Request, res: Response) {
   const user = getUser(req);
   if (!user) {
-    return res.status(401).json({ error: { code: 'AUTH_REQUIRED' } });
+    return authRequired(res);
   }
 
   try {
     if (!req.body || !req.body.image) {
-      return res.status(400).json({
-        error: { code: 'INVALID_INPUT', message: 'No image provided' },
-      });
+      return invalidInput(res, 'No image provided');
     }
 
     const { image, mimeType } = req.body;
 
     if (!ALLOWED_TYPES.includes(mimeType)) {
-      return res.status(400).json({
-        error: {
-          code: 'INVALID_INPUT',
-          message: 'Invalid image type. Allowed: JPEG, PNG, GIF, WebP',
-        },
-      });
+      return invalidInput(res, 'Invalid image type. Allowed: JPEG, PNG, GIF, WebP');
     }
 
     // Decode base64 image
@@ -183,9 +164,7 @@ export async function uploadLogo(req: Request, res: Response) {
     const buffer = Buffer.from(base64Data, 'base64');
 
     if (buffer.length > MAX_SIZE) {
-      return res.status(400).json({
-        error: { code: 'INVALID_INPUT', message: 'Image too large. Maximum size is 5MB' },
-      });
+      return invalidInput(res, 'Image too large. Maximum size is 5MB');
     }
 
     // Generate unique filename
@@ -220,7 +199,7 @@ export async function uploadLogo(req: Request, res: Response) {
     return res.json({ success: true, logoUrl });
   } catch (err) {
     console.error('[uploadLogo] error', err);
-    return res.status(500).json({ error: { code: 'SERVER_ERROR' } });
+    return serverError(res);
   }
 }
 
@@ -231,25 +210,18 @@ export async function uploadLogo(req: Request, res: Response) {
 export async function uploadBackground(req: Request, res: Response) {
   const user = getUser(req);
   if (!user) {
-    return res.status(401).json({ error: { code: 'AUTH_REQUIRED' } });
+    return authRequired(res);
   }
 
   try {
     if (!req.body || !req.body.image) {
-      return res.status(400).json({
-        error: { code: 'INVALID_INPUT', message: 'No image provided' },
-      });
+      return invalidInput(res, 'No image provided');
     }
 
     const { image, mimeType } = req.body;
 
     if (!ALLOWED_TYPES.includes(mimeType)) {
-      return res.status(400).json({
-        error: {
-          code: 'INVALID_INPUT',
-          message: 'Invalid image type. Allowed: JPEG, PNG, GIF, WebP',
-        },
-      });
+      return invalidInput(res, 'Invalid image type. Allowed: JPEG, PNG, GIF, WebP');
     }
 
     // Decode base64 image
@@ -257,9 +229,7 @@ export async function uploadBackground(req: Request, res: Response) {
     const buffer = Buffer.from(base64Data, 'base64');
 
     if (buffer.length > MAX_SIZE) {
-      return res.status(400).json({
-        error: { code: 'INVALID_INPUT', message: 'Image too large. Maximum size is 5MB' },
-      });
+      return invalidInput(res, 'Image too large. Maximum size is 5MB');
     }
 
     // Generate unique filename
@@ -300,7 +270,7 @@ export async function uploadBackground(req: Request, res: Response) {
     return res.json({ success: true, backgroundUrl });
   } catch (err) {
     console.error('[uploadBackground] error', err);
-    return res.status(500).json({ error: { code: 'SERVER_ERROR' } });
+    return serverError(res);
   }
 }
 
@@ -311,12 +281,12 @@ export async function uploadBackground(req: Request, res: Response) {
 export async function uploadRecipeImage(req: Request, res: Response) {
   const user = getUser(req);
   if (!user) {
-    return res.status(401).json({ error: { code: 'AUTH_REQUIRED' } });
+    return authRequired(res);
   }
 
   const recipeId = parseInt(req.params.id);
   if (isNaN(recipeId)) {
-    return res.status(400).json({ error: { code: 'INVALID_INPUT', message: 'Invalid recipe ID' } });
+    return invalidInput(res, 'Invalid recipe ID');
   }
 
   try {
@@ -327,29 +297,22 @@ export async function uploadRecipeImage(req: Request, res: Response) {
     );
 
     if (!recipe) {
-      return res.status(404).json({ error: { code: 'NOT_FOUND', message: 'Recipe not found' } });
+      return notFound(res, 'Recipe');
     }
 
     // Only admin or recipe creator can upload image
     if (user.roleId !== 'admin' && recipe.createdBy !== user.id) {
-      return res.status(403).json({ error: { code: 'FORBIDDEN', message: 'You cannot edit this recipe' } });
+      return forbidden(res, 'You cannot edit this recipe');
     }
 
     if (!req.body || !req.body.image) {
-      return res.status(400).json({
-        error: { code: 'INVALID_INPUT', message: 'No image provided' },
-      });
+      return invalidInput(res, 'No image provided');
     }
 
     const { image, mimeType } = req.body;
 
     if (!ALLOWED_TYPES.includes(mimeType)) {
-      return res.status(400).json({
-        error: {
-          code: 'INVALID_INPUT',
-          message: 'Invalid image type. Allowed: JPEG, PNG, GIF, WebP',
-        },
-      });
+      return invalidInput(res, 'Invalid image type. Allowed: JPEG, PNG, GIF, WebP');
     }
 
     // Decode base64 image
@@ -357,9 +320,7 @@ export async function uploadRecipeImage(req: Request, res: Response) {
     const buffer = Buffer.from(base64Data, 'base64');
 
     if (buffer.length > MAX_SIZE) {
-      return res.status(400).json({
-        error: { code: 'INVALID_INPUT', message: 'Image too large. Maximum size is 5MB' },
-      });
+      return invalidInput(res, 'Image too large. Maximum size is 5MB');
     }
 
     // Generate unique filename
@@ -392,7 +353,7 @@ export async function uploadRecipeImage(req: Request, res: Response) {
     return res.json({ success: true, imageUrl });
   } catch (err) {
     console.error('[uploadRecipeImage] error', err);
-    return res.status(500).json({ error: { code: 'SERVER_ERROR' } });
+    return serverError(res);
   }
 }
 
@@ -403,12 +364,12 @@ export async function uploadRecipeImage(req: Request, res: Response) {
 export async function deleteRecipeImage(req: Request, res: Response) {
   const user = getUser(req);
   if (!user) {
-    return res.status(401).json({ error: { code: 'AUTH_REQUIRED' } });
+    return authRequired(res);
   }
 
   const recipeId = parseInt(req.params.id);
   if (isNaN(recipeId)) {
-    return res.status(400).json({ error: { code: 'INVALID_INPUT', message: 'Invalid recipe ID' } });
+    return invalidInput(res, 'Invalid recipe ID');
   }
 
   try {
@@ -419,12 +380,12 @@ export async function deleteRecipeImage(req: Request, res: Response) {
     );
 
     if (!recipe) {
-      return res.status(404).json({ error: { code: 'NOT_FOUND', message: 'Recipe not found' } });
+      return notFound(res, 'Recipe');
     }
 
     // Only admin or recipe creator can delete image
     if (user.roleId !== 'admin' && recipe.createdBy !== user.id) {
-      return res.status(403).json({ error: { code: 'FORBIDDEN', message: 'You cannot edit this recipe' } });
+      return forbidden(res, 'You cannot edit this recipe');
     }
 
     // Delete old recipe image if exists
@@ -448,7 +409,7 @@ export async function deleteRecipeImage(req: Request, res: Response) {
     return res.json({ success: true });
   } catch (err) {
     console.error('[deleteRecipeImage] error', err);
-    return res.status(500).json({ error: { code: 'SERVER_ERROR' } });
+    return serverError(res);
   }
 }
 
@@ -459,7 +420,7 @@ export async function deleteRecipeImage(req: Request, res: Response) {
 export async function listUploads(req: Request, res: Response) {
   const user = getUser(req);
   if (!user) {
-    return res.status(401).json({ error: { code: 'AUTH_REQUIRED' } });
+    return authRequired(res);
   }
 
   try {
@@ -500,7 +461,7 @@ export async function listUploads(req: Request, res: Response) {
     return res.json({ files: allFiles });
   } catch (err) {
     console.error('[listUploads] error', err);
-    return res.status(500).json({ error: { code: 'SERVER_ERROR' } });
+    return serverError(res);
   }
 }
 
@@ -511,7 +472,7 @@ export async function listUploads(req: Request, res: Response) {
 export async function deleteUpload(req: Request, res: Response) {
   const user = getUser(req);
   if (!user) {
-    return res.status(401).json({ error: { code: 'AUTH_REQUIRED' } });
+    return authRequired(res);
   }
 
   // The :id param is expected to be in format "type/filename" or just parsed from URL
@@ -559,9 +520,7 @@ export async function deleteUpload(req: Request, res: Response) {
     }
   }
 
-  return res.status(404).json({
-    error: { code: 'NOT_FOUND', message: 'File not found' },
-  });
+  return notFound(res, 'File');
 }
 
 // =============================================================================
@@ -571,15 +530,13 @@ export async function deleteUpload(req: Request, res: Response) {
 export async function selectUpload(req: Request, res: Response) {
   const user = getUser(req);
   if (!user) {
-    return res.status(401).json({ error: { code: 'AUTH_REQUIRED' } });
+    return authRequired(res);
   }
 
   const { url, type } = req.body;
 
   if (!url || !type) {
-    return res.status(400).json({
-      error: { code: 'INVALID_INPUT', message: 'URL and type are required' },
-    });
+    return invalidInput(res, 'URL and type are required');
   }
 
   try {
@@ -591,9 +548,7 @@ export async function selectUpload(req: Request, res: Response) {
         [url],
       );
     } else {
-      return res.status(400).json({
-        error: { code: 'INVALID_INPUT', message: 'Invalid type for selection' },
-      });
+      return invalidInput(res, 'Invalid type for selection');
     }
 
     await logAudit({
@@ -606,6 +561,6 @@ export async function selectUpload(req: Request, res: Response) {
     return res.json({ success: true });
   } catch (err) {
     console.error('[selectUpload] error', err);
-    return res.status(500).json({ error: { code: 'SERVER_ERROR' } });
+    return serverError(res);
   }
 }

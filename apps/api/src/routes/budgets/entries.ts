@@ -3,11 +3,11 @@
 
 import { Request, Response } from 'express';
 import { q } from '../../db';
+import { getUser } from '../../utils/auth';
+import { authRequired, invalidInput, notFound, serverError } from '../../utils/errors';
+import { createLogger } from '../../services/logger';
 
-// Helper to get user from request
-function getUser(req: Request) {
-  return (req as any).user as { id: number; roleId: string } | undefined;
-}
+const log = createLogger('budgets');
 
 // ============================================
 // GET ALL ENTRIES (with filters)
@@ -16,7 +16,7 @@ export async function getEntries(req: Request, res: Response) {
   try {
     const user = getUser(req);
     if (!user) {
-      return res.status(401).json({ error: 'Authentication required' });
+      return authRequired(res);
     }
 
     const { budgetId, categoryId, startDate, endDate, limit = 100, offset = 0 } = req.query;
@@ -114,7 +114,7 @@ export async function getEntries(req: Request, res: Response) {
     });
   } catch (err) {
     console.error('Failed to get budget entries:', err);
-    res.status(500).json({ error: 'Failed to get budget entries' });
+    serverError(res, 'Failed to get budget entries');
   }
 }
 
@@ -125,7 +125,7 @@ export async function getEntry(req: Request, res: Response) {
   try {
     const user = getUser(req);
     if (!user) {
-      return res.status(401).json({ error: 'Authentication required' });
+      return authRequired(res);
     }
 
     const { id } = req.params;
@@ -158,13 +158,13 @@ export async function getEntry(req: Request, res: Response) {
     `, [id]);
 
     if (entries.length === 0) {
-      return res.status(404).json({ error: 'Entry not found' });
+      return notFound(res, 'Entry');
     }
 
     res.json({ entry: entries[0] });
   } catch (err) {
     console.error('Failed to get budget entry:', err);
-    res.status(500).json({ error: 'Failed to get budget entry' });
+    serverError(res, 'Failed to get budget entry');
   }
 }
 
@@ -175,7 +175,7 @@ export async function createEntry(req: Request, res: Response) {
   try {
     const user = getUser(req);
     if (!user) {
-      return res.status(401).json({ error: 'Authentication required' });
+      return authRequired(res);
     }
 
     const {
@@ -191,13 +191,13 @@ export async function createEntry(req: Request, res: Response) {
 
     // Validation
     if (!budgetId) {
-      return res.status(400).json({ error: 'Budget is required' });
+      return invalidInput(res, 'Budget is required');
     }
     if (amount === undefined || amount === null || amount <= 0) {
-      return res.status(400).json({ error: 'Valid amount is required' });
+      return invalidInput(res, 'Valid amount is required');
     }
     if (!transactionDate) {
-      return res.status(400).json({ error: 'Transaction date is required' });
+      return invalidInput(res, 'Transaction date is required');
     }
 
     // Check budget exists
@@ -206,7 +206,7 @@ export async function createEntry(req: Request, res: Response) {
     `, [budgetId]);
 
     if (budget.length === 0) {
-      return res.status(400).json({ error: 'Invalid budget' });
+      return invalidInput(res, 'Invalid budget');
     }
 
     const result = await q<any>(`
@@ -227,13 +227,15 @@ export async function createEntry(req: Request, res: Response) {
       user.id
     ]);
 
+    log.info('Budget entry created', { entryId: result.insertId, budgetId, amount, createdBy: user.id });
+
     res.status(201).json({
       id: result.insertId,
       message: 'Entry created successfully'
     });
   } catch (err) {
-    console.error('Failed to create budget entry:', err);
-    res.status(500).json({ error: 'Failed to create budget entry' });
+    log.error('Failed to create budget entry', { error: String(err) });
+    serverError(res, 'Failed to create budget entry');
   }
 }
 
@@ -244,7 +246,7 @@ export async function updateEntry(req: Request, res: Response) {
   try {
     const user = getUser(req);
     if (!user) {
-      return res.status(401).json({ error: 'Authentication required' });
+      return authRequired(res);
     }
 
     const { id } = req.params;
@@ -265,7 +267,7 @@ export async function updateEntry(req: Request, res: Response) {
     `, [id]);
 
     if (existing.length === 0) {
-      return res.status(404).json({ error: 'Entry not found' });
+      return notFound(res, 'Entry');
     }
 
     // Build update query dynamically
@@ -278,14 +280,14 @@ export async function updateEntry(req: Request, res: Response) {
         SELECT id FROM budgets WHERE id = ? AND active = 1
       `, [budgetId]);
       if (budget.length === 0) {
-        return res.status(400).json({ error: 'Invalid budget' });
+        return invalidInput(res, 'Invalid budget');
       }
       updates.push('budgetId = ?');
       params.push(budgetId);
     }
     if (amount !== undefined) {
       if (amount <= 0) {
-        return res.status(400).json({ error: 'Amount must be greater than 0' });
+        return invalidInput(res, 'Amount must be greater than 0');
       }
       updates.push('amount = ?');
       params.push(amount);
@@ -316,7 +318,7 @@ export async function updateEntry(req: Request, res: Response) {
     }
 
     if (updates.length === 0) {
-      return res.status(400).json({ error: 'No fields to update' });
+      return invalidInput(res, 'No fields to update');
     }
 
     params.push(id);
@@ -326,10 +328,12 @@ export async function updateEntry(req: Request, res: Response) {
       WHERE id = ?
     `, params);
 
+    log.info('Budget entry updated', { entryId: id, updatedBy: user.id });
+
     res.json({ success: true, message: 'Entry updated successfully' });
   } catch (err) {
-    console.error('Failed to update budget entry:', err);
-    res.status(500).json({ error: 'Failed to update budget entry' });
+    log.error('Failed to update budget entry', { entryId: id, error: String(err) });
+    serverError(res, 'Failed to update budget entry');
   }
 }
 
@@ -340,7 +344,7 @@ export async function deleteEntry(req: Request, res: Response) {
   try {
     const user = getUser(req);
     if (!user) {
-      return res.status(401).json({ error: 'Authentication required' });
+      return authRequired(res);
     }
 
     const { id } = req.params;
@@ -351,7 +355,7 @@ export async function deleteEntry(req: Request, res: Response) {
     `, [id]);
 
     if (existing.length === 0) {
-      return res.status(404).json({ error: 'Entry not found' });
+      return notFound(res, 'Entry');
     }
 
     // Hard delete entries (they can be re-added)
@@ -359,9 +363,11 @@ export async function deleteEntry(req: Request, res: Response) {
       DELETE FROM budget_entries WHERE id = ?
     `, [id]);
 
+    log.info('Budget entry deleted', { entryId: id, deletedBy: user.id });
+
     res.json({ success: true, message: 'Entry deleted successfully' });
   } catch (err) {
-    console.error('Failed to delete budget entry:', err);
-    res.status(500).json({ error: 'Failed to delete budget entry' });
+    log.error('Failed to delete budget entry', { entryId: id, error: String(err) });
+    serverError(res, 'Failed to delete budget entry');
   }
 }
