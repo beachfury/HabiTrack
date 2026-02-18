@@ -19,7 +19,7 @@ import {
   BookOpen,
   UtensilsCrossed,
 } from 'lucide-react';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import type { Theme, ExtendedTheme } from '../../types/theme';
 import type { HouseholdSettings } from '../../api';
 
@@ -161,6 +161,16 @@ export function SidebarLayout({
 }: SidebarLayoutProps) {
   const location = useLocation();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const [isDesktop, setIsDesktop] = useState(window.innerWidth >= 1024);
+
+  // Use JS media query to determine desktop vs mobile — this is bulletproof against
+  // inline styles from theme customCSS overriding Tailwind's hidden/lg:flex classes
+  useEffect(() => {
+    const mql = window.matchMedia('(min-width: 1024px)');
+    const handler = (e: MediaQueryListEvent) => setIsDesktop(e.matches);
+    mql.addEventListener('change', handler);
+    return () => mql.removeEventListener('change', handler);
+  }, []);
 
   const isActive = (path: string) => location.pathname === path;
 
@@ -596,60 +606,62 @@ export function SidebarLayout({
       )}
 
       {/* Mobile menu button */}
-      <div className="lg:hidden fixed top-4 left-4 z-50">
-        <button
-          onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-          className="p-2 rounded-lg bg-white dark:bg-gray-800 shadow-lg"
-          style={{ color: accentColor }}
-        >
-          {mobileMenuOpen ? <X size={24} /> : <Menu size={24} />}
-        </button>
-      </div>
+      {!isDesktop && (
+        <div className="fixed top-4 left-4 z-50">
+          <button
+            onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
+            className="p-2 rounded-lg bg-white dark:bg-gray-800 shadow-lg"
+            style={{ color: accentColor }}
+          >
+            {mobileMenuOpen ? <X size={24} /> : <Menu size={24} />}
+          </button>
+        </div>
+      )}
 
       {/* Mobile sidebar overlay */}
-      {mobileMenuOpen && (
+      {!isDesktop && mobileMenuOpen && (
         <div
-          className="lg:hidden fixed inset-0 bg-black/50 z-40"
+          className="fixed inset-0 bg-black/50 z-40"
           onClick={() => setMobileMenuOpen(false)}
         />
       )}
 
       <div className={`flex-1 flex ${side === 'right' ? 'flex-row-reverse' : ''}`}>
-        {/* Sidebar - desktop */}
-        {/* Note: We only apply default border classes when there's no customCSS that might define its own border */}
-        {/* Check for animated background effect flags in customCSS */}
-        <aside
-          className={`hidden lg:flex flex-col relative overflow-hidden ${
-            !sidebarElementStyle?.customCSS ? (side === 'right' ? 'border-l border-gray-200 dark:border-gray-700' : 'border-r border-gray-200 dark:border-gray-700') : ''
-          } ${getAnimatedBackgroundClasses(sidebarElementStyle?.customCSS)}`}
-          style={{ ...sidebarStyle, position: 'relative' }}
-        >
-          {sidebarContent}
-        </aside>
+        {/* Sidebar - desktop (only rendered on lg+ screens) */}
+        {/* Uses JS media query instead of CSS hidden/lg:flex to prevent theme customCSS
+            inline styles from overriding display:none and causing the sidebar to render on mobile */}
+        {isDesktop && (
+          <aside
+            className={`flex flex-col relative overflow-hidden ${
+              !sidebarElementStyle?.customCSS ? (side === 'right' ? 'border-l border-gray-200 dark:border-gray-700' : 'border-r border-gray-200 dark:border-gray-700') : ''
+            } ${getAnimatedBackgroundClasses(sidebarElementStyle?.customCSS)}`}
+            style={{ ...sidebarStyle, position: 'relative' }}
+          >
+            {sidebarContent}
+          </aside>
+        )}
 
-        {/* Sidebar - mobile */}
-        {/* IMPORTANT: We build a separate mobile style to avoid inheriting transform/position/width
-            overrides from theme customCSS that would break the fixed overlay behavior.
-            We also set transform directly in inline style since Tailwind classes lose to inline styles. */}
-        <aside
-          className={`lg:hidden inset-y-0 ${side === 'right' ? 'right-0' : 'left-0'} z-40 flex flex-col overflow-hidden transition-transform duration-300`}
-          style={(() => {
-            // Start from sidebarStyle but override properties that must be mobile-specific
-            const mobileStyle: React.CSSProperties = { ...sidebarStyle };
-            // Force mobile-specific layout — these MUST win over theme customCSS
-            mobileStyle.width = 280;
-            mobileStyle.minWidth = 280;
-            mobileStyle.position = 'fixed';
-            // Set transform directly so inline style doesn't fight with Tailwind translate classes
-            const translateX = mobileMenuOpen
-              ? 'translateX(0)'
-              : side === 'right' ? 'translateX(100%)' : 'translateX(-100%)';
-            mobileStyle.transform = translateX;
-            return mobileStyle;
-          })()}
-        >
-          {sidebarContent}
-        </aside>
+        {/* Sidebar - mobile (only rendered on < lg screens) */}
+        {/* Uses fixed positioning as an overlay — transform is set inline to prevent
+            theme customCSS from overriding the slide-in/out animation */}
+        {!isDesktop && (
+          <aside
+            className={`inset-y-0 ${side === 'right' ? 'right-0' : 'left-0'} z-40 flex flex-col overflow-hidden transition-transform duration-300`}
+            style={(() => {
+              const mobileStyle: React.CSSProperties = { ...sidebarStyle };
+              mobileStyle.width = 280;
+              mobileStyle.minWidth = 280;
+              mobileStyle.position = 'fixed';
+              const translateX = mobileMenuOpen
+                ? 'translateX(0)'
+                : side === 'right' ? 'translateX(100%)' : 'translateX(-100%)';
+              mobileStyle.transform = translateX;
+              return mobileStyle;
+            })()}
+          >
+            {sidebarContent}
+          </aside>
+        )}
 
         {/* Main content */}
         <main
