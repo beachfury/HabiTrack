@@ -6,6 +6,20 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ---
 
+## [1.1.3] - 2025-02-18
+
+### Changed
+
+#### Theme System Refactor
+- **ThemeEditorAdvanced.tsx** — Reduced from 1,676 to 1,022 lines by extracting `useThemeHistory` hook, `ElementsTab`, and `PresetsTab` into separate files
+- **ElementStyleEditor.tsx** — Reduced from 2,937 to 426 lines by extracting `BackgroundTab`, `TextTab`, `BorderTab`, `EffectsTab`, `ColorInput`, `SliderWithInput`, `MediaLibraryModal`, and `ImageUploadSection` into `editors/` directory
+- **LoginPageEditor.tsx** — Reduced from 1,242 to 562 lines by extracting `LoginBackgroundEditor`, `LoginBrandEditor`, `LoginButtonEditor`, `LoginEffectsEditor`, and `LoginAdvancedEditor` into `editors/` directory
+- **AdvancedCSSEffects.tsx** — Reduced from 921 to 305 lines by extracting CSS effect definitions into `editors/cssEffectDefinitions.ts`
+- **themeCssGenerator.ts** — Reduced from 910 to 32-line barrel file by splitting into `css/utils.ts`, `css/colorVariables.ts`, `css/elementVariables.ts`, `css/animationClasses.ts`, `css/specialModes.ts`, and `css/index.ts`
+- No behavior changes — pure code organization refactor
+
+---
+
 ## [1.1.2] - 2025-02-18
 
 ### Added
