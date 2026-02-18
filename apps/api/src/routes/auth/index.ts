@@ -14,4 +14,4 @@ export { postForgotPassword, postResetPassword } from './reset';
 export { getPinUsers, postPinLogin, verifyPin } from './pin';
 
 // Onboarding
-export { postOnboardComplete } from './onboard';
+export { postOnboardComplete, postSetPassword } from './onboard';

@@ -181,10 +181,14 @@ export async function createMember(req: Request, res: Response) {
   }
 
   try {
+    // Set firstLoginRequired = 1 if a password is provided (temporary password scenario)
+    // This forces the user to change their password on first login
+    const requireFirstLogin = password && password.length >= 8 ? 1 : 0;
+
     const result: any = await q(
-      `INSERT INTO users (displayName, nickname, email, roleId, color, kioskOnly, active)
-       VALUES (?, ?, ?, ?, ?, 0, 1)`,
-      [displayName.trim(), nickname?.trim() || null, email?.trim().toLowerCase() || null, role, color || null]
+      `INSERT INTO users (displayName, nickname, email, roleId, color, kioskOnly, active, firstLoginRequired)
+       VALUES (?, ?, ?, ?, ?, 0, 1, ?)`,
+      [displayName.trim(), nickname?.trim() || null, email?.trim().toLowerCase() || null, role, color || null, requireFirstLogin]
     );
 
     const userId = result.insertId as number;

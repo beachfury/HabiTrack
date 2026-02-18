@@ -583,15 +583,46 @@ Store your data in `/mnt/user/appdata/habitrack/`:
 └── .env         # Environment configuration
 ```
 
-#### Using with Unraid's Reverse Proxy (SWAG/NPM)
+#### Using with Nginx Proxy Manager (NPM)
 
-If you use SWAG or Nginx Proxy Manager:
+If you use Nginx Proxy Manager (common on Unraid):
+
+**1. Create Proxy Host in NPM:**
+   - Domain: `habitrack.yourdomain.com`
+   - Scheme: `http`
+   - Forward Hostname/IP: Your server's IP (e.g., `192.168.1.100`)
+   - Forward Port: `8080`
+   - Enable "Websockets Support" ✓
+   - Enable SSL with "Force SSL" ✓
+
+**2. Configure HabiTrack for HTTPS:**
+
+```env
+# In your .env file:
+HABITRACK_ENV=production
+HABITRACK_BASE_URL=https://habitrack.yourdomain.com
+HABITRACK_ALLOWED_ORIGINS=https://habitrack.yourdomain.com
+HABITRACK_TRUSTED_PROXIES=10.0.0.0/8,172.16.0.0/12,192.168.0.0/16
+```
+
+**3. Restart containers:**
+
+```bash
+docker compose down && docker compose up -d
+```
+
+> **Important:** Setting `HABITRACK_ENV=production` enables secure cookies required for HTTPS. Without this, authentication will fail when accessing via your domain.
+
+See [DOCKER-README.md](DOCKER-README.md) for detailed Nginx Proxy Manager setup instructions.
+
+#### Using with SWAG
+
+If you use SWAG:
 
 1. Point your domain to your Unraid IP
 2. Create a proxy host for HabiTrack
-3. Forward to `http://YOUR-UNRAID-IP:3000`
-4. Add a custom location for `/api` → `http://YOUR-UNRAID-IP:3001`
-5. Enable SSL
+3. Forward to `http://YOUR-UNRAID-IP:8080`
+4. Enable SSL
 
 ---
 
