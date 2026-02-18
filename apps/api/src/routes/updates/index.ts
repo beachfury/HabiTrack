@@ -4,6 +4,7 @@
 import type { Request, Response } from 'express';
 import { exec } from 'child_process';
 import { promisify } from 'util';
+import { existsSync } from 'fs';
 import { getUser } from '../../utils/auth';
 import { authRequired, forbidden, serverError } from '../../utils/errors';
 import { getVersionInfo } from '../../utils/version';
@@ -15,6 +16,11 @@ const log = createLogger('updates');
 
 // GitHub repo for HabiTrack
 const GITHUB_REPO = 'beachfury/HabiTrack';
+
+// Git operations run against the host repo bind-mounted at /repo
+// (The container's /app is a baked-in copy from the Docker build — no .git there)
+// In development, fall back to process.cwd()
+const GIT_REPO_DIR = existsSync('/repo/.git') ? '/repo' : process.cwd();
 
 interface GitHubRelease {
   tag_name: string;
@@ -137,35 +143,45 @@ export async function applyUpdate(req: Request, res: Response) {
     const versionInfo = getVersionInfo();
     const beforeVersion = versionInfo.version;
 
-    log.info('Starting update process', { beforeVersion, userId: user.id });
+    log.info('Starting update process', { beforeVersion, userId: user.id, gitDir: GIT_REPO_DIR });
 
     // First fetch the latest from origin
     try {
       const fetchResult = await execAsync('git fetch origin', {
-        cwd: process.cwd(),
+        cwd: GIT_REPO_DIR,
         timeout: 30000, // 30 second timeout
       });
       log.debug('Git fetch completed', { stdout: fetchResult.stdout, stderr: fetchResult.stderr });
     } catch (fetchErr: any) {
-      log.error('Git fetch failed', { error: fetchErr.message });
+      log.error('Git fetch failed', { error: fetchErr.message, gitDir: GIT_REPO_DIR });
       return res.status(500).json({
         success: false,
-        error: { code: 'GIT_FETCH_FAILED', message: 'Failed to fetch updates from GitHub' },
+        error: {
+          code: 'GIT_FETCH_FAILED',
+          message: 'Failed to fetch updates from GitHub',
+          detail: fetchErr.message,
+          gitDir: GIT_REPO_DIR,
+        },
       });
     }
 
     // Pull the latest changes
     try {
       const pullResult = await execAsync('git pull origin main', {
-        cwd: process.cwd(),
+        cwd: GIT_REPO_DIR,
         timeout: 60000, // 60 second timeout
       });
       log.info('Git pull completed', { stdout: pullResult.stdout, stderr: pullResult.stderr });
     } catch (pullErr: any) {
-      log.error('Git pull failed', { error: pullErr.message });
+      log.error('Git pull failed', { error: pullErr.message, gitDir: GIT_REPO_DIR });
       return res.status(500).json({
         success: false,
-        error: { code: 'GIT_PULL_FAILED', message: 'Failed to pull updates. You may have local changes.' },
+        error: {
+          code: 'GIT_PULL_FAILED',
+          message: 'Failed to pull updates. You may have local changes.',
+          detail: pullErr.message,
+          gitDir: GIT_REPO_DIR,
+        },
       });
     }
 
@@ -217,23 +233,23 @@ export async function getUpdateStatus(req: Request, res: Response) {
     let gitStatus = { clean: true, branch: 'unknown', behind: 0 };
     try {
       const { stdout: branchOut } = await execAsync('git rev-parse --abbrev-ref HEAD', {
-        cwd: process.cwd(),
+        cwd: GIT_REPO_DIR,
         timeout: 5000,
       });
       gitStatus.branch = branchOut.trim();
 
       // Check if working directory is clean
       const { stdout: statusOut } = await execAsync('git status --porcelain', {
-        cwd: process.cwd(),
+        cwd: GIT_REPO_DIR,
         timeout: 5000,
       });
       gitStatus.clean = statusOut.trim() === '';
 
       // Check how many commits behind origin
       try {
-        await execAsync('git fetch origin --dry-run', { cwd: process.cwd(), timeout: 10000 });
+        await execAsync('git fetch origin --dry-run', { cwd: GIT_REPO_DIR, timeout: 10000 });
         const { stdout: behindOut } = await execAsync('git rev-list HEAD..origin/main --count', {
-          cwd: process.cwd(),
+          cwd: GIT_REPO_DIR,
           timeout: 5000,
         });
         gitStatus.behind = parseInt(behindOut.trim(), 10) || 0;
