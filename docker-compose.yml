@@ -79,11 +79,11 @@ services:
     ports:
       - '${API_PORT:-3000}:3000'
     healthcheck:
-      test: ['CMD', 'wget', '-q', '--spider', 'http://localhost:3000/api/health']
+      test: ['CMD', 'wget', '-q', '--spider', 'http://localhost:3000/health']
       interval: 30s
       timeout: 10s
       retries: 5
-      start_period: 60s
+      start_period: 120s
     networks:
       - habitrack-network
 

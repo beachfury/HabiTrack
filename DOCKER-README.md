@@ -2,16 +2,20 @@
 
 ## Quick Start
 
-### 1. Configure Environment
+### 1. Configure Environment (IMPORTANT!)
 
 ```bash
 # Copy the example environment file
 cp .env.example .env
 
-# Edit .env and change at minimum:
-# - DB_ROOT_PASSWORD
-# - DB_PASSWORD
+# Edit .env and CHANGE THESE PASSWORDS:
+# - DB_ROOT_PASSWORD (MariaDB root user password)
+# - DB_PASSWORD (HabiTrack application database password)
 ```
+
+> ⚠️ **Security Note**: Each installation MUST use unique passwords. The default
+> passwords in docker-compose.yml are placeholder values and should NEVER be
+> used in production. Always create a `.env` file with your own secure passwords.
 
 ### 2. Start Everything
 
@@ -75,13 +79,17 @@ docker-compose up -d
 
 All configuration is done via environment variables in the `.env` file.
 
-### Required Variables
+### Required Variables (Must Change!)
 
 | Variable | Description | Default |
 |----------|-------------|---------|
-| `DB_ROOT_PASSWORD` | MariaDB root password | (required) |
-| `DB_PASSWORD` | App database password | (required) |
+| `DB_ROOT_PASSWORD` | MariaDB root password | ⚠️ **MUST CHANGE** |
+| `DB_PASSWORD` | App database password | ⚠️ **MUST CHANGE** |
 | `HABITRACK_BASE_URL` | Public URL of the app | http://localhost:8080 |
+
+> **Why unique passwords matter**: If everyone uses the same default passwords,
+> anyone who downloads HabiTrack could potentially access your database if your
+> server is exposed. Generate unique passwords for your installation.
 
 ### Optional Variables
 
