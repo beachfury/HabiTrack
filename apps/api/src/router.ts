@@ -33,6 +33,7 @@ import * as meals from './routes/meals';
 import { deleteDirectMessage, deleteConversation } from './routes/messages/direct';
 import notificationsRouter from './routes/notifications';
 import * as debug from './routes/debug';
+import * as updates from './routes/updates';
 
 const router = Router();
 
@@ -53,6 +54,13 @@ router.delete('/debug/logs', requireAuth('admin'), debug.clearLogs);
 router.get('/debug/logs/file/:filename', requireAuth('admin'), debug.downloadLogFile);
 router.get('/debug/system', requireAuth('admin'), debug.getSystemInfo);
 router.post('/debug/frontend-errors', requireAuth(), debug.receiveFrontendErrors);
+
+// =============================================================================
+// UPDATE ROUTES (admin only)
+// =============================================================================
+router.get('/updates/check', requireAuth('admin'), updates.checkForUpdates);
+router.get('/updates/status', requireAuth('admin'), updates.getUpdateStatus);
+router.post('/updates/apply', requireAuth('admin'), updates.applyUpdate);
 
 // =============================================================================
 // AUTH ROUTES
@@ -80,6 +88,7 @@ router.post('/auth/pin/verify', kioskLocalOnly, auth.verifyPin);
 
 // Onboarding
 router.post('/auth/onboard/complete', auth.postOnboardComplete);
+router.post('/auth/onboard/set-password', auth.postSetPassword);
 
 // =============================================================================
 // BOOTSTRAP ROUTES

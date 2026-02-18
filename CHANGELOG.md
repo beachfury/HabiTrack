@@ -6,6 +6,46 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ---
 
+## [1.1.0] - 2025-02-17
+
+### Added
+
+#### First-Time Login Flow
+- **Forced Password Change for New Members**
+  - When admins create new family members with a temporary password, those members are now required to change their password on first login
+  - New `FirstLoginModal` component guides users through setting their permanent password
+  - Backend validates the `firstLoginRequired` flag and returns HTTP 428 status when password change is needed
+  - Secure onboard token flow ensures only the intended user can complete the password change
+
+#### One-Click Update System
+- **Update Checker in Settings > About**
+  - Admins can check for new releases directly from the Settings page
+  - Compares current version with latest GitHub release
+  - Displays release notes, version comparison, and release date
+  - "Update Now" button pulls the latest code from GitHub
+  - Clear instructions for restarting containers to complete the update
+
+- **Update API Endpoints**
+  - `GET /api/updates/check` - Check for available updates from GitHub releases
+  - `POST /api/updates/apply` - Pull latest code (admin only)
+  - `GET /api/updates/status` - Get current git status and version info
+
+#### Documentation
+- **Nginx Proxy Manager Setup Guide**
+  - Detailed instructions for configuring NPM with HabiTrack
+  - Production environment settings for HTTPS
+  - Troubleshooting guide for common proxy issues
+
+### Changed
+- Settings > About tab now shows update status for admins
+- Family member creation sets `firstLoginRequired` flag when temporary password is provided
+
+### Fixed
+- Cookie security configuration for HTTPS via reverse proxy
+- Docker health check timing and URL improvements
+
+---
+
 ## [Unreleased]
 
 ### Added

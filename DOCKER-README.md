@@ -150,6 +150,75 @@ HABITRACK_TRUSTED_PROXIES=10.0.0.0/8,172.16.0.0/12,192.168.0.0/16
 
 ---
 
+## Nginx Proxy Manager (NPM) Setup
+
+If you're using Nginx Proxy Manager (common on Unraid), follow these steps:
+
+### 1. Configure NPM Proxy Host
+
+1. In NPM, go to **Hosts → Proxy Hosts → Add Proxy Host**
+2. **Details Tab:**
+   - Domain Names: `habitrack.yourdomain.com`
+   - Scheme: `http`
+   - Forward Hostname/IP: Your server's IP (e.g., `192.168.1.100`)
+   - Forward Port: `8080` (or your configured WEB_PORT)
+   - Enable: "Block Common Exploits" ✓
+   - Enable: "Websockets Support" ✓
+
+3. **SSL Tab:**
+   - SSL Certificate: Request a new SSL Certificate or select existing
+   - Force SSL: ✓
+   - HTTP/2 Support: ✓
+
+### 2. Configure HabiTrack for HTTPS
+
+Create or update your `.env` file with production settings:
+
+```env
+# Production mode - enables secure cookies
+HABITRACK_ENV=production
+
+# Your public HTTPS URL
+HABITRACK_BASE_URL=https://habitrack.yourdomain.com
+
+# Allowed origins for CORS (include both HTTPS and any local dev URLs)
+HABITRACK_ALLOWED_ORIGINS=https://habitrack.yourdomain.com,http://localhost:8080
+
+# Trust proxy headers from local networks
+HABITRACK_TRUSTED_PROXIES=10.0.0.0/8,172.16.0.0/12,192.168.0.0/16
+
+# Optional: explicit cookie security (auto-enabled in production)
+HABITRACK_COOKIE_SECURE=true
+```
+
+### 3. Restart Containers
+
+```bash
+docker compose down && docker compose up -d
+```
+
+### 4. Verify Configuration
+
+After restarting, login to HabiTrack and check Settings > Debug to verify:
+- `env: 'production'`
+- `secure: true` in cookie config
+
+### Troubleshooting NPM Issues
+
+**Login not working after NPM setup:**
+- Ensure `HABITRACK_ENV=production` is set
+- Clear browser cookies and try again
+- Check that your domain resolves correctly
+
+**Mixed content warnings:**
+- Make sure `HABITRACK_BASE_URL` uses `https://`
+- Force SSL is enabled in NPM
+
+**"Invalid origin" errors:**
+- Add your domain to `HABITRACK_ALLOWED_ORIGINS`
+
+---
+
 ## Unraid Deployment
 
 1. Install the "Docker Compose Manager" plugin

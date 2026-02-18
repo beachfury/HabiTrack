@@ -3,7 +3,9 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
+import { FirstLoginModal } from '../components/auth/FirstLoginModal';
 
+const API_BASE = (import.meta.env.VITE_API_BASE_URL as string) || '';
 
 interface Branding {
   name: string | null;
@@ -20,7 +22,10 @@ export function LoginPage() {
   const [loading, setLoading] = useState(false);
   const [branding, setBranding] = useState<Branding | null>(null);
   const [isDarkMode, setIsDarkMode] = useState(false);
-  const { login } = useAuth();
+  // First login flow state
+  const [showFirstLoginModal, setShowFirstLoginModal] = useState(false);
+  const [onboardToken, setOnboardToken] = useState<string | null>(null);
+  const { login, refresh } = useAuth();
   const navigate = useNavigate();
 
   // Detect system dark mode preference
@@ -55,13 +60,53 @@ export function LoginPage() {
     setLoading(true);
 
     try {
-      await login(email, password);
+      // First, try the direct API call to check for first login requirement
+      const res = await fetch(`${API_BASE}/api/auth/creds/login`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
+        body: JSON.stringify({ email, secret: password }),
+      });
+
+      if (res.status === 428) {
+        // First login required - show password change modal
+        const data = await res.json();
+        if (data.onboardToken) {
+          setOnboardToken(data.onboardToken);
+          setShowFirstLoginModal(true);
+          return;
+        }
+      }
+
+      if (!res.ok) {
+        const data = await res.json().catch(() => ({}));
+        throw new Error(data.error?.message || 'Login failed. Please try again.');
+      }
+
+      // Normal login success - refresh auth context and navigate
+      await refresh();
       navigate('/');
     } catch (err: any) {
       setError(err.message || 'Login failed. Please try again.');
     } finally {
       setLoading(false);
     }
+  };
+
+  // Handle successful first login password set
+  const handleFirstLoginSuccess = async () => {
+    setShowFirstLoginModal(false);
+    setOnboardToken(null);
+    // Session cookie was set by the backend, just refresh and navigate
+    await refresh();
+    navigate('/');
+  };
+
+  // Handle first login modal cancel
+  const handleFirstLoginCancel = () => {
+    setShowFirstLoginModal(false);
+    setOnboardToken(null);
+    setError('You must set a new password to continue.');
   };
 
   // Determine background style
@@ -300,6 +345,15 @@ export function LoginPage() {
           Powered by <span className="font-semibold">HabiTrack</span>
         </p>
       </div>
+
+      {/* First Login Modal */}
+      {showFirstLoginModal && onboardToken && (
+        <FirstLoginModal
+          token={onboardToken}
+          onSuccess={handleFirstLoginSuccess}
+          onCancel={handleFirstLoginCancel}
+        />
+      )}
     </div>
   );
 }

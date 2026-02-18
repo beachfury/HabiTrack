@@ -1,5 +1,5 @@
 // apps/web/src/components/settings/AboutTab.tsx
-// About section showing app info, version, system diagnostics, and household info
+// About section showing app info, version, system diagnostics, household info, and updates
 
 import { useState, useEffect } from 'react';
 import {
@@ -12,7 +12,13 @@ import {
   Users,
   RefreshCw,
   ExternalLink,
+  Download,
+  CheckCircle,
+  AlertCircle,
+  ArrowUpCircle,
 } from 'lucide-react';
+import { useAuth } from '../../context/AuthContext';
+import { UpdateModal } from './UpdateModal';
 
 const API_BASE = (import.meta.env.VITE_API_BASE_URL as string) || '';
 
@@ -51,6 +57,17 @@ interface HouseholdInfo {
   createdAt?: string;
 }
 
+interface UpdateInfo {
+  updateAvailable: boolean;
+  currentVersion: string;
+  latestVersion?: string;
+  releaseName?: string;
+  releaseNotes?: string;
+  releaseUrl?: string;
+  publishedAt?: string;
+  message?: string;
+}
+
 async function request(path: string) {
   const res = await fetch(API_BASE + path, { credentials: 'include' });
   if (!res.ok) {
@@ -61,12 +78,21 @@ async function request(path: string) {
 }
 
 export function AboutTab() {
+  const { user } = useAuth();
+  const isAdmin = user?.role === 'admin';
+
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [version, setVersion] = useState<VersionInfo | null>(null);
   const [systemInfo, setSystemInfo] = useState<SystemInfo | null>(null);
   const [householdInfo, setHouseholdInfo] = useState<HouseholdInfo | null>(null);
   const [loadingSystem, setLoadingSystem] = useState(false);
+
+  // Update state
+  const [updateInfo, setUpdateInfo] = useState<UpdateInfo | null>(null);
+  const [checkingUpdates, setCheckingUpdates] = useState(false);
+  const [updateError, setUpdateError] = useState('');
+  const [showUpdateModal, setShowUpdateModal] = useState(false);
 
   useEffect(() => {
     fetchBasicInfo();
@@ -109,6 +135,19 @@ export function AboutTab() {
     }
   };
 
+  const checkForUpdates = async () => {
+    setCheckingUpdates(true);
+    setUpdateError('');
+    try {
+      const data = await request('/api/updates/check');
+      setUpdateInfo(data);
+    } catch (err: any) {
+      setUpdateError(err.message || 'Failed to check for updates');
+    } finally {
+      setCheckingUpdates(false);
+    }
+  };
+
   const formatUptime = (seconds: number): string => {
     const days = Math.floor(seconds / 86400);
     const hours = Math.floor((seconds % 86400) / 3600);
@@ -116,6 +155,18 @@ export function AboutTab() {
     if (days > 0) return `${days}d ${hours}h ${mins}m`;
     if (hours > 0) return `${hours}h ${mins}m`;
     return `${mins}m`;
+  };
+
+  const formatDate = (dateStr: string): string => {
+    try {
+      return new Date(dateStr).toLocaleDateString(undefined, {
+        year: 'numeric',
+        month: 'short',
+        day: 'numeric',
+      });
+    } catch {
+      return dateStr;
+    }
   };
 
   if (loading) {
@@ -176,6 +227,92 @@ export function AboutTab() {
         </div>
       </div>
 
+      {/* Updates Section (Admin only) */}
+      {isAdmin && (
+        <div className="p-4 bg-[var(--color-muted)]/50 rounded-xl">
+          <div className="flex items-center justify-between mb-4">
+            <h3 className="font-medium text-[var(--color-foreground)] flex items-center gap-2">
+              <ArrowUpCircle size={18} className="text-[var(--color-primary)]" />
+              Software Updates
+            </h3>
+            <button
+              onClick={checkForUpdates}
+              disabled={checkingUpdates}
+              className="themed-btn-secondary text-sm flex items-center gap-2"
+            >
+              <RefreshCw size={14} className={checkingUpdates ? 'animate-spin' : ''} />
+              {checkingUpdates ? 'Checking...' : 'Check for Updates'}
+            </button>
+          </div>
+
+          {updateError && (
+            <div className="p-3 bg-[var(--color-destructive)]/10 border border-[var(--color-destructive)]/30 rounded-lg text-[var(--color-destructive)] text-sm mb-4">
+              {updateError}
+            </div>
+          )}
+
+          {updateInfo ? (
+            updateInfo.updateAvailable ? (
+              <div className="p-4 bg-[var(--color-primary)]/10 border border-[var(--color-primary)]/30 rounded-xl">
+                <div className="flex items-start gap-3">
+                  <Download className="text-[var(--color-primary)] mt-0.5" size={20} />
+                  <div className="flex-1">
+                    <h4 className="font-medium text-[var(--color-foreground)]">
+                      Update Available: {updateInfo.releaseName || `v${updateInfo.latestVersion}`}
+                    </h4>
+                    <p className="text-sm text-[var(--color-muted-foreground)] mt-1">
+                      Current version: v{updateInfo.currentVersion} → Latest: v{updateInfo.latestVersion}
+                    </p>
+                    {updateInfo.publishedAt && (
+                      <p className="text-xs text-[var(--color-muted-foreground)] mt-1">
+                        Released: {formatDate(updateInfo.publishedAt)}
+                      </p>
+                    )}
+                    <div className="flex gap-2 mt-4">
+                      <button
+                        onClick={() => setShowUpdateModal(true)}
+                        className="themed-btn-primary text-sm flex items-center gap-2"
+                      >
+                        <Download size={14} />
+                        Update Now
+                      </button>
+                      {updateInfo.releaseUrl && (
+                        <a
+                          href={updateInfo.releaseUrl}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="themed-btn-secondary text-sm flex items-center gap-2"
+                        >
+                          <ExternalLink size={14} />
+                          View Release Notes
+                        </a>
+                      )}
+                    </div>
+                  </div>
+                </div>
+              </div>
+            ) : (
+              <div className="p-4 bg-[var(--color-background)] rounded-xl">
+                <div className="flex items-center gap-3">
+                  <CheckCircle className="text-green-500" size={20} />
+                  <div>
+                    <p className="font-medium text-[var(--color-foreground)]">You're up to date!</p>
+                    <p className="text-sm text-[var(--color-muted-foreground)]">
+                      Running version v{updateInfo.currentVersion}
+                      {updateInfo.message && ` - ${updateInfo.message}`}
+                    </p>
+                  </div>
+                </div>
+              </div>
+            )
+          ) : (
+            <p className="text-sm text-[var(--color-muted-foreground)]">
+              Click "Check for Updates" to see if a newer version is available.
+            </p>
+          )}
+        </div>
+      )}
+
       {/* Household Info */}
       {householdInfo && (
         <div className="p-4 bg-[var(--color-muted)]/50 rounded-xl">
@@ -203,103 +340,105 @@ export function AboutTab() {
       )}
 
       {/* System Diagnostics (Admin only - collapsible) */}
-      <div className="p-4 bg-[var(--color-muted)]/50 rounded-xl">
-        <div className="flex items-center justify-between mb-4">
-          <h3 className="font-medium text-[var(--color-foreground)] flex items-center gap-2">
-            <Server size={18} className="text-[var(--color-primary)]" />
-            System Information
-          </h3>
-          <button
-            onClick={fetchSystemInfo}
-            disabled={loadingSystem}
-            className="themed-btn-secondary text-sm flex items-center gap-2"
-          >
-            <RefreshCw size={14} className={loadingSystem ? 'animate-spin' : ''} />
-            {loadingSystem ? 'Loading...' : systemInfo ? 'Refresh' : 'Load'}
-          </button>
-        </div>
-
-        {systemInfo ? (
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            {/* Server Info */}
-            <div className="p-3 bg-[var(--color-background)] rounded-lg">
-              <h4 className="text-sm font-medium text-[var(--color-foreground)] mb-2 flex items-center gap-2">
-                <Clock size={14} />
-                Server
-              </h4>
-              <div className="space-y-1 text-sm">
-                <div className="flex justify-between">
-                  <span className="text-[var(--color-muted-foreground)]">Node.js</span>
-                  <span className="text-[var(--color-foreground)]">{systemInfo.server.nodeVersion}</span>
-                </div>
-                <div className="flex justify-between">
-                  <span className="text-[var(--color-muted-foreground)]">Platform</span>
-                  <span className="text-[var(--color-foreground)]">{systemInfo.server.platform}</span>
-                </div>
-                <div className="flex justify-between">
-                  <span className="text-[var(--color-muted-foreground)]">Uptime</span>
-                  <span className="text-[var(--color-foreground)]">{formatUptime(systemInfo.server.uptime)}</span>
-                </div>
-              </div>
-            </div>
-
-            {/* Memory Info */}
-            <div className="p-3 bg-[var(--color-background)] rounded-lg">
-              <h4 className="text-sm font-medium text-[var(--color-foreground)] mb-2 flex items-center gap-2">
-                <HardDrive size={14} />
-                Memory
-              </h4>
-              <div className="space-y-1 text-sm">
-                <div className="flex justify-between">
-                  <span className="text-[var(--color-muted-foreground)]">Heap Used</span>
-                  <span className="text-[var(--color-foreground)]">~{systemInfo.server.memory.heapUsedMB} MB</span>
-                </div>
-                <div className="flex justify-between">
-                  <span className="text-[var(--color-muted-foreground)]">Heap Total</span>
-                  <span className="text-[var(--color-foreground)]">~{systemInfo.server.memory.heapTotalMB} MB</span>
-                </div>
-              </div>
-            </div>
-
-            {/* Database Info */}
-            <div className="p-3 bg-[var(--color-background)] rounded-lg md:col-span-2">
-              <h4 className="text-sm font-medium text-[var(--color-foreground)] mb-2 flex items-center gap-2">
-                <Database size={14} />
-                Database
-              </h4>
-              <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 text-sm">
-                <div>
-                  <span className="text-[var(--color-muted-foreground)] block">Type</span>
-                  <span className="text-[var(--color-foreground)] font-medium">{systemInfo.database.type}</span>
-                </div>
-                <div>
-                  <span className="text-[var(--color-muted-foreground)] block">Version</span>
-                  <span className="text-[var(--color-foreground)] font-medium">{systemInfo.database.version}</span>
-                </div>
-                <div>
-                  <span className="text-[var(--color-muted-foreground)] block">Size</span>
-                  <span className="text-[var(--color-foreground)] font-medium">~{systemInfo.database.sizeMB} MB</span>
-                </div>
-                <div>
-                  <span className="text-[var(--color-muted-foreground)] block">Tables</span>
-                  <span className="text-[var(--color-foreground)] font-medium">{systemInfo.database.tableCount}</span>
-                </div>
-              </div>
-            </div>
+      {isAdmin && (
+        <div className="p-4 bg-[var(--color-muted)]/50 rounded-xl">
+          <div className="flex items-center justify-between mb-4">
+            <h3 className="font-medium text-[var(--color-foreground)] flex items-center gap-2">
+              <Server size={18} className="text-[var(--color-primary)]" />
+              System Information
+            </h3>
+            <button
+              onClick={fetchSystemInfo}
+              disabled={loadingSystem}
+              className="themed-btn-secondary text-sm flex items-center gap-2"
+            >
+              <RefreshCw size={14} className={loadingSystem ? 'animate-spin' : ''} />
+              {loadingSystem ? 'Loading...' : systemInfo ? 'Refresh' : 'Load'}
+            </button>
           </div>
-        ) : (
-          <p className="text-sm text-[var(--color-muted-foreground)]">
-            Click "Load" to view server and database diagnostics (admin only)
-          </p>
-        )}
-      </div>
+
+          {systemInfo ? (
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              {/* Server Info */}
+              <div className="p-3 bg-[var(--color-background)] rounded-lg">
+                <h4 className="text-sm font-medium text-[var(--color-foreground)] mb-2 flex items-center gap-2">
+                  <Clock size={14} />
+                  Server
+                </h4>
+                <div className="space-y-1 text-sm">
+                  <div className="flex justify-between">
+                    <span className="text-[var(--color-muted-foreground)]">Node.js</span>
+                    <span className="text-[var(--color-foreground)]">{systemInfo.server.nodeVersion}</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-[var(--color-muted-foreground)]">Platform</span>
+                    <span className="text-[var(--color-foreground)]">{systemInfo.server.platform}</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-[var(--color-muted-foreground)]">Uptime</span>
+                    <span className="text-[var(--color-foreground)]">{formatUptime(systemInfo.server.uptime)}</span>
+                  </div>
+                </div>
+              </div>
+
+              {/* Memory Info */}
+              <div className="p-3 bg-[var(--color-background)] rounded-lg">
+                <h4 className="text-sm font-medium text-[var(--color-foreground)] mb-2 flex items-center gap-2">
+                  <HardDrive size={14} />
+                  Memory
+                </h4>
+                <div className="space-y-1 text-sm">
+                  <div className="flex justify-between">
+                    <span className="text-[var(--color-muted-foreground)]">Heap Used</span>
+                    <span className="text-[var(--color-foreground)]">~{systemInfo.server.memory.heapUsedMB} MB</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-[var(--color-muted-foreground)]">Heap Total</span>
+                    <span className="text-[var(--color-foreground)]">~{systemInfo.server.memory.heapTotalMB} MB</span>
+                  </div>
+                </div>
+              </div>
+
+              {/* Database Info */}
+              <div className="p-3 bg-[var(--color-background)] rounded-lg md:col-span-2">
+                <h4 className="text-sm font-medium text-[var(--color-foreground)] mb-2 flex items-center gap-2">
+                  <Database size={14} />
+                  Database
+                </h4>
+                <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 text-sm">
+                  <div>
+                    <span className="text-[var(--color-muted-foreground)] block">Type</span>
+                    <span className="text-[var(--color-foreground)] font-medium">{systemInfo.database.type}</span>
+                  </div>
+                  <div>
+                    <span className="text-[var(--color-muted-foreground)] block">Version</span>
+                    <span className="text-[var(--color-foreground)] font-medium">{systemInfo.database.version}</span>
+                  </div>
+                  <div>
+                    <span className="text-[var(--color-muted-foreground)] block">Size</span>
+                    <span className="text-[var(--color-foreground)] font-medium">~{systemInfo.database.sizeMB} MB</span>
+                  </div>
+                  <div>
+                    <span className="text-[var(--color-muted-foreground)] block">Tables</span>
+                    <span className="text-[var(--color-foreground)] font-medium">{systemInfo.database.tableCount}</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+          ) : (
+            <p className="text-sm text-[var(--color-muted-foreground)]">
+              Click "Load" to view server and database diagnostics
+            </p>
+          )}
+        </div>
+      )}
 
       {/* Links / Credits */}
       <div className="p-4 bg-[var(--color-muted)]/50 rounded-xl">
         <h3 className="font-medium text-[var(--color-foreground)] mb-3">Resources</h3>
         <div className="flex flex-wrap gap-3">
           <a
-            href="https://github.com/your-repo/habitrack"
+            href="https://github.com/beachfury/HabiTrack"
             target="_blank"
             rel="noopener noreferrer"
             className="flex items-center gap-2 px-3 py-2 bg-[var(--color-background)] rounded-lg text-sm text-[var(--color-foreground)] hover:bg-[var(--color-muted)] transition-colors"
@@ -308,7 +447,7 @@ export function AboutTab() {
             Documentation
           </a>
           <a
-            href="https://github.com/your-repo/habitrack/issues"
+            href="https://github.com/beachfury/HabiTrack/issues"
             target="_blank"
             rel="noopener noreferrer"
             className="flex items-center gap-2 px-3 py-2 bg-[var(--color-background)] rounded-lg text-sm text-[var(--color-foreground)] hover:bg-[var(--color-muted)] transition-colors"
@@ -318,6 +457,14 @@ export function AboutTab() {
           </a>
         </div>
       </div>
+
+      {/* Update Modal */}
+      {showUpdateModal && updateInfo && (
+        <UpdateModal
+          updateInfo={updateInfo}
+          onClose={() => setShowUpdateModal(false)}
+        />
+      )}
     </div>
   );
 }
