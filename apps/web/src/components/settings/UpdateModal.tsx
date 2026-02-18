@@ -267,7 +267,7 @@ export function UpdateModal({ updateInfo, onClose }: UpdateModalProps) {
   return (
     <ModalPortal
       isOpen={true}
-      onClose={status === 'updating' ? undefined : onClose}
+      onClose={status === 'updating' ? () => {} : onClose}
       title={
         status === 'confirm'
           ? `Update to ${updateInfo.releaseName || `v${updateInfo.latestVersion}`}`
