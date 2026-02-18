@@ -89,7 +89,7 @@ export function PredictionsTab({
 
   if (suggestions.length === 0) {
     return (
-      <div className="themed-card p-8 text-center">
+      <div className="themed-shopping-list p-8 text-center">
         <Sparkles
           size={48}
           className="mx-auto mb-3 text-[var(--color-muted-foreground)] opacity-50"
@@ -118,28 +118,28 @@ export function PredictionsTab({
       {/* Stats Summary */}
       {stats && (
         <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
-          <div className="themed-card p-3">
+          <div className="themed-shopping-list p-3">
             <div className="flex items-center gap-2 text-[var(--color-destructive)] mb-1">
               <Clock size={16} />
               <span className="text-xs font-medium">Overdue</span>
             </div>
             <p className="text-xl font-bold text-[var(--color-foreground)]">{visibleOverdue}</p>
           </div>
-          <div className="themed-card p-3">
+          <div className="themed-shopping-list p-3">
             <div className="flex items-center gap-2 text-[var(--color-warning)] mb-1">
               <Calendar size={16} />
               <span className="text-xs font-medium">Due Soon</span>
             </div>
             <p className="text-xl font-bold text-[var(--color-foreground)]">{visibleDueSoon}</p>
           </div>
-          <div className="themed-card p-3">
+          <div className="themed-shopping-list p-3">
             <div className="flex items-center gap-2 text-[var(--color-primary)] mb-1">
               <Utensils size={16} />
               <span className="text-xs font-medium">For Meals</span>
             </div>
             <p className="text-xl font-bold text-[var(--color-foreground)]">{visibleMeals}</p>
           </div>
-          <div className="themed-card p-3">
+          <div className="themed-shopping-list p-3">
             <div className="flex items-center gap-2 text-[var(--color-success)] mb-1">
               <TrendingUp size={16} />
               <span className="text-xs font-medium">Popular</span>
@@ -222,14 +222,14 @@ export function PredictionsTab({
       {/* Suggestions List */}
       <div className="space-y-2">
         {filteredSuggestions.length === 0 ? (
-          <div className="themed-card p-6 text-center">
+          <div className="themed-shopping-list p-6 text-center">
             <p className="text-[var(--color-muted-foreground)]">No items match this filter</p>
           </div>
         ) : (
           filteredSuggestions.map((s) => (
             <div
               key={s.catalogItemId}
-              className="themed-card p-3"
+              className="themed-shopping-list p-3"
               style={
                 s.confidence === 'high'
                   ? {

@@ -69,6 +69,22 @@ export function CalendarPreview({
 }: CalendarPreviewProps) {
   const colors = colorMode === 'light' ? theme.colorsLight : theme.colorsDark;
 
+  // Default fallbacks
+  const defaultRadius = RADIUS_MAP[theme.ui.borderRadius] || '8px';
+  const defaultShadow = SHADOW_MAP[theme.ui.shadowIntensity] || 'none';
+
+  // Page-specific background - check early for card fallback logic
+  const calendarBgStyle = theme.elementStyles?.['calendar-background'] || {};
+  const globalPageBgStyle = theme.elementStyles?.['page-background'] || {};
+
+  // Check if calendar background has custom styling (gradient, image, or explicit color)
+  const hasCustomCalendarBg = calendarBgStyle.backgroundColor || calendarBgStyle.backgroundGradient || calendarBgStyle.backgroundImage || calendarBgStyle.customCSS;
+
+  // When calendar has custom background, use semi-transparent card backgrounds by default
+  // This allows the background to show through while still having distinct cards
+  const cardBgFallback = hasCustomCalendarBg ? 'rgba(255,255,255,0.08)' : colors.card;
+  const cardBorderFallback = hasCustomCalendarBg ? 'rgba(255,255,255,0.15)' : colors.border;
+
   // Get styles with page-specific overrides
   // calendar-grid -> falls back to card
   // calendar-meal-widget -> falls back to widget
@@ -78,14 +94,10 @@ export function CalendarPreview({
   const userCardStyle = getElementStyleWithFallback(theme.elementStyles, 'calendar-user-card', 'card');
   const buttonPrimaryStyle = theme.elementStyles?.['button-primary'] || {};
 
-  // Default fallbacks
-  const defaultRadius = RADIUS_MAP[theme.ui.borderRadius] || '8px';
-  const defaultShadow = SHADOW_MAP[theme.ui.shadowIntensity] || 'none';
-
-  // Build computed styles for each element (with text color fallback)
-  const computedCalendarGridStyle = buildElementStyle(calendarGridStyle, colors.card, colors.border, defaultRadius, defaultShadow, colors.cardForeground);
-  const computedMealWidgetStyle = buildElementStyle(mealWidgetStyle, colors.muted, colors.border, defaultRadius, 'none', colors.foreground);
-  const computedUserCardStyle = buildElementStyle(userCardStyle, colors.card, colors.border, defaultRadius, defaultShadow, colors.cardForeground);
+  // Build computed styles for each element (with text color fallback and semi-transparent fallbacks)
+  const computedCalendarGridStyle = buildElementStyle(calendarGridStyle, cardBgFallback, cardBorderFallback, defaultRadius, defaultShadow, colors.cardForeground);
+  const computedMealWidgetStyle = buildElementStyle(mealWidgetStyle, hasCustomCalendarBg ? 'rgba(255,255,255,0.06)' : colors.muted, cardBorderFallback, defaultRadius, 'none', colors.foreground);
+  const computedUserCardStyle = buildElementStyle(userCardStyle, cardBgFallback, cardBorderFallback, defaultRadius, defaultShadow, colors.cardForeground);
   const computedButtonPrimaryStyle = buildButtonStyle(buttonPrimaryStyle, colors.primary, colors.primaryForeground, 'transparent', '8px');
 
   // Extract text styles for child elements (with fallback to theme/defaults)
@@ -125,21 +137,37 @@ export function CalendarPreview({
   const getEventsForDay = (day: number) => MOCK_EVENTS.filter((e) => e.day === day);
   const getChoresForDay = (day: number) => MOCK_CHORES.filter((c) => c.day === day);
 
-  // Page-specific background (calendar-background with fallback to page-background)
-  const calendarBgStyle = theme.elementStyles?.['calendar-background'] || {};
-  const globalPageBgStyle = theme.elementStyles?.['page-background'] || {};
-  const { style: pageBgStyle, backgroundImageUrl } = buildPageBackgroundStyle(
+  // Build page background style (calendarBgStyle and globalPageBgStyle already defined above)
+  const { style: pageBgStyle, backgroundImageUrl, customCSS } = buildPageBackgroundStyle(
     calendarBgStyle,
     globalPageBgStyle,
     colors.background
   );
+
+  // Detect animated background effect classes from customCSS
+  const getAnimatedBgClasses = (css?: string): string => {
+    if (!css) return '';
+    const classes: string[] = [];
+    if (css.includes('matrix-rain: true') || css.includes('matrix-rain:true')) {
+      classes.push('matrix-rain-bg');
+      const speedMatch = css.match(/matrix-rain-speed:\s*(slow|normal|fast|veryfast)/i);
+      if (speedMatch) classes.push(`matrix-rain-${speedMatch[1].toLowerCase()}`);
+    }
+    if (css.includes('snowfall: true') || css.includes('snowfall:true')) classes.push('snowfall-bg');
+    if (css.includes('sparkle: true') || css.includes('sparkle:true')) classes.push('sparkle-bg');
+    if (css.includes('bubbles: true') || css.includes('bubbles:true')) classes.push('bubbles-bg');
+    if (css.includes('embers: true') || css.includes('embers:true')) classes.push('embers-bg');
+    return classes.join(' ');
+  };
+
+  const animatedBgClasses = getAnimatedBgClasses(customCSS);
 
   return (
     <ClickableElement
       element="calendar-background"
       isSelected={selectedElement === 'calendar-background'}
       onClick={() => onSelectElement('calendar-background')}
-      className="flex-1 overflow-auto flex flex-col"
+      className={`flex-1 overflow-auto flex flex-col ${animatedBgClasses}`}
       style={pageBgStyle}
     >
       {/* Background image layer */}
@@ -158,9 +186,27 @@ export function CalendarPreview({
       {/* Page header - matches actual CalendarPage */}
       <div className="flex items-center justify-between mb-4">
         <div className="flex items-center gap-3">
-          <h1 className="text-xl font-bold" style={{ color: colors.foreground }}>
-            February 2024
-          </h1>
+          <ClickableElement
+            element="calendar-title"
+            isSelected={selectedElement === 'calendar-title'}
+            onClick={() => onSelectElement('calendar-title')}
+          >
+            <h1
+              className="text-xl font-bold"
+              style={{
+                color: theme.elementStyles?.['calendar-title']?.textColor || colors.foreground,
+                fontSize: theme.elementStyles?.['calendar-title']?.textSize
+                  ? `${theme.elementStyles['calendar-title'].textSize}px`
+                  : undefined,
+                fontWeight: theme.elementStyles?.['calendar-title']?.fontWeight
+                  ? { normal: 400, medium: 500, semibold: 600, bold: 700 }[theme.elementStyles['calendar-title'].fontWeight]
+                  : undefined,
+                fontFamily: theme.elementStyles?.['calendar-title']?.fontFamily,
+              }}
+            >
+              February 2024
+            </h1>
+          </ClickableElement>
           <div className="flex items-center gap-1">
             <button
               className="p-1.5 rounded-lg transition-colors"

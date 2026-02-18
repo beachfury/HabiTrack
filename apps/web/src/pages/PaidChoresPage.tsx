@@ -19,6 +19,7 @@ import {
 } from 'lucide-react';
 import { ModalPortal, ModalBody } from '../components/common/ModalPortal';
 import { useAuth } from '../context/AuthContext';
+import { useTheme } from '../context/ThemeContext';
 import * as paidChoresApi from '../api/paid-chores';
 import type { PaidChore, CreatePaidChoreInput, LeaderboardEntry } from '../api/paid-chores';
 import { getDifficultyStyle } from '../utils';
@@ -27,6 +28,8 @@ type TabType = 'available' | 'my-claims' | 'pending-review' | 'leaderboard';
 
 export function PaidChoresPage() {
   const { user } = useAuth();
+  const { getPageAnimationClasses } = useTheme();
+  const animationClasses = getPageAnimationClasses('paidchores-background');
   const [activeTab, setActiveTab] = useState<TabType>('available');
   const [chores, setChores] = useState<PaidChore[]>([]);
   const [leaderboard, setLeaderboard] = useState<LeaderboardEntry[]>([]);
@@ -158,7 +161,8 @@ export function PaidChoresPage() {
   ];
 
   return (
-    <div className="p-8">
+    <div className={`min-h-screen themed-paidchores-bg ${animationClasses}`}>
+      <div className="p-8">
       {/* Header */}
       <div className="flex items-center justify-between mb-8">
         <div>
@@ -348,6 +352,7 @@ export function PaidChoresPage() {
           </ModalBody>
         </ModalPortal>
       )}
+      </div>
     </div>
   );
 }

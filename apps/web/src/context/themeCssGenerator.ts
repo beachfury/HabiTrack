@@ -9,6 +9,7 @@ import type {
   ThemeableElement,
   LoginPageStyle,
   LcarsMode,
+  KioskStyle,
 } from '../types/theme';
 import { DEFAULT_COLORS_LIGHT, DEFAULT_COLORS_DARK, LCARS_COLORS } from '../types/theme';
 
@@ -23,6 +24,48 @@ export function resolveImageUrl(url: string | undefined): string | undefined {
   }
   // Already an absolute URL
   return url;
+}
+
+/**
+ * Apply opacity to a color value
+ * Supports hex (#RGB, #RRGGBB, #RRGGBBAA), rgb(), rgba(), and named colors
+ */
+function applyOpacityToColor(color: string, opacity: number): string {
+  if (opacity >= 1) return color;
+  if (opacity <= 0) return 'transparent';
+
+  // If it's already rgba with alpha, modify the alpha
+  const rgbaMatch = color.match(/^rgba?\((\d+),\s*(\d+),\s*(\d+)(?:,\s*[\d.]+)?\)$/i);
+  if (rgbaMatch) {
+    const [, r, g, b] = rgbaMatch;
+    return `rgba(${r}, ${g}, ${b}, ${opacity})`;
+  }
+
+  // If it's a hex color
+  const hexMatch = color.match(/^#([0-9a-f]{3,8})$/i);
+  if (hexMatch) {
+    let hex = hexMatch[1];
+    let r: number, g: number, b: number;
+
+    if (hex.length === 3) {
+      // #RGB -> #RRGGBB
+      r = parseInt(hex[0] + hex[0], 16);
+      g = parseInt(hex[1] + hex[1], 16);
+      b = parseInt(hex[2] + hex[2], 16);
+    } else if (hex.length === 6 || hex.length === 8) {
+      r = parseInt(hex.slice(0, 2), 16);
+      g = parseInt(hex.slice(2, 4), 16);
+      b = parseInt(hex.slice(4, 6), 16);
+    } else {
+      return color; // Invalid hex, return as-is
+    }
+
+    return `rgba(${r}, ${g}, ${b}, ${opacity})`;
+  }
+
+  // For named colors or other formats, wrap in color-mix (modern CSS)
+  // This allows applying opacity to any CSS color
+  return `color-mix(in srgb, ${color} ${Math.round(opacity * 100)}%, transparent)`;
 }
 
 /**
@@ -49,8 +92,9 @@ const ELEMENT_PREFIX_MAP: Record<ThemeableElement, string> = {
   'modal': 'modal',
   'input': 'input',
   'login-page': 'login',
+  'kiosk': 'kiosk',
   // Page-specific backgrounds
-  'dashboard-background': 'dashboard-page',
+  'home-background': 'home-page',
   'calendar-background': 'calendar-page',
   'chores-background': 'chores-page',
   'shopping-background': 'shopping-page',
@@ -59,12 +103,19 @@ const ELEMENT_PREFIX_MAP: Record<ThemeableElement, string> = {
   'budget-background': 'budget-page',
   'meals-background': 'meals-page',
   'recipes-background': 'recipes-page',
-  // Dashboard page specific elements
-  'dashboard-stats-widget': 'dashboard-stats',
-  'dashboard-chores-card': 'dashboard-chores',
-  'dashboard-events-card': 'dashboard-events',
-  'dashboard-weather-widget': 'dashboard-weather',
+  'paidchores-background': 'paidchores-page',
+  'family-background': 'family-page',
+  // Home page specific elements
+  'home-title': 'home-title',
+  'home-welcome-banner': 'home-welcome',
+  'home-stats-widget': 'home-stats',
+  'home-chores-card': 'home-chores',
+  'home-events-card': 'home-events',
+  'home-weather-widget': 'home-weather',
+  'home-leaderboard-widget': 'home-leaderboard',
+  'home-meals-widget': 'home-meals',
   // Calendar page specific elements
+  'calendar-title': 'calendar-title',
   'calendar-grid': 'calendar-grid',
   'calendar-meal-widget': 'calendar-meal',
   'calendar-user-card': 'calendar-user',
@@ -94,13 +145,33 @@ export function elementStyleToCssVariables(
   const p = ELEMENT_PREFIX_MAP[elementType] || prefix;
 
   // Background
+  // If backgroundOpacity is set and < 1, apply it directly to the background color
+  const bgOpacity = style.backgroundOpacity;
+  const hasCustomOpacity = bgOpacity !== undefined && bgOpacity < 1;
+
   if (style.backgroundColor) {
-    vars[`--${p}-bg`] = style.backgroundColor;
+    if (hasCustomOpacity) {
+      vars[`--${p}-bg`] = applyOpacityToColor(style.backgroundColor, bgOpacity);
+    } else {
+      vars[`--${p}-bg`] = style.backgroundColor;
+    }
+  } else if (hasCustomOpacity && !style.backgroundGradient && !style.backgroundImage) {
+    // If only opacity is set (no color/gradient/image), we need to set a background
+    // that respects the opacity. Use color-mix with the card background.
+    // Note: This creates a transparent version that lets the page background show through.
+    vars[`--${p}-bg`] = `color-mix(in srgb, var(--card-bg) ${Math.round(bgOpacity * 100)}%, transparent)`;
   }
 
   if (style.backgroundGradient) {
     const dir = style.backgroundGradient.direction || 'to bottom';
-    vars[`--${p}-bg`] = `linear-gradient(${dir}, ${style.backgroundGradient.from}, ${style.backgroundGradient.to})`;
+    if (hasCustomOpacity) {
+      // Apply opacity to both gradient colors
+      const fromWithOpacity = applyOpacityToColor(style.backgroundGradient.from, bgOpacity);
+      const toWithOpacity = applyOpacityToColor(style.backgroundGradient.to, bgOpacity);
+      vars[`--${p}-bg`] = `linear-gradient(${dir}, ${fromWithOpacity}, ${toWithOpacity})`;
+    } else {
+      vars[`--${p}-bg`] = `linear-gradient(${dir}, ${style.backgroundGradient.from}, ${style.backgroundGradient.to})`;
+    }
   }
 
   if (style.backgroundImage) {
@@ -110,8 +181,9 @@ export function elementStyleToCssVariables(
     }
   }
 
-  if (style.backgroundOpacity !== undefined) {
-    vars[`--${p}-bg-opacity`] = String(style.backgroundOpacity);
+  // Still set bg-opacity for background images (used by ::before pseudo-element)
+  if (bgOpacity !== undefined) {
+    vars[`--${p}-bg-opacity`] = String(bgOpacity);
   }
 
   // Text
@@ -150,10 +222,66 @@ export function elementStyleToCssVariables(
     vars[`--${p}-radius`] = `${style.borderRadius}px`;
   }
 
+  if (style.borderStyle) {
+    vars[`--${p}-border-style`] = style.borderStyle;
+  }
+
   // Effects
   if (style.boxShadow) {
     const shadow = SHADOW_MAP[style.boxShadow] || style.boxShadow;
     vars[`--${p}-shadow`] = shadow;
+  }
+
+  if (style.blur !== undefined) {
+    vars[`--${p}-blur`] = `${style.blur}px`;
+  }
+
+  if (style.opacity !== undefined) {
+    vars[`--${p}-opacity`] = String(style.opacity);
+  }
+
+  // Transform effects
+  if (style.scale !== undefined) {
+    vars[`--${p}-scale`] = String(style.scale);
+  }
+
+  if (style.rotate !== undefined) {
+    vars[`--${p}-rotate`] = `${style.rotate}deg`;
+  }
+
+  if (style.skewX !== undefined) {
+    vars[`--${p}-skew-x`] = `${style.skewX}deg`;
+  }
+
+  if (style.skewY !== undefined) {
+    vars[`--${p}-skew-y`] = `${style.skewY}deg`;
+  }
+
+  // Glow effect
+  if (style.glowColor) {
+    vars[`--${p}-glow-color`] = style.glowColor;
+  }
+
+  if (style.glowSize !== undefined) {
+    vars[`--${p}-glow-size`] = `${style.glowSize}px`;
+  }
+
+  // Filters
+  if (style.saturation !== undefined) {
+    vars[`--${p}-saturation`] = `${style.saturation}%`;
+  }
+
+  if (style.grayscale !== undefined) {
+    vars[`--${p}-grayscale`] = `${style.grayscale}%`;
+  }
+
+  // Hover effects
+  if (style.hoverScale !== undefined) {
+    vars[`--${p}-hover-scale`] = String(style.hoverScale);
+  }
+
+  if (style.hoverOpacity !== undefined) {
+    vars[`--${p}-hover-opacity`] = String(style.hoverOpacity);
   }
 
   // Spacing
@@ -211,6 +339,50 @@ export function loginPageToCssVariables(loginPage: LoginPageStyle): Record<strin
   if (loginPage.brandColor) {
     vars['--login-brand-color'] = loginPage.brandColor;
   }
+
+  return vars;
+}
+
+/**
+ * Convert Kiosk style settings to CSS variables
+ */
+export function kioskToCssVariables(kioskStyle: KioskStyle): Record<string, string> {
+  const vars: Record<string, string> = {};
+
+  // Background gradient
+  if (kioskStyle.backgroundGradient) {
+    vars['--kiosk-bg-gradient-from'] = kioskStyle.backgroundGradient.from;
+    vars['--kiosk-bg-gradient-to'] = kioskStyle.backgroundGradient.to;
+  }
+
+  // Solid background
+  if (kioskStyle.backgroundType === 'solid' && kioskStyle.backgroundColor) {
+    vars['--kiosk-bg-gradient-from'] = kioskStyle.backgroundColor;
+    vars['--kiosk-bg-gradient-to'] = kioskStyle.backgroundColor;
+  }
+
+  // Background image
+  if (kioskStyle.backgroundImage) {
+    const resolvedUrl = resolveImageUrl(kioskStyle.backgroundImage);
+    if (resolvedUrl) {
+      vars['--kiosk-bg-image'] = `url(${resolvedUrl})`;
+    }
+  }
+
+  // Text colors
+  if (kioskStyle.textColor) vars['--kiosk-text'] = kioskStyle.textColor;
+  if (kioskStyle.textMutedColor) vars['--kiosk-text-muted'] = kioskStyle.textMutedColor;
+
+  // Button styling
+  if (kioskStyle.buttonBgColor) vars['--kiosk-button-bg'] = kioskStyle.buttonBgColor;
+  if (kioskStyle.buttonHoverColor) vars['--kiosk-button-hover'] = kioskStyle.buttonHoverColor;
+  if (kioskStyle.buttonActiveColor) vars['--kiosk-button-active'] = kioskStyle.buttonActiveColor;
+  if (kioskStyle.buttonTextColor) vars['--kiosk-text'] = kioskStyle.buttonTextColor;
+  if (kioskStyle.accentColor) vars['--kiosk-accent'] = kioskStyle.accentColor;
+
+  // Error styling
+  if (kioskStyle.errorBgColor) vars['--kiosk-error-bg'] = kioskStyle.errorBgColor;
+  if (kioskStyle.errorTextColor) vars['--kiosk-error-text'] = kioskStyle.errorTextColor;
 
   return vars;
 }
@@ -378,6 +550,54 @@ export function buildCssVariables(
         Object.assign(vars, elementStyleToCssVariables(elementType as ThemeableElement, style));
       }
     }
+
+    // Auto-set semi-transparent borders for cards/widgets when page background is customized
+    // This prevents gray borders from showing on dark/custom backgrounds
+    const pageBackgroundElements: Record<string, { cards: string[]; widgets: string[] }> = {
+      'home-background': {
+        cards: ['home-chores', 'home-events', 'home-welcome', 'home-leaderboard'],
+        widgets: ['home-stats', 'home-weather', 'home-meals'],
+      },
+      'calendar-background': {
+        cards: ['calendar-grid', 'calendar-user'],
+        widgets: ['calendar-meal'],
+      },
+      'chores-background': {
+        cards: ['chores-task', 'chores-paid'],
+        widgets: [],
+      },
+      'shopping-background': {
+        cards: ['shopping-list'],
+        widgets: ['shopping-filter'],
+      },
+      'messages-background': {
+        cards: ['messages-announcements', 'messages-chat'],
+        widgets: [],
+      },
+      'settings-background': {
+        cards: ['settings-nav', 'settings-content'],
+        widgets: [],
+      },
+    };
+
+    for (const [bgElement, elements] of Object.entries(pageBackgroundElements)) {
+      const bgStyle = extTheme.elementStyles[bgElement as ThemeableElement];
+      const hasCustomBg = bgStyle && (bgStyle.backgroundColor || bgStyle.backgroundGradient || bgStyle.backgroundImage || bgStyle.customCSS);
+
+      if (hasCustomBg) {
+        // Set semi-transparent borders for cards and widgets on this page (if not explicitly set)
+        for (const cardPrefix of elements.cards) {
+          if (!vars[`--${cardPrefix}-border`]) {
+            vars[`--${cardPrefix}-border`] = 'rgba(255,255,255,0.15)';
+          }
+        }
+        for (const widgetPrefix of elements.widgets) {
+          if (!vars[`--${widgetPrefix}-border`]) {
+            vars[`--${widgetPrefix}-border`] = 'rgba(255,255,255,0.15)';
+          }
+        }
+      }
+    }
   }
 
   // Apply login page styles
@@ -390,6 +610,11 @@ export function buildCssVariables(
     Object.assign(vars, lcarsToCssVariables(extTheme.lcarsMode));
   }
 
+  // Apply kiosk styles
+  if (extTheme.kioskStyle) {
+    Object.assign(vars, kioskToCssVariables(extTheme.kioskStyle));
+  }
+
   return vars;
 }
 
@@ -399,8 +624,25 @@ let previousElementVars: Set<string> = new Set();
 // List of element-specific CSS variable prefixes that need to be cleared when not present
 const ELEMENT_VAR_PREFIXES = [
   '--card-', '--widget-', '--sidebar-', '--header-', '--page-', '--modal-', '--input-',
-  '--btn-primary-', '--btn-secondary-', '--login-',
-  '--calendar-grid-', '--calendar-meal-', '--calendar-user-',
+  '--btn-primary-', '--btn-secondary-', '--login-', '--kiosk-',
+  // Home page elements
+  '--home-title-', '--home-welcome-', '--home-stats-', '--home-chores-', '--home-events-', '--home-weather-', '--home-leaderboard-', '--home-meals-', '--home-page-',
+  // Calendar page elements
+  '--calendar-title-', '--calendar-grid-', '--calendar-meal-', '--calendar-user-', '--calendar-page-',
+  // Chores page elements
+  '--chores-task-', '--chores-paid-', '--chores-page-',
+  // Shopping page elements
+  '--shopping-filter-', '--shopping-list-', '--shopping-page-',
+  // Messages page elements
+  '--messages-announcements-', '--messages-chat-', '--messages-page-',
+  // Settings page elements
+  '--settings-nav-', '--settings-content-', '--settings-page-',
+  // Budget page elements
+  '--budget-page-',
+  // Meals page elements
+  '--meals-page-',
+  // Recipes page elements
+  '--recipes-page-',
 ];
 
 /**
@@ -469,6 +711,114 @@ export function applyLcarsMode(theme: ThemeDefinition | null) {
 }
 
 /**
+ * CSS selectors for each themeable element
+ * These map element types to CSS selectors that target them
+ */
+const ELEMENT_CSS_SELECTORS: Partial<Record<ThemeableElement, string>> = {
+  // Global elements
+  'page-background': 'body, main, .page-content, [data-theme-element="page-background"]',
+  'sidebar': 'aside, .sidebar, [data-theme-element="sidebar"]',
+  'header': 'header, .app-header, [data-theme-element="header"]',
+  'card': '.themed-card, .bg-white.dark\\:bg-gray-800, .rounded-xl.border, [data-theme-element="card"]',
+  'widget': '.themed-widget, .bg-gray-50.dark\\:bg-gray-700, [data-theme-element="widget"]',
+  'button-primary': '.themed-btn-primary, button.bg-emerald-600, .btn-primary, [data-theme-element="button-primary"]',
+  'button-secondary': '.themed-btn-secondary, button.bg-gray-100, button.bg-gray-200, .btn-secondary, [data-theme-element="button-secondary"]',
+  'modal': '.themed-modal, [role="dialog"], .modal, [data-theme-element="modal"]',
+  'input': '.themed-input, input:not([type="checkbox"]):not([type="radio"]), textarea, select, [data-theme-element="input"]',
+  // Home page elements
+  'home-title': '.themed-home-title, [data-theme-element="home-title"]',
+  'home-welcome-banner': '.themed-home-welcome, [data-theme-element="home-welcome-banner"]',
+  'home-stats-widget': '.themed-home-stats, [data-theme-element="home-stats-widget"]',
+  'home-chores-card': '.themed-home-chores, [data-theme-element="home-chores-card"]',
+  'home-events-card': '.themed-home-events, [data-theme-element="home-events-card"]',
+  'home-weather-widget': '.themed-home-weather, [data-theme-element="home-weather-widget"]',
+  'home-leaderboard-widget': '.themed-home-leaderboard, [data-theme-element="home-leaderboard-widget"]',
+  'home-meals-widget': '.themed-home-meals, [data-theme-element="home-meals-widget"]',
+  'home-background': '.themed-home-bg, [data-theme-element="home-background"]',
+  // Calendar page elements
+  'calendar-title': '.themed-calendar-title, [data-theme-element="calendar-title"]',
+  'calendar-grid': '.themed-calendar-grid, .calendar-grid, [data-theme-element="calendar-grid"]',
+  'calendar-meal-widget': '.themed-calendar-meal, .calendar-meal-widget, [data-theme-element="calendar-meal-widget"]',
+  'calendar-user-card': '.themed-calendar-user, .calendar-user-card, [data-theme-element="calendar-user-card"]',
+  'calendar-background': '.themed-calendar-bg, [data-theme-element="calendar-background"]',
+  // Chores page elements
+  'chores-task-card': '.themed-chores-task, [data-theme-element="chores-task-card"]',
+  'chores-paid-card': '.themed-chores-paid, [data-theme-element="chores-paid-card"]',
+  'chores-background': '.themed-chores-bg, [data-theme-element="chores-background"]',
+  // Shopping page elements
+  'shopping-filter-widget': '.themed-shopping-filter, [data-theme-element="shopping-filter-widget"]',
+  'shopping-list-card': '.themed-shopping-list, [data-theme-element="shopping-list-card"]',
+  'shopping-background': '.themed-shopping-bg, [data-theme-element="shopping-background"]',
+  // Messages page elements
+  'messages-announcements-card': '.themed-messages-announcements, [data-theme-element="messages-announcements-card"]',
+  'messages-chat-card': '.themed-messages-chat, [data-theme-element="messages-chat-card"]',
+  'messages-background': '.themed-messages-bg, [data-theme-element="messages-background"]',
+  // Settings page elements
+  'settings-nav-card': '.themed-settings-nav, [data-theme-element="settings-nav-card"]',
+  'settings-content-card': '.themed-settings-content, [data-theme-element="settings-content-card"]',
+  'settings-background': '.themed-settings-bg, [data-theme-element="settings-background"]',
+  // Budget page elements
+  'budget-background': '.themed-budget-bg, [data-theme-element="budget-background"]',
+  // Meals page elements
+  'meals-background': '.themed-meals-bg, [data-theme-element="meals-background"]',
+  // Recipes page elements
+  'recipes-background': '.themed-recipes-bg, [data-theme-element="recipes-background"]',
+  // Paid Chores page elements
+  'paidchores-background': '.themed-paidchores-bg, [data-theme-element="paidchores-background"]',
+  // Family page elements
+  'family-background': '.themed-family-bg, [data-theme-element="family-background"]',
+};
+
+/**
+ * Apply element-level custom CSS from theme
+ * Creates a <style> element with CSS rules for each element's customCSS
+ */
+export function applyElementCustomCss(theme: ThemeDefinition | null) {
+  const styleId = 'theme-element-custom-css';
+  let styleEl = document.getElementById(styleId);
+
+  const extTheme = theme as ExtendedTheme | null;
+
+  if (!extTheme?.elementStyles) {
+    // Remove custom CSS if no theme or no element styles
+    if (styleEl) {
+      styleEl.remove();
+    }
+    return;
+  }
+
+  // Build CSS rules from element customCSS
+  const cssRules: string[] = [];
+
+  for (const [elementType, style] of Object.entries(extTheme.elementStyles)) {
+    if (style?.customCSS) {
+      const selector = ELEMENT_CSS_SELECTORS[elementType as ThemeableElement];
+      if (selector) {
+        // Wrap the custom CSS properties in a rule for the selector
+        cssRules.push(`${selector} { ${style.customCSS} }`);
+      }
+    }
+  }
+
+  if (cssRules.length === 0) {
+    // No custom CSS to apply, remove the style element
+    if (styleEl) {
+      styleEl.remove();
+    }
+    return;
+  }
+
+  // Create or update the style element
+  if (!styleEl) {
+    styleEl = document.createElement('style');
+    styleEl.id = styleId;
+    document.head.appendChild(styleEl);
+  }
+
+  styleEl.textContent = cssRules.join('\n');
+}
+
+/**
  * Get resolved colors for a theme and mode
  */
 export function getResolvedColors(
@@ -479,4 +829,82 @@ export function getResolvedColors(
     return resolvedMode === 'dark' ? theme.colorsDark : theme.colorsLight;
   }
   return resolvedMode === 'dark' ? DEFAULT_COLORS_DARK : DEFAULT_COLORS_LIGHT;
+}
+
+/**
+ * Extract animation classes from customCSS string
+ * Detects special animation flags like "matrix-rain: true" and returns CSS class names
+ */
+export function getAnimationClassesFromCustomCSS(customCSS: string | undefined): string {
+  if (!customCSS) return '';
+
+  const classes: string[] = [];
+
+  // Matrix rain effect
+  if (customCSS.includes('matrix-rain: true') || customCSS.includes('matrix-rain:true')) {
+    classes.push('matrix-rain-bg');
+    const speedMatch = customCSS.match(/matrix-rain-speed:\s*(slow|normal|fast|veryfast)/i);
+    if (speedMatch) {
+      classes.push(`matrix-rain-${speedMatch[1].toLowerCase()}`);
+    }
+  }
+
+  // Snowfall effect
+  if (customCSS.includes('snowfall: true') || customCSS.includes('snowfall:true')) {
+    classes.push('snowfall-bg');
+  }
+
+  // Sparkle effect
+  if (customCSS.includes('sparkle: true') || customCSS.includes('sparkle:true')) {
+    classes.push('sparkle-bg');
+  }
+
+  // Bubbles effect
+  if (customCSS.includes('bubbles: true') || customCSS.includes('bubbles:true')) {
+    classes.push('bubbles-bg');
+  }
+
+  // Embers effect
+  if (customCSS.includes('embers: true') || customCSS.includes('embers:true')) {
+    classes.push('embers-bg');
+  }
+
+  return classes.join(' ');
+}
+
+/**
+ * Get animation classes for a specific page background element
+ * Checks the page-specific background first, then falls back to global page-background
+ */
+export function getPageAnimationClasses(
+  theme: ThemeDefinition | null,
+  pageElement: ThemeableElement
+): string {
+  const extTheme = theme as ExtendedTheme | null;
+  if (!extTheme?.elementStyles) return '';
+
+  // Check page-specific background first
+  const pageStyle = extTheme.elementStyles[pageElement];
+  if (pageStyle?.customCSS) {
+    const classes = getAnimationClassesFromCustomCSS(pageStyle.customCSS);
+    if (classes) return classes;
+  }
+
+  // Fall back to global page-background
+  const globalPageStyle = extTheme.elementStyles['page-background'];
+  if (globalPageStyle?.customCSS) {
+    return getAnimationClassesFromCustomCSS(globalPageStyle.customCSS);
+  }
+
+  return '';
+}
+
+/**
+ * Get animation classes for the sidebar
+ */
+export function getSidebarAnimationClasses(theme: ThemeDefinition | null): string {
+  const extTheme = theme as ExtendedTheme | null;
+  if (!extTheme?.elementStyles?.sidebar?.customCSS) return '';
+
+  return getAnimationClassesFromCustomCSS(extTheme.elementStyles.sidebar.customCSS);
 }

@@ -1,5 +1,6 @@
 // apps/web/src/pages/KioskLoginPage.tsx
 // A touch-friendly PIN login for tablets/kiosk displays
+// Uses theme CSS variables for customizable styling
 
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
@@ -13,6 +14,54 @@ interface PinUser {
   color: string | null;
   avatarUrl: string | null;
 }
+
+// Kiosk styling using CSS variables (customizable via theme editor)
+const kioskStyles = {
+  page: {
+    minHeight: '100vh',
+    background: 'linear-gradient(to bottom right, var(--kiosk-bg-gradient-from), var(--kiosk-bg-gradient-to))',
+    display: 'flex',
+    flexDirection: 'column' as const,
+    alignItems: 'center',
+    justifyContent: 'center',
+    padding: '2rem',
+  },
+  title: {
+    color: 'var(--kiosk-text)',
+  },
+  subtitle: {
+    color: 'var(--kiosk-text-muted)',
+  },
+  userButton: {
+    backgroundColor: 'var(--kiosk-button-bg)',
+    backdropFilter: 'blur(8px)',
+  },
+  userButtonHover: {
+    backgroundColor: 'var(--kiosk-button-hover)',
+  },
+  userButtonActive: {
+    backgroundColor: 'var(--kiosk-button-active)',
+  },
+  pinButton: {
+    backgroundColor: 'var(--kiosk-button-bg)',
+    color: 'var(--kiosk-text)',
+  },
+  pinButtonSecondary: {
+    backgroundColor: 'rgba(255, 255, 255, 0.1)',
+    color: 'var(--kiosk-text)',
+  },
+  submitButton: {
+    backgroundColor: 'var(--kiosk-accent)',
+    color: 'var(--kiosk-bg-gradient-from)',
+  },
+  error: {
+    backgroundColor: 'var(--kiosk-error-bg)',
+    color: 'var(--kiosk-error-text)',
+  },
+  link: {
+    color: 'var(--kiosk-text-muted)',
+  },
+};
 
 export function KioskLoginPage() {
   const navigate = useNavigate();
@@ -91,16 +140,22 @@ export function KioskLoginPage() {
   // User selection screen
   if (!selectedUser) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-purple-600 to-blue-600 flex flex-col items-center justify-center p-8">
-        <h1 className="text-4xl font-bold text-white mb-2">Welcome!</h1>
-        <p className="text-xl text-white/80 mb-8">Who's checking in?</p>
+      <div style={kioskStyles.page}>
+        <h1 className="text-4xl font-bold mb-2" style={kioskStyles.title}>
+          Welcome!
+        </h1>
+        <p className="text-xl mb-8" style={kioskStyles.subtitle}>
+          Who's checking in?
+        </p>
 
         {loading ? (
-          <div className="text-white text-xl">Loading...</div>
+          <div className="text-xl" style={kioskStyles.title}>Loading...</div>
         ) : users.length === 0 ? (
           <div className="text-center">
-            <p className="text-white/80 text-lg mb-4">No users with PINs set up yet.</p>
-            <a href="/login" className="text-white underline">
+            <p className="text-lg mb-4" style={kioskStyles.subtitle}>
+              No users with PINs set up yet.
+            </p>
+            <a href="/login" className="underline" style={kioskStyles.title}>
               Use password login
             </a>
           </div>
@@ -110,23 +165,31 @@ export function KioskLoginPage() {
               <button
                 key={user.id}
                 onClick={() => setSelectedUser(user)}
-                className="bg-white/20 hover:bg-white/30 backdrop-blur-sm rounded-2xl p-6 flex flex-col items-center gap-3 transition-all hover:scale-105 active:scale-95"
+                className="rounded-2xl p-6 flex flex-col items-center gap-3 transition-all hover:scale-105 active:scale-95"
+                style={kioskStyles.userButton}
               >
                 {user.avatarUrl ? (
                   <img
                     src={user.avatarUrl}
                     alt=""
-                    className="w-20 h-20 rounded-full object-cover border-4 border-white/50"
+                    className="w-20 h-20 rounded-full object-cover"
+                    style={{ borderWidth: '4px', borderStyle: 'solid', borderColor: 'var(--kiosk-text-muted)' }}
                   />
                 ) : (
                   <div
-                    className="w-20 h-20 rounded-full flex items-center justify-center text-3xl font-bold text-white border-4 border-white/50"
-                    style={{ backgroundColor: user.color || '#8b5cf6' }}
+                    className="w-20 h-20 rounded-full flex items-center justify-center text-3xl font-bold"
+                    style={{
+                      backgroundColor: user.color || 'var(--kiosk-bg-gradient-from)',
+                      color: 'var(--kiosk-text)',
+                      borderWidth: '4px',
+                      borderStyle: 'solid',
+                      borderColor: 'var(--kiosk-text-muted)',
+                    }}
                   >
                     {(user.nickname || user.displayName).charAt(0).toUpperCase()}
                   </div>
                 )}
-                <span className="text-white text-xl font-medium">
+                <span className="text-xl font-medium" style={kioskStyles.title}>
                   {user.nickname || user.displayName}
                 </span>
               </button>
@@ -135,7 +198,11 @@ export function KioskLoginPage() {
         )}
 
         {/* Link to password login */}
-        <a href="/login" className="mt-8 text-white/60 hover:text-white text-sm underline">
+        <a
+          href="/login"
+          className="mt-8 text-sm underline hover:opacity-80 transition-opacity"
+          style={kioskStyles.link}
+        >
           Use email & password instead
         </a>
       </div>
@@ -144,11 +211,12 @@ export function KioskLoginPage() {
 
   // PIN entry screen
   return (
-    <div className="min-h-screen bg-gradient-to-br from-purple-600 to-blue-600 flex flex-col items-center justify-center p-8">
+    <div style={kioskStyles.page}>
       {/* Back button */}
       <button
         onClick={handleBack}
-        className="absolute top-6 left-6 text-white/80 hover:text-white flex items-center gap-2 text-lg"
+        className="absolute top-6 left-6 flex items-center gap-2 text-lg hover:opacity-80 transition-opacity"
+        style={kioskStyles.subtitle}
       >
         ← Back
       </button>
@@ -159,37 +227,50 @@ export function KioskLoginPage() {
           <img
             src={selectedUser.avatarUrl}
             alt=""
-            className="w-24 h-24 rounded-full object-cover border-4 border-white/50"
+            className="w-24 h-24 rounded-full object-cover"
+            style={{ borderWidth: '4px', borderStyle: 'solid', borderColor: 'var(--kiosk-text-muted)' }}
           />
         ) : (
           <div
-            className="w-24 h-24 rounded-full flex items-center justify-center text-4xl font-bold text-white border-4 border-white/50"
-            style={{ backgroundColor: selectedUser.color || '#8b5cf6' }}
+            className="w-24 h-24 rounded-full flex items-center justify-center text-4xl font-bold"
+            style={{
+              backgroundColor: selectedUser.color || 'var(--kiosk-bg-gradient-from)',
+              color: 'var(--kiosk-text)',
+              borderWidth: '4px',
+              borderStyle: 'solid',
+              borderColor: 'var(--kiosk-text-muted)',
+            }}
           >
             {(selectedUser.nickname || selectedUser.displayName).charAt(0).toUpperCase()}
           </div>
         )}
       </div>
 
-      <h2 className="text-2xl font-bold text-white mb-2">
+      <h2 className="text-2xl font-bold mb-2" style={kioskStyles.title}>
         Hi, {selectedUser.nickname || selectedUser.displayName}!
       </h2>
-      <p className="text-white/80 mb-6">Enter your PIN</p>
+      <p className="mb-6" style={kioskStyles.subtitle}>Enter your PIN</p>
 
       {/* PIN dots */}
       <div className="flex gap-3 mb-6">
         {[0, 1, 2, 3, 4, 5].map((i) => (
           <div
             key={i}
-            className={`w-4 h-4 rounded-full transition-all ${
-              i < pin.length ? 'bg-white scale-110' : 'bg-white/30'
-            }`}
+            className="w-4 h-4 rounded-full transition-all"
+            style={{
+              backgroundColor: i < pin.length ? 'var(--kiosk-text)' : 'var(--kiosk-button-bg)',
+              transform: i < pin.length ? 'scale(1.1)' : 'scale(1)',
+            }}
           />
         ))}
       </div>
 
       {/* Error message */}
-      {error && <div className="mb-4 px-4 py-2 bg-red-500/80 text-white rounded-lg">{error}</div>}
+      {error && (
+        <div className="mb-4 px-4 py-2 rounded-lg" style={kioskStyles.error}>
+          {error}
+        </div>
+      )}
 
       {/* Number pad */}
       <div className="grid grid-cols-3 gap-4 mb-6">
@@ -198,7 +279,8 @@ export function KioskLoginPage() {
             key={num}
             onClick={() => handlePinDigit(String(num))}
             disabled={loading}
-            className="w-20 h-20 rounded-full bg-white/20 hover:bg-white/30 active:bg-white/40 text-white text-3xl font-bold transition-all disabled:opacity-50"
+            className="w-20 h-20 rounded-full text-3xl font-bold transition-all hover:opacity-90 active:scale-95 disabled:opacity-50"
+            style={kioskStyles.pinButton}
           >
             {num}
           </button>
@@ -206,21 +288,24 @@ export function KioskLoginPage() {
         <button
           onClick={handleClear}
           disabled={loading}
-          className="w-20 h-20 rounded-full bg-white/10 hover:bg-white/20 text-white text-lg font-medium transition-all disabled:opacity-50"
+          className="w-20 h-20 rounded-full text-lg font-medium transition-all hover:opacity-80 disabled:opacity-50"
+          style={kioskStyles.pinButtonSecondary}
         >
           Clear
         </button>
         <button
           onClick={() => handlePinDigit('0')}
           disabled={loading}
-          className="w-20 h-20 rounded-full bg-white/20 hover:bg-white/30 active:bg-white/40 text-white text-3xl font-bold transition-all disabled:opacity-50"
+          className="w-20 h-20 rounded-full text-3xl font-bold transition-all hover:opacity-90 active:scale-95 disabled:opacity-50"
+          style={kioskStyles.pinButton}
         >
           0
         </button>
         <button
           onClick={handleBackspace}
           disabled={loading}
-          className="w-20 h-20 rounded-full bg-white/10 hover:bg-white/20 text-white text-2xl transition-all disabled:opacity-50"
+          className="w-20 h-20 rounded-full text-2xl transition-all hover:opacity-80 disabled:opacity-50"
+          style={kioskStyles.pinButtonSecondary}
         >
           ⌫
         </button>
@@ -230,7 +315,8 @@ export function KioskLoginPage() {
       <button
         onClick={handleSubmit}
         disabled={loading || pin.length < 4}
-        className="px-12 py-4 bg-white text-purple-600 rounded-full text-xl font-bold hover:bg-white/90 active:scale-95 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+        className="px-12 py-4 rounded-full text-xl font-bold hover:opacity-90 active:scale-95 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+        style={kioskStyles.submitButton}
       >
         {loading ? 'Checking...' : 'Enter'}
       </button>

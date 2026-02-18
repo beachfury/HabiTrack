@@ -14,6 +14,7 @@ import {
   X,
 } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
+import { useTheme } from '../context/ThemeContext';
 import { shoppingApi } from '../api';
 import type {
   ShoppingCategory,
@@ -46,8 +47,12 @@ type Tab = 'list' | 'catalog' | 'predictions' | 'history' | 'manage';
 
 export function ShoppingPage() {
   const { user } = useAuth();
+  const { getPageAnimationClasses } = useTheme();
   const isAdmin = user?.role === 'admin';
   const isKid = user?.role === 'kid';
+
+  // Get animation classes for the shopping page background
+  const animationClasses = getPageAnimationClasses('shopping-background');
 
   // Data state
   const [activeTab, setActiveTab] = useState<Tab>('list');
@@ -448,9 +453,9 @@ export function ShoppingPage() {
   ];
 
   return (
-    <div className="min-h-screen pb-24 overflow-x-hidden themed-shopping-bg">
+    <div className={`min-h-screen pb-24 overflow-x-hidden themed-shopping-bg ${animationClasses}`}>
       {/* Header */}
-      <div className="themed-card border-b border-[var(--color-border)] sticky top-0 z-10 rounded-none">
+      <div className="themed-shopping-filter border-b border-[var(--color-border)] sticky top-0 z-10 rounded-none">
         <div className="max-w-4xl mx-auto px-3 py-3">
           <div className="flex items-center justify-between mb-3">
             <h1 className="text-xl font-bold text-[var(--color-foreground)] flex items-center gap-2">

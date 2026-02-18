@@ -54,7 +54,7 @@ export function DayDetailModal({
           {/* Add Event Button */}
           <button
             onClick={onAddEvent}
-            className="w-full p-3 border-2 border-dashed border-gray-300 dark:border-gray-600 rounded-xl text-gray-500 dark:text-gray-400 hover:border-blue-500 hover:text-blue-500 transition-colors flex items-center justify-center gap-2"
+            className="w-full p-3 border-2 border-dashed border-[var(--color-border)] rounded-xl text-[var(--color-muted-foreground)] hover:border-[var(--color-primary)] hover:text-[var(--color-primary)] transition-colors flex items-center justify-center gap-2"
           >
             <Plus size={18} />
             Add Event
@@ -63,7 +63,7 @@ export function DayDetailModal({
           {/* Events */}
           {events.length > 0 && (
             <div>
-              <h3 className="text-sm font-medium text-gray-500 dark:text-gray-400 mb-2 flex items-center gap-2">
+              <h3 className="text-sm font-medium text-[var(--color-muted-foreground)] mb-2 flex items-center gap-2">
                 <Calendar size={14} />
                 Events
               </h3>
@@ -72,29 +72,29 @@ export function DayDetailModal({
                   <button
                     key={event.id}
                     onClick={() => onEditEvent(event)}
-                    className="w-full p-3 bg-gray-50 dark:bg-gray-700 rounded-xl text-left hover:bg-gray-100 dark:hover:bg-gray-600 transition-colors"
+                    className="w-full p-3 bg-[var(--color-muted)] rounded-xl text-left hover:opacity-80 transition-colors"
                   >
                     <div className="flex items-start gap-3">
                       <div
                         className="w-3 h-3 rounded-full mt-1 flex-shrink-0"
-                        style={{ backgroundColor: event.color || '#3b82f6' }}
+                        style={{ backgroundColor: event.color || 'var(--color-primary)' }}
                       />
                       <div className="flex-1 min-w-0">
-                        <p className="font-medium text-gray-900 dark:text-white truncate">
+                        <p className="font-medium text-[var(--color-foreground)] truncate">
                           {event.title}
                         </p>
                         {!event.allDay && (
-                          <p className="text-sm text-gray-500 flex items-center gap-1 mt-0.5">
+                          <p className="text-sm text-[var(--color-muted-foreground)] flex items-center gap-1 mt-0.5">
                             <Clock size={12} />
                             {formatTime(event.start)}
                             {event.end && ` - ${formatTime(event.end)}`}
                           </p>
                         )}
                         {event.allDay && (
-                          <p className="text-sm text-gray-500">All day</p>
+                          <p className="text-sm text-[var(--color-muted-foreground)]">All day</p>
                         )}
                         {event.location && (
-                          <p className="text-sm text-gray-500 flex items-center gap-1 mt-0.5">
+                          <p className="text-sm text-[var(--color-muted-foreground)] flex items-center gap-1 mt-0.5">
                             <MapPin size={12} />
                             {event.location}
                           </p>
@@ -110,35 +110,37 @@ export function DayDetailModal({
           {/* Chores */}
           {showChores && chores.length > 0 && (
             <div>
-              <h3 className="text-sm font-medium text-gray-500 dark:text-gray-400 mb-2">
+              <h3 className="text-sm font-medium text-[var(--color-muted-foreground)] mb-2">
                 Chores
               </h3>
               <div className="space-y-2">
                 {chores.map((chore) => (
                   <div
                     key={chore.id}
-                    className={`p-3 rounded-xl ${
-                      chore.status === 'approved'
-                        ? 'bg-green-50 dark:bg-green-900/20'
+                    className="p-3 rounded-xl"
+                    style={{
+                      backgroundColor: chore.status === 'approved'
+                        ? 'color-mix(in srgb, var(--color-success) 10%, transparent)'
                         : chore.status === 'completed'
-                          ? 'bg-yellow-50 dark:bg-yellow-900/20'
-                          : 'bg-purple-50 dark:bg-purple-900/20'
-                    }`}
+                          ? 'color-mix(in srgb, var(--color-warning) 10%, transparent)'
+                          : 'color-mix(in srgb, var(--color-primary) 10%, transparent)',
+                    }}
                   >
                     <div className="flex items-center justify-between">
                       <div className="flex-1 min-w-0">
                         <p
-                          className={`font-medium truncate ${
-                            chore.status === 'approved'
-                              ? 'text-green-700 dark:text-green-300 line-through'
+                          className={`font-medium truncate ${chore.status === 'approved' ? 'line-through' : ''}`}
+                          style={{
+                            color: chore.status === 'approved'
+                              ? 'var(--color-success)'
                               : chore.status === 'completed'
-                                ? 'text-yellow-700 dark:text-yellow-300'
-                                : 'text-purple-700 dark:text-purple-300'
-                          }`}
+                                ? 'var(--color-warning)'
+                                : 'var(--color-primary)',
+                          }}
                         >
                           {chore.title}
                         </p>
-                        <p className="text-sm text-gray-500">
+                        <p className="text-sm text-[var(--color-muted-foreground)]">
                           {chore.points} pts • {chore.assignedToName || 'Unassigned'}
                         </p>
                       </div>
@@ -147,7 +149,7 @@ export function DayDetailModal({
                         <div className="flex gap-1">
                           <button
                             onClick={() => onCompleteChore(chore)}
-                            className="p-2 bg-green-100 dark:bg-green-800 text-green-600 dark:text-green-300 rounded-lg hover:bg-green-200"
+                            className="p-2 bg-[var(--color-success)]/20 text-[var(--color-success)] rounded-lg hover:bg-[var(--color-success)]/30"
                             title="Complete"
                           >
                             <Check size={16} />
@@ -155,7 +157,7 @@ export function DayDetailModal({
                           {isAdmin && (
                             <button
                               onClick={() => onSkipChore(chore)}
-                              className="p-2 bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-300 rounded-lg hover:bg-gray-200"
+                              className="p-2 bg-[var(--color-muted)] text-[var(--color-muted-foreground)] rounded-lg hover:opacity-80"
                               title="Skip"
                             >
                               <SkipForward size={16} />
@@ -165,13 +167,13 @@ export function DayDetailModal({
                       )}
 
                       {chore.status === 'completed' && (
-                        <span className="text-xs text-yellow-600 dark:text-yellow-400 font-medium">
+                        <span className="text-xs text-[var(--color-warning)] font-medium">
                           Awaiting approval
                         </span>
                       )}
 
                       {chore.status === 'approved' && (
-                        <Check size={18} className="text-green-600" />
+                        <Check size={18} className="text-[var(--color-success)]" />
                       )}
                     </div>
                   </div>
@@ -182,7 +184,7 @@ export function DayDetailModal({
 
           {/* Empty State */}
           {events.length === 0 && (!showChores || chores.length === 0) && (
-            <div className="text-center py-8 text-gray-500">
+            <div className="text-center py-8 text-[var(--color-muted-foreground)]">
               <Calendar size={48} className="mx-auto mb-3 opacity-30" />
               <p>No events for this day</p>
             </div>

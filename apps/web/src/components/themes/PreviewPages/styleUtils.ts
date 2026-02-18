@@ -14,6 +14,46 @@ function resolveImageUrl(url: string | undefined): string | undefined {
   return url;
 }
 
+/**
+ * Apply opacity to a color value
+ * Supports hex (#RGB, #RRGGBB, #RRGGBBAA), rgb(), rgba(), and named colors
+ */
+function applyOpacityToColor(color: string, opacity: number): string {
+  if (opacity >= 1) return color;
+  if (opacity <= 0) return 'transparent';
+
+  // If it's already rgba with alpha, modify the alpha
+  const rgbaMatch = color.match(/^rgba?\((\d+),\s*(\d+),\s*(\d+)(?:,\s*[\d.]+)?\)$/i);
+  if (rgbaMatch) {
+    const [, r, g, b] = rgbaMatch;
+    return `rgba(${r}, ${g}, ${b}, ${opacity})`;
+  }
+
+  // If it's a hex color
+  const hexMatch = color.match(/^#([0-9a-f]{3,8})$/i);
+  if (hexMatch) {
+    let hex = hexMatch[1];
+    let r: number, g: number, b: number;
+
+    if (hex.length === 3) {
+      r = parseInt(hex[0] + hex[0], 16);
+      g = parseInt(hex[1] + hex[1], 16);
+      b = parseInt(hex[2] + hex[2], 16);
+    } else if (hex.length === 6 || hex.length === 8) {
+      r = parseInt(hex.slice(0, 2), 16);
+      g = parseInt(hex.slice(2, 4), 16);
+      b = parseInt(hex.slice(4, 6), 16);
+    } else {
+      return color;
+    }
+
+    return `rgba(${r}, ${g}, ${b}, ${opacity})`;
+  }
+
+  // For named colors or other formats, use color-mix
+  return `color-mix(in srgb, ${color} ${Math.round(opacity * 100)}%, transparent)`;
+}
+
 // Shadow preset values
 export const SHADOW_MAP: Record<string, string> = {
   none: 'none',
@@ -39,6 +79,33 @@ const FONT_WEIGHT_MAP: Record<string, number> = {
 };
 
 /**
+ * Parse CSS string to React CSSProperties object
+ * Handles custom CSS from the Advanced tab
+ */
+export function parseCustomCssToStyle(css: string): CSSProperties {
+  const style: Record<string, string> = {};
+
+  // Split by semicolons, handling edge cases
+  const declarations = css.split(';').filter(d => d.trim());
+
+  for (const declaration of declarations) {
+    const colonIndex = declaration.indexOf(':');
+    if (colonIndex === -1) continue;
+
+    const property = declaration.slice(0, colonIndex).trim();
+    const value = declaration.slice(colonIndex + 1).trim();
+
+    if (!property || !value) continue;
+
+    // Convert kebab-case to camelCase for React
+    const camelProperty = property.replace(/-([a-z])/g, (_, letter) => letter.toUpperCase());
+    style[camelProperty] = value;
+  }
+
+  return style as CSSProperties;
+}
+
+/**
  * Build a complete style object from ElementStyle with all properties applied
  */
 export function buildElementStyle(
@@ -52,9 +119,19 @@ export function buildElementStyle(
   const style: CSSProperties = {};
 
   // Background - handle gradient, image, or solid color
+  // Apply background opacity directly to colors (not to the element itself, which would affect children)
+  const bgOpacity = elementStyle.backgroundOpacity;
+  const hasCustomOpacity = bgOpacity !== undefined && bgOpacity < 1;
+
   if (elementStyle.backgroundGradient) {
     const { from, to, direction } = elementStyle.backgroundGradient;
-    style.background = `linear-gradient(${direction || 'to bottom'}, ${from}, ${to})`;
+    if (hasCustomOpacity) {
+      const fromWithOpacity = applyOpacityToColor(from, bgOpacity);
+      const toWithOpacity = applyOpacityToColor(to, bgOpacity);
+      style.background = `linear-gradient(${direction || 'to bottom'}, ${fromWithOpacity}, ${toWithOpacity})`;
+    } else {
+      style.background = `linear-gradient(${direction || 'to bottom'}, ${from}, ${to})`;
+    }
   } else if (elementStyle.backgroundImage) {
     const resolvedUrl = resolveImageUrl(elementStyle.backgroundImage);
     if (resolvedUrl) {
@@ -62,21 +139,20 @@ export function buildElementStyle(
     }
     style.backgroundSize = 'cover';
     style.backgroundPosition = 'center';
-    // Also set a fallback background color
-    style.backgroundColor = elementStyle.backgroundColor || fallbackBg;
+    // Also set a fallback background color (with opacity if set)
+    const bgColor = elementStyle.backgroundColor || fallbackBg;
+    style.backgroundColor = hasCustomOpacity ? applyOpacityToColor(bgColor, bgOpacity) : bgColor;
   } else if (elementStyle.backgroundColor) {
-    style.backgroundColor = elementStyle.backgroundColor;
+    style.backgroundColor = hasCustomOpacity
+      ? applyOpacityToColor(elementStyle.backgroundColor, bgOpacity)
+      : elementStyle.backgroundColor;
   } else {
-    style.backgroundColor = fallbackBg;
+    style.backgroundColor = hasCustomOpacity
+      ? applyOpacityToColor(fallbackBg, bgOpacity)
+      : fallbackBg;
   }
 
-  // Background opacity (applies a semi-transparent layer)
-  if (elementStyle.backgroundOpacity !== undefined && elementStyle.backgroundOpacity < 1) {
-    // For elements with background opacity, we need to handle it differently
-    // Using opacity on the whole element would affect children too
-    // Instead, we track this for potential use with pseudo-elements
-    style.opacity = elementStyle.backgroundOpacity;
-  }
+  // Note: backgroundOpacity is now applied directly to colors above, not to the element
 
   // Text styling
   if (elementStyle.textColor) {
@@ -134,6 +210,51 @@ export function buildElementStyle(
     style.opacity = elementStyle.opacity;
   }
 
+  // Transform effects
+  const transforms: string[] = [];
+  if (elementStyle.scale !== undefined && elementStyle.scale !== 1) {
+    transforms.push(`scale(${elementStyle.scale})`);
+  }
+  if (elementStyle.rotate !== undefined && elementStyle.rotate !== 0) {
+    transforms.push(`rotate(${elementStyle.rotate}deg)`);
+  }
+  if (elementStyle.skewX !== undefined && elementStyle.skewX !== 0) {
+    transforms.push(`skewX(${elementStyle.skewX}deg)`);
+  }
+  if (elementStyle.skewY !== undefined && elementStyle.skewY !== 0) {
+    transforms.push(`skewY(${elementStyle.skewY}deg)`);
+  }
+  if (transforms.length > 0) {
+    style.transform = transforms.join(' ');
+  }
+
+  // Filter effects
+  const filters: string[] = [];
+  if (elementStyle.saturation !== undefined && elementStyle.saturation !== 100) {
+    filters.push(`saturate(${elementStyle.saturation}%)`);
+  }
+  if (elementStyle.grayscale !== undefined && elementStyle.grayscale !== 0) {
+    filters.push(`grayscale(${elementStyle.grayscale}%)`);
+  }
+  if (filters.length > 0) {
+    style.filter = filters.join(' ');
+  }
+
+  // Glow effect (add to box-shadow)
+  if (elementStyle.glowColor && elementStyle.glowSize !== undefined && elementStyle.glowSize > 0) {
+    const existingShadow = style.boxShadow && style.boxShadow !== 'none' ? `${style.boxShadow}, ` : '';
+    style.boxShadow = `${existingShadow}0 0 ${elementStyle.glowSize}px ${elementStyle.glowColor}`;
+  }
+
+  // Add transition for hover effects
+  style.transition = 'transform 0.2s ease, opacity 0.2s ease, filter 0.2s ease';
+
+  // Apply custom CSS (from Advanced tab) - overrides other properties
+  if (elementStyle.customCSS) {
+    const customStyles = parseCustomCssToStyle(elementStyle.customCSS);
+    Object.assign(style, customStyles);
+  }
+
   return style;
 }
 
@@ -145,22 +266,24 @@ export function buildPageBackgroundStyle(
   pageStyle: ElementStyle | undefined,
   globalPageStyle: ElementStyle | undefined,
   fallbackBg: string
-): { style: CSSProperties; hasCustomStyle: boolean; backgroundImageUrl?: string } {
+): { style: CSSProperties; hasCustomStyle: boolean; backgroundImageUrl?: string; customCSS?: string } {
   const style: CSSProperties = {
     position: 'relative',
   };
 
-  // Use page-specific style if it has any background properties, else fall back to global
+  // Use page-specific style if it has any background properties OR customCSS, else fall back to global
   const effectiveStyle = (pageStyle && (
     pageStyle.backgroundColor ||
     pageStyle.backgroundGradient ||
-    pageStyle.backgroundImage
+    pageStyle.backgroundImage ||
+    pageStyle.customCSS
   )) ? pageStyle : globalPageStyle;
 
   const hasCustomStyle = !!(effectiveStyle && (
     effectiveStyle.backgroundColor ||
     effectiveStyle.backgroundGradient ||
-    effectiveStyle.backgroundImage
+    effectiveStyle.backgroundImage ||
+    effectiveStyle.customCSS
   ));
 
   let backgroundImageUrl: string | undefined;
@@ -179,11 +302,17 @@ export function buildPageBackgroundStyle(
     } else {
       style.backgroundColor = fallbackBg;
     }
+
+    // Apply custom CSS (from Advanced tab) - overrides other properties
+    if (effectiveStyle.customCSS) {
+      const customStyles = parseCustomCssToStyle(effectiveStyle.customCSS);
+      Object.assign(style, customStyles);
+    }
   } else {
     style.backgroundColor = fallbackBg;
   }
 
-  return { style, hasCustomStyle, backgroundImageUrl };
+  return { style, hasCustomStyle, backgroundImageUrl, customCSS: effectiveStyle?.customCSS };
 }
 
 /**
@@ -196,8 +325,13 @@ export function buildButtonStyle(
   fallbackBorder: string,
   fallbackRadius: string
 ): CSSProperties {
+  // Apply background opacity directly to colors
+  const bgOpacity = elementStyle.backgroundOpacity;
+  const hasCustomOpacity = bgOpacity !== undefined && bgOpacity < 1;
+
+  const bgColor = elementStyle.backgroundColor || fallbackBg;
   const style: CSSProperties = {
-    backgroundColor: elementStyle.backgroundColor || fallbackBg,
+    backgroundColor: hasCustomOpacity ? applyOpacityToColor(bgColor, bgOpacity) : bgColor,
     color: elementStyle.textColor || fallbackText,
     borderRadius: elementStyle.borderRadius !== undefined
       ? `${elementStyle.borderRadius}px`
@@ -207,7 +341,13 @@ export function buildButtonStyle(
   // Background gradient for buttons
   if (elementStyle.backgroundGradient) {
     const { from, to, direction } = elementStyle.backgroundGradient;
-    style.background = `linear-gradient(${direction || 'to bottom'}, ${from}, ${to})`;
+    if (hasCustomOpacity) {
+      const fromWithOpacity = applyOpacityToColor(from, bgOpacity);
+      const toWithOpacity = applyOpacityToColor(to, bgOpacity);
+      style.background = `linear-gradient(${direction || 'to bottom'}, ${fromWithOpacity}, ${toWithOpacity})`;
+    } else {
+      style.background = `linear-gradient(${direction || 'to bottom'}, ${from}, ${to})`;
+    }
   }
 
   // Border
@@ -223,6 +363,60 @@ export function buildButtonStyle(
   // Shadow
   if (elementStyle.boxShadow) {
     style.boxShadow = SHADOW_MAP[elementStyle.boxShadow] || elementStyle.boxShadow;
+  }
+
+  // Effects
+  if (elementStyle.opacity !== undefined) {
+    style.opacity = elementStyle.opacity;
+  }
+
+  if (elementStyle.blur) {
+    style.backdropFilter = `blur(${elementStyle.blur}px)`;
+  }
+
+  // Transform effects
+  const transforms: string[] = [];
+  if (elementStyle.scale !== undefined && elementStyle.scale !== 1) {
+    transforms.push(`scale(${elementStyle.scale})`);
+  }
+  if (elementStyle.rotate !== undefined && elementStyle.rotate !== 0) {
+    transforms.push(`rotate(${elementStyle.rotate}deg)`);
+  }
+  if (elementStyle.skewX !== undefined && elementStyle.skewX !== 0) {
+    transforms.push(`skewX(${elementStyle.skewX}deg)`);
+  }
+  if (elementStyle.skewY !== undefined && elementStyle.skewY !== 0) {
+    transforms.push(`skewY(${elementStyle.skewY}deg)`);
+  }
+  if (transforms.length > 0) {
+    style.transform = transforms.join(' ');
+  }
+
+  // Filter effects
+  const filters: string[] = [];
+  if (elementStyle.saturation !== undefined && elementStyle.saturation !== 100) {
+    filters.push(`saturate(${elementStyle.saturation}%)`);
+  }
+  if (elementStyle.grayscale !== undefined && elementStyle.grayscale !== 0) {
+    filters.push(`grayscale(${elementStyle.grayscale}%)`);
+  }
+  if (filters.length > 0) {
+    style.filter = filters.join(' ');
+  }
+
+  // Glow effect (add to box-shadow)
+  if (elementStyle.glowColor && elementStyle.glowSize !== undefined && elementStyle.glowSize > 0) {
+    const existingShadow = style.boxShadow && style.boxShadow !== 'none' ? `${style.boxShadow}, ` : '';
+    style.boxShadow = `${existingShadow}0 0 ${elementStyle.glowSize}px ${elementStyle.glowColor}`;
+  }
+
+  // Add transition for hover effects
+  style.transition = 'all 0.15s ease';
+
+  // Apply custom CSS (from Advanced tab) - overrides other properties
+  if (elementStyle.customCSS) {
+    const customStyles = parseCustomCssToStyle(elementStyle.customCSS);
+    Object.assign(style, customStyles);
   }
 
   return style;

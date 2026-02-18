@@ -321,7 +321,7 @@ export function ColorPickerModal({ currentColor, onSelect, onClose }: ColorPicke
           </div>
 
           {/* Preview */}
-          <div className="flex items-center gap-4 p-3 bg-gray-50 dark:bg-gray-700/50 rounded-xl">
+          <div className="flex items-center gap-4 p-3 bg-gray-100 dark:bg-gray-700/50 rounded-xl">
             <div
               className="w-12 h-12 rounded-xl shadow-inner border border-gray-200 dark:border-gray-600"
               style={{ backgroundColor: selectedColor }}
@@ -450,8 +450,8 @@ export function ColorPickerModal({ currentColor, onSelect, onClose }: ColorPicke
                   onClick={() => setSliderMode('hsl')}
                   className={`px-3 py-1 rounded-lg text-sm font-medium ${
                     sliderMode === 'hsl'
-                      ? 'bg-gray-200 dark:bg-gray-600 text-gray-900 dark:text-white'
-                      : 'text-gray-500 hover:bg-gray-100 dark:hover:bg-gray-700'
+                      ? 'bg-purple-100 dark:bg-purple-900/30 text-purple-700 dark:text-purple-300'
+                      : 'text-gray-500 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-700'
                   }`}
                 >
                   HSL
@@ -460,8 +460,8 @@ export function ColorPickerModal({ currentColor, onSelect, onClose }: ColorPicke
                   onClick={() => setSliderMode('rgb')}
                   className={`px-3 py-1 rounded-lg text-sm font-medium ${
                     sliderMode === 'rgb'
-                      ? 'bg-gray-200 dark:bg-gray-600 text-gray-900 dark:text-white'
-                      : 'text-gray-500 hover:bg-gray-100 dark:hover:bg-gray-700'
+                      ? 'bg-purple-100 dark:bg-purple-900/30 text-purple-700 dark:text-purple-300'
+                      : 'text-gray-500 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-700'
                   }`}
                 >
                   RGB
@@ -628,7 +628,7 @@ export function ColorPickerModal({ currentColor, onSelect, onClose }: ColorPicke
                       }
                     }
                   }}
-                  className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-xl bg-white dark:bg-gray-800 font-mono uppercase"
+                  className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-xl bg-gray-50 dark:bg-gray-800 text-gray-900 dark:text-white font-mono uppercase"
                   placeholder="#000000"
                   maxLength={7}
                 />
@@ -650,7 +650,7 @@ export function ColorPickerModal({ currentColor, onSelect, onClose }: ColorPicke
                     value={swatchName}
                     onChange={(e) => setSwatchName(e.target.value)}
                     placeholder="Color name..."
-                    className="flex-1 px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-xl bg-white dark:bg-gray-800 text-sm"
+                    className="flex-1 px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-xl bg-gray-50 dark:bg-gray-800 text-gray-900 dark:text-white text-sm"
                     autoFocus
                   />
                   <button

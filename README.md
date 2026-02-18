@@ -97,12 +97,14 @@ HabiTrack features a powerful theming system that allows deep customization:
 - **Mode-aware colors** — separate color palettes for light and dark modes
 - **Global color palette** customization (primary, accent, background, card, muted, border, destructive, success, warning)
 - **Per-element styling** — customize cards, widgets, buttons, inputs, modals individually
-- **Per-page backgrounds** — different backgrounds for each section of the app
+- **Per-page backgrounds** — different backgrounds for each section of the app (14 pages supported)
 - **Page-specific element overrides** — style the calendar grid differently than the chores card
 - **Background images** with opacity control and media library
+- **Animated CSS effects** — Matrix rain, snowfall, sparkle, bubbles, embers (combinable!)
 - **Typography control** — custom fonts, sizes, line heights
 - **Border radius and shadow** presets
-- **Live preview** in the theme editor with all app pages
+- **Live preview** in the theme editor with 14 page previews
+- **"Apply to All"** — quickly copy background settings across multiple pages
 - **Theme library** — save, duplicate, and share themes
 - **Kid-safe themes** — admins can approve themes for kids to use
 - **Two default themes**: HabiTrack Classic (uneditable) and Household Brand (customizable)
@@ -685,8 +687,10 @@ HabiTrack includes a powerful theming system that goes beyond simple color chang
 - **Typography**: Choose font family, base size, and line height
 - **UI Presets**: Border radius (none, small, medium, large) and shadow intensity (none, subtle, medium, strong)
 - **Element Styles**: Per-element customization for cards, widgets, buttons, inputs, modals, sidebar
-- **Page Backgrounds**: Set different backgrounds (solid, gradient, or image) for each page
-- **Live Preview**: See changes in real-time across all preview pages (Home, Calendar, Chores, Shopping, Messages, Settings, Login)
+- **Page Backgrounds**: Set different backgrounds (solid, gradient, or image) for each of 14 pages
+- **Animated Effects**: Add Matrix rain, snowfall, sparkle, bubbles, or embers to any page background
+- **Live Preview**: See changes in real-time across 14 preview pages (Home, Chores, Calendar, Shopping, Messages, Settings, Budget, Meals, Recipes, Paid Chores, Family, Modal, Login, Kiosk)
+- **Apply to All**: Quickly copy background settings from one page to multiple others
 - **Media Library**: Upload and manage background images with category organization
 - **Reset to Defaults**: Easily reset elements to theme defaults while preserving mode-awareness
 
@@ -763,6 +767,146 @@ The theme system uses CSS custom properties (variables) for all colors, making i
 --color-success-foreground
 --color-warning
 --color-warning-foreground
+
+/* Per-page backgrounds */
+--home-page-bg
+--calendar-page-bg
+--chores-page-bg
+--shopping-page-bg
+--messages-page-bg
+--settings-page-bg
+--budget-page-bg
+--meals-page-bg
+--recipes-page-bg
+--paidchores-page-bg
+--family-page-bg
+```
+
+### Advanced Theme Features
+
+HabiTrack's theme editor includes powerful advanced features for deep customization:
+
+#### Per-Page Background Customization
+
+Each page in HabiTrack can have its own unique background:
+
+1. Go to **Settings → Themes → Edit Theme**
+2. Click on any page tab (Home, Calendar, Chores, Shopping, etc.)
+3. Click on the page background area in the preview
+4. Use the **Background** tab in the element editor to set:
+   - **Solid color**: Pick any color for the background
+   - **Gradient**: Create a gradient with custom colors and direction
+   - **Image**: Upload or select from the media library
+   - **Opacity**: Control image transparency (0-100%)
+
+**Example: Create a gradient background for the Home page**
+1. Select the Home page tab in the preview
+2. Click on the page background
+3. In the Background tab, select "Gradient"
+4. Set "From" color to `#1a1a2e` and "To" color to `#16213e`
+5. Choose direction (e.g., "to bottom right")
+6. The preview updates in real-time
+
+#### Apply to All Pages
+
+To quickly apply the same background to multiple pages:
+
+1. Configure the background on one page (e.g., Home)
+2. Click the **"Apply to All"** button in the element editor
+3. Select which pages should receive this background
+4. Click Apply — all selected pages now share the same background
+
+#### Advanced CSS Effects
+
+HabiTrack includes animated background effects that can be combined:
+
+| Effect | Description | Use Case |
+|--------|-------------|----------|
+| **Matrix Rain** | Digital falling characters (The Matrix style) | Tech/cyberpunk themes |
+| **Snowfall** | Gentle falling snowflakes | Winter/holiday themes |
+| **Sparkle** | Twinkling star effects | Magical/fantasy themes |
+| **Bubbles** | Rising bubble animation | Underwater/aquatic themes |
+| **Embers** | Floating glowing particles | Fire/warm themes |
+
+**How to add effects:**
+
+1. Select a page and click on its background
+2. Go to the **Advanced** tab in the element editor
+3. Toggle effects ON/OFF in the "Combinable CSS Effects" section
+4. For Matrix Rain, choose a speed: Slow, Normal, Fast, or Very Fast
+5. Effects are combinable — enable multiple for unique looks!
+
+**Example: Matrix Rain + Sparkle combo**
+```
+In the Advanced tab:
+- Toggle "Matrix Rain" ON
+- Set speed to "Fast"
+- Toggle "Sparkle" ON
+
+The page now shows falling digital characters with twinkling stars.
+```
+
+#### Per-Element Styling
+
+Beyond backgrounds, you can customize individual UI elements:
+
+| Element | What You Can Style |
+|---------|-------------------|
+| **Cards** | Background, border radius, shadow, opacity |
+| **Buttons** | Colors, hover states, border radius |
+| **Inputs** | Border color, background, focus states |
+| **Modals** | Background, backdrop blur, shadow |
+| **Sidebar** | Background color, gradient, or image |
+| **Widgets** | Individual dashboard widget styling |
+
+**Example: Glass-morphism cards**
+1. Select a card element in the preview
+2. In the Background tab:
+   - Set background color with low opacity (e.g., `rgba(255,255,255,0.1)`)
+3. In the Effects tab:
+   - Add backdrop blur (8px)
+   - Add subtle shadow
+4. In the Border tab:
+   - Add a subtle border (e.g., `rgba(255,255,255,0.2)`)
+
+#### Theme Preview Pages
+
+The theme editor includes live previews for all pages:
+
+| Page | What's Previewed |
+|------|-----------------|
+| **Home** | Dashboard widgets, stats, greeting |
+| **Chores** | Chore cards, completion buttons, filters |
+| **Calendar** | Calendar grid, events, day details |
+| **Shopping** | Shopping lists, item cards, categories |
+| **Messages** | Message list, announcements, DMs |
+| **Settings** | Settings form, tabs, inputs |
+| **Budget** | Budget cards, progress bars, entries |
+| **Meals** | Meal planner grid, week view |
+| **Recipes** | Recipe cards, ratings, cook time |
+| **Paid Chores** | Reward amounts, claim buttons |
+| **Family** | Member list, avatars, roles |
+| **Modal** | Example modal dialogs |
+| **Login** | Login form styling (admin only) |
+| **Kiosk** | Kiosk PIN entry screen (admin only) |
+
+#### Custom CSS (Power Users)
+
+For advanced users, the Custom CSS field in the Advanced tab accepts special directives:
+
+```css
+/* Enable animated effects */
+matrix-rain: true
+matrix-rain-speed: fast    /* slow, normal, fast, veryfast */
+snowfall: true
+sparkle: true
+bubbles: true
+embers: true
+
+/* Combine multiple effects */
+matrix-rain: true
+matrix-rain-speed: slow
+sparkle: true
 ```
 
 ---

@@ -14,7 +14,11 @@ import {
   buildCssVariables,
   applyCssVariables,
   applyLcarsMode,
+  applyElementCustomCss,
+  getPageAnimationClasses,
+  getSidebarAnimationClasses,
 } from './themeCssGenerator';
+import type { ThemeableElement } from '../types/theme';
 
 // Local ThemeMode type (subset of the API type which also includes 'auto')
 type ThemeMode = 'light' | 'dark' | 'system';
@@ -40,6 +44,10 @@ interface ThemeContextType {
 
   // Resolved colors based on mode
   colors: ThemeColors;
+
+  // Animation utilities
+  getPageAnimationClasses: (pageElement: ThemeableElement) => string;
+  getSidebarAnimationClasses: () => string;
 }
 
 const ThemeContext = createContext<ThemeContextType | null>(null);
@@ -165,6 +173,7 @@ export function ThemeProvider({ children }: { children: ReactNode }) {
     setCssVariables(vars);
     applyCssVariables(vars);
     applyLcarsMode(activeTheme);
+    applyElementCustomCss(activeTheme);
   }, [activeTheme, resolvedTheme, accentColor]);
 
   // Get current colors based on mode
@@ -202,6 +211,17 @@ export function ThemeProvider({ children }: { children: ReactNode }) {
     localStorage.setItem('habitrack-accent', color);
     updateUserSettings({ accentColor: color }).catch(() => {});
   }, []);
+
+  // Animation class getters - memoized based on activeTheme
+  const getPageAnimationClassesFn = useCallback(
+    (pageElement: ThemeableElement) => getPageAnimationClasses(activeTheme, pageElement),
+    [activeTheme]
+  );
+
+  const getSidebarAnimationClassesFn = useCallback(
+    () => getSidebarAnimationClasses(activeTheme),
+    [activeTheme]
+  );
 
   // New: Set active theme
   const setActiveTheme = useCallback(async (themeId: string) => {
@@ -246,6 +266,9 @@ export function ThemeProvider({ children }: { children: ReactNode }) {
         // CSS variables and colors
         cssVariables,
         colors,
+        // Animation utilities
+        getPageAnimationClasses: getPageAnimationClassesFn,
+        getSidebarAnimationClasses: getSidebarAnimationClassesFn,
       }}
     >
       {children}

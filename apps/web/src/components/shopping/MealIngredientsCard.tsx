@@ -132,7 +132,7 @@ export function MealIngredientsCard({
   const mealKeys = Object.keys(groupedSuggestions).sort();
 
   return (
-    <div className="themed-card overflow-hidden mb-4">
+    <div className="themed-shopping-list overflow-hidden mb-4">
       {/* Header */}
       <button
         onClick={() => setExpanded(!expanded)}

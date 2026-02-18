@@ -3,11 +3,26 @@ import { useState, useEffect, useCallback } from 'react';
 import { GridLayout, useContainerWidth, useResponsiveLayout, LayoutItem } from 'react-grid-layout';
 import { Plus, Settings, RotateCcw, GripVertical, X } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
+import { useTheme } from '../context/ThemeContext';
 import { dashboardApi, WidgetLayout, DashboardWidget, DashboardData } from '../api/dashboard';
 import { widgetComponents } from '../components/dashboard/widgets';
 import { ModalPortal, ModalBody } from '../components/common/ModalPortal';
 
 import 'react-grid-layout/css/styles.css';
+
+// Map widget IDs to home-specific themed classes for individual styling
+const WIDGET_THEMED_CLASS_MAP: Record<string, string> = {
+  'welcome': 'themed-home-welcome',
+  'quick-stats': 'themed-home-stats',
+  'todays-chores': 'themed-home-chores',
+  'my-chores': 'themed-home-chores',
+  'chore-leaderboard': 'themed-home-leaderboard',
+  'paid-chores': 'themed-home-chores',
+  'todays-events': 'themed-home-events',
+  'upcoming-events': 'themed-home-events',
+  'weather': 'themed-home-weather',
+  'upcoming-meals': 'themed-home-meals',
+};
 
 // Map widget data to widget props
 function getWidgetProps(widgetId: string, data: DashboardData, currentUserId?: number): Record<string, unknown> {
@@ -84,7 +99,11 @@ function getWidgetProps(widgetId: string, data: DashboardData, currentUserId?: n
 
 export function HomePage() {
   const { user } = useAuth();
+  const { getPageAnimationClasses } = useTheme();
   const { width, containerRef, mounted } = useContainerWidth();
+
+  // Get animation classes for the home page background
+  const animationClasses = getPageAnimationClasses('home-background');
   const [layouts, setLayouts] = useState<WidgetLayout[]>([]);
   const [availableWidgets, setAvailableWidgets] = useState<DashboardWidget[]>([]);
   const [dashboardData, setDashboardData] = useState<DashboardData>({});
@@ -236,11 +255,11 @@ export function HomePage() {
   }
 
   return (
-    <div className="p-4 max-w-7xl mx-auto themed-dashboard-bg" ref={containerRef}>
+    <div className={`p-4 min-h-screen themed-home-bg ${animationClasses}`} ref={containerRef}>
       {/* Header */}
       <div className="flex items-center justify-between mb-4">
-        <h1 className="text-2xl font-bold text-[var(--color-foreground)]">
-          Dashboard
+        <h1 className="themed-home-title">
+          Home
         </h1>
         <div className="flex items-center gap-2">
           {isEditing ? (
@@ -313,12 +332,13 @@ export function HomePage() {
             .map((layout) => {
               const WidgetComponent = widgetComponents[layout.widgetId];
               const widgetInfo = availableWidgets.find((w) => w.id === layout.widgetId);
+              const themedClass = WIDGET_THEMED_CLASS_MAP[layout.widgetId] || 'themed-card';
 
               if (!WidgetComponent) {
                 return (
                   <div
                     key={layout.widgetId}
-                    className="themed-card"
+                    className={themedClass}
                   >
                     <p className="text-[var(--color-muted-foreground)]">Unknown widget: {layout.widgetId}</p>
                   </div>
@@ -330,7 +350,7 @@ export function HomePage() {
               return (
                 <div
                   key={layout.widgetId}
-                  className="themed-card overflow-hidden"
+                  className={`${themedClass} overflow-hidden`}
                   style={{ padding: 0 }}
                 >
                   {isEditing && (

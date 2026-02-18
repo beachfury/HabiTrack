@@ -20,7 +20,7 @@ export function HistoryTab({ analytics, purchaseHistory, onPeriodChange }: Histo
 
   if (!analytics) {
     return (
-      <div className="themed-card p-8 text-center">
+      <div className="themed-shopping-list p-8 text-center">
         <BarChart3 size={48} className="mx-auto mb-3 text-[var(--color-muted-foreground)]" />
         <p className="text-[var(--color-muted-foreground)]">Loading...</p>
       </div>
@@ -52,11 +52,11 @@ export function HistoryTab({ analytics, purchaseHistory, onPeriodChange }: Histo
 
       {/* Summary Cards */}
       <div className="grid grid-cols-2 gap-2">
-        <div className="themed-card p-3">
+        <div className="themed-shopping-list p-3">
           <p className="text-xs text-[var(--color-muted-foreground)]">Total Spent</p>
           <p className="text-xl font-bold text-[var(--color-success)]">${totalSpent.toFixed(2)}</p>
         </div>
-        <div className="themed-card p-3">
+        <div className="themed-shopping-list p-3">
           <p className="text-xs text-[var(--color-muted-foreground)]">Purchases</p>
           <p className="text-xl font-bold text-[var(--color-info)]">{purchaseCount}</p>
         </div>
@@ -64,7 +64,7 @@ export function HistoryTab({ analytics, purchaseHistory, onPeriodChange }: Histo
 
       {/* Category Spending */}
       {analytics.categorySpending && analytics.categorySpending.length > 0 && (
-        <div className="themed-card p-3">
+        <div className="themed-shopping-list p-3">
           <h3 className="font-semibold text-[var(--color-foreground)] mb-2 text-sm">By Category</h3>
           <div className="space-y-2">
             {analytics.categorySpending.slice(0, 5).map((cat, i) => {
@@ -94,7 +94,7 @@ export function HistoryTab({ analytics, purchaseHistory, onPeriodChange }: Histo
       {/* Purchase History Toggle */}
       <button
         onClick={() => setShowHistory(!showHistory)}
-        className="w-full p-3 themed-card flex items-center justify-between"
+        className="w-full p-3 themed-shopping-list flex items-center justify-between"
       >
         <span className="font-medium text-[var(--color-foreground)] flex items-center gap-2">
           <History size={18} /> Purchase History
@@ -103,7 +103,7 @@ export function HistoryTab({ analytics, purchaseHistory, onPeriodChange }: Histo
       </button>
 
       {showHistory && purchaseHistory.length > 0 && (
-        <div className="themed-card overflow-hidden max-h-64 overflow-y-auto">
+        <div className="themed-shopping-list overflow-hidden max-h-64 overflow-y-auto">
           {purchaseHistory.map((p) => (
             <div
               key={p.id}

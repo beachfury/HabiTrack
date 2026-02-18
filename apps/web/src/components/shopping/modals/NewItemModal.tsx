@@ -148,7 +148,7 @@ export function NewItemModal({
     <button
       onClick={handleSubmit}
       disabled={!name.trim() || submitting}
-      className="w-full py-3 bg-orange-500 text-white rounded-xl font-medium hover:bg-orange-600 transition-colors disabled:opacity-50"
+      className="w-full py-3 bg-[var(--color-primary)] text-[var(--color-primary-foreground)] rounded-xl font-medium hover:opacity-90 transition-opacity disabled:opacity-50"
     >
       {getButtonText()}
     </button>
@@ -165,14 +165,14 @@ export function NewItemModal({
       <ModalBody>
         <div className="space-y-4">
           {!isAdmin && !isEditMode && (
-            <div className="p-3 bg-blue-50 dark:bg-blue-900/20 rounded-xl text-sm text-blue-700 dark:text-blue-300">
+            <div className="p-3 rounded-xl text-sm" style={{ backgroundColor: 'color-mix(in srgb, var(--color-primary) 10%, transparent)', color: 'var(--color-primary)' }}>
               Your request will be sent to an admin for approval.
             </div>
           )}
 
           {/* Image */}
           <div>
-            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+            <label className="block text-sm font-medium text-[var(--color-foreground)] mb-1">
               Photo
             </label>
             <input
@@ -187,7 +187,7 @@ export function NewItemModal({
                 <img src={imageUrl} alt="" className="w-full h-32 object-cover rounded-xl" />
                 <button
                   onClick={() => setImageUrl('')}
-                  className="absolute top-2 right-2 p-1 bg-red-500 text-white rounded-full"
+                  className="absolute top-2 right-2 p-1 bg-[var(--color-destructive)] text-[var(--color-destructive-foreground)] rounded-full"
                 >
                   <X size={16} />
                 </button>
@@ -196,14 +196,14 @@ export function NewItemModal({
               <button
                 onClick={() => fileInputRef.current?.click()}
                 disabled={uploading}
-                className="w-full h-24 border-2 border-dashed border-gray-300 dark:border-gray-600 rounded-xl flex flex-col items-center justify-center gap-2 hover:border-orange-500 transition-colors"
+                className="w-full h-24 border-2 border-dashed border-[var(--color-border)] rounded-xl flex flex-col items-center justify-center gap-2 hover:border-[var(--color-primary)] transition-colors"
               >
                 {uploading ? (
-                  <RefreshCw size={24} className="animate-spin text-gray-400" />
+                  <RefreshCw size={24} className="animate-spin text-[var(--color-muted-foreground)]" />
                 ) : (
                   <>
-                    <Camera size={24} className="text-gray-400" />
-                    <span className="text-sm text-gray-500">Upload photo</span>
+                    <Camera size={24} className="text-[var(--color-muted-foreground)]" />
+                    <span className="text-sm text-[var(--color-muted-foreground)]">Upload photo</span>
                   </>
                 )}
               </button>
@@ -212,7 +212,7 @@ export function NewItemModal({
 
           {/* Name */}
           <div>
-            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+            <label className="block text-sm font-medium text-[var(--color-foreground)] mb-1">
               Name *
             </label>
             <input
@@ -220,14 +220,14 @@ export function NewItemModal({
               value={name}
               onChange={(e) => setName(e.target.value)}
               placeholder="e.g., Cheerios"
-              className="w-full px-3 py-2 border border-gray-200 dark:border-gray-700 rounded-xl bg-white dark:bg-gray-800"
+              className="w-full px-3 py-2 border border-[var(--color-border)] rounded-xl bg-[var(--color-card)] text-[var(--color-foreground)]"
               required
             />
           </div>
 
           {/* Brand */}
           <div>
-            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+            <label className="block text-sm font-medium text-[var(--color-foreground)] mb-1">
               Brand
             </label>
             <input
@@ -235,13 +235,13 @@ export function NewItemModal({
               value={brand}
               onChange={(e) => setBrand(e.target.value)}
               placeholder="e.g., General Mills"
-              className="w-full px-3 py-2 border border-gray-200 dark:border-gray-700 rounded-xl bg-white dark:bg-gray-800"
+              className="w-full px-3 py-2 border border-[var(--color-border)] rounded-xl bg-[var(--color-card)] text-[var(--color-foreground)]"
             />
           </div>
 
           {/* Size */}
           <div>
-            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+            <label className="block text-sm font-medium text-[var(--color-foreground)] mb-1">
               Size/Package
             </label>
             <input
@@ -249,19 +249,19 @@ export function NewItemModal({
               value={sizeText}
               onChange={(e) => setSizeText(e.target.value)}
               placeholder="e.g., 18 oz"
-              className="w-full px-3 py-2 border border-gray-200 dark:border-gray-700 rounded-xl bg-white dark:bg-gray-800"
+              className="w-full px-3 py-2 border border-[var(--color-border)] rounded-xl bg-[var(--color-card)] text-[var(--color-foreground)]"
             />
           </div>
 
           {/* Category */}
           <div>
-            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+            <label className="block text-sm font-medium text-[var(--color-foreground)] mb-1">
               Category
             </label>
             <select
               value={categoryId || ''}
               onChange={(e) => setCategoryId(e.target.value ? Number(e.target.value) : null)}
-              className="w-full px-3 py-2 border border-gray-200 dark:border-gray-700 rounded-xl bg-white dark:bg-gray-800"
+              className="w-full px-3 py-2 border border-[var(--color-border)] rounded-xl bg-[var(--color-card)] text-[var(--color-foreground)]"
             >
               <option value="">Select category...</option>
               {categories.map((cat) => (
@@ -276,13 +276,13 @@ export function NewItemModal({
           {isAdmin && (
             <div>
               <div className="flex items-center justify-between mb-2">
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">
+                <label className="block text-sm font-medium text-[var(--color-foreground)]">
                   Store Prices
                 </label>
                 <button
                   onClick={addPriceEntry}
                   disabled={prices.length >= stores.length}
-                  className="text-sm text-orange-600 hover:text-orange-700 disabled:opacity-50"
+                  className="text-sm text-[var(--color-primary)] hover:opacity-80 disabled:opacity-50"
                 >
                   + Add Store
                 </button>
@@ -292,7 +292,7 @@ export function NewItemModal({
                   <select
                     value={p.storeId}
                     onChange={(e) => updatePrice(i, 'storeId', Number(e.target.value))}
-                    className="flex-1 px-3 py-2 border border-gray-200 dark:border-gray-700 rounded-xl bg-white dark:bg-gray-800 text-sm"
+                    className="flex-1 px-3 py-2 border border-[var(--color-border)] rounded-xl bg-[var(--color-card)] text-[var(--color-foreground)] text-sm"
                   >
                     {stores.map((s) => (
                       <option key={s.id} value={s.id}>
@@ -303,7 +303,7 @@ export function NewItemModal({
                   <div className="relative w-24">
                     <DollarSign
                       size={16}
-                      className="absolute left-2 top-1/2 -translate-y-1/2 text-gray-400"
+                      className="absolute left-2 top-1/2 -translate-y-1/2 text-[var(--color-muted-foreground)]"
                     />
                     <input
                       type="number"
@@ -312,19 +312,19 @@ export function NewItemModal({
                       value={p.price}
                       onChange={(e) => updatePrice(i, 'price', e.target.value)}
                       placeholder="0.00"
-                      className="w-full pl-7 pr-2 py-2 border border-gray-200 dark:border-gray-700 rounded-xl text-sm bg-white dark:bg-gray-800"
+                      className="w-full pl-7 pr-2 py-2 border border-[var(--color-border)] rounded-xl text-sm bg-[var(--color-card)] text-[var(--color-foreground)]"
                     />
                   </div>
                   <button
                     onClick={() => removePrice(i)}
-                    className="p-2 text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-lg"
+                    className="p-2 text-[var(--color-destructive)] hover:bg-[var(--color-destructive)]/10 rounded-lg"
                   >
                     <Trash2 size={16} />
                   </button>
                 </div>
               ))}
               {prices.length === 0 && (
-                <p className="text-sm text-gray-400 italic">
+                <p className="text-sm text-[var(--color-muted-foreground)] italic">
                   No prices yet. Click "+ Add Store" to add.
                 </p>
               )}

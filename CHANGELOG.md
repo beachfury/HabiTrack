@@ -10,6 +10,32 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ### Added
 
+#### Advanced Per-Page Theme System
+- **Expanded Page Previews in Theme Editor**
+  - Added 5 new page previews: Budget, Meals, Recipes, Paid Chores, Family
+  - Total of 14 previewable pages in the theme editor (Home, Chores, Calendar, Shopping, Messages, Settings, Budget, Meals, Recipes, Paid Chores, Family, Modal, Login, Kiosk)
+  - Each page preview shows realistic UI elements that respond to theme changes in real-time
+
+- **Per-Page Background Customization**
+  - Every page can now have its own unique background (color, gradient, or image)
+  - Independent opacity controls for background images per page
+  - "Apply to All" feature to copy background settings across multiple pages at once
+  - Backgrounds now extend corner-to-corner on all pages
+
+- **Advanced CSS Effects System**
+  - **Matrix Rain**: Animated digital rain effect with 4 speed options (slow, normal, fast, veryfast)
+  - **Snowfall**: Gentle falling snow animation
+  - **Sparkle**: Twinkling star effect
+  - **Bubbles**: Rising bubble animation
+  - **Embers**: Floating ember particles
+  - All effects are combinable - use multiple effects on the same page
+  - Effects work on any page background (Home, Calendar, Chores, Shopping, etc.)
+
+- **Enhanced Card Styling**
+  - Semi-transparent card fallbacks when using custom page backgrounds
+  - Cards automatically adjust opacity to look good on gradient/image backgrounds
+  - Consistent card styling across all page previews
+
 #### Debug & Diagnostics System
 - **Debug Settings Tab** in Settings page for admins
   - Toggle debug mode on/off
@@ -51,8 +77,13 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 - Consolidated 33 migrations into 11 organized files
 - Split ThemeContext for better maintainability
 - Added reusable ModalForm component
+- Updated all pages to use `min-h-screen` for full viewport coverage
+- Pages now use CSS variables consistently for theming
 
 ### Fixed
+- Page backgrounds now extend from edge to edge (no visible gaps)
+- Animation classes now properly apply to all pages (Budget, Meals, Recipes, Paid Chores, Family)
+- "Apply to All" feature now works correctly for all page backgrounds
 - Various TypeScript type improvements across the codebase
 
 ---
