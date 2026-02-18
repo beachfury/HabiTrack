@@ -34,6 +34,7 @@ import { deleteDirectMessage, deleteConversation } from './routes/messages/direc
 import notificationsRouter from './routes/notifications';
 import * as debug from './routes/debug';
 import * as updates from './routes/updates';
+import * as backups from './routes/backups';
 
 const router = Router();
 
@@ -59,8 +60,18 @@ router.post('/debug/frontend-errors', requireAuth(), debug.receiveFrontendErrors
 // UPDATE ROUTES (admin only)
 // =============================================================================
 router.get('/updates/check', requireAuth('admin'), updates.checkForUpdates);
+router.get('/updates/releases', requireAuth('admin'), updates.listReleases);
 router.get('/updates/status', requireAuth('admin'), updates.getUpdateStatus);
 router.post('/updates/apply', requireAuth('admin'), updates.applyUpdate);
+
+// =============================================================================
+// BACKUP ROUTES (admin only)
+// =============================================================================
+router.post('/backups/create', requireAuth('admin'), backups.createBackup);
+router.get('/backups', requireAuth('admin'), backups.listBackups);
+router.get('/backups/:filename/download', requireAuth('admin'), backups.downloadBackup);
+router.post('/backups/:filename/restore', requireAuth('admin'), backups.restoreBackup);
+router.delete('/backups/:filename', requireAuth('admin'), backups.deleteBackup);
 
 // =============================================================================
 // AUTH ROUTES

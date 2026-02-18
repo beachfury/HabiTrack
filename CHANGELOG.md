@@ -6,6 +6,36 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ---
 
+## [1.1.2] - 2025-02-18
+
+### Added
+
+#### Version Management & Rollback
+- **Version picker** — Browse all GitHub releases from Settings > About > "Manage Versions"
+- **Upgrade or rollback** — Switch to any tagged release (newer or older) with `git checkout <tag>`
+- **Pre-update backup reminder** — Before switching versions, a backup reminder with one-click "Create Backup Now" button is shown
+- **Downgrade warning** — Extra warning when rolling back about potential database migration issues
+
+#### Database Backup & Restore
+- **Create backups** — One-click database backup using `mariadb-dump`, saved as gzipped `.sql.gz` files
+- **List backups** — View all existing backups with filename, size, and creation date
+- **Download backups** — Download any backup file to your local machine
+- **Restore from backup** — Restore database from a backup with type-to-confirm safety ("RESTORE")
+- **Delete backups** — Remove old backup files
+- **Persistent storage** — Backups stored in `habitrack-backups` Docker volume, surviving container rebuilds
+
+### Changed
+- **Update instructions** now reference `docker compose --profile web` to ensure the web container is also rebuilt
+- **Version list endpoint** (`GET /api/updates/releases`) replaces single latest-version check for the version picker
+- **Apply endpoint** (`POST /api/updates/apply`) now accepts optional `{ version: "v1.1.0" }` body for targeted version switching
+
+### Security
+- All backup and update endpoints enforce `requireAuth('admin')` middleware
+- Backup filenames validated against strict regex to prevent path traversal
+- Database restore requires typing "RESTORE" to confirm (destructive action)
+
+---
+
 ## [1.1.1] - 2025-02-18
 
 ### Fixed

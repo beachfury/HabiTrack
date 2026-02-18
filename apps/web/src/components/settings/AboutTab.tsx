@@ -16,9 +16,14 @@ import {
   CheckCircle,
   AlertCircle,
   ArrowUpCircle,
+  Shield,
+  Trash2,
+  Loader2,
+  RotateCcw,
 } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
 import { UpdateModal } from './UpdateModal';
+import { BackupRestoreModal } from './BackupRestoreModal';
 
 const API_BASE = (import.meta.env.VITE_API_BASE_URL as string) || '';
 
@@ -68,6 +73,12 @@ interface UpdateInfo {
   message?: string;
 }
 
+interface BackupInfo {
+  filename: string;
+  size: number;
+  createdAt: string;
+}
+
 async function request(path: string) {
   const res = await fetch(API_BASE + path, { credentials: 'include' });
   if (!res.ok) {
@@ -93,6 +104,14 @@ export function AboutTab() {
   const [checkingUpdates, setCheckingUpdates] = useState(false);
   const [updateError, setUpdateError] = useState('');
   const [showUpdateModal, setShowUpdateModal] = useState(false);
+
+  // Backup state
+  const [backups, setBackups] = useState<BackupInfo[]>([]);
+  const [loadingBackups, setLoadingBackups] = useState(false);
+  const [creatingBackup, setCreatingBackup] = useState(false);
+  const [backupError, setBackupError] = useState('');
+  const [restoreTarget, setRestoreTarget] = useState<string | null>(null);
+  const [restoringBackup, setRestoringBackup] = useState(false);
 
   useEffect(() => {
     fetchBasicInfo();
@@ -146,6 +165,81 @@ export function AboutTab() {
     } finally {
       setCheckingUpdates(false);
     }
+  };
+
+  const fetchBackups = async () => {
+    setLoadingBackups(true);
+    setBackupError('');
+    try {
+      const data = await request('/api/backups');
+      setBackups(data.backups || []);
+    } catch (err: any) {
+      setBackupError(err.message || 'Failed to load backups');
+    } finally {
+      setLoadingBackups(false);
+    }
+  };
+
+  const createBackup = async () => {
+    setCreatingBackup(true);
+    setBackupError('');
+    try {
+      const res = await fetch(`${API_BASE}/api/backups/create`, {
+        method: 'POST',
+        credentials: 'include',
+      });
+      if (!res.ok) {
+        const data = await res.json().catch(() => ({}));
+        throw new Error(data.message || 'Failed to create backup');
+      }
+      await fetchBackups();
+    } catch (err: any) {
+      setBackupError(err.message || 'Failed to create backup');
+    } finally {
+      setCreatingBackup(false);
+    }
+  };
+
+  const deleteBackup = async (filename: string) => {
+    try {
+      const res = await fetch(`${API_BASE}/api/backups/${filename}`, {
+        method: 'DELETE',
+        credentials: 'include',
+      });
+      if (!res.ok) throw new Error('Failed to delete backup');
+      setBackups(prev => prev.filter(b => b.filename !== filename));
+    } catch (err: any) {
+      setBackupError(err.message || 'Failed to delete backup');
+    }
+  };
+
+  const confirmRestore = async () => {
+    if (!restoreTarget) return;
+    setRestoringBackup(true);
+    setBackupError('');
+    try {
+      const res = await fetch(`${API_BASE}/api/backups/${restoreTarget}/restore`, {
+        method: 'POST',
+        credentials: 'include',
+      });
+      if (!res.ok) {
+        const data = await res.json();
+        throw new Error(data.error || 'Restore failed');
+      }
+      setRestoreTarget(null);
+      setBackupError('');
+      alert('Database restored successfully. Please restart the containers and log in again.');
+    } catch (err: any) {
+      setBackupError(err.message || 'Failed to restore backup');
+    } finally {
+      setRestoringBackup(false);
+    }
+  };
+
+  const formatBytes = (bytes: number): string => {
+    if (bytes < 1024) return `${bytes} B`;
+    if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(1)} KB`;
+    return `${(bytes / 1024 / 1024).toFixed(1)} MB`;
   };
 
   const formatUptime = (seconds: number): string => {
@@ -235,14 +329,23 @@ export function AboutTab() {
               <ArrowUpCircle size={18} className="text-[var(--color-primary)]" />
               Software Updates
             </h3>
-            <button
-              onClick={checkForUpdates}
-              disabled={checkingUpdates}
-              className="themed-btn-secondary text-sm flex items-center gap-2"
-            >
-              <RefreshCw size={14} className={checkingUpdates ? 'animate-spin' : ''} />
-              {checkingUpdates ? 'Checking...' : 'Check for Updates'}
-            </button>
+            <div className="flex gap-2">
+              <button
+                onClick={checkForUpdates}
+                disabled={checkingUpdates}
+                className="themed-btn-secondary text-sm flex items-center gap-2"
+              >
+                <RefreshCw size={14} className={checkingUpdates ? 'animate-spin' : ''} />
+                {checkingUpdates ? 'Checking...' : 'Check'}
+              </button>
+              <button
+                onClick={() => setShowUpdateModal(true)}
+                className="themed-btn-primary text-sm flex items-center gap-2"
+              >
+                <ArrowUpCircle size={14} />
+                Manage Versions
+              </button>
+            </div>
           </div>
 
           {updateError && (
@@ -268,26 +371,6 @@ export function AboutTab() {
                         Released: {formatDate(updateInfo.publishedAt)}
                       </p>
                     )}
-                    <div className="flex gap-2 mt-4">
-                      <button
-                        onClick={() => setShowUpdateModal(true)}
-                        className="themed-btn-primary text-sm flex items-center gap-2"
-                      >
-                        <Download size={14} />
-                        Update Now
-                      </button>
-                      {updateInfo.releaseUrl && (
-                        <a
-                          href={updateInfo.releaseUrl}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          className="themed-btn-secondary text-sm flex items-center gap-2"
-                        >
-                          <ExternalLink size={14} />
-                          View Release Notes
-                        </a>
-                      )}
-                    </div>
                   </div>
                 </div>
               </div>
@@ -307,7 +390,93 @@ export function AboutTab() {
             )
           ) : (
             <p className="text-sm text-[var(--color-muted-foreground)]">
-              Click "Check for Updates" to see if a newer version is available.
+              Click "Check" to see if a newer version is available, or "Manage Versions" to browse all releases.
+            </p>
+          )}
+        </div>
+      )}
+
+      {/* Database Backups (Admin only) */}
+      {isAdmin && (
+        <div className="p-4 bg-[var(--color-muted)]/50 rounded-xl">
+          <div className="flex items-center justify-between mb-4">
+            <h3 className="font-medium text-[var(--color-foreground)] flex items-center gap-2">
+              <Shield size={18} className="text-[var(--color-primary)]" />
+              Database Backups
+            </h3>
+            <div className="flex gap-2">
+              <button
+                onClick={fetchBackups}
+                disabled={loadingBackups}
+                className="themed-btn-secondary text-sm flex items-center gap-2"
+              >
+                <RefreshCw size={14} className={loadingBackups ? 'animate-spin' : ''} />
+                {loadingBackups ? 'Loading...' : backups.length > 0 ? 'Refresh' : 'Load'}
+              </button>
+              <button
+                onClick={createBackup}
+                disabled={creatingBackup}
+                className="themed-btn-primary text-sm flex items-center gap-2"
+              >
+                {creatingBackup ? (
+                  <><Loader2 size={14} className="animate-spin" /> Creating...</>
+                ) : (
+                  <><Shield size={14} /> Create Backup</>
+                )}
+              </button>
+            </div>
+          </div>
+
+          {backupError && (
+            <div className="p-3 bg-[var(--color-destructive)]/10 border border-[var(--color-destructive)]/30 rounded-lg text-[var(--color-destructive)] text-sm mb-4">
+              {backupError}
+            </div>
+          )}
+
+          {backups.length > 0 ? (
+            <div className="space-y-2">
+              {backups.map((backup) => (
+                <div
+                  key={backup.filename}
+                  className="p-3 bg-[var(--color-background)] rounded-lg flex items-center justify-between gap-3"
+                >
+                  <div className="flex-1 min-w-0">
+                    <p className="text-sm font-mono text-[var(--color-foreground)] truncate">
+                      {backup.filename}
+                    </p>
+                    <p className="text-xs text-[var(--color-muted-foreground)]">
+                      {formatBytes(backup.size)} &middot; {formatDate(backup.createdAt)}
+                    </p>
+                  </div>
+                  <div className="flex items-center gap-1.5 flex-shrink-0">
+                    <a
+                      href={`${API_BASE}/api/backups/${backup.filename}/download`}
+                      className="p-1.5 rounded-lg hover:bg-[var(--color-muted)] transition-colors text-[var(--color-muted-foreground)] hover:text-[var(--color-foreground)]"
+                      title="Download"
+                    >
+                      <Download size={14} />
+                    </a>
+                    <button
+                      onClick={() => setRestoreTarget(backup.filename)}
+                      className="p-1.5 rounded-lg hover:bg-amber-500/10 transition-colors text-[var(--color-muted-foreground)] hover:text-amber-500"
+                      title="Restore"
+                    >
+                      <RotateCcw size={14} />
+                    </button>
+                    <button
+                      onClick={() => deleteBackup(backup.filename)}
+                      className="p-1.5 rounded-lg hover:bg-red-500/10 transition-colors text-[var(--color-muted-foreground)] hover:text-red-500"
+                      title="Delete"
+                    >
+                      <Trash2 size={14} />
+                    </button>
+                  </div>
+                </div>
+              ))}
+            </div>
+          ) : (
+            <p className="text-sm text-[var(--color-muted-foreground)]">
+              {loadingBackups ? 'Loading backups...' : 'Click "Load" to view existing backups, or "Create Backup" to make a new one.'}
             </p>
           )}
         </div>
@@ -458,11 +627,19 @@ export function AboutTab() {
         </div>
       </div>
 
-      {/* Update Modal */}
-      {showUpdateModal && updateInfo && (
+      {/* Version Manager Modal */}
+      {showUpdateModal && (
         <UpdateModal
-          updateInfo={updateInfo}
           onClose={() => setShowUpdateModal(false)}
+        />
+      )}
+
+      {/* Backup Restore Confirmation Modal */}
+      {restoreTarget && (
+        <BackupRestoreModal
+          filename={restoreTarget}
+          onConfirm={confirmRestore}
+          onClose={() => setRestoreTarget(null)}
         />
       )}
     </div>

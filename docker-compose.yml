@@ -79,6 +79,9 @@ services:
       # Mount host repo for in-app git update support (git pull runs here)
       - .:/repo
 
+      # Database backups persist across container rebuilds
+      - habitrack-backups:/app/backups
+
     ports:
       - '${API_PORT:-3000}:3000'
     healthcheck:
@@ -117,3 +120,4 @@ networks:
 volumes:
   habitrack-db-data:
   habitrack-uploads:
+  habitrack-backups:
