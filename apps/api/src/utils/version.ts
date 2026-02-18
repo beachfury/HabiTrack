@@ -24,33 +24,41 @@ export function getVersionInfo(): VersionInfo {
   }
 
   try {
-    // Try multiple paths to find package.json
-    // In Docker: WORKDIR is /app, so package.json is at /app/package.json
-    // In dev: process.cwd() might be apps/api or the monorepo root
+    // Try multiple paths to find the ROOT package.json (which has the version)
+    // Note: apps/api/package.json does NOT have a version field
+    // In Docker: WORKDIR is /app, root package.json is at /app/package.json
+    // In dev: We need to find the monorepo root package.json
     const possiblePaths = [
-      join(process.cwd(), 'package.json'),           // Docker: /app/package.json
-      join(process.cwd(), '../../package.json'),     // Dev from apps/api
-      join(__dirname, '../../../../package.json'),   // Relative to this file
+      join(process.cwd(), 'package.json'),           // Docker: /app/package.json OR dev from monorepo root
+      join(process.cwd(), '..', '..', 'package.json'), // Dev: from apps/api -> monorepo root
     ];
 
-    let packageJson: { version?: string; name?: string } | null = null;
+    let version: string | undefined;
+    let name: string | undefined;
 
     for (const packagePath of possiblePaths) {
       try {
-        packageJson = JSON.parse(readFileSync(packagePath, 'utf-8'));
-        if (packageJson?.version) break;
+        const content = readFileSync(packagePath, 'utf-8');
+        const pkg = JSON.parse(content);
+        // Only accept if this package.json has a version AND is named "habitrack"
+        // This ensures we get the root package.json, not apps/api/package.json
+        if (pkg.version && pkg.name === 'habitrack') {
+          version = pkg.version;
+          name = pkg.name;
+          break;
+        }
       } catch {
         // Try next path
       }
     }
 
-    if (!packageJson?.version) {
-      throw new Error('Could not find package.json with version');
+    if (!version) {
+      throw new Error('Could not find root package.json with version');
     }
 
     cachedVersion = {
-      version: packageJson.version,
-      name: packageJson.name || 'habitrack',
+      version,
+      name: name || 'habitrack',
       environment: process.env.NODE_ENV || 'development',
       buildDate: new Date().toISOString(),
       nodeVersion: process.version,
