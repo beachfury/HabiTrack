@@ -46,7 +46,7 @@ export function LayoutEditor({ layout, onChange, ui, onUiChange }: LayoutEditorP
         <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-3">
           Layout Type
         </label>
-        <div className="grid grid-cols-2 gap-3">
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
           {LAYOUT_OPTIONS.map((option) => (
             <button
               key={option.id}
@@ -152,7 +152,7 @@ export function LayoutEditor({ layout, onChange, ui, onUiChange }: LayoutEditorP
         <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-3">
           Border Radius
         </label>
-        <div className="flex gap-2">
+        <div className="flex flex-wrap gap-2">
           {BORDER_RADIUS_OPTIONS.map((option) => (
             <button
               key={option.id}
@@ -182,7 +182,7 @@ export function LayoutEditor({ layout, onChange, ui, onUiChange }: LayoutEditorP
         <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-3">
           Shadow Intensity
         </label>
-        <div className="flex gap-2">
+        <div className="flex flex-wrap gap-2">
           {SHADOW_OPTIONS.map((option) => (
             <button
               key={option.id}

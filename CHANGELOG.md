@@ -6,6 +6,30 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ---
 
+## [1.1.1] - 2025-02-18
+
+### Fixed
+
+#### Mobile Responsiveness Overhaul
+- **Fixed sidebar not collapsing on mobile** — Root cause was an inline `position: relative` style overriding Tailwind's `fixed` positioning on the mobile sidebar, causing it to permanently occupy screen space and push content to the right
+- **Fixed modal sizing overflow on small screens** — All modals now properly constrain to viewport width on phones (375px+)
+- **Fixed 7-column calendar grid on mobile** — Calendar and month views now horizontally scroll on small screens instead of being illegibly compressed
+- **Fixed Settings page sidebar on mobile** — Converted fixed-width sidebar to horizontal scrollable tabs on screens below 768px
+- **Fixed Meals page week/month grids** — Week view now uses responsive column counts (1→2→4→7 columns across breakpoints); month view scrolls horizontally
+- **Fixed Messages page fixed height** — Conversation area now uses viewport-relative height on mobile
+- **Fixed hardcoded padding on 7 pages** — CalendarPage, SettingsPage, MealsPage, RecipesPage, FamilyPage, PaidChoresPage, BudgetPage now use responsive padding (`p-3 sm:p-4 md:p-6 lg:p-8`)
+- **Fixed all modal form grids** — 2-column form layouts in AddChoreModal, AdminActionModal, AddTemplateModal, EventFormModal, CatalogBrowserModal, and others now stack to single column on mobile
+- **Fixed budget category color picker** — 9-column grid reduced to 6 columns on mobile for touch-friendly sizing
+- **Fixed all component grids** — NotificationsTab, AnalyticsTab, AssignmentsTab, LeaderboardView, TypographyEditor, LayoutEditor, and others now use responsive column counts
+- **Fixed table overflow** — Assignments and budget entries tables now have horizontal scroll wrappers with minimum widths
+- **Fixed touch targets** — Color picker swatches enlarged to 40x40px on mobile (44px recommended minimum)
+- **Fixed sidebar logo size** — Logo now scales down on mobile (80px) vs desktop (176px)
+- **Fixed login/setup page logos** — Logo containers scale down on mobile for better fit
+- **Fixed search/filter layouts** — CatalogTab and ManageTab search+filter rows now stack vertically on mobile
+- **Fixed FormRow component** — Shared form grid component now stacks to single column on mobile
+
+---
+
 ## [1.1.0] - 2025-02-17
 
 ### Added

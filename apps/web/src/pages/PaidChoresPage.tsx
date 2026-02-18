@@ -162,9 +162,9 @@ export function PaidChoresPage() {
 
   return (
     <div className={`min-h-screen themed-paidchores-bg ${animationClasses}`}>
-      <div className="p-8">
+      <div className="p-3 sm:p-4 md:p-6 lg:p-8">
       {/* Header */}
-      <div className="flex items-center justify-between mb-8">
+      <div className="flex flex-wrap items-center justify-between mb-8">
         <div>
           <h1 className="text-3xl font-bold text-[var(--color-foreground)] flex items-center gap-3">
             <DollarSign className="text-[var(--color-success)]" />
@@ -174,7 +174,7 @@ export function PaidChoresPage() {
             Race to claim chores and earn real money!
           </p>
         </div>
-        <div className="flex items-center gap-4">
+        <div className="flex items-center gap-2 sm:gap-4">
           {/* My Earnings */}
           <div
             className="px-4 py-2 rounded-xl"

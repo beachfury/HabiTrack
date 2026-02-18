@@ -360,7 +360,7 @@ export function ColorPickerModal({ currentColor, onSelect, onClose }: ColorPicke
                           setRgb(newRgb);
                           setHsl(rgbToHsl(newRgb.r, newRgb.g, newRgb.b));
                         }}
-                        className={`w-8 h-8 rounded-lg transition-transform border-2 ${
+                        className={`w-10 h-10 sm:w-8 sm:h-8 rounded-lg transition-transform border-2 ${
                           selectedColor === color
                             ? 'border-purple-500 scale-110 ring-2 ring-purple-300'
                             : 'border-transparent hover:scale-105'
@@ -390,7 +390,7 @@ export function ColorPickerModal({ currentColor, onSelect, onClose }: ColorPicke
                           setRgb(newRgb);
                           setHsl(rgbToHsl(newRgb.r, newRgb.g, newRgb.b));
                         }}
-                        className={`w-8 h-8 rounded-lg transition-transform border-2 ${
+                        className={`w-10 h-10 sm:w-8 sm:h-8 rounded-lg transition-transform border-2 ${
                           selectedColor === swatch.hexColor
                             ? 'border-purple-500 scale-110 ring-2 ring-purple-300'
                             : 'border-transparent hover:scale-105'
@@ -419,7 +419,7 @@ export function ColorPickerModal({ currentColor, onSelect, onClose }: ColorPicke
                             setRgb(newRgb);
                             setHsl(rgbToHsl(newRgb.r, newRgb.g, newRgb.b));
                           }}
-                          className={`w-8 h-8 rounded-lg transition-transform border-2 ${
+                          className={`w-10 h-10 sm:w-8 sm:h-8 rounded-lg transition-transform border-2 ${
                             selectedColor === swatch.hexColor
                               ? 'border-purple-500 scale-110 ring-2 ring-purple-300'
                               : 'border-transparent hover:scale-105'
@@ -429,9 +429,9 @@ export function ColorPickerModal({ currentColor, onSelect, onClose }: ColorPicke
                         />
                         <button
                           onClick={() => deleteCustomSwatch(swatch.id)}
-                          className="absolute -top-1 -right-1 w-4 h-4 bg-red-500 text-white rounded-full opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center"
+                          className="absolute -top-1 -right-1 w-5 h-5 bg-red-500 text-white rounded-full opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center"
                         >
-                          <X size={10} />
+                          <X size={12} />
                         </button>
                       </div>
                     ))}

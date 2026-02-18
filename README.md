@@ -132,6 +132,14 @@ HabiTrack features a powerful theming system that allows deep customization:
 - Simplified display-focused interface
 - Perfect for wall-mounted tablets or kitchen displays
 
+### 📱 Mobile Responsive
+- Fully usable on phones, tablets, and desktops
+- Responsive sidebar that collapses to hamburger menu on mobile
+- Touch-friendly controls and tap targets
+- Responsive grids that adapt to screen size
+- Horizontally scrollable calendar and month views on small screens
+- All modals properly sized for mobile viewports
+
 ### 🔒 Security
 - Argon2id password hashing
 - HTTP-only session cookies

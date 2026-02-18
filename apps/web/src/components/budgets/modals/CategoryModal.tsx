@@ -163,7 +163,7 @@ export function CategoryModal({
               <Palette className="w-4 h-4 inline mr-1" />
               Color
             </label>
-            <div className="grid grid-cols-9 gap-2">
+            <div className="grid grid-cols-6 sm:grid-cols-9 gap-2">
               {COLOR_OPTIONS.map((color) => (
                 <button
                   key={color}
@@ -189,7 +189,7 @@ export function CategoryModal({
             <label className="block text-sm font-medium text-[var(--color-foreground)] mb-2">
               Icon
             </label>
-            <div className="grid grid-cols-6 gap-2">
+            <div className="grid grid-cols-3 sm:grid-cols-6 gap-2">
               {ICON_OPTIONS.map((icon) => (
                 <button
                   key={icon.name}

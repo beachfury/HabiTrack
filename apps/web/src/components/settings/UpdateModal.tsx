@@ -80,7 +80,7 @@ export function UpdateModal({ updateInfo, onClose }: UpdateModalProps) {
           <>
             {/* Version comparison */}
             <div className="p-4 bg-[var(--color-muted)]/50 rounded-xl">
-              <div className="flex items-center justify-between">
+              <div className="flex items-center justify-between flex-wrap">
                 <div className="text-center flex-1">
                   <p className="text-sm text-[var(--color-muted-foreground)]">Current</p>
                   <p className="text-lg font-bold text-[var(--color-foreground)]">

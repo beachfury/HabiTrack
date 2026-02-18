@@ -231,7 +231,7 @@ export function EmailSettingsTab() {
                       smtpSecure: preset.secure,
                     });
                   }}
-                  className="px-3 py-1.5 text-sm bg-[var(--color-muted)] text-[var(--color-foreground)] rounded-lg hover:bg-[var(--color-primary)] hover:text-[var(--color-primary-foreground)] transition-colors"
+                  className="px-2 sm:px-3 py-1.5 text-xs sm:text-sm bg-[var(--color-muted)] text-[var(--color-foreground)] rounded-lg hover:bg-[var(--color-primary)] hover:text-[var(--color-primary-foreground)] transition-colors"
                 >
                   {preset.name}
                 </button>
@@ -403,7 +403,7 @@ export function EmailSettingsTab() {
           Send a test email to verify your SMTP settings are working correctly
         </p>
 
-        <div className="flex gap-2">
+        <div className="flex flex-col sm:flex-row gap-2">
           <input
             type="email"
             value={testEmail}

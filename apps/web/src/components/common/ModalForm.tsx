@@ -288,7 +288,7 @@ interface FormRowProps {
 
 export function FormRow({ children, columns = 2 }: FormRowProps) {
   return (
-    <div className={`grid gap-4 ${columns === 3 ? 'grid-cols-3' : 'grid-cols-2'}`}>
+    <div className={`grid gap-4 ${columns === 3 ? 'grid-cols-1 sm:grid-cols-3' : 'grid-cols-1 sm:grid-cols-2'}`}>
       {children}
     </div>
   );

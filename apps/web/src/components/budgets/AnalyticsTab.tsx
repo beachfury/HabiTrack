@@ -73,7 +73,7 @@ export function AnalyticsTab({ analytics, onRefresh }: AnalyticsTabProps) {
   return (
     <div className="space-y-6">
       {/* Summary Cards */}
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4">
         <div className="themed-card rounded-xl p-4 shadow-sm">
           <p className="text-sm text-[var(--color-muted-foreground)]">Total Budgeted</p>
           <p className="text-xl font-bold text-[var(--color-foreground)] mt-1">

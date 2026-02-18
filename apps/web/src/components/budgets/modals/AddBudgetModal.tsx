@@ -190,7 +190,7 @@ export function AddBudgetModal({
             <label className="block text-sm font-medium text-[var(--color-foreground)] mb-2">
               Budget Type
             </label>
-            <div className="flex gap-3">
+            <div className="flex flex-col sm:flex-row gap-3">
               <button
                 type="button"
                 onClick={() => setFormData({ ...formData, budgetType: 'bill' })}

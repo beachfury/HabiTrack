@@ -300,7 +300,7 @@ export function NewItemModal({
                       </option>
                     ))}
                   </select>
-                  <div className="relative w-24">
+                  <div className="relative w-20 sm:w-24">
                     <DollarSign
                       size={16}
                       className="absolute left-2 top-1/2 -translate-y-1/2 text-[var(--color-muted-foreground)]"

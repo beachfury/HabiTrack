@@ -104,7 +104,7 @@ export function CatalogBrowserModal({
             </button>
           </div>
         ) : (
-          <div className="grid grid-cols-2 gap-2">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
             {filteredItems.slice(0, 20).map((item) => (
               <button
                 key={item.id}

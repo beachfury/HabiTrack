@@ -208,7 +208,7 @@ export function EntriesTab({
       {paginatedEntries.length > 0 ? (
         <div className="themed-card rounded-xl shadow-sm overflow-hidden">
           <div className="overflow-x-auto">
-            <table className="w-full">
+            <table className="w-full min-w-[600px]">
               <thead>
                 <tr className="border-b border-[var(--color-border)] bg-[var(--color-muted)]">
                   <th className="text-left px-4 py-3 text-sm font-medium text-[var(--color-muted-foreground)]">

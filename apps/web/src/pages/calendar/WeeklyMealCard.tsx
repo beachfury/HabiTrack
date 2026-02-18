@@ -58,7 +58,7 @@ export function WeeklyMealCard({ mealPlans, onMealClick }: WeeklyMealCardProps) 
         </h3>
       </div>
       <div
-        className="grid grid-cols-7 gap-2"
+        className="grid grid-cols-2 sm:grid-cols-4 md:grid-cols-7 gap-2"
         style={{ fontFamily: 'var(--calendar-meal-font-family, inherit)' }}
       >
         {weekDays.map((date, i) => {

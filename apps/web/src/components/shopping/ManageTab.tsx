@@ -483,7 +483,7 @@ export function ManageTab({
               <Plus size={18} className="text-[var(--color-primary)]" />
               Add Store
             </h3>
-            <div className="flex gap-2">
+            <div className="flex flex-col sm:flex-row gap-2">
               <input
                 type="text"
                 value={newStore}

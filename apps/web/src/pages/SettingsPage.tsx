@@ -358,7 +358,7 @@ export function SettingsPage() {
 
   return (
     <div className={`min-h-screen themed-settings-bg ${animationClasses}`}>
-      <div className="p-8">
+      <div className="p-3 sm:p-4 md:p-6 lg:p-8">
       {/* Header */}
       <div className="mb-8">
         <h1 className="text-3xl font-bold text-[var(--color-foreground)] flex items-center gap-3">
@@ -385,9 +385,27 @@ export function SettingsPage() {
         </div>
       )}
 
-      <div className="flex gap-8">
-        {/* Tabs */}
-        <div className="w-48 flex-shrink-0">
+      {/* Mobile Tabs - horizontal scrollable */}
+      <div className="flex md:hidden overflow-x-auto gap-1 pb-2 mb-4 -mx-1 px-1">
+        {tabs.map((tab) => (
+          <button
+            key={tab.id}
+            onClick={() => setActiveTab(tab.id)}
+            className={`flex items-center gap-2 px-3 py-2 rounded-lg transition-colors whitespace-nowrap text-sm ${
+              activeTab === tab.id
+                ? 'bg-[var(--color-primary)]/10 text-[var(--color-primary)] font-medium'
+                : 'text-[var(--color-muted-foreground)] hover:bg-[var(--color-muted)]'
+            }`}
+          >
+            <tab.icon size={16} />
+            {tab.label}
+          </button>
+        ))}
+      </div>
+
+      <div className="flex flex-col md:flex-row gap-4 md:gap-8">
+        {/* Desktop Tabs - sidebar */}
+        <div className="hidden md:block w-48 flex-shrink-0">
           <nav className="space-y-1">
             {tabs.map((tab) => (
               <button
@@ -407,7 +425,7 @@ export function SettingsPage() {
         </div>
 
         {/* Content */}
-        <div className="flex-1 themed-card p-6">
+        <div className="flex-1 themed-card p-4 sm:p-6">
           {/* Profile Tab */}
           {activeTab === 'profile' && (
             <form onSubmit={handleSaveProfile} className="space-y-6">
