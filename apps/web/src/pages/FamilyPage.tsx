@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Users, Plus, Edit2, Key, Hash, Trash2, X, Check, AlertCircle } from 'lucide-react';
+import { Users, Plus, Edit2, Key, Hash, Trash2, X, Check, AlertCircle, UserCheck, UserX } from 'lucide-react';
 import { ModalPortal, ModalBody } from '../components/common/ModalPortal';
 import { api, type FamilyMember } from '../api';
 import { useAuth } from '../context/AuthContext';
@@ -243,6 +243,40 @@ export function FamilyPage() {
     }
   };
 
+  const handleReactivateMember = async (member: FamilyMember) => {
+    if (!confirm(`Reactivate ${member.displayName}? They will be able to log in again.`)) {
+      return;
+    }
+
+    try {
+      await api.reactivateFamilyMember(member.id);
+      setSuccess(`${member.displayName} has been reactivated`);
+      setTimeout(() => setSuccess(''), 3000);
+      fetchMembers();
+    } catch (err: any) {
+      setError(err.message || 'Failed to reactivate member');
+    }
+  };
+
+  const handleHardDeleteMember = async (member: FamilyMember) => {
+    if (
+      !confirm(
+        `⚠️ PERMANENTLY DELETE ${member.displayName}?\n\nThis will remove their account and ALL associated data (chores, points, messages, etc.).\n\nThis action CANNOT be undone.`,
+      )
+    ) {
+      return;
+    }
+
+    try {
+      await api.hardDeleteFamilyMember(member.id);
+      setSuccess(`${member.displayName} has been permanently deleted`);
+      setTimeout(() => setSuccess(''), 3000);
+      fetchMembers();
+    } catch (err: any) {
+      setError(err.message || 'Failed to permanently delete member');
+    }
+  };
+
   if (loading) {
     return (
       <div className="p-8 flex items-center justify-center">
@@ -362,7 +396,7 @@ export function FamilyPage() {
               </div>
 
               {/* Actions */}
-              {member.active && (
+              {member.active ? (
                 <div className="flex items-center gap-2">
                   <button
                     onClick={() => openEditModal(member)}
@@ -390,6 +424,25 @@ export function FamilyPage() {
                       onClick={() => handleDeleteMember(member)}
                       className="p-2 text-[var(--color-muted-foreground)] hover:text-[var(--color-destructive)] hover:bg-[var(--color-destructive)]/10 rounded-lg transition-colors"
                       title="Deactivate member"
+                    >
+                      <UserX size={18} />
+                    </button>
+                  )}
+                </div>
+              ) : (
+                <div className="flex items-center gap-2">
+                  <button
+                    onClick={() => handleReactivateMember(member)}
+                    className="p-2 text-[var(--color-muted-foreground)] hover:text-[var(--color-success)] hover:bg-[var(--color-success)]/10 rounded-lg transition-colors"
+                    title="Reactivate member"
+                  >
+                    <UserCheck size={18} />
+                  </button>
+                  {member.id !== user?.id && (
+                    <button
+                      onClick={() => handleHardDeleteMember(member)}
+                      className="p-2 text-[var(--color-muted-foreground)] hover:text-[var(--color-destructive)] hover:bg-[var(--color-destructive)]/10 rounded-lg transition-colors"
+                      title="Permanently delete member"
                     >
                       <Trash2 size={18} />
                     </button>

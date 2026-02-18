@@ -7,6 +7,8 @@ export {
   createMember,
   updateMember,
   deleteMember,
+  reactivateMember,
+  hardDeleteMember,
 } from './members';
 
 export {

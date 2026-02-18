@@ -171,6 +171,7 @@ export const api = {
   updateFamilyMember: familyApi.updateMember,
   deleteFamilyMember: familyApi.deleteMember,
   reactivateFamilyMember: familyApi.reactivateMember,
+  hardDeleteFamilyMember: familyApi.hardDeleteMember,
   getFamilyUsers: familyApi.getUsers,
   sendFamilyInvite: familyApi.sendInvite,
   resetMemberPassword: familyApi.resetMemberPassword,
