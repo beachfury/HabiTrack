@@ -25,6 +25,7 @@ export function LoginPage() {
   // First login flow state
   const [showFirstLoginModal, setShowFirstLoginModal] = useState(false);
   const [onboardToken, setOnboardToken] = useState<string | null>(null);
+  const [appVersion, setAppVersion] = useState<string | null>(null);
   const { login, refresh } = useAuth();
   const navigate = useNavigate();
 
@@ -50,6 +51,19 @@ export function LoginPage() {
         setBranding(data as Branding);
       } catch (err) {
         console.error(err);
+      }
+    })();
+
+    // Fetch app version — no auth required
+    (async () => {
+      try {
+        const res = await fetch('/api/version');
+        if (res.ok) {
+          const data = await res.json();
+          setAppVersion(data.version);
+        }
+      } catch (err) {
+        console.error('Failed to fetch version:', err);
       }
     })();
   }, []);
@@ -343,6 +357,9 @@ export function LoginPage() {
         {/* Footer branding */}
         <p className="text-center mt-6 text-sm" style={{ color: footerColor }}>
           Powered by <span className="font-semibold">HabiTrack</span>
+          {appVersion && (
+            <span className="opacity-60 ml-1">v{appVersion}</span>
+          )}
         </p>
       </div>
 

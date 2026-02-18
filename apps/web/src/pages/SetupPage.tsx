@@ -26,6 +26,7 @@ export function SetupPage({ onComplete }: SetupPageProps) {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [isDarkMode, setIsDarkMode] = useState(false);
+  const [appVersion, setAppVersion] = useState<string | null>(null);
 
   // Detect system dark mode preference
   useEffect(() => {
@@ -35,6 +36,21 @@ export function SetupPage({ onComplete }: SetupPageProps) {
     const handler = (e: MediaQueryListEvent) => setIsDarkMode(e.matches);
     mediaQuery.addEventListener('change', handler);
     return () => mediaQuery.removeEventListener('change', handler);
+  }, []);
+
+  // Fetch app version
+  useEffect(() => {
+    (async () => {
+      try {
+        const res = await fetch('/api/version');
+        if (res.ok) {
+          const data = await res.json();
+          setAppVersion(data.version);
+        }
+      } catch (err) {
+        console.error('Failed to fetch version:', err);
+      }
+    })();
   }, []);
 
   // Step 1: Household info
@@ -373,6 +389,9 @@ export function SetupPage({ onComplete }: SetupPageProps) {
         {/* Footer branding */}
         <p className="text-center mt-6 text-sm" style={{ color: isDarkMode ? colors.mutedText : navyColor }}>
           Powered by <span className="font-semibold">HabiTrack</span>
+          {appVersion && (
+            <span className="opacity-60 ml-1">v{appVersion}</span>
+          )}
         </p>
       </div>
     </div>
