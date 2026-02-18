@@ -253,7 +253,7 @@ export function AssignmentsTab({ onRefresh }: AssignmentsTabProps) {
       {/* Filters Panel */}
       {showFilters && (
         <div className="p-4 bg-[var(--color-muted)] rounded-xl space-y-4">
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4">
             {/* Chore Filter */}
             <div>
               <label className="block text-sm font-medium text-[var(--color-foreground)] mb-1">
@@ -373,9 +373,9 @@ export function AssignmentsTab({ onRefresh }: AssignmentsTabProps) {
           </p>
         </div>
       ) : (
-        <div className="themed-card overflow-hidden">
+        <div className="themed-card overflow-hidden overflow-x-auto">
           {/* Table Header */}
-          <div className="grid grid-cols-[auto,1fr,1fr,1fr,auto,auto] gap-4 p-3 bg-[var(--color-muted)] border-b border-[var(--color-border)] text-sm font-medium text-[var(--color-muted-foreground)]">
+          <div className="min-w-[600px] grid grid-cols-[auto,1fr,1fr,1fr,auto,auto] gap-4 p-3 bg-[var(--color-muted)] border-b border-[var(--color-border)] text-sm font-medium text-[var(--color-muted-foreground)]">
             <div>
               <input
                 type="checkbox"
@@ -400,7 +400,7 @@ export function AssignmentsTab({ onRefresh }: AssignmentsTabProps) {
               return (
                 <div
                   key={assignment.id}
-                  className={`grid grid-cols-[auto,1fr,1fr,1fr,auto,auto] gap-4 p-3 items-center hover:bg-[var(--color-muted)] ${
+                  className={`min-w-[600px] grid grid-cols-[auto,1fr,1fr,1fr,auto,auto] gap-4 p-3 items-center hover:bg-[var(--color-muted)] ${
                     selectedIds.has(assignment.id) ? 'bg-[var(--color-primary)]/5' : ''
                   }`}
                 >

@@ -47,7 +47,7 @@ export function LeaderboardView({
 
       {/* Top 3 Podium */}
       {leaderboard.length >= 3 && (
-        <div className="grid grid-cols-3 gap-4 mb-6">
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-6">
           {/* 2nd Place */}
           <div
             className={`flex flex-col items-center pt-8 ${isAdmin ? 'cursor-pointer hover:opacity-80 transition-opacity' : ''}`}

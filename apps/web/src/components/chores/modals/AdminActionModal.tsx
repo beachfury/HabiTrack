@@ -75,7 +75,7 @@ export function AdminActionModal({
               <Check size={14} />
               Complete for someone
             </h3>
-            <div className="grid grid-cols-2 gap-2">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
               {users.map((u) => (
                 <button
                   key={u.id}
@@ -104,7 +104,7 @@ export function AdminActionModal({
               <UserPlus size={14} />
               Reassign to
             </h3>
-            <div className="grid grid-cols-2 gap-2">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
               <button
                 onClick={() => onReassign(instance.id, null)}
                 className="p-2 bg-[var(--color-muted)] hover:opacity-80 text-[var(--color-muted-foreground)] rounded-lg text-sm transition-opacity"

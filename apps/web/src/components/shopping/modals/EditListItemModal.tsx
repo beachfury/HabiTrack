@@ -147,7 +147,7 @@ export function EditListItemModal({ item, stores, onClose, onSave }: EditListIte
           <label className="block text-sm font-medium text-[var(--color-foreground)] mb-2">
             Quantity
           </label>
-          <div className="flex items-center gap-3">
+          <div className="flex items-center gap-2">
             <button
               type="button"
               onClick={() => setQuantity(Math.max(1, quantity - 1))}

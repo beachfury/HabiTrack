@@ -310,11 +310,11 @@ export function BudgetPage() {
 
   return (
     <div className={`min-h-screen themed-budget-bg ${animationClasses}`}>
-      <div className="space-y-6 p-8">
+      <div className="space-y-6 p-3 sm:p-4 md:p-6 lg:p-8">
       {/* Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 sm:gap-4">
         <div>
-          <h1 className="text-2xl font-bold text-[var(--color-foreground)]">
+          <h1 className="text-xl sm:text-2xl font-bold text-[var(--color-foreground)]">
             Budget Management
           </h1>
           <p className="text-sm text-[var(--color-muted-foreground)]">

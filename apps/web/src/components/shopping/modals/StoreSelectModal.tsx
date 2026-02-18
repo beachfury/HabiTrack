@@ -198,7 +198,7 @@ export function StoreSelectModal({ item, stores, onClose, onAdd, isAdmin }: Stor
             <label className="block text-sm font-medium text-[var(--color-foreground)] mb-2">
               Quantity
             </label>
-            <div className="flex items-center gap-4">
+            <div className="flex items-center gap-2 sm:gap-4">
               <button
                 onClick={() => setQuantity(Math.max(1, quantity - 1))}
                 className="w-10 h-10 rounded-full bg-[var(--color-muted)] text-[var(--color-foreground)] flex items-center justify-center text-xl font-bold"

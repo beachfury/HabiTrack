@@ -410,10 +410,10 @@ export function CalendarPage() {
 
   return (
     <div className={`min-h-screen themed-calendar-bg ${animationClasses}`}>
-      <div className="p-8 flex flex-col">
+      <div className="p-3 sm:p-4 md:p-6 lg:p-8 flex flex-col">
       {/* Header */}
-      <div className="flex items-center justify-between mb-6">
-        <div className="flex items-center gap-4">
+      <div className="flex flex-wrap items-center justify-between mb-6">
+        <div className="flex flex-wrap items-center gap-2 sm:gap-4">
           <h1 className="themed-calendar-title">
             {MONTHS[month]} {year}
           </h1>
@@ -463,14 +463,15 @@ export function CalendarPage() {
 
       {/* Calendar Grid */}
       <div className="flex-1 themed-calendar-grid overflow-hidden flex flex-col">
+        <div className="overflow-x-auto">
+          <div className="min-w-[700px]">
         {/* Day headers - use inherit for font styles from themed container */}
         <div className="grid grid-cols-7" style={{ borderBottom: '1px solid var(--calendar-grid-border, rgba(255,255,255,0.15))' }}>
           {DAYS.map((day) => (
             <div
               key={day}
-              className="py-3 text-center"
+              className="py-2 sm:py-3 text-center text-xs sm:text-sm"
               style={{
-                fontSize: 'var(--calendar-grid-font-size, 0.875rem)',
                 fontWeight: 'var(--calendar-grid-font-weight, 600)',
                 fontFamily: 'var(--calendar-grid-font-family, inherit)',
                 color: 'var(--calendar-grid-text, var(--color-muted-foreground))',
@@ -620,6 +621,8 @@ export function CalendarPage() {
               </div>
             );
           })}
+        </div>
+          </div>
         </div>
       </div>
 

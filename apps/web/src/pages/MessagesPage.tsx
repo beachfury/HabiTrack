@@ -642,7 +642,7 @@ export function MessagesPage() {
 
       {/* Direct Messages Tab */}
       {activeTab === 'messages' && (
-        <div className="flex gap-4 h-[500px]">
+        <div className="flex gap-4 h-[calc(100vh-14rem)] sm:h-[400px] md:h-[500px]">
           {/* Conversations List */}
           <div
             className={`${selectedConversation ? 'hidden md:block' : ''} w-full md:w-1/3 themed-card overflow-hidden`}

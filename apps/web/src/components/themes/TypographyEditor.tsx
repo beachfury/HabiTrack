@@ -251,7 +251,7 @@ export function TypographyEditor({ typography, onChange }: TypographyEditorProps
         <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
           Base Font Size: {typography.baseFontSize}px
         </label>
-        <div className="grid grid-cols-3 gap-1.5">
+        <div className="grid grid-cols-2 sm:grid-cols-3 gap-1.5">
           {FONT_SIZES.map((size) => (
             <button
               key={size.value}
@@ -274,7 +274,7 @@ export function TypographyEditor({ typography, onChange }: TypographyEditorProps
         <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
           Default Body Weight
         </label>
-        <div className="grid grid-cols-4 gap-1">
+        <div className="grid grid-cols-2 sm:grid-cols-4 gap-1">
           {FONT_WEIGHT_OPTIONS.map((option) => (
             <button
               key={option.value}
@@ -297,7 +297,7 @@ export function TypographyEditor({ typography, onChange }: TypographyEditorProps
         <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
           Line Height
         </label>
-        <div className="grid grid-cols-3 gap-1.5">
+        <div className="grid grid-cols-2 sm:grid-cols-3 gap-1.5">
           {LINE_HEIGHT_OPTIONS.map((option) => (
             <button
               key={option.id}

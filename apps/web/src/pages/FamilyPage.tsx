@@ -253,9 +253,9 @@ export function FamilyPage() {
 
   return (
     <div className={`min-h-screen themed-family-bg ${animationClasses}`}>
-      <div className="p-8">
+      <div className="p-3 sm:p-4 md:p-6 lg:p-8">
       {/* Header */}
-      <div className="flex items-center justify-between mb-8">
+      <div className="flex flex-wrap items-center justify-between mb-8">
         <div>
           <h1 className="text-3xl font-bold text-[var(--color-foreground)] flex items-center gap-3">
             <Users className="text-[var(--color-primary)]" />

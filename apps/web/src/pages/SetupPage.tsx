@@ -152,7 +152,7 @@ export function SetupPage({ onComplete }: SetupPageProps) {
             <div className="text-center mb-8">
               {/* Large prominent logo with glow effect */}
               <div
-                className="w-48 h-48 mx-auto mb-6 flex items-center justify-center relative"
+                className="w-32 h-32 sm:w-48 sm:h-48 mx-auto mb-6 flex items-center justify-center relative"
                 style={{
                   filter: isDarkMode
                     ? `drop-shadow(0 0 25px rgba(79, 214, 147, 0.6)) drop-shadow(0 0 50px rgba(79, 214, 147, 0.35))`
@@ -162,7 +162,7 @@ export function SetupPage({ onComplete }: SetupPageProps) {
                 <img
                   src="/assets/HabiTrack_logo.png"
                   alt="HabiTrack Logo"
-                  className="w-44 h-44 object-contain"
+                  className="w-28 h-28 sm:w-44 sm:h-44 object-contain"
                 />
               </div>
               <h1 className="text-3xl font-bold" style={{ color: colors.text }}>

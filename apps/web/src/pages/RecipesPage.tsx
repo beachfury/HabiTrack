@@ -144,9 +144,9 @@ export function RecipesPage() {
 
   return (
     <div className={`min-h-screen themed-recipes-bg ${animationClasses}`}>
-      <div className="p-8 flex flex-col">
+      <div className="p-3 sm:p-4 md:p-6 lg:p-8 flex flex-col">
       {/* Header */}
-      <div className="flex items-center justify-between mb-6">
+      <div className="flex flex-wrap items-center justify-between mb-6">
         <div className="flex items-center gap-3">
           <BookOpen className="w-8 h-8 text-[var(--color-primary)]" />
           <h1 className="text-3xl font-bold text-[var(--color-foreground)]">Recipe Book</h1>

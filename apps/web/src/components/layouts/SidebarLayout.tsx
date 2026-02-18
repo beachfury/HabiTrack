@@ -221,7 +221,8 @@ export function SidebarLayout({
   const sidebarStyle: React.CSSProperties = {
     width: sidebarWidth,
     minWidth: sidebarWidth,
-    position: 'relative',
+    // NOTE: position is NOT set here — desktop sidebar uses 'relative' (via className + inline),
+    // mobile sidebar uses 'fixed'. Setting it here would override mobile's fixed positioning.
     overflow: 'hidden',
   };
 
@@ -460,7 +461,7 @@ export function SidebarLayout({
       >
         <Link to="/" className="flex flex-col items-center gap-2" onClick={() => setMobileMenuOpen(false)}>
           <div
-            className="w-48 h-48 flex items-center justify-center"
+            className="w-24 h-24 lg:w-48 lg:h-48 flex items-center justify-center"
             style={{
               filter: resolvedMode === 'dark'
                 ? 'drop-shadow(0 0 25px rgba(79, 214, 147, 0.6)) drop-shadow(0 0 50px rgba(79, 214, 147, 0.35))'
@@ -473,7 +474,7 @@ export function SidebarLayout({
                 : '/assets/HabiTrack_logo.png'
               }
               alt="HabiTrack Logo"
-              className="w-44 h-44 object-contain"
+              className="w-20 h-20 lg:w-44 lg:h-44 object-contain"
             />
           </div>
           {navStyle !== 'icons-only' && (
@@ -621,17 +622,17 @@ export function SidebarLayout({
           className={`hidden lg:flex flex-col relative overflow-hidden ${
             !sidebarElementStyle?.customCSS ? (side === 'right' ? 'border-l border-gray-200 dark:border-gray-700' : 'border-r border-gray-200 dark:border-gray-700') : ''
           } ${getAnimatedBackgroundClasses(sidebarElementStyle?.customCSS)}`}
-          style={sidebarStyle}
+          style={{ ...sidebarStyle, position: 'relative' }}
         >
           {sidebarContent}
         </aside>
 
         {/* Sidebar - mobile */}
         <aside
-          className={`lg:hidden fixed inset-y-0 ${side === 'right' ? 'right-0' : 'left-0'} z-40 flex flex-col relative overflow-hidden transition-transform duration-300 ${
+          className={`lg:hidden fixed inset-y-0 ${side === 'right' ? 'right-0' : 'left-0'} z-40 flex flex-col overflow-hidden transition-transform duration-300 ${
             mobileMenuOpen ? 'translate-x-0' : side === 'right' ? 'translate-x-full' : '-translate-x-full'
           }`}
-          style={{ ...sidebarStyle, width: 280 }}
+          style={{ ...sidebarStyle, width: 280, position: 'fixed' }}
         >
           {sidebarContent}
         </aside>

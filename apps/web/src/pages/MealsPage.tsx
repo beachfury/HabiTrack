@@ -221,15 +221,15 @@ export function MealsPage() {
 
   return (
     <div className={`min-h-screen themed-meals-bg ${animationClasses}`}>
-      <div className="p-8 flex flex-col">
+      <div className="p-3 sm:p-4 md:p-6 lg:p-8 flex flex-col">
       {/* Header */}
-      <div className="flex items-center justify-between mb-6">
+      <div className="flex flex-wrap items-center justify-between mb-6">
         <div className="flex items-center gap-3">
           <UtensilsCrossed className="w-8 h-8 text-[var(--color-primary)]" />
           <h1 className="text-3xl font-bold text-[var(--color-foreground)]">Dinner Planner</h1>
         </div>
 
-        <div className="flex items-center gap-4">
+        <div className="flex items-center gap-2 sm:gap-4">
           {/* View Toggle */}
           <div className="flex rounded-lg border border-[var(--color-border)] overflow-hidden">
             <button
@@ -305,9 +305,9 @@ export function MealsPage() {
       {/* Grid */}
       {viewMode === 'week' ? (
         /* Week View */
-        <div className="flex-1 grid grid-cols-7 gap-3">
+        <div className="flex-1 grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 lg:grid-cols-7 gap-2 sm:gap-3">
           {loading ? (
-            <div className="col-span-7 flex items-center justify-center">
+            <div className="col-span-full flex items-center justify-center">
               <Loader2 className="w-8 h-8 animate-spin text-[var(--color-primary)]" />
             </div>
           ) : (
@@ -334,12 +334,14 @@ export function MealsPage() {
       ) : (
         /* Month View */
         <div className="flex-1 flex flex-col themed-card overflow-hidden">
+          <div className="overflow-x-auto">
+            <div className="min-w-[600px]">
           {/* Day Headers */}
           <div className="grid grid-cols-7 border-b border-[var(--color-border)]">
             {DAYS_SHORT.map((day) => (
               <div
                 key={day}
-                className="py-2 text-center text-sm font-semibold text-[var(--color-muted-foreground)]"
+                className="py-2 text-center text-xs sm:text-sm font-semibold text-[var(--color-muted-foreground)]"
               >
                 {day}
               </div>
@@ -373,6 +375,8 @@ export function MealsPage() {
                 );
               })
             )}
+          </div>
+            </div>
           </div>
         </div>
       )}
