@@ -378,6 +378,9 @@ export async function deleteMember(req: Request, res: Response) {
   try {
     await q('UPDATE users SET active = 0 WHERE id = ?', [memberId]);
 
+    // Kill any active sessions so the user is logged out immediately
+    await q('DELETE FROM sessions WHERE user_id = ?', [memberId]);
+
     log.info('Family member deactivated', { memberId, deactivatedBy: admin.id });
 
     await logAudit({
@@ -390,6 +393,121 @@ export async function deleteMember(req: Request, res: Response) {
     return res.status(204).end();
   } catch (err) {
     log.error('Failed to delete family member', { memberId, error: String(err) });
+    return serverError(res, err as Error);
+  }
+}
+
+/**
+ * POST /api/family/members/:id/reactivate
+ * Reactivate a deactivated family member (admin only)
+ */
+export async function reactivateMember(req: Request, res: Response) {
+  const admin = getUser(req);
+  if (!admin) return res.status(401).json({ error: { code: 'AUTH_REQUIRED' } });
+
+  const memberId = Number(req.params.id);
+
+  if (!memberId) {
+    return validationError(res, 'Invalid member ID');
+  }
+
+  if (memberId === 1) {
+    return forbidden(res, 'Cannot modify kiosk user');
+  }
+
+  try {
+    // Verify the member exists and is currently inactive
+    const [member] = await q<Array<{ id: number; active: number; displayName: string }>>(
+      'SELECT id, active, displayName FROM users WHERE id = ? AND kioskOnly = 0',
+      [memberId]
+    );
+
+    if (!member) {
+      return notFound(res, 'Member not found');
+    }
+
+    if (member.active) {
+      return validationError(res, 'Member is already active');
+    }
+
+    await q('UPDATE users SET active = 1 WHERE id = ?', [memberId]);
+
+    log.info('Family member reactivated', { memberId, reactivatedBy: admin.id });
+
+    await logAudit({
+      action: 'family.member.reactivate',
+      result: 'ok',
+      actorId: admin.id,
+      details: { memberId, displayName: member.displayName },
+    });
+
+    return res.status(204).end();
+  } catch (err) {
+    log.error('Failed to reactivate family member', { memberId, error: String(err) });
+    return serverError(res, err as Error);
+  }
+}
+
+/**
+ * DELETE /api/family/members/:id/permanent
+ * Permanently delete a deactivated family member and all their data (admin only)
+ * The member must already be deactivated (active = 0) before hard deletion.
+ */
+export async function hardDeleteMember(req: Request, res: Response) {
+  const admin = getUser(req);
+  if (!admin) return res.status(401).json({ error: { code: 'AUTH_REQUIRED' } });
+
+  const memberId = Number(req.params.id);
+
+  if (!memberId) {
+    return validationError(res, 'Invalid member ID');
+  }
+
+  // Prevent deleting yourself or kiosk user
+  if (memberId === admin.id) {
+    return forbidden(res, 'Cannot delete yourself');
+  }
+  if (memberId === 1) {
+    return forbidden(res, 'Cannot delete kiosk user');
+  }
+
+  try {
+    // Verify the member exists and is inactive
+    const [member] = await q<Array<{ id: number; active: number; displayName: string }>>(
+      'SELECT id, active, displayName FROM users WHERE id = ? AND kioskOnly = 0',
+      [memberId]
+    );
+
+    if (!member) {
+      return notFound(res, 'Member not found');
+    }
+
+    if (member.active) {
+      return forbidden(res, 'Member must be deactivated before permanent deletion');
+    }
+
+    // Kill any remaining sessions
+    await q('DELETE FROM sessions WHERE user_id = ?', [memberId]);
+
+    // Hard delete — CASCADE and SET NULL foreign keys handle cleanup
+    const result: any = await q('DELETE FROM users WHERE id = ? AND active = 0', [memberId]);
+
+    if (result.affectedRows === 0) {
+      return notFound(res, 'Member not found or is still active');
+    }
+
+    log.info('Family member permanently deleted', { memberId, displayName: member.displayName, deletedBy: admin.id });
+
+    await logAudit({
+      action: 'family.member.hardDelete',
+      result: 'ok',
+      actorId: admin.id,
+      details: { memberId, displayName: member.displayName },
+    });
+
+    return res.status(204).end();
+  } catch (err) {
+    log.error('Failed to permanently delete family member', { memberId, error: String(err) });
     return serverError(res, err as Error);
   }
 }

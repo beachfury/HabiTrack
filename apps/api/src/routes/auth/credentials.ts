@@ -106,6 +106,15 @@ export async function postLogin(req: Request, res: Response) {
     return validationError(res, 'Could not resolve user');
   }
 
+  // Check if user is active (deactivated users cannot log in)
+  const [activeCheck] = await q<Array<{ active: number }>>(
+    'SELECT active FROM users WHERE id = ? LIMIT 1',
+    [resolvedUserId]
+  );
+  if (!activeCheck || !activeCheck.active) {
+    return res.status(403).json({ error: { code: 'USER_INACTIVE' } });
+  }
+
   try {
     // Check lockout
     const lockoutStatus = await checkLockout(resolvedUserId);

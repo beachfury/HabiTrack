@@ -360,6 +360,8 @@ router.get('/family/members/:id', requireAuth(), family.getMember);
 router.post('/family/members', requireAuth('admin'), writeRateLimiter, family.createMember);
 router.put('/family/members/:id', requireAuth('admin'), writeRateLimiter, family.updateMember);
 router.delete('/family/members/:id', requireAuth('admin'), family.deleteMember);
+router.post('/family/members/:id/reactivate', requireAuth('admin'), writeRateLimiter, family.reactivateMember);
+router.delete('/family/members/:id/permanent', requireAuth('admin'), family.hardDeleteMember);
 router.post(
   '/family/members/:id/password',
   requireAuth('admin'),

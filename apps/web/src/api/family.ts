@@ -25,7 +25,7 @@ export const familyApi = {
     return apiClient['put'](`/family/members/${id}`, data);
   },
 
-  // Delete/deactivate family member
+  // Delete/deactivate family member (soft delete)
   deleteMember(id: number): Promise<{ success: boolean }> {
     return apiClient['delete'](`/family/members/${id}`, undefined);
   },
@@ -33,6 +33,11 @@ export const familyApi = {
   // Reactivate family member
   reactivateMember(id: number): Promise<{ success: boolean }> {
     return apiClient['post'](`/family/members/${id}/reactivate`);
+  },
+
+  // Permanently delete a deactivated family member (hard delete)
+  hardDeleteMember(id: number): Promise<{ success: boolean }> {
+    return apiClient['delete'](`/family/members/${id}/permanent`, undefined);
   },
 
   // Get simple user list (for dropdowns)
