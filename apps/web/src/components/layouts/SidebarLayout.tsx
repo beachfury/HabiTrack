@@ -18,6 +18,7 @@ import {
   Wallet,
   BookOpen,
   UtensilsCrossed,
+  Store,
 } from 'lucide-react';
 import { useState, useEffect } from 'react';
 import type { Theme, ExtendedTheme } from '../../types/theme';
@@ -136,6 +137,7 @@ const navItems = [
   { path: '/meals', icon: UtensilsCrossed, label: 'Meals' },
   { path: '/recipes', icon: BookOpen, label: 'Recipes' },
   { path: '/messages', icon: Bell, label: 'Messages' },
+  { path: '/store', icon: Store, label: 'Store' },
 ];
 
 const adminItems = [

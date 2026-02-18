@@ -12,3 +12,5 @@ export {
 } from './library';
 
 export { getUserThemePreferences, updateUserThemePreferences } from './preferences';
+
+export { exportTheme, importTheme } from './importExport';

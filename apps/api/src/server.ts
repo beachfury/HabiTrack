@@ -97,6 +97,29 @@ app.get('/api/_debug/csrf', (req, res) => {
 });
 
 // =============================================================================
+// CONTENT SECURITY POLICY
+// =============================================================================
+// Widgets and themes must not load external resources (except Open-Meteo for weather).
+// CSP is the primary enforcement — even if code tries fetch(), the browser blocks it.
+app.use((_req, res, next) => {
+  res.setHeader(
+    'Content-Security-Policy',
+    [
+      "default-src 'self'",
+      "script-src 'self'",
+      "style-src 'self' 'unsafe-inline'",            // inline styles needed for themes
+      "img-src 'self' data: blob:",                   // data: for base64 theme assets
+      "font-src 'self' data:",
+      "connect-src 'self' https://api.open-meteo.com https://geocoding-api.open-meteo.com", // Weather widget only
+      "frame-src 'none'",
+      "object-src 'none'",
+      "base-uri 'self'",
+    ].join('; '),
+  );
+  next();
+});
+
+// =============================================================================
 // KIOSK RESTRICTIONS (applies to all API routes)
 // =============================================================================
 // SECURITY: Kiosk sessions have restricted access to certain routes

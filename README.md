@@ -165,7 +165,7 @@ HabiTrack features a powerful theming system that allows deep customization:
 
 | Layer     | Technology                                                        |
 | --------- | ----------------------------------------------------------------- |
-| Frontend  | React 18, TypeScript, Vite, Tailwind CSS v4                       |
+| Frontend  | React 19, TypeScript, Vite, Tailwind CSS v4                       |
 | Backend   | Node.js, Express, TypeScript                                      |
 | Database  | MariaDB 11 (MySQL-compatible)                                     |
 | Auth      | Argon2id password hashing, HTTP-only session cookies, CSRF tokens |
@@ -196,7 +196,7 @@ docker compose up -d
 ### Local Development
 
 ```bash
-# Prerequisites: Node.js 18+, pnpm, Docker
+# Prerequisites: Node.js 22+, pnpm 10+, Docker
 
 # Install dependencies
 pnpm install
@@ -637,6 +637,540 @@ If you use SWAG:
 2. Create a proxy host for HabiTrack
 3. Forward to `http://YOUR-UNRAID-IP:8080`
 4. Enable SSL
+
+---
+
+## Store / Marketplace
+
+The Store page (`/store`) lets users browse all available widgets and themes in one place.
+
+### How it Works
+
+- **Widgets** are currently all built-in. The catalog shows the 14 shipped widgets with their metadata (name, description, category, tags).
+- **Themes** include both built-in system themes and any user-created public themes from the database.
+- **Admins** can import `.habi-theme` files and export existing themes directly from the store.
+- **Members & Kids** can browse the catalog and submit install requests. Admins review and approve/dismiss these from the Pending Requests section.
+
+### Permission Model
+
+| Role | Browse | Import/Export | Install | Request |
+|------|--------|---------------|---------|---------|
+| Admin | Yes | Yes | Yes | N/A |
+| Member | Yes | No | No | Yes |
+| Kid | Yes (filtered) | No | No | Yes |
+
+---
+
+## Creating a Custom Widget
+
+Widgets are React components registered in a central manifest system. Every widget lives in `apps/web/src/components/dashboard/widgets/`.
+
+### Step 1: Create the Component
+
+Create a new file:
+
+```
+apps/web/src/components/dashboard/widgets/MyCustomWidget.tsx
+```
+
+```tsx
+interface MyCustomWidgetProps {
+  userName?: string;
+  // Add whatever props your widget needs
+}
+
+export function MyCustomWidget({ userName = 'User' }: MyCustomWidgetProps) {
+  return (
+    <div className="h-full flex flex-col p-1">
+      <h3 className="text-sm font-semibold text-[var(--color-foreground)] mb-2">
+        My Widget
+      </h3>
+      <p className="text-[var(--color-muted-foreground)]">
+        Hello, {userName}!
+      </p>
+    </div>
+  );
+}
+```
+
+**Rules for widget components:**
+
+- Use `h-full` so the widget fills its grid cell
+- Use CSS variables for **all** colors (`var(--color-foreground)`, `var(--color-primary)`, etc.) — never hardcode colors
+- Keep it self-contained; don't rely on external state beyond what's passed as props
+- If your widget fetches its own data (like the Weather widget), do it internally with `useEffect`
+
+### Step 2: Register in the Widget Registry
+
+Open `apps/web/src/components/dashboard/widgets/index.ts` and add three things:
+
+**a) Import your component:**
+
+```ts
+import { MyCustomWidget } from './MyCustomWidget';
+```
+
+**b) Define the manifest:**
+
+```ts
+const myCustomManifest: WidgetManifest = {
+  id: 'my-custom',                    // kebab-case, unique
+  version: '1.0.0',                   // semver
+  name: 'My Custom Widget',           // display name
+  description: 'A short description', // shown in store catalog
+  author: 'Your Name',
+  category: 'custom',                 // general|calendar|chores|shopping|meals|messages|family|finance|custom
+  icon: 'sparkles',                   // any Lucide icon name
+  size: {
+    defaultW: 2, defaultH: 2,         // default grid size (grid is 4 columns wide)
+    minW: 1, minH: 1,                 // minimum resize
+    maxW: 4, maxH: 4,                 // maximum resize (null = unlimited)
+  },
+  dataSources: ['user'],              // keys from DashboardData this widget needs
+  roles: null,                        // null = visible to all roles, or ['admin', 'member']
+  configSchema: null,                 // reserved for future widget settings UI
+  builtIn: false,
+  tags: ['custom', 'example'],
+  themedClass: 'themed-my-custom',    // CSS class the theme system can target
+};
+```
+
+**c) Define the props adapter:**
+
+The adapter maps the centralized `DashboardData` object (fetched once by the dashboard) to your widget's props:
+
+```ts
+const myCustomAdapter: WidgetPropsAdapter = (data) => ({
+  userName: (data.user as any)?.displayName || 'User',
+});
+```
+
+**d) Add to the registry Map:**
+
+```ts
+widgetRegistry.set('my-custom', {
+  manifest: myCustomManifest,
+  component: MyCustomWidget,
+  getProps: myCustomAdapter,
+});
+```
+
+### Step 3: Add to the Database
+
+Create or update a migration in `providers/storage-mariadb/migrations/`:
+
+```sql
+INSERT INTO `dashboard_widgets`
+  (`id`, `name`, `description`, `icon`, `category`, `defaultW`, `defaultH`,
+   `minW`, `minH`, `maxW`, `maxH`, `sortOrder`, `version`, `author`,
+   `dataSources`, `builtIn`, `source`)
+VALUES
+  ('my-custom', 'My Custom Widget', 'A short description', 'sparkles', 'custom',
+   2, 2, 1, 1, 4, 4, 99, '1.0.0', 'Your Name',
+   '["user"]', 0, 'custom');
+```
+
+### Step 4: Rebuild
+
+```bash
+docker compose --profile web down && docker compose --profile web up -d --build
+```
+
+### Available Data Sources
+
+When the adapter receives `DashboardData`, these keys are available:
+
+| Key | Type | Contents |
+|-----|------|----------|
+| `user` | object | `{ id, displayName, role }` |
+| `quickStats` | object | `{ eventsToday, choresToday, shoppingItems }` |
+| `todaysEvents` | array | Calendar events for today |
+| `upcomingEvents` | array | Events for next 7 days |
+| `todaysChores` | array | Chores due today |
+| `myChores` | array | User's assigned chores |
+| `choreLeaderboard` | array | Rankings by points |
+| `shoppingItems` | array | Active shopping list |
+| `availablePaidChores` | array | Claimable paid chores |
+| `myEarnings` | object | `{ total, thisWeek, thisMonth }` |
+| `familyMembers` | array | Household members |
+| `announcements` | array | Recent announcements |
+| `upcomingMeals` | array | Meal plans with voting |
+
+### Widget File Structure Summary
+
+```
+apps/web/src/components/dashboard/widgets/
+├── index.ts                  # Central registry — manifests, adapters, Map
+├── WelcomeWidget.tsx         # Simple stateless widget (receives props)
+├── WeatherWidget.tsx         # Self-managed data widget (fetches own API)
+├── QuickStatsWidget.tsx
+├── TodaysEventsWidget.tsx
+├── UpcomingEventsWidget.tsx
+├── TodaysChoresWidget.tsx
+├── MyChoresWidget.tsx
+├── ChoreLeaderboardWidget.tsx
+├── ShoppingListWidget.tsx
+├── PaidChoresWidget.tsx
+├── EarningsWidget.tsx
+├── FamilyMembersWidget.tsx
+├── AnnouncementsWidget.tsx
+├── UpcomingMealsWidget.tsx
+└── MyCustomWidget.tsx        # <-- Your new widget
+```
+
+---
+
+## Creating a Custom Theme
+
+Themes control the entire look of HabiTrack. There are **no separate CSS files** — the entire theme system works through JSON that gets converted to CSS custom properties at runtime.
+
+### How Themes Work (the Pipeline)
+
+Understanding the pipeline is key to creating themes:
+
+```
+.habi-theme JSON (or database record)
+    ↓
+buildCssVariables()        ← converts JSON → flat CSS variable map
+    ↓
+applyCssVariables()        ← sets each on document.documentElement.style
+    ↓
+Components read via        ← var(--color-primary), var(--card-bg), etc.
+```
+
+**Every component** in HabiTrack references CSS variables, never hardcoded colors. When you change a theme, `buildCssVariables()` regenerates the variable map and `applyCssVariables()` swaps them all at once — instant theme switch, no page reload.
+
+### Theme File Structure
+
+The code that powers this lives in:
+
+```
+apps/web/src/
+├── context/
+│   ├── ThemeContext.tsx              # Theme state management, loads/applies themes
+│   └── css/                         # CSS variable generation pipeline
+│       ├── index.ts                 # buildCssVariables() + applyCssVariables()
+│       ├── colorVariables.ts        # ThemeColors → --color-* variables
+│       ├── elementVariables.ts      # ElementStyle → --{element}-* variables
+│       ├── specialModes.ts          # Login page, kiosk, LCARS variable generators
+│       ├── animationClasses.ts      # Matrix rain, snowfall, sparkle effects
+│       └── utils.ts                 # resolveImageUrl, opacity helpers
+├── types/
+│   ├── theme.ts                     # Barrel export
+│   ├── theme-core.ts                # Theme, ThemeColors, ThemeLayout, etc.
+│   └── theme-extended.ts            # ElementStyle, ThemeableElement (40+ types)
+├── components/themes/
+│   ├── ThemeEditorAdvanced.tsx       # Main theme editor UI
+│   ├── ElementStyleEditor.tsx        # Per-element style editor
+│   ├── LoginPageEditor.tsx           # Login page theme editor
+│   ├── editors/                      # 17 sub-editor tabs
+│   │   ├── BackgroundTab.tsx
+│   │   ├── TextTab.tsx
+│   │   ├── BorderTab.tsx
+│   │   ├── EffectsTab.tsx
+│   │   └── ...
+│   └── hooks/
+│       └── useThemeHistory.ts        # Undo/redo for theme editing
+└── utils/
+    └── themeValidation.ts            # .habi-theme file validation
+```
+
+On the API side:
+
+```
+apps/api/src/
+├── routes/themes/
+│   ├── index.ts                     # Theme CRUD endpoints
+│   └── importExport.ts              # GET /themes/:id/export, POST /themes/import
+└── utils/
+    └── themeSanitization.ts          # CSS sanitization for imported themes
+```
+
+### CSS Variable Reference
+
+When a theme is active, these CSS variables are set on `:root`:
+
+**Core colors** (from `colorsLight` or `colorsDark` based on mode):
+
+| Variable | Source Field | Example |
+|----------|-------------|---------|
+| `--color-primary` | `primary` | `#3cb371` |
+| `--color-primary-foreground` | `primaryForeground` | `#ffffff` |
+| `--color-secondary` | `secondary` | `#1e3a5f` |
+| `--color-accent` | `accent` | `#3cb371` |
+| `--color-background` | `background` | `#ffffff` |
+| `--color-foreground` | `foreground` | `#000000` |
+| `--color-card` | `card` | `#ffffff` |
+| `--color-muted` | `muted` | `#f5f5f5` |
+| `--color-muted-foreground` | `mutedForeground` | `#6b7280` |
+| `--color-border` | `border` | `#e5e7eb` |
+| `--color-destructive` | `destructive` | `#dc2626` |
+| `--color-success` | `success` | `#22c55e` |
+| `--color-warning` | `warning` | `#f59e0b` |
+| `--color-info` | `info` | `#06b6d4` |
+
+**Layout variables** (from `layout`, `typography`, `ui`):
+
+| Variable | Source | Example |
+|----------|--------|---------|
+| `--layout-type` | `layout.type` | `sidebar-left` |
+| `--sidebar-width` | `layout.sidebarWidth` | `256px` |
+| `--header-height` | `layout.headerHeight` | `64px` |
+| `--font-family` | `typography.fontFamily` | `system-ui` |
+| `--font-size-base` | `typography.baseFontSize` | `16px` |
+| `--line-height` | `typography.lineHeight` | `1.5` |
+| `--radius-base` | `ui.borderRadius` | `1rem` |
+| `--shadow-base` | `ui.shadowIntensity` | `0 1px 2px rgba(0,0,0,0.05)` |
+
+**Element-specific variables** (from `elementStyles`):
+
+Each element in `elementStyles` generates variables with a prefix. For example, the `card` element generates `--card-bg`, `--card-text`, `--card-border`, etc.
+
+| Element Type | CSS Prefix | Example Variables |
+|-------------|-----------|-------------------|
+| `card` | `--card-` | `--card-bg`, `--card-text`, `--card-border`, `--card-radius` |
+| `widget` | `--widget-` | `--widget-bg`, `--widget-text`, `--widget-shadow` |
+| `sidebar` | `--sidebar-` | `--sidebar-bg`, `--sidebar-text` |
+| `button-primary` | `--btn-primary-` | `--btn-primary-bg`, `--btn-primary-text` |
+| `modal` | `--modal-` | `--modal-bg`, `--modal-border`, `--modal-blur` |
+| `input` | `--input-` | `--input-bg`, `--input-border` |
+| `home-background` | `--home-page-` | `--home-page-bg`, `--home-page-bg-image` |
+| `home-welcome-banner` | `--home-welcome-` | `--home-welcome-bg`, `--home-welcome-text` |
+| `home-chores-card` | `--home-chores-` | `--home-chores-bg`, `--home-chores-border` |
+| `calendar-grid` | `--calendar-grid-` | `--calendar-grid-bg`, `--calendar-grid-text` |
+
+Each element style can generate these suffixes: `-bg`, `-bg-image`, `-bg-opacity`, `-text`, `-font-size`, `-font-weight`, `-font-family`, `-border`, `-border-width`, `-radius`, `-border-style`, `-shadow`, `-blur`, `-opacity`, `-scale`, `-rotate`, `-glow-color`, `-glow-size`, `-padding`, `-hover-scale`, `-hover-opacity`, `-custom-css`.
+
+### Creating a Theme via .habi-theme File
+
+The `.habi-theme` format is a JSON file you can create in any text editor:
+
+```json
+{
+  "formatVersion": "1.0",
+  "manifest": {
+    "name": "My Dark Theme",
+    "description": "A sleek dark theme",
+    "author": "Your Name",
+    "version": "1.0.0",
+    "tags": ["dark", "modern"],
+    "previewColors": {
+      "primary": "#818cf8",
+      "accent": "#818cf8",
+      "background": "#0f0f0f"
+    }
+  },
+  "theme": {
+    "layout": {
+      "type": "sidebar-left",
+      "sidebarWidth": 256,
+      "headerHeight": 64,
+      "navStyle": "icons-text"
+    },
+    "colorsLight": {
+      "primary": "#6366f1", "primaryForeground": "#ffffff",
+      "secondary": "#1e3a5f", "secondaryForeground": "#ffffff",
+      "accent": "#6366f1", "accentForeground": "#ffffff",
+      "background": "#ffffff", "foreground": "#000000",
+      "card": "#ffffff", "cardForeground": "#000000",
+      "muted": "#f5f5f5", "mutedForeground": "#6b7280",
+      "destructive": "#dc2626", "destructiveForeground": "#ffffff",
+      "success": "#22c55e", "successForeground": "#ffffff",
+      "warning": "#f59e0b", "warningForeground": "#ffffff",
+      "info": "#06b6d4", "infoForeground": "#ffffff",
+      "border": "#e5e7eb", "ring": "#6366f1"
+    },
+    "colorsDark": {
+      "primary": "#818cf8", "primaryForeground": "#000000",
+      "secondary": "#94a3b8", "secondaryForeground": "#000000",
+      "accent": "#818cf8", "accentForeground": "#000000",
+      "background": "#0f0f0f", "foreground": "#f9fafb",
+      "card": "#1a1a1a", "cardForeground": "#f9fafb",
+      "muted": "#1f1f1f", "mutedForeground": "#9ca3af",
+      "destructive": "#f87171", "destructiveForeground": "#ffffff",
+      "success": "#4ade80", "successForeground": "#000000",
+      "warning": "#fbbf24", "warningForeground": "#000000",
+      "info": "#22d3ee", "infoForeground": "#000000",
+      "border": "#2a2a2a", "ring": "#818cf8"
+    },
+    "typography": {
+      "fontFamily": "system-ui, -apple-system, sans-serif",
+      "baseFontSize": 16,
+      "lineHeight": "normal",
+      "fontWeight": "normal"
+    },
+    "pageBackground": { "type": "solid", "color": null },
+    "ui": { "borderRadius": "large", "shadowIntensity": "subtle" },
+    "icons": { "style": "outline" },
+    "sidebar": null,
+    "header": null,
+    "elementStyles": null,
+    "widgetOverrides": null,
+    "loginPage": null,
+    "lcarsMode": null
+  },
+  "assets": null
+}
+```
+
+### Adding Per-Element Styles
+
+The `elementStyles` object lets you style 40+ individual UI elements. Each key is a `ThemeableElement` type and the value is an `ElementStyle`:
+
+```json
+{
+  "theme": {
+    "elementStyles": {
+      "card": {
+        "backgroundColor": "rgba(255,255,255,0.05)",
+        "borderColor": "rgba(255,255,255,0.1)",
+        "borderRadius": 16,
+        "customCSS": "backdrop-filter: blur(12px);"
+      },
+      "home-background": {
+        "backgroundGradient": {
+          "from": "#0f0f23",
+          "to": "#1a1a3e",
+          "direction": "to bottom right"
+        }
+      },
+      "sidebar": {
+        "backgroundColor": "#0d0d1a",
+        "textColor": "#e0e0ff"
+      },
+      "button-primary": {
+        "backgroundColor": "#818cf8",
+        "textColor": "#000000",
+        "borderRadius": 8,
+        "hoverScale": 1.02
+      }
+    }
+  }
+}
+```
+
+**All available element types:**
+
+| Category | Element Types |
+|----------|--------------|
+| **Global** | `page-background`, `sidebar`, `header`, `card`, `widget`, `button-primary`, `button-secondary`, `modal`, `input`, `login-page`, `kiosk` |
+| **Home** | `home-background`, `home-title`, `home-welcome-banner`, `home-stats-widget`, `home-chores-card`, `home-events-card`, `home-weather-widget`, `home-leaderboard-widget`, `home-meals-widget` |
+| **Calendar** | `calendar-background`, `calendar-title`, `calendar-grid`, `calendar-meal-widget`, `calendar-user-card` |
+| **Chores** | `chores-background`, `chores-task-card`, `chores-paid-card` |
+| **Shopping** | `shopping-background`, `shopping-filter-widget`, `shopping-list-card` |
+| **Messages** | `messages-background`, `messages-announcements-card`, `messages-chat-card` |
+| **Settings** | `settings-background`, `settings-nav-card`, `settings-content-card` |
+| **Other Pages** | `budget-background`, `meals-background`, `recipes-background`, `paidchores-background`, `family-background` |
+
+**All available ElementStyle properties:**
+
+```typescript
+{
+  backgroundColor?: string;        // Solid color, e.g., "#1a1a2e" or "rgba(0,0,0,0.5)"
+  backgroundGradient?: {           // CSS gradient
+    from: string;
+    to: string;
+    direction?: string;            // "to bottom", "135deg", etc.
+  };
+  backgroundImage?: string;        // URL or data: URI
+  backgroundOpacity?: number;      // 0–1, applied to bg color/gradient
+  textColor?: string;
+  textSize?: number;               // px
+  fontWeight?: 'normal' | 'medium' | 'semibold' | 'bold';
+  fontFamily?: string;
+  borderColor?: string;
+  borderWidth?: number;            // px
+  borderRadius?: number;           // px
+  borderStyle?: string;            // "solid", "dashed", etc.
+  boxShadow?: string;             // "none" | "subtle" | "medium" | "strong" or raw CSS
+  blur?: number;                   // px (backdrop-filter blur)
+  opacity?: number;                // 0–1
+  scale?: number;                  // 1 = normal
+  rotate?: number;                 // degrees
+  skewX?: number;                  // degrees
+  skewY?: number;                  // degrees
+  glowColor?: string;
+  glowSize?: number;               // px
+  saturation?: number;             // percentage
+  grayscale?: number;              // percentage
+  hoverScale?: number;             // Scale on hover (1.02 = slight grow)
+  hoverOpacity?: number;           // Opacity on hover
+  padding?: string;                // CSS padding value
+  customCSS?: string;              // Raw CSS (sanitized on import)
+}
+```
+
+### CSS Selectors & Classes
+
+Components opt into element theming via CSS classes or `data-theme-element` attributes:
+
+| Element | CSS Class | Data Attribute |
+|---------|-----------|---------------|
+| Cards | `.themed-card` | `data-theme-element="card"` |
+| Widgets | `.themed-widget` | `data-theme-element="widget"` |
+| Primary buttons | `.themed-btn-primary` | `data-theme-element="button-primary"` |
+| Secondary buttons | `.themed-btn-secondary` | `data-theme-element="button-secondary"` |
+| Modals | `.themed-modal` | `data-theme-element="modal"` |
+| Inputs | `.themed-input` | `data-theme-element="input"` |
+| Home welcome | `.themed-home-welcome` | `data-theme-element="home-welcome-banner"` |
+| Home chores | `.themed-home-chores` | `data-theme-element="home-chores-card"` |
+| Calendar grid | `.themed-calendar-grid` | `data-theme-element="calendar-grid"` |
+
+When your theme sets `elementStyles["home-chores-card"].backgroundColor = "#1a1a2e"`, the system sets `--home-chores-bg: #1a1a2e` on `:root`, and the component's CSS reads it: `background: var(--home-chores-bg, var(--card-bg))`.
+
+### Importing the Theme
+
+1. Save your file as `my-theme.habi-theme`
+2. Go to **Store** page as an admin
+3. Click **Import Theme**
+4. Select the file — the server validates format, sanitizes CSS, and creates the theme
+
+### Theme Security (Sanitization)
+
+Imported themes are sanitized server-side. The following patterns are stripped from any `customCSS` field:
+- External URLs (`url(https://...)`)
+- `@import` directives
+- `javascript:` URLs
+- `expression()` (IE XSS)
+- `-moz-binding` (Firefox XBL)
+- `behavior` property (IE)
+
+Base64 images are validated by checking magic bytes (png, jpg, gif, webp, svg, ico only). Max file size: 5 MB.
+
+### .habi-theme Format Reference
+
+| Section | Required | Description |
+|---------|----------|-------------|
+| `formatVersion` | Yes | Always `"1.0"` |
+| `manifest` | Yes | Name (max 100 chars), author, version (semver), tags, preview colors |
+| `theme` | Yes | Full definition: layout, colorsLight, colorsDark, typography, pageBackground, ui, icons (all required); sidebar, header, elementStyles, widgetOverrides, loginPage, lcarsMode (optional) |
+| `assets` | No | Array of `{ assetType, filename, mimeType, url, data }` |
+
+---
+
+## Docker Architecture
+
+HabiTrack uses **3 containers** managed by Docker Compose:
+
+| Container | Image | Port | Purpose |
+|-----------|-------|------|---------|
+| `habitrack-db` | `mariadb:11` | 3306 | Database with persistent volume |
+| `habitrack-api` | Custom (Node 22 Alpine) | 3000 | API server, migrations, git ops |
+| `habitrack-web` | Custom (Nginx Alpine) | 8080 | Static frontend + reverse proxy |
+
+### Why 3 Containers (Not 1)?
+
+- **Database must be separate.** MariaDB is a completely different runtime from Node.js. It needs the official `mariadb:11` image for init scripts, health checks, and upgrades. Combining it with API would lose all of that.
+- **Web (Nginx) serves a different purpose than API (Node).** The web container is a static file server with reverse proxy rules. The API runs a Node.js process. Combining them requires a process manager (supervisord) in one container — a Docker anti-pattern. Separate containers allow independent rebuild and scaling.
+- **The `web` container is already optional.** It's behind the `web` profile — headless deployments skip it: `docker compose up -d` starts only `db` + `api`.
+
+### Startup Sequence
+
+```
+db (MariaDB healthcheck passes)
+  → api (runs migrate.js → starts Express)
+    → web (serves frontend, proxies /api → api:3000) [optional]
+```
 
 ---
 
