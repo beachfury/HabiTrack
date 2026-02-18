@@ -32,6 +32,7 @@ import * as budgets from './routes/budgets';
 import * as meals from './routes/meals';
 import { deleteDirectMessage, deleteConversation } from './routes/messages/direct';
 import notificationsRouter from './routes/notifications';
+import * as store from './routes/store';
 import * as debug from './routes/debug';
 import * as updates from './routes/updates';
 import * as backups from './routes/backups';
@@ -340,6 +341,8 @@ router.use('/colors', colorsRouter);
 router.get('/themes', requireAuth(), themes.listThemes);
 router.post('/themes', requireAuth(), writeRateLimiter, themes.createTheme);
 // Specific theme routes MUST come before generic :id routes
+router.post('/themes/import', requireAuth('admin'), writeRateLimiter, themes.importTheme);
+router.get('/themes/:id/export', requireAuth(), themes.exportTheme);
 router.post('/themes/:id/duplicate', requireAuth(), writeRateLimiter, themes.duplicateTheme);
 router.put('/themes/:id/kid-approval', requireAuth('admin'), writeRateLimiter, themes.toggleKidApproval);
 // Generic :id routes LAST
@@ -482,6 +485,14 @@ router.delete('/dashboard/widgets/:widgetId', requireAuth(), dashboard.removeWid
 router.put('/dashboard/widgets/:widgetId/config', requireAuth(), writeRateLimiter, dashboard.updateWidgetConfig);
 router.post('/dashboard/reset', requireAuth(), writeRateLimiter, dashboard.resetDashboard);
 router.get('/dashboard/data', requireAuth(), dashboard.getDashboardData);
+
+// =============================================================================
+// STORE ROUTES
+// =============================================================================
+router.get('/store/catalog', requireAuth(), store.getCatalog);
+router.get('/store/requests', requireAuth(), store.listRequests);
+router.post('/store/requests', requireAuth(), writeRateLimiter, store.createRequest);
+router.put('/store/requests/:id', requireAuth('admin'), writeRateLimiter, store.updateRequest);
 
 // =============================================================================
 // BUDGET ROUTES (Admin only)

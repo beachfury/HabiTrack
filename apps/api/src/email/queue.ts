@@ -164,6 +164,7 @@ async function checkUserPreferences(
       VOTING_OPENED: 'eventReminders',
       STORE_REQUEST: 'shoppingUpdates',
       NEW_FAMILY_MEMBER: 'messageNotifications',
+      WELCOME_MEMBER: null, // Always send welcome emails
       PAID_CHORE_AVAILABLE: 'choreAssignments',
       PAID_CHORE_UPDATE: 'choreCompletions',
       TEST_EMAIL: null, // Always send test emails

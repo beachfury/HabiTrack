@@ -5,97 +5,11 @@ import { Plus, Settings, RotateCcw, GripVertical, X } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { useTheme } from '../context/ThemeContext';
 import { dashboardApi, WidgetLayout, DashboardWidget, DashboardData } from '../api/dashboard';
-import { widgetComponents } from '../components/dashboard/widgets';
+import { widgetRegistry, getWidgetData, getWidgetThemedClass } from '../components/dashboard/widgets';
+import { WidgetSandbox } from '../components/dashboard/WidgetSandbox';
 import { ModalPortal, ModalBody } from '../components/common/ModalPortal';
 
 import 'react-grid-layout/css/styles.css';
-
-// Map widget IDs to home-specific themed classes for individual styling
-const WIDGET_THEMED_CLASS_MAP: Record<string, string> = {
-  'welcome': 'themed-home-welcome',
-  'quick-stats': 'themed-home-stats',
-  'todays-chores': 'themed-home-chores',
-  'my-chores': 'themed-home-chores',
-  'chore-leaderboard': 'themed-home-leaderboard',
-  'paid-chores': 'themed-home-chores',
-  'todays-events': 'themed-home-events',
-  'upcoming-events': 'themed-home-events',
-  'weather': 'themed-home-weather',
-  'upcoming-meals': 'themed-home-meals',
-};
-
-// Map widget data to widget props
-function getWidgetProps(widgetId: string, data: DashboardData, currentUserId?: number): Record<string, unknown> {
-  switch (widgetId) {
-    case 'welcome':
-      return {
-        userName: data.user?.displayName || 'User',
-        todayStats: data.quickStats || { events: 0, chores: 0, shopping: 0 },
-      };
-    case 'quick-stats': {
-      const stats = data.quickStats || { events: 0, chores: 0, shopping: 0, paidChores: 0 };
-      return {
-        eventsToday: stats.events,
-        choresDue: stats.chores,
-        shoppingItems: stats.shopping,
-        earnings: Number(data.myEarnings?.total) || 0,
-      };
-    }
-    case 'todays-events':
-      return {
-        events: data.todaysEvents || [],
-      };
-    case 'upcoming-events':
-      return {
-        events: data.upcomingEvents || [],
-        title: 'Upcoming Events',
-      };
-    case 'todays-chores':
-      return {
-        chores: data.todaysChores || [],
-      };
-    case 'my-chores':
-      return {
-        chores: data.myChores || [],
-      };
-    case 'chore-leaderboard':
-      return {
-        leaderboard: data.choreLeaderboard || [],
-        currentUserId,
-      };
-    case 'shopping-list':
-      return {
-        items: data.shoppingItems || [],
-      };
-    case 'paid-chores':
-      return {
-        chores: data.availablePaidChores || [],
-      };
-    case 'earnings':
-      return {
-        totalEarnings: Number(data.myEarnings?.total) || 0,
-      };
-    case 'family-members':
-      return {
-        members: data.familyMembers || [],
-        currentUserId,
-      };
-    case 'announcements':
-      return {
-        announcements: data.announcements || [],
-      };
-    case 'weather':
-      return {
-        location: undefined, // Will use geolocation
-      };
-    case 'upcoming-meals':
-      return {
-        meals: data.upcomingMeals || [],
-      };
-    default:
-      return {};
-  }
-}
 
 export function HomePage() {
   const { user } = useAuth();
@@ -330,11 +244,11 @@ export function HomePage() {
           {layouts
             .filter((layout) => layout.visible)
             .map((layout) => {
-              const WidgetComponent = widgetComponents[layout.widgetId];
+              const registryEntry = widgetRegistry.get(layout.widgetId);
               const widgetInfo = availableWidgets.find((w) => w.id === layout.widgetId);
-              const themedClass = WIDGET_THEMED_CLASS_MAP[layout.widgetId] || 'themed-card';
+              const themedClass = getWidgetThemedClass(layout.widgetId);
 
-              if (!WidgetComponent) {
+              if (!registryEntry) {
                 return (
                   <div
                     key={layout.widgetId}
@@ -345,7 +259,8 @@ export function HomePage() {
                 );
               }
 
-              const props = getWidgetProps(layout.widgetId, dashboardData, user?.id);
+              const WidgetComponent = registryEntry.component;
+              const props = getWidgetData(layout.widgetId, dashboardData as Record<string, unknown>, user?.id);
 
               return (
                 <div
@@ -357,7 +272,7 @@ export function HomePage() {
                     <div className="flex items-center justify-between px-3 py-1.5 bg-[var(--color-muted)] border-b border-[var(--color-border)]">
                       <div className="widget-drag-handle flex items-center gap-1 cursor-grab text-[var(--color-muted-foreground)] hover:text-[var(--color-foreground)]">
                         <GripVertical size={14} />
-                        <span className="text-xs font-medium">{widgetInfo?.name || layout.widgetId}</span>
+                        <span className="text-xs font-medium">{widgetInfo?.name || registryEntry.manifest.name}</span>
                       </div>
                       <button
                         onClick={() => handleRemoveWidget(layout.widgetId)}
@@ -368,7 +283,9 @@ export function HomePage() {
                     </div>
                   )}
                   <div className={`p-[var(--card-padding)] h-full ${isEditing ? 'pt-2' : ''}`}>
-                    <WidgetComponent {...props} />
+                    <WidgetSandbox widgetId={layout.widgetId}>
+                      <WidgetComponent {...props} />
+                    </WidgetSandbox>
                   </div>
                 </div>
               );

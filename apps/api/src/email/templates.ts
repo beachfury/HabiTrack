@@ -457,6 +457,36 @@ They can now access HabiTrack and participate in family activities.
 - HabiTrack`,
 };
 
+export const WELCOME_MEMBER: EmailTemplate = {
+  subject: 'Welcome to {{householdName}} on HabiTrack!',
+  html: wrapHtml(`
+    <h2>Welcome to the Family!</h2>
+    <p>Hi <strong>{{memberName}}</strong>,</p>
+    <p>You've been added to <strong>{{householdName}}</strong> on HabiTrack by {{adminName}}.</p>
+    <p>Here are your login details:</p>
+    <div style="background: #f0f0f0; padding: 15px; border-radius: 8px; margin: 15px 0;">
+      <p style="margin: 5px 0;"><strong>Login URL:</strong> {{loginUrl}}</p>
+      <p style="margin: 5px 0;"><strong>Email:</strong> {{memberEmail}}</p>
+      <p style="margin: 5px 0;"><strong>Temporary Password:</strong> <code style="background: #e0e0e0; padding: 2px 8px; border-radius: 4px; font-size: 16px;">{{tempPassword}}</code></p>
+    </div>
+    <p style="color: #e74c3c;"><strong>Important:</strong> You will be asked to change your password on first login.</p>
+    <a href="{{loginUrl}}" class="button">Log In Now</a>
+  `),
+  text: `Hi {{memberName}},
+
+You've been added to {{householdName}} on HabiTrack by {{adminName}}.
+
+Here are your login details:
+
+Login URL: {{loginUrl}}
+Email: {{memberEmail}}
+Temporary Password: {{tempPassword}}
+
+IMPORTANT: You will be asked to change your password on first login.
+
+- HabiTrack`,
+};
+
 // =============================================================================
 // PAID CHORES TEMPLATES
 // =============================================================================
@@ -520,6 +550,7 @@ export const EMAIL_TEMPLATES = {
   VOTING_OPENED,
   STORE_REQUEST,
   NEW_FAMILY_MEMBER,
+  WELCOME_MEMBER,
   PAID_CHORE_AVAILABLE,
   PAID_CHORE_UPDATE,
   TEST_EMAIL,

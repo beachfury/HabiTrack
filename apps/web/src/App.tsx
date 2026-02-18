@@ -17,6 +17,7 @@ import { PaidChoresPage } from './pages/PaidChoresPage';
 import { BudgetPage } from './pages/BudgetPage';
 import { RecipesPage } from './pages/RecipesPage';
 import { MealsPage } from './pages/MealsPage';
+import { StorePage } from './pages/StorePage';
 import { useKioskIdleTimeout } from './hooks';
 import { ErrorBoundary } from './components/ErrorBoundary';
 
@@ -191,6 +192,14 @@ function AppRoutes() {
         element={
           <ProtectedRoute>
             <MealsPage />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/store"
+        element={
+          <ProtectedRoute>
+            <StorePage />
           </ProtectedRoute>
         }
       />

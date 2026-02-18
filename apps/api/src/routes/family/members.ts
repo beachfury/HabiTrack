@@ -7,6 +7,7 @@ import { logAudit } from '../../audit';
 import { hashSecret, verifyHash } from '../../crypto';
 import { getUser, isValidString, isValidPin, success, created, notFound, forbidden, serverError, validationError } from '../../utils';
 import { createLogger } from '../../services/logger';
+import { queueEmail, getUserEmail } from '../../email/queue';
 
 const log = createLogger('family');
 
@@ -220,12 +221,46 @@ export async function createMember(req: Request, res: Response) {
       details: { userId, displayName: displayName.trim(), role },
     });
 
+    // Send welcome email if the new member has an email AND a temporary password
+    const memberEmail = email?.trim().toLowerCase();
+    if (memberEmail && password && password.length >= 8) {
+      try {
+        // Get household name for the email
+        const [household] = await q<Array<{ householdName: string }>>(
+          `SELECT householdName FROM settings WHERE id = 1`
+        );
+        const householdName = household?.householdName || 'HabiTrack';
+
+        // Build the login URL from the request origin
+        const origin = req.headers.origin || req.headers.referer?.replace(/\/$/, '') || 'http://localhost:3000';
+        const loginUrl = `${origin}/login`;
+
+        await queueEmail({
+          userId,
+          toEmail: memberEmail,
+          template: 'WELCOME_MEMBER',
+          variables: {
+            memberName: displayName.trim(),
+            memberEmail,
+            tempPassword: password,
+            householdName,
+            adminName: admin.displayName || 'Admin',
+            loginUrl,
+          },
+        });
+        log.info('Welcome email queued', { userId, toEmail: memberEmail });
+      } catch (emailErr) {
+        // Don't fail member creation if email fails — just log the error
+        log.warn('Failed to queue welcome email', { userId, error: (emailErr as Error).message });
+      }
+    }
+
     return created(res, {
       member: {
         id: userId,
         displayName: displayName.trim(),
         nickname: nickname?.trim() || null,
-        email: email?.trim().toLowerCase() || null,
+        email: memberEmail || null,
         role,
         color: color || null,
         active: true,

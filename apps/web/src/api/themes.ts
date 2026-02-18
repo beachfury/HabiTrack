@@ -134,3 +134,26 @@ export async function toggleKidApproval(themeId: string, approved: boolean): Pro
   );
   return response.theme;
 }
+
+// =============================================================================
+// IMPORT / EXPORT
+// =============================================================================
+
+/**
+ * Export a theme as a .habi-theme file (JSON)
+ */
+export async function exportTheme(themeId: string): Promise<Record<string, unknown>> {
+  return fetchApi<Record<string, unknown>>(`/themes/${encodeURIComponent(themeId)}/export`);
+}
+
+/**
+ * Import a .habi-theme file (admin only)
+ */
+export async function importTheme(
+  data: Record<string, unknown>
+): Promise<{ theme: Theme; warnings: string[] }> {
+  return fetchApi<{ theme: Theme; warnings: string[] }>('/themes/import', {
+    method: 'POST',
+    body: JSON.stringify(data),
+  });
+}
