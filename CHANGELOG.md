@@ -28,6 +28,10 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 - **Fixed search/filter layouts** — CatalogTab and ManageTab search+filter rows now stack vertically on mobile
 - **Fixed FormRow component** — Shared form grid component now stacks to single column on mobile
 
+#### In-App Update System Fix
+- **Fixed update endpoint 500 error in Docker** — The API container had no `.git` directory (baked-in copy from Dockerfile) and `git` was not installed. Added `git` to Alpine packages, bind-mount host repo at `/repo` for git operations, and auto-detect git directory at startup
+- **Added detailed error responses** — Update apply endpoint now returns `detail` and `gitDir` in error responses for easier debugging
+
 ---
 
 ## [1.1.0] - 2025-02-17

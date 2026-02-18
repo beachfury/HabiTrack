@@ -76,6 +76,9 @@ services:
       # CRITICAL: expose migrations to the API container at the path migrate.js expects
       - ./providers/storage-mariadb/migrations:/app/providers/storage-mariadb/migrations:ro
 
+      # Mount host repo for in-app git update support (git pull runs here)
+      - .:/repo
+
     ports:
       - '${API_PORT:-3000}:3000'
     healthcheck:

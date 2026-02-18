@@ -9,8 +9,8 @@ FROM node:22-alpine
 RUN corepack enable && corepack prepare pnpm@latest --activate
 RUN npm install -g tsx
 
-# Add wget for healthcheck
-RUN apk add --no-cache wget
+# Add wget for healthcheck, git for in-app updates
+RUN apk add --no-cache wget git
 
 WORKDIR /app
 
