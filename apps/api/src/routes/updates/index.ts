@@ -127,12 +127,72 @@ export async function checkForUpdates(req: Request, res: Response) {
 }
 
 /**
+ * GET /api/updates/releases
+ * Fetch ALL GitHub releases for version picker
+ * Requires admin authentication
+ */
+export async function listReleases(req: Request, res: Response) {
+  try {
+    const user = getUser(req);
+    if (!user) return authRequired(res);
+    if (user.roleId !== 'admin') return forbidden(res, 'Admin access required');
+
+    const versionInfo = getVersionInfo();
+    const currentVersion = versionInfo.version;
+
+    // Fetch all releases (GitHub returns up to 30 per page by default)
+    const response = await fetch(`https://api.github.com/repos/${GITHUB_REPO}/releases?per_page=30`, {
+      headers: {
+        'Accept': 'application/vnd.github.v3+json',
+        'User-Agent': 'HabiTrack-UpdateChecker',
+      },
+    });
+
+    if (!response.ok) {
+      if (response.status === 404) {
+        return res.json({ releases: [], currentVersion });
+      }
+      throw new Error(`GitHub API error: ${response.status}`);
+    }
+
+    const releases: GitHubRelease[] = await response.json();
+
+    const mapped = releases
+      .filter(r => !r.draft)
+      .map(r => {
+        const version = r.tag_name.replace(/^v/, '');
+        const cmp = compareVersions(version, currentVersion);
+        return {
+          version,
+          tag: r.tag_name,
+          name: r.name || r.tag_name,
+          notes: r.body || '',
+          url: r.html_url,
+          date: r.published_at,
+          prerelease: r.prerelease,
+          isCurrent: cmp === 0,
+          isNewer: cmp > 0,
+          isOlder: cmp < 0,
+        };
+      });
+
+    return res.json({ releases: mapped, currentVersion });
+  } catch (err) {
+    log.error('Failed to list releases', { error: String(err) });
+    return serverError(res, 'Failed to fetch releases from GitHub');
+  }
+}
+
+/**
  * POST /api/updates/apply
- * Apply the latest update by pulling from git
+ * Apply an update or rollback to a specific version
  * Requires admin authentication
  *
- * Note: This only pulls the code. Container rebuild requires manual restart
- * or external orchestration.
+ * Body: { version?: "v1.1.0" }
+ *   - If version provided: git fetch + git checkout <tag> (upgrade or downgrade)
+ *   - If no version: git pull origin main (latest)
+ *
+ * Note: This only updates the code. Container rebuild requires manual restart.
  */
 export async function applyUpdate(req: Request, res: Response) {
   try {
@@ -142,14 +202,15 @@ export async function applyUpdate(req: Request, res: Response) {
 
     const versionInfo = getVersionInfo();
     const beforeVersion = versionInfo.version;
+    const targetVersion = req.body?.version; // e.g. "v1.1.0" or undefined for latest
 
-    log.info('Starting update process', { beforeVersion, userId: user.id, gitDir: GIT_REPO_DIR });
+    log.info('Starting update process', { beforeVersion, targetVersion, userId: user.id, gitDir: GIT_REPO_DIR });
 
-    // First fetch the latest from origin
+    // First fetch the latest from origin (including tags)
     try {
-      const fetchResult = await execAsync('git fetch origin', {
+      const fetchResult = await execAsync('git fetch origin --tags', {
         cwd: GIT_REPO_DIR,
-        timeout: 30000, // 30 second timeout
+        timeout: 30000,
       });
       log.debug('Git fetch completed', { stdout: fetchResult.stdout, stderr: fetchResult.stderr });
     } catch (fetchErr: any) {
@@ -165,40 +226,64 @@ export async function applyUpdate(req: Request, res: Response) {
       });
     }
 
-    // Pull the latest changes
-    try {
-      const pullResult = await execAsync('git pull origin main', {
-        cwd: GIT_REPO_DIR,
-        timeout: 60000, // 60 second timeout
-      });
-      log.info('Git pull completed', { stdout: pullResult.stdout, stderr: pullResult.stderr });
-    } catch (pullErr: any) {
-      log.error('Git pull failed', { error: pullErr.message, gitDir: GIT_REPO_DIR });
-      return res.status(500).json({
-        success: false,
-        error: {
-          code: 'GIT_PULL_FAILED',
-          message: 'Failed to pull updates. You may have local changes.',
-          detail: pullErr.message,
-          gitDir: GIT_REPO_DIR,
-        },
-      });
+    if (targetVersion) {
+      // Checkout a specific version tag
+      const tag = targetVersion.startsWith('v') ? targetVersion : `v${targetVersion}`;
+      try {
+        const checkoutResult = await execAsync(`git checkout "${tag}"`, {
+          cwd: GIT_REPO_DIR,
+          timeout: 60000,
+        });
+        log.info('Git checkout completed', { tag, stdout: checkoutResult.stdout, stderr: checkoutResult.stderr });
+      } catch (checkoutErr: any) {
+        log.error('Git checkout failed', { error: checkoutErr.message, tag, gitDir: GIT_REPO_DIR });
+        return res.status(500).json({
+          success: false,
+          error: {
+            code: 'GIT_CHECKOUT_FAILED',
+            message: `Failed to switch to version ${tag}`,
+            detail: checkoutErr.message,
+            gitDir: GIT_REPO_DIR,
+          },
+        });
+      }
+    } else {
+      // Pull latest from main (original behavior)
+      try {
+        const pullResult = await execAsync('git pull origin main', {
+          cwd: GIT_REPO_DIR,
+          timeout: 60000,
+        });
+        log.info('Git pull completed', { stdout: pullResult.stdout, stderr: pullResult.stderr });
+      } catch (pullErr: any) {
+        log.error('Git pull failed', { error: pullErr.message, gitDir: GIT_REPO_DIR });
+        return res.status(500).json({
+          success: false,
+          error: {
+            code: 'GIT_PULL_FAILED',
+            message: 'Failed to pull updates. You may have local changes.',
+            detail: pullErr.message,
+            gitDir: GIT_REPO_DIR,
+          },
+        });
+      }
     }
 
     await logAudit({
       action: 'system.update.apply',
       result: 'ok',
       actorId: user.id,
-      details: { beforeVersion },
+      details: { beforeVersion, targetVersion: targetVersion || 'latest' },
     });
 
+    const action = targetVersion ? `switched to ${targetVersion}` : 'updated to latest';
     return res.json({
       success: true,
-      message: 'Update downloaded successfully. Please restart the containers to complete the update.',
+      message: `Code ${action} successfully. Please restart the containers to complete the update.`,
       instructions: [
-        '1. The code has been updated',
+        `1. The code has been ${action}`,
         '2. Restart the containers to apply changes:',
-        '   docker compose down && docker compose up -d --build',
+        '   docker compose --profile web down && docker compose --profile web up -d --build',
         '3. Clear your browser cache if you see old UI',
       ],
     });

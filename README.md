@@ -140,6 +140,12 @@ HabiTrack features a powerful theming system that allows deep customization:
 - Horizontally scrollable calendar and month views on small screens
 - All modals properly sized for mobile viewports
 
+### 🔄 Version Management & Backups
+- Browse all GitHub releases and upgrade or rollback to any version
+- One-click database backups with download and restore
+- Pre-update backup reminders to protect your data
+- Admin-only access with type-to-confirm safety for destructive operations
+
 ### 🔒 Security
 - Argon2id password hashing
 - HTTP-only session cookies
