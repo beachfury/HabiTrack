@@ -90,9 +90,26 @@ All configuration is done via environment variables in the `.env` file.
 | `WEB_PORT` | Web UI port | 8080 |
 | `API_PORT` | API port | 3000 |
 | `DB_PORT` | Database port | 3306 |
+| `HABITRACK_ENV` | Environment mode (development/production) | production |
 | `HABITRACK_LOG_LEVEL` | Log level (debug, info, warn, error) | info |
 
 See `.env.example` for all available options.
+
+### HTTP vs HTTPS (Important!)
+
+**For local network access over HTTP** (no SSL/HTTPS), set:
+```env
+HABITRACK_ENV=development
+```
+
+This configures cookies to work over HTTP. Without this setting, authentication will fail because secure cookies require HTTPS.
+
+**For production with HTTPS**, use the default:
+```env
+HABITRACK_ENV=production
+```
+
+This enables secure cookies and other production security features.
 
 ---
 

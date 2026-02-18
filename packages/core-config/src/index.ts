@@ -34,15 +34,18 @@ export const EnvSchema = z.object({
   HABITRACK_JSON_PATH: z.string().optional(),
 
   // Sessions & Cookies
-  HABITRACK_SESSION_COOKIE_NAME: z.string().default('__Host-habitrack_sid'),
+  // Note: Cookie names default to simple names without __Host- prefix.
+  // The __Host- prefix requires HTTPS and won't work over HTTP.
+  // For production with HTTPS, you can set these to '__Host-habitrack_sid' and '__Host-habitrack_csrf'
+  HABITRACK_SESSION_COOKIE_NAME: z.string().default('habitrack_sid'),
   HABITRACK_SESSION_TTL_MINUTES: z.coerce.number().int().positive().default(120),
   HABITRACK_SESSION_ROLLING: z.coerce.boolean().default(true),
   HABITRACK_COOKIE_SAMESITE: z.enum(['Lax', 'Strict', 'None']).default('Lax'),
-  HABITRACK_COOKIE_SECURE: z.coerce.boolean().default(true),
+  HABITRACK_COOKIE_SECURE: z.coerce.boolean().optional(), // Defaults based on HABITRACK_ENV in cookie-config.ts
 
   // CSRF
   HABITRACK_CSRF_ENABLED: z.coerce.boolean().default(true),
-  HABITRACK_CSRF_COOKIE_NAME: z.string().default('__Host-habitrack_csrf'),
+  HABITRACK_CSRF_COOKIE_NAME: z.string().default('habitrack_csrf'),
   HABITRACK_CSRF_HEADER_NAME: z.string().default('X-HabiTrack-CSRF'),
 
   // Rate Limits
