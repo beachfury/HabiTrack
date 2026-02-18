@@ -1,13 +1,37 @@
-﻿# dependencies
+# dependencies
 node_modules/
+
 # builds
 dist/
 build/
+
 # env
 .env*
+
 # logs
 *.log
 logs/
-# editor
+
+# editor/IDE
 .vscode/
 .DS_Store
+
+# Claude Code settings (user-specific)
+.claude/
+
+# Archives/backups
+*.zip
+*.bak
+*.backup
+
+# Windows artifacts
+nul
+Thumbs.db
+
+# macOS
+.DS_Store
+._*
+
+# Snapshots (from dev scripts)
+code-snapshot_*.txt
+*_skipped.txt

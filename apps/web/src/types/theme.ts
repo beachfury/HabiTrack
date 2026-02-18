@@ -38,6 +38,7 @@ export type {
   ElementStyle,
   WidgetStyleOverride,
   LoginPageStyle,
+  KioskStyle,
   LcarsMode,
   ElementPreset,
 } from './theme-extended';

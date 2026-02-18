@@ -33,7 +33,7 @@ export function EventFormModal({
         <button
           type="button"
           onClick={onDelete}
-          className="p-2 text-red-600 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-xl"
+          className="p-2 text-[var(--color-destructive)] hover:bg-[var(--color-destructive)]/10 rounded-xl"
         >
           <Trash2 size={20} />
         </button>
@@ -41,7 +41,7 @@ export function EventFormModal({
       <button
         type="button"
         onClick={onClose}
-        className="flex-1 py-2 bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 rounded-xl font-medium"
+        className="flex-1 py-2 bg-[var(--color-muted)] text-[var(--color-foreground)] rounded-xl font-medium hover:opacity-90"
       >
         Cancel
       </button>
@@ -49,7 +49,7 @@ export function EventFormModal({
         type="submit"
         form="event-form"
         onClick={onSubmit}
-        className="flex-1 py-2 bg-blue-600 text-white rounded-xl font-medium hover:bg-blue-700"
+        className="flex-1 py-2 bg-[var(--color-primary)] text-[var(--color-primary-foreground)] rounded-xl font-medium hover:opacity-90"
       >
         {isEditing ? 'Save' : 'Create'}
       </button>
@@ -68,7 +68,7 @@ export function EventFormModal({
         <form id="event-form" onSubmit={onSubmit} className="space-y-4">
           {/* Title */}
           <div>
-            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+            <label className="block text-sm font-medium text-[var(--color-foreground)] mb-1">
               Title *
             </label>
             <input
@@ -76,7 +76,7 @@ export function EventFormModal({
               required
               value={formData.title}
               onChange={(e) => onChange({ ...formData, title: e.target.value })}
-              className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-xl bg-white dark:bg-gray-800 focus:ring-2 focus:ring-blue-500"
+              className="w-full px-3 py-2 border border-[var(--color-border)] rounded-xl bg-[var(--color-card)] text-[var(--color-foreground)] focus:ring-2 focus:ring-[var(--color-primary)]"
               placeholder="Event title"
             />
           </div>
@@ -88,9 +88,9 @@ export function EventFormModal({
               id="allDay"
               checked={formData.allDay}
               onChange={(e) => onChange({ ...formData, allDay: e.target.checked })}
-              className="w-4 h-4 text-blue-600 rounded focus:ring-blue-500"
+              className="w-4 h-4 rounded focus:ring-[var(--color-primary)] accent-[var(--color-primary)]"
             />
-            <label htmlFor="allDay" className="text-sm text-gray-700 dark:text-gray-300">
+            <label htmlFor="allDay" className="text-sm text-[var(--color-foreground)]">
               All day event
             </label>
           </div>
@@ -98,7 +98,7 @@ export function EventFormModal({
           {/* Date/Time */}
           <div className="grid grid-cols-2 gap-4">
             <div>
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+              <label className="block text-sm font-medium text-[var(--color-foreground)] mb-1">
                 Start *
               </label>
               <input
@@ -106,45 +106,45 @@ export function EventFormModal({
                 required
                 value={formData.allDay ? formData.start.slice(0, 10) : formData.start}
                 onChange={(e) => onChange({ ...formData, start: e.target.value })}
-                className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-xl bg-white dark:bg-gray-800 focus:ring-2 focus:ring-blue-500"
+                className="w-full px-3 py-2 border border-[var(--color-border)] rounded-xl bg-[var(--color-card)] text-[var(--color-foreground)] focus:ring-2 focus:ring-[var(--color-primary)]"
               />
             </div>
             <div>
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+              <label className="block text-sm font-medium text-[var(--color-foreground)] mb-1">
                 End
               </label>
               <input
                 type={formData.allDay ? 'date' : 'datetime-local'}
                 value={formData.allDay ? formData.end?.slice(0, 10) || '' : formData.end || ''}
                 onChange={(e) => onChange({ ...formData, end: e.target.value })}
-                className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-xl bg-white dark:bg-gray-800 focus:ring-2 focus:ring-blue-500"
+                className="w-full px-3 py-2 border border-[var(--color-border)] rounded-xl bg-[var(--color-card)] text-[var(--color-foreground)] focus:ring-2 focus:ring-[var(--color-primary)]"
               />
             </div>
           </div>
 
           {/* Location */}
           <div>
-            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+            <label className="block text-sm font-medium text-[var(--color-foreground)] mb-1">
               Location
             </label>
             <input
               type="text"
               value={formData.location || ''}
               onChange={(e) => onChange({ ...formData, location: e.target.value })}
-              className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-xl bg-white dark:bg-gray-800 focus:ring-2 focus:ring-blue-500"
+              className="w-full px-3 py-2 border border-[var(--color-border)] rounded-xl bg-[var(--color-card)] text-[var(--color-foreground)] focus:ring-2 focus:ring-[var(--color-primary)]"
               placeholder="Optional location"
             />
           </div>
 
           {/* Description */}
           <div>
-            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+            <label className="block text-sm font-medium text-[var(--color-foreground)] mb-1">
               Description
             </label>
             <textarea
               value={formData.description || ''}
               onChange={(e) => onChange({ ...formData, description: e.target.value })}
-              className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-xl bg-white dark:bg-gray-800 focus:ring-2 focus:ring-blue-500 resize-none"
+              className="w-full px-3 py-2 border border-[var(--color-border)] rounded-xl bg-[var(--color-card)] text-[var(--color-foreground)] focus:ring-2 focus:ring-[var(--color-primary)] resize-none"
               rows={2}
               placeholder="Optional description"
             />
@@ -160,7 +160,7 @@ export function EventFormModal({
           {/* Assign To (Admin only) */}
           {canAssignToOthers && (
             <div>
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+              <label className="block text-sm font-medium text-[var(--color-foreground)] mb-1">
                 Assign To
               </label>
               <select
@@ -168,7 +168,7 @@ export function EventFormModal({
                 onChange={(e) =>
                   onChange({ ...formData, assignedTo: e.target.value ? Number(e.target.value) : undefined })
                 }
-                className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-xl bg-white dark:bg-gray-800"
+                className="w-full px-3 py-2 border border-[var(--color-border)] rounded-xl bg-[var(--color-card)] text-[var(--color-foreground)]"
               >
                 <option value="">Everyone</option>
                 {users.map((u) => (

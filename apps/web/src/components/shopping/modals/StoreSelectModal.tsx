@@ -68,7 +68,7 @@ export function StoreSelectModal({ item, stores, onClose, onAdd, isAdmin }: Stor
           quantity,
         })
       }
-      className="w-full py-3 bg-orange-500 text-white rounded-xl font-medium hover:bg-orange-600 transition-colors"
+      className="w-full py-3 bg-[var(--color-primary)] text-[var(--color-primary-foreground)] rounded-xl font-medium hover:opacity-90 transition-colors"
     >
       Add to List
     </button>
@@ -85,22 +85,22 @@ export function StoreSelectModal({ item, stores, onClose, onAdd, isAdmin }: Stor
       <ModalBody>
         <div className="space-y-4">
           {/* Item Info */}
-          <div className="flex items-center gap-3 p-3 bg-gray-50 dark:bg-gray-700 rounded-xl">
+          <div className="flex items-center gap-3 p-3 bg-[var(--color-muted)] rounded-xl">
             <ItemImage url={item.imageUrl} />
             <div className="flex-1 min-w-0">
-              <p className="font-medium text-gray-900 dark:text-white truncate">{item.name}</p>
-              {item.brand && <p className="text-sm text-gray-500 truncate">{item.brand}</p>}
+              <p className="font-medium text-[var(--color-foreground)] truncate">{item.name}</p>
+              {item.brand && <p className="text-sm text-[var(--color-muted-foreground)] truncate">{item.brand}</p>}
             </div>
           </div>
 
           {/* Store Selection */}
           <div>
-            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+            <label className="block text-sm font-medium text-[var(--color-foreground)] mb-2">
               Select Store
             </label>
             {loading ? (
               <div className="text-center py-4">
-                <RefreshCw className="animate-spin mx-auto text-gray-400" size={24} />
+                <RefreshCw className="animate-spin mx-auto text-[var(--color-muted-foreground)]" size={24} />
               </div>
             ) : (
               <div className="space-y-2">
@@ -112,8 +112,8 @@ export function StoreSelectModal({ item, stores, onClose, onAdd, isAdmin }: Stor
                       key={store.id}
                       className={`flex items-center gap-3 p-3 rounded-xl border cursor-pointer transition-colors ${
                         selectedStoreId === store.id
-                          ? 'border-orange-500 bg-orange-50 dark:bg-orange-900/20'
-                          : 'border-gray-200 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-700/50'
+                          ? 'border-[var(--color-primary)] bg-[var(--color-primary)]/10'
+                          : 'border-[var(--color-border)] hover:bg-[var(--color-muted)]'
                       }`}
                     >
                       <input
@@ -121,16 +121,16 @@ export function StoreSelectModal({ item, stores, onClose, onAdd, isAdmin }: Stor
                         name="store"
                         checked={selectedStoreId === store.id}
                         onChange={() => setSelectedStoreId(store.id)}
-                        className="text-orange-500"
+                        className="accent-[var(--color-primary)]"
                       />
-                      <Store size={18} className="text-gray-400" />
-                      <span className="flex-1 text-gray-900 dark:text-white">{store.name}</span>
+                      <Store size={18} className="text-[var(--color-muted-foreground)]" />
+                      <span className="flex-1 text-[var(--color-foreground)]">{store.name}</span>
                       {price ? (
-                        <span className="font-semibold text-green-600">
+                        <span className="font-semibold text-[var(--color-success)]">
                           ${Number(price.price).toFixed(2)}
                         </span>
                       ) : (
-                        <span className="text-sm text-gray-400">No price</span>
+                        <span className="text-sm text-[var(--color-muted-foreground)]">No price</span>
                       )}
                     </label>
                   );
@@ -140,8 +140,8 @@ export function StoreSelectModal({ item, stores, onClose, onAdd, isAdmin }: Stor
                 <label
                   className={`flex items-center gap-3 p-3 rounded-xl border cursor-pointer transition-colors ${
                     selectedStoreId === null
-                      ? 'border-orange-500 bg-orange-50 dark:bg-orange-900/20'
-                      : 'border-gray-200 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-700/50'
+                      ? 'border-[var(--color-primary)] bg-[var(--color-primary)]/10'
+                      : 'border-[var(--color-border)] hover:bg-[var(--color-muted)]'
                   }`}
                 >
                   <input
@@ -149,14 +149,14 @@ export function StoreSelectModal({ item, stores, onClose, onAdd, isAdmin }: Stor
                     name="store"
                     checked={selectedStoreId === null}
                     onChange={() => setSelectedStoreId(null)}
-                    className="text-orange-500"
+                    className="accent-[var(--color-primary)]"
                   />
-                  <Store size={18} className="text-gray-400" />
-                  <span className="flex-1 text-gray-900 dark:text-white">Any Store</span>
+                  <Store size={18} className="text-[var(--color-muted-foreground)]" />
+                  <span className="flex-1 text-[var(--color-foreground)]">Any Store</span>
                 </label>
 
                 {stores.length === 0 && (
-                  <p className="text-sm text-gray-500 text-center py-2">
+                  <p className="text-sm text-[var(--color-muted-foreground)] text-center py-2">
                     No stores added yet. Add stores in the Manage tab.
                   </p>
                 )}
@@ -166,7 +166,7 @@ export function StoreSelectModal({ item, stores, onClose, onAdd, isAdmin }: Stor
 
           {/* List Type */}
           <div>
-            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+            <label className="block text-sm font-medium text-[var(--color-foreground)] mb-2">
               Type
             </label>
             <div className="flex gap-2">
@@ -174,8 +174,8 @@ export function StoreSelectModal({ item, stores, onClose, onAdd, isAdmin }: Stor
                 onClick={() => setListType('need')}
                 className={`flex-1 py-2 rounded-xl font-medium transition-colors ${
                   listType === 'need'
-                    ? 'bg-green-500 text-white'
-                    : 'bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-300'
+                    ? 'bg-[var(--color-success)] text-[var(--color-success-foreground)]'
+                    : 'bg-[var(--color-muted)] text-[var(--color-muted-foreground)]'
                 }`}
               >
                 Need
@@ -184,8 +184,8 @@ export function StoreSelectModal({ item, stores, onClose, onAdd, isAdmin }: Stor
                 onClick={() => setListType('want')}
                 className={`flex-1 py-2 rounded-xl font-medium transition-colors ${
                   listType === 'want'
-                    ? 'bg-blue-500 text-white'
-                    : 'bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-300'
+                    ? 'bg-[var(--color-warning)] text-[var(--color-warning-foreground)]'
+                    : 'bg-[var(--color-muted)] text-[var(--color-muted-foreground)]'
                 }`}
               >
                 Want
@@ -195,22 +195,22 @@ export function StoreSelectModal({ item, stores, onClose, onAdd, isAdmin }: Stor
 
           {/* Quantity */}
           <div>
-            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+            <label className="block text-sm font-medium text-[var(--color-foreground)] mb-2">
               Quantity
             </label>
             <div className="flex items-center gap-4">
               <button
                 onClick={() => setQuantity(Math.max(1, quantity - 1))}
-                className="w-10 h-10 rounded-full bg-gray-100 dark:bg-gray-700 flex items-center justify-center text-xl font-bold"
+                className="w-10 h-10 rounded-full bg-[var(--color-muted)] text-[var(--color-foreground)] flex items-center justify-center text-xl font-bold"
               >
                 -
               </button>
-              <span className="text-xl font-semibold text-gray-900 dark:text-white w-8 text-center">
+              <span className="text-xl font-semibold text-[var(--color-foreground)] w-8 text-center">
                 {quantity}
               </span>
               <button
                 onClick={() => setQuantity(quantity + 1)}
-                className="w-10 h-10 rounded-full bg-gray-100 dark:bg-gray-700 flex items-center justify-center text-xl font-bold"
+                className="w-10 h-10 rounded-full bg-[var(--color-muted)] text-[var(--color-foreground)] flex items-center justify-center text-xl font-bold"
               >
                 +
               </button>
@@ -219,10 +219,10 @@ export function StoreSelectModal({ item, stores, onClose, onAdd, isAdmin }: Stor
 
           {/* Total */}
           {totalPrice > 0 && (
-            <div className="p-3 bg-green-50 dark:bg-green-900/20 rounded-xl">
+            <div className="p-3 rounded-xl" style={{ backgroundColor: 'color-mix(in srgb, var(--color-success) 10%, transparent)' }}>
               <div className="flex justify-between items-center">
-                <span className="text-gray-600 dark:text-gray-300">Estimated Total</span>
-                <span className="text-xl font-bold text-green-600">${totalPrice.toFixed(2)}</span>
+                <span className="text-[var(--color-muted-foreground)]">Estimated Total</span>
+                <span className="text-xl font-bold text-[var(--color-success)]">${totalPrice.toFixed(2)}</span>
               </div>
             </div>
           )}

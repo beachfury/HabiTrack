@@ -1,10 +1,10 @@
 // apps/web/src/components/themes/PreviewPages/ShoppingPreview.tsx
 // Shopping page preview replica for theme editor - mirrors actual ShoppingPage
 
-import { Check, ShoppingCart, ListPlus, Package, Sparkles, History, Settings, ChevronDown, ChevronRight } from 'lucide-react';
+import { ShoppingCart, Package, Sparkles, History, Settings, ChevronDown, Plus, Store } from 'lucide-react';
 import type { ExtendedTheme, ThemeableElement } from '../../../types/theme';
 import { ClickableElement } from '../InteractivePreview';
-import { buildElementStyle, buildButtonStyle, buildPageBackgroundStyle, RADIUS_MAP, SHADOW_MAP } from './styleUtils';
+import { buildElementStyle, buildPageBackgroundStyle, RADIUS_MAP, SHADOW_MAP } from './styleUtils';
 
 interface ShoppingPreviewProps {
   theme: ExtendedTheme;
@@ -13,23 +13,9 @@ interface ShoppingPreviewProps {
   onSelectElement: (element: ThemeableElement) => void;
 }
 
-// Mock shopping data matching real page
-const MOCK_ITEMS_BY_STORE = {
-  'Costco': [
-    { id: 1, name: 'Milk', quantity: 2, category: 'Dairy', done: false, price: 5.99 },
-    { id: 2, name: 'Eggs', quantity: 1, category: 'Dairy', done: true, price: 8.99 },
-    { id: 3, name: 'Bread', quantity: 1, category: 'Bakery', done: false, price: 4.49 },
-  ],
-  'Safeway': [
-    { id: 4, name: 'Apples', quantity: 6, category: 'Produce', done: false, price: 3.99 },
-    { id: 5, name: 'Chicken breast', quantity: 2, category: 'Meat', done: false, price: 12.99 },
-  ],
-};
-
 // Tab configuration - matches real page
 const TABS = [
   { id: 'list', label: 'List', icon: ShoppingCart },
-  { id: 'requests', label: 'Requests', icon: ListPlus },
   { id: 'catalog', label: 'Catalog', icon: Package },
   { id: 'predictions', label: 'Predict', icon: Sparkles },
   { id: 'history', label: 'History', icon: History },
@@ -43,34 +29,57 @@ export function ShoppingPreview({
   onSelectElement,
 }: ShoppingPreviewProps) {
   const colors = colorMode === 'light' ? theme.colorsLight : theme.colorsDark;
-  const cardStyle = theme.elementStyles?.card || {};
-  const widgetStyle = theme.elementStyles?.widget || {};
-  const buttonPrimaryStyle = theme.elementStyles?.['button-primary'] || {};
 
   // Default fallbacks
   const defaultRadius = RADIUS_MAP[theme.ui.borderRadius] || '8px';
   const defaultShadow = SHADOW_MAP[theme.ui.shadowIntensity] || 'none';
 
-  // Build computed styles
-  const computedCardStyle = buildElementStyle(cardStyle, colors.card, colors.border, defaultRadius, defaultShadow, colors.cardForeground);
-  const computedWidgetStyle = buildElementStyle(widgetStyle, colors.muted, colors.border, defaultRadius, 'none', colors.foreground);
-  const computedButtonPrimaryStyle = buildButtonStyle(buttonPrimaryStyle, colors.primary, colors.primaryForeground, 'transparent', '8px');
-
-  // Page-specific background
+  // Page-specific background - check early for card fallback logic
   const shoppingBgStyle = theme.elementStyles?.['shopping-background'] || {};
   const globalPageBgStyle = theme.elementStyles?.['page-background'] || {};
-  const { style: pageBgStyle, backgroundImageUrl } = buildPageBackgroundStyle(
+
+  // Check if shopping background has custom styling
+  const hasCustomShoppingBg = shoppingBgStyle.backgroundColor || shoppingBgStyle.backgroundGradient || shoppingBgStyle.backgroundImage || shoppingBgStyle.customCSS;
+  const cardBgFallback = hasCustomShoppingBg ? 'rgba(255,255,255,0.08)' : colors.card;
+  const cardBorderFallback = hasCustomShoppingBg ? 'rgba(255,255,255,0.15)' : colors.border;
+
+  // Shopping filter widget style
+  const filterWidgetStyle = theme.elementStyles?.['shopping-filter-widget'] || {};
+  const computedFilterStyle = buildElementStyle(filterWidgetStyle, cardBgFallback, cardBorderFallback, defaultRadius, defaultShadow, colors.foreground);
+
+  // Shopping list card style
+  const listCardStyle = theme.elementStyles?.['shopping-list-card'] || {};
+  const computedListStyle = buildElementStyle(listCardStyle, cardBgFallback, cardBorderFallback, defaultRadius, defaultShadow, colors.cardForeground);
+  const { style: pageBgStyle, backgroundImageUrl, customCSS } = buildPageBackgroundStyle(
     shoppingBgStyle,
     globalPageBgStyle,
     colors.background
   );
+
+  // Detect animated background effect classes from customCSS
+  const getAnimatedBgClasses = (css?: string): string => {
+    if (!css) return '';
+    const classes: string[] = [];
+    if (css.includes('matrix-rain: true') || css.includes('matrix-rain:true')) {
+      classes.push('matrix-rain-bg');
+      const speedMatch = css.match(/matrix-rain-speed:\s*(slow|normal|fast|veryfast)/i);
+      if (speedMatch) classes.push(`matrix-rain-${speedMatch[1].toLowerCase()}`);
+    }
+    if (css.includes('snowfall: true') || css.includes('snowfall:true')) classes.push('snowfall-bg');
+    if (css.includes('sparkle: true') || css.includes('sparkle:true')) classes.push('sparkle-bg');
+    if (css.includes('bubbles: true') || css.includes('bubbles:true')) classes.push('bubbles-bg');
+    if (css.includes('embers: true') || css.includes('embers:true')) classes.push('embers-bg');
+    return classes.join(' ');
+  };
+
+  const animatedBgClasses = getAnimatedBgClasses(customCSS);
 
   return (
     <ClickableElement
       element="shopping-background"
       isSelected={selectedElement === 'shopping-background'}
       onClick={() => onSelectElement('shopping-background')}
-      className="flex-1 overflow-auto"
+      className={`flex-1 overflow-auto ${animatedBgClasses}`}
       style={pageBgStyle}
     >
       {backgroundImageUrl && (
@@ -85,14 +94,14 @@ export function ShoppingPreview({
         />
       )}
       <div className="relative z-10">
-        {/* Sticky Header - matches real page */}
+        {/* Header - Filter Widget */}
         <ClickableElement
           element="shopping-filter-widget"
           isSelected={selectedElement === 'shopping-filter-widget'}
           onClick={() => onSelectElement('shopping-filter-widget')}
           className="sticky top-0 z-10 border-b"
           style={{
-            ...computedCardStyle,
+            ...computedFilterStyle,
             borderRadius: 0,
             padding: '12px',
             borderColor: colors.border,
@@ -105,10 +114,10 @@ export function ShoppingPreview({
             </h1>
             <div className="text-right text-xs">
               <p style={{ color: colors.mutedForeground }}>
-                Needs: <span className="font-semibold" style={{ color: colors.success }}>$24.45</span>
+                Needs: <span className="font-semibold" style={{ color: colors.success }}>$0.00</span>
               </p>
               <p style={{ color: colors.mutedForeground }}>
-                Total: <span className="font-semibold" style={{ color: colors.warning }}>$36.45</span>
+                Total: <span className="font-semibold" style={{ color: colors.warning }}>$0.00</span>
               </p>
             </div>
           </div>
@@ -132,92 +141,48 @@ export function ShoppingPreview({
         </ClickableElement>
 
         {/* Shopping List Content */}
-        <div className="p-3">
-          {/* Store sections */}
-          {Object.entries(MOCK_ITEMS_BY_STORE).map(([storeName, items]) => (
-            <ClickableElement
-              key={storeName}
-              element="shopping-list-card"
-              isSelected={selectedElement === 'shopping-list-card'}
-              onClick={() => onSelectElement('shopping-list-card')}
-              className="mb-3"
-              style={{
-                ...computedCardStyle,
-                padding: 0,
-              }}
-            >
-              {/* Store header */}
-              <div
-                className="flex items-center justify-between px-3 py-2 border-b cursor-pointer"
-                style={{ borderColor: colors.border }}
-              >
-                <div className="flex items-center gap-2">
-                  <ChevronDown size={14} style={{ color: colors.mutedForeground }} />
-                  <span className="text-sm font-semibold" style={{ color: colors.foreground }}>{storeName}</span>
-                  <span className="text-[10px] px-1.5 py-0.5 rounded-full" style={{ backgroundColor: colors.muted, color: colors.mutedForeground }}>
-                    {items.filter(i => !i.done).length}
-                  </span>
-                </div>
-                <span className="text-xs font-medium" style={{ color: colors.success }}>
-                  ${items.reduce((sum, i) => sum + (i.done ? 0 : i.price), 0).toFixed(2)}
-                </span>
-              </div>
-
-              {/* Items */}
-              <div className="p-2 space-y-1">
-                {items.map((item) => (
-                  <div
-                    key={item.id}
-                    className="flex items-center gap-2 p-2 rounded-lg"
-                    style={{
-                      backgroundColor: item.done ? `${colors.success}10` : 'transparent',
-                    }}
-                  >
-                    <div
-                      className="w-5 h-5 rounded border-2 flex items-center justify-center flex-shrink-0"
-                      style={{
-                        borderColor: item.done ? colors.success : colors.border,
-                        backgroundColor: item.done ? colors.success : 'transparent',
-                      }}
-                    >
-                      {item.done && <Check size={12} style={{ color: colors.successForeground }} />}
-                    </div>
-                    <div className="flex-1 min-w-0">
-                      <p
-                        className={`text-xs font-medium ${item.done ? 'line-through opacity-60' : ''}`}
-                        style={{ color: colors.foreground }}
-                      >
-                        {item.name}
-                      </p>
-                      <p className="text-[10px]" style={{ color: colors.mutedForeground }}>
-                        {item.category} • x{item.quantity}
-                      </p>
-                    </div>
-                    <span className="text-xs" style={{ color: colors.mutedForeground }}>
-                      ${item.price.toFixed(2)}
-                    </span>
-                  </div>
-                ))}
-              </div>
-            </ClickableElement>
-          ))}
-
-          {/* Add to List Button - matches real page FAB style */}
+        <div className="p-3 space-y-3">
+          {/* Add Item to List Button - matches real page */}
           <ClickableElement
             element="button-primary"
             isSelected={selectedElement === 'button-primary'}
             onClick={() => onSelectElement('button-primary')}
-            className="fixed bottom-4 right-4"
           >
             <button
-              className="flex items-center gap-2 px-4 py-2.5 text-xs font-medium shadow-lg"
+              className="w-full p-3 border-2 border-dashed rounded-xl flex items-center justify-center gap-2 text-sm"
               style={{
-                ...computedButtonPrimaryStyle,
-                borderRadius: '9999px',
+                borderColor: colors.border,
+                color: colors.mutedForeground,
               }}
             >
-              <ListPlus size={16} />
-              Add to List
+              <Plus size={16} /> Add Item to List
+            </button>
+          </ClickableElement>
+
+          {/* Store Card - Collapsed by default like real page */}
+          <ClickableElement
+            element="shopping-list-card"
+            isSelected={selectedElement === 'shopping-list-card'}
+            onClick={() => onSelectElement('shopping-list-card')}
+            style={{
+              ...computedListStyle,
+              padding: 0,
+            }}
+          >
+            <button
+              className="w-full p-3 flex items-center gap-3"
+              style={{ backgroundColor: 'transparent' }}
+            >
+              <Store size={16} style={{ color: colors.primary }} />
+              <div className="flex-1 text-left min-w-0">
+                <p className="font-semibold text-sm" style={{ color: colors.foreground }}>
+                  Costco
+                </p>
+                <p className="text-xs" style={{ color: colors.mutedForeground }}>
+                  1 items • $0.00
+                </p>
+              </div>
+              <ChevronDown size={16} style={{ color: colors.mutedForeground }} />
             </button>
           </ClickableElement>
         </div>

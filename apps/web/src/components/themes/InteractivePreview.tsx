@@ -15,6 +15,13 @@ import {
   Minus,
   Plus,
   Maximize2,
+  LayoutGrid,
+  Tablet,
+  DollarSign,
+  Users,
+  Wallet,
+  UtensilsCrossed,
+  BookOpen,
 } from 'lucide-react';
 import type { ExtendedTheme, ThemeableElement, ElementStyle } from '../../types/theme';
 import { HomePreview } from './PreviewPages/HomePreview';
@@ -24,6 +31,13 @@ import { ShoppingPreview } from './PreviewPages/ShoppingPreview';
 import { MessagesPreview } from './PreviewPages/MessagesPreview';
 import { SettingsPreview } from './PreviewPages/SettingsPreview';
 import { LoginPreview } from './PreviewPages/LoginPreview';
+import { ModalPreview } from './PreviewPages/ModalPreview';
+import { KioskPreview } from './PreviewPages/KioskPreview';
+import { BudgetPreview } from './PreviewPages/BudgetPreview';
+import { MealsPreview } from './PreviewPages/MealsPreview';
+import { RecipesPreview } from './PreviewPages/RecipesPreview';
+import { PaidChoresPreview } from './PreviewPages/PaidChoresPreview';
+import { FamilyPreview } from './PreviewPages/FamilyPreview';
 
 // Helper to resolve image URLs - converts relative API paths to full URLs
 const API_BASE = import.meta.env.VITE_API_BASE_URL || 'http://localhost:3000';
@@ -35,17 +49,88 @@ function resolveImageUrl(url: string | undefined): string | undefined {
   return url;
 }
 
+// Parse CSS string to React CSSProperties object
+// Converts "background: red; box-shadow: 0 0 10px blue;" to { background: 'red', boxShadow: '0 0 10px blue' }
+function parseCustomCssToStyle(cssString: string): React.CSSProperties {
+  const style: Record<string, string> = {};
+
+  // Remove comments
+  const cleanCss = cssString.replace(/\/\*[\s\S]*?\*\//g, '');
+
+  // Split by semicolons
+  const declarations = cleanCss.split(';').filter(d => d.trim());
+
+  for (const declaration of declarations) {
+    const colonIndex = declaration.indexOf(':');
+    if (colonIndex === -1) continue;
+
+    const property = declaration.substring(0, colonIndex).trim();
+    const value = declaration.substring(colonIndex + 1).trim();
+
+    if (!property || !value) continue;
+
+    // Convert CSS property name to camelCase (e.g., "box-shadow" -> "boxShadow")
+    const camelProperty = property.replace(/-([a-z])/g, (_, letter) => letter.toUpperCase());
+
+    style[camelProperty] = value;
+  }
+
+  return style as React.CSSProperties;
+}
+
+// Detect animated background effect classes from customCSS string
+// Supports: matrix-rain (with speed variants), snowfall, sparkle, bubbles, embers
+function getAnimatedBackgroundClasses(customCSS?: string): string {
+  if (!customCSS) return '';
+
+  const classes: string[] = [];
+
+  // Matrix rain effect with speed variants
+  if (customCSS.includes('matrix-rain: true') || customCSS.includes('matrix-rain:true')) {
+    classes.push('matrix-rain-bg');
+
+    // Check for speed setting: matrix-rain-speed: slow | normal | fast | veryfast
+    const speedMatch = customCSS.match(/matrix-rain-speed:\s*(slow|normal|fast|veryfast)/i);
+    if (speedMatch) {
+      classes.push(`matrix-rain-${speedMatch[1].toLowerCase()}`);
+    }
+  }
+
+  // Snowfall effect
+  if (customCSS.includes('snowfall: true') || customCSS.includes('snowfall:true')) {
+    classes.push('snowfall-bg');
+  }
+
+  // Sparkle/stars effect
+  if (customCSS.includes('sparkle: true') || customCSS.includes('sparkle:true')) {
+    classes.push('sparkle-bg');
+  }
+
+  // Bubbles effect
+  if (customCSS.includes('bubbles: true') || customCSS.includes('bubbles:true')) {
+    classes.push('bubbles-bg');
+  }
+
+  // Embers/fire effect
+  if (customCSS.includes('embers: true') || customCSS.includes('embers:true')) {
+    classes.push('embers-bg');
+  }
+
+  return classes.join(' ');
+}
+
 interface InteractivePreviewProps {
   theme: ExtendedTheme;
   colorMode: 'light' | 'dark';
   onColorModeChange: (mode: 'light' | 'dark') => void;
   selectedElement: ThemeableElement | null;
   onSelectElement: (element: ThemeableElement | null) => void;
+  onPageChange?: (page: 'home' | 'chores' | 'calendar' | 'shopping' | 'messages' | 'settings' | 'budget' | 'meals' | 'recipes' | 'paidchores' | 'family' | 'modal' | 'login' | 'kiosk') => void;
   isAdmin?: boolean;
   brandingVersion?: number; // Increment to trigger LoginPreview refresh
 }
 
-type PreviewPage = 'home' | 'chores' | 'calendar' | 'shopping' | 'messages' | 'settings' | 'login';
+type PreviewPage = 'home' | 'chores' | 'calendar' | 'shopping' | 'messages' | 'settings' | 'budget' | 'meals' | 'recipes' | 'paidchores' | 'family' | 'modal' | 'login' | 'kiosk';
 
 // Tab order mirrors the actual app sidebar (see SidebarLayout.tsx navItems)
 const PAGE_TABS: { id: PreviewPage; label: string; icon: React.ElementType; adminOnly?: boolean }[] = [
@@ -53,9 +138,16 @@ const PAGE_TABS: { id: PreviewPage; label: string; icon: React.ElementType; admi
   { id: 'calendar', label: 'Calendar', icon: Calendar },
   { id: 'shopping', label: 'Shopping', icon: ShoppingCart },
   { id: 'chores', label: 'Chores', icon: ClipboardList },
+  { id: 'paidchores', label: 'Paid Chores', icon: DollarSign },
   { id: 'messages', label: 'Messages', icon: Bell },
+  { id: 'budget', label: 'Budget', icon: Wallet },
+  { id: 'meals', label: 'Meals', icon: UtensilsCrossed },
+  { id: 'recipes', label: 'Recipes', icon: BookOpen },
+  { id: 'family', label: 'Family', icon: Users },
   { id: 'settings', label: 'Settings', icon: Settings },
+  { id: 'modal', label: 'Modal', icon: LayoutGrid },
   { id: 'login', label: 'Login', icon: Lock, adminOnly: true },
+  { id: 'kiosk', label: 'Kiosk', icon: Tablet, adminOnly: true },
 ];
 
 export function InteractivePreview({
@@ -64,10 +156,17 @@ export function InteractivePreview({
   onColorModeChange,
   selectedElement,
   onSelectElement,
+  onPageChange,
   isAdmin = false,
   brandingVersion = 0,
 }: InteractivePreviewProps) {
   const [activePage, setActivePage] = useState<PreviewPage>('home');
+
+  // Notify parent when page changes
+  const handlePageChange = (page: PreviewPage) => {
+    setActivePage(page);
+    onPageChange?.(page);
+  };
   const [zoom, setZoom] = useState(75); // Higher default zoom
   const containerRef = useRef<HTMLDivElement>(null);
   const [containerSize, setContainerSize] = useState({ width: 0, height: 0 });
@@ -115,10 +214,14 @@ export function InteractivePreview({
     return Math.min(Math.floor(Math.min(scaleX, scaleY) * 100), 120);
   }, [containerSize]);
 
-  // Auto-switch to login page when login-page element is selected
+  // Auto-switch to appropriate preview when special elements are selected
   useEffect(() => {
     if (selectedElement === 'login-page') {
-      setActivePage('login');
+      handlePageChange('login');
+    } else if (selectedElement === 'kiosk') {
+      handlePageChange('kiosk');
+    } else if (selectedElement === 'modal') {
+      handlePageChange('modal');
     }
   }, [selectedElement]);
 
@@ -148,15 +251,16 @@ export function InteractivePreview({
     overflow: 'hidden',
   };
 
-  // Check if there are element styles defined for sidebar
-  const hasElementStyles = sidebarElementStyle && (
+  // Check if there are BACKGROUND element styles defined for sidebar
+  const hasBackgroundElementStyles = sidebarElementStyle && (
     sidebarElementStyle.backgroundColor ||
     sidebarElementStyle.backgroundGradient ||
     sidebarElementStyle.backgroundImage
   );
 
-  if (hasElementStyles) {
-    // Use element styles (new system)
+  // Apply background styles - prioritize elementStyles over legacy
+  if (hasBackgroundElementStyles) {
+    // Use element styles (new system) for background
     if (sidebarElementStyle.backgroundGradient) {
       const { from, to, direction } = sidebarElementStyle.backgroundGradient;
       sidebarStyle.background = `linear-gradient(${direction || 'to bottom'}, ${from}, ${to})`;
@@ -173,25 +277,6 @@ export function InteractivePreview({
     } else if (sidebarElementStyle.backgroundColor) {
       sidebarStyle.backgroundColor = sidebarElementStyle.backgroundColor;
     }
-
-    if (sidebarElementStyle.borderRadius !== undefined) {
-      sidebarStyle.borderRadius = `${sidebarElementStyle.borderRadius}px`;
-    }
-    if (sidebarElementStyle.borderWidth && sidebarElementStyle.borderColor) {
-      sidebarStyle.border = `${sidebarElementStyle.borderWidth}px ${sidebarElementStyle.borderStyle || 'solid'} ${sidebarElementStyle.borderColor}`;
-    }
-    if (sidebarElementStyle.boxShadow) {
-      const shadowMap: Record<string, string> = {
-        none: 'none',
-        subtle: '0 1px 3px rgba(0,0,0,0.08)',
-        medium: '0 4px 6px rgba(0,0,0,0.1)',
-        strong: '0 10px 15px rgba(0,0,0,0.15)',
-      };
-      sidebarStyle.boxShadow = shadowMap[sidebarElementStyle.boxShadow] || sidebarElementStyle.boxShadow;
-    }
-    if (sidebarElementStyle.blur) {
-      sidebarStyle.backdropFilter = `blur(${sidebarElementStyle.blur}px)`;
-    }
   } else if (theme.sidebar?.backgroundType === 'solid') {
     // Fallback to legacy sidebar settings
     sidebarStyle.backgroundColor = theme.sidebar.backgroundColor || colors.card;
@@ -202,6 +287,107 @@ export function InteractivePreview({
     sidebarStyle.backgroundColor = colors.card;
   } else {
     sidebarStyle.backgroundColor = colors.card;
+  }
+
+  // Apply border, shadow, blur, and effects from elementStyles (independent of background)
+  if (sidebarElementStyle) {
+    if (sidebarElementStyle.borderRadius !== undefined) {
+      sidebarStyle.borderRadius = `${sidebarElementStyle.borderRadius}px`;
+    }
+    if (sidebarElementStyle.borderWidth && sidebarElementStyle.borderColor) {
+      sidebarStyle.border = `${sidebarElementStyle.borderWidth}px ${sidebarElementStyle.borderStyle || 'solid'} ${sidebarElementStyle.borderColor}`;
+    }
+
+    // Box shadow and glow
+    let shadowValue = '';
+    if (sidebarElementStyle.boxShadow) {
+      const shadowMap: Record<string, string> = {
+        none: 'none',
+        subtle: '0 1px 3px rgba(0,0,0,0.08)',
+        medium: '0 4px 6px rgba(0,0,0,0.1)',
+        strong: '0 10px 15px rgba(0,0,0,0.15)',
+      };
+      shadowValue = shadowMap[sidebarElementStyle.boxShadow] || sidebarElementStyle.boxShadow;
+    }
+    if (sidebarElementStyle.glowColor && sidebarElementStyle.glowSize) {
+      const glowShadow = `0 0 ${sidebarElementStyle.glowSize}px ${sidebarElementStyle.glowColor}`;
+      shadowValue = shadowValue && shadowValue !== 'none' ? `${shadowValue}, ${glowShadow}` : glowShadow;
+    }
+    if (shadowValue) {
+      sidebarStyle.boxShadow = shadowValue;
+    }
+
+    if (sidebarElementStyle.blur) {
+      sidebarStyle.backdropFilter = `blur(${sidebarElementStyle.blur}px)`;
+    }
+    if (sidebarElementStyle.opacity !== undefined) {
+      sidebarStyle.opacity = sidebarElementStyle.opacity;
+    }
+    if (sidebarElementStyle.padding) {
+      sidebarStyle.padding = sidebarElementStyle.padding;
+    }
+    if (sidebarElementStyle.margin) {
+      sidebarStyle.margin = sidebarElementStyle.margin;
+    }
+
+    // Transform effects
+    const transforms: string[] = [];
+    if (sidebarElementStyle.scale !== undefined && sidebarElementStyle.scale !== 1) {
+      transforms.push(`scale(${sidebarElementStyle.scale})`);
+    }
+    if (sidebarElementStyle.rotate !== undefined && sidebarElementStyle.rotate !== 0) {
+      transforms.push(`rotate(${sidebarElementStyle.rotate}deg)`);
+    }
+    if (sidebarElementStyle.skewX !== undefined && sidebarElementStyle.skewX !== 0) {
+      transforms.push(`skewX(${sidebarElementStyle.skewX}deg)`);
+    }
+    if (sidebarElementStyle.skewY !== undefined && sidebarElementStyle.skewY !== 0) {
+      transforms.push(`skewY(${sidebarElementStyle.skewY}deg)`);
+    }
+    if (transforms.length > 0) {
+      sidebarStyle.transform = transforms.join(' ');
+    }
+
+    // Filters
+    const filters: string[] = [];
+    if (sidebarElementStyle.saturation !== undefined && sidebarElementStyle.saturation !== 100) {
+      filters.push(`saturate(${sidebarElementStyle.saturation}%)`);
+    }
+    if (sidebarElementStyle.grayscale !== undefined && sidebarElementStyle.grayscale !== 0) {
+      filters.push(`grayscale(${sidebarElementStyle.grayscale}%)`);
+    }
+    if (filters.length > 0) {
+      sidebarStyle.filter = filters.join(' ');
+    }
+
+    // Transition for hover effects
+    if (sidebarElementStyle.hoverScale || sidebarElementStyle.hoverOpacity) {
+      sidebarStyle.transition = 'transform 0.2s ease, opacity 0.2s ease';
+    }
+
+    // Apply customCSS as inline styles (highest priority)
+    if (sidebarElementStyle.customCSS) {
+      const customStyles = parseCustomCssToStyle(sidebarElementStyle.customCSS);
+
+      // Clear conflicting properties before applying custom CSS
+      // CSS shorthand properties (like 'background') don't override longhand (like 'backgroundColor') in JS objects
+      if ('background' in customStyles) {
+        delete sidebarStyle.backgroundColor;
+        delete sidebarStyle.backgroundImage;
+      }
+      if ('border' in customStyles) {
+        delete sidebarStyle.borderColor;
+        delete sidebarStyle.borderWidth;
+        delete sidebarStyle.borderStyle;
+      }
+      if ('borderRight' in customStyles) {
+        delete sidebarStyle.borderRightColor;
+        delete sidebarStyle.borderRightWidth;
+        delete sidebarStyle.borderRightStyle;
+      }
+
+      Object.assign(sidebarStyle, customStyles);
+    }
   }
 
   // Page background style - prioritize elementStyles over legacy pageBackground
@@ -244,8 +430,22 @@ export function InteractivePreview({
   const radiusMap = { none: '0', small: '4px', medium: '8px', large: '16px' };
   const borderRadius = radiusMap[theme.ui.borderRadius] || '8px';
 
-  // Text color for sidebar
-  const textColor = theme.sidebar?.textColor || colors.foreground;
+  // Text color for sidebar - prioritize elementStyles over legacy sidebar system
+  const textColor = sidebarElementStyle?.textColor || theme.sidebar?.textColor || colors.foreground;
+
+  // Apply text styling from elementStyles to sidebar
+  if (sidebarElementStyle?.fontFamily) {
+    sidebarStyle.fontFamily = sidebarElementStyle.fontFamily;
+  }
+  if (sidebarElementStyle?.fontWeight) {
+    const weightMap: Record<string, number> = { normal: 400, medium: 500, semibold: 600, bold: 700 };
+    sidebarStyle.fontWeight = weightMap[sidebarElementStyle.fontWeight] || 400;
+  }
+  if (sidebarElementStyle?.textSize) {
+    sidebarStyle.fontSize = `${sidebarElementStyle.textSize}px`;
+  }
+  // Apply text color to sidebar style for CSS inheritance
+  sidebarStyle.color = textColor;
 
   // Visible tabs based on admin status
   const visibleTabs = PAGE_TABS.filter((tab) => !tab.adminOnly || isAdmin);
@@ -259,7 +459,7 @@ export function InteractivePreview({
           {visibleTabs.map((tab) => (
             <button
               key={tab.id}
-              onClick={() => setActivePage(tab.id)}
+              onClick={() => handlePageChange(tab.id)}
               className={`flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium rounded-md transition-colors ${
                 activePage === tab.id
                   ? 'bg-emerald-100 dark:bg-emerald-900/30 text-emerald-700 dark:text-emerald-300'
@@ -345,13 +545,13 @@ export function InteractivePreview({
         >
           {/* App layout preview */}
           <div className="h-full flex" style={pageStyle}>
-            {/* Sidebar - only show for non-login pages */}
-            {activePage !== 'login' && (theme.layout.type === 'sidebar-left' || theme.layout.type === 'sidebar-right') && (
+            {/* Sidebar - only show for pages that have sidebars (not login, kiosk, or modal) */}
+            {activePage !== 'login' && activePage !== 'kiosk' && activePage !== 'modal' && (theme.layout.type === 'sidebar-left' || theme.layout.type === 'sidebar-right') && (
               <ClickableElement
                 element="sidebar"
                 isSelected={selectedElement === 'sidebar'}
                 onClick={() => handleElementClick('sidebar')}
-                className={theme.layout.type === 'sidebar-right' ? 'order-2' : ''}
+                className={`${theme.layout.type === 'sidebar-right' ? 'order-2' : ''} ${getAnimatedBackgroundClasses(sidebarElementStyle?.customCSS)}`}
                 style={sidebarStyle}
               >
                 {/* Image background */}
@@ -372,7 +572,10 @@ export function InteractivePreview({
                 <div className="relative z-10 h-full flex flex-col p-4">
                   <div
                     className="text-xl font-bold mb-6"
-                    style={{ color: textColor }}
+                    style={{
+                      color: textColor,
+                      textShadow: sidebarStyle.textShadow,
+                    }}
                   >
                     {theme.name || 'HabiTrack'}
                   </div>
@@ -383,7 +586,7 @@ export function InteractivePreview({
                         key={tab.id}
                         onClick={(e) => {
                           e.stopPropagation();
-                          setActivePage(tab.id);
+                          handlePageChange(tab.id);
                         }}
                         className="w-full flex items-center gap-3 px-3 py-2 rounded-lg text-left transition-colors"
                         style={{
@@ -391,11 +594,15 @@ export function InteractivePreview({
                           backgroundColor:
                             activePage === tab.id ? `${colors.primary}20` : 'transparent',
                           color: activePage === tab.id ? colors.primary : textColor,
+                          textShadow: sidebarStyle.textShadow,
+                          fontFamily: sidebarStyle.fontFamily,
+                          fontWeight: sidebarStyle.fontWeight,
+                          fontSize: sidebarStyle.fontSize,
                         }}
                       >
                         <tab.icon size={20} />
                         {theme.layout.navStyle !== 'icons-only' && (
-                          <span className="text-sm font-medium">{tab.label}</span>
+                          <span className="font-medium">{tab.label}</span>
                         )}
                       </button>
                     ))}
@@ -409,6 +616,20 @@ export function InteractivePreview({
               {activePage === 'login' ? (
                 <LoginPreview
                   key={brandingVersion}
+                  theme={theme}
+                  colorMode={colorMode}
+                  selectedElement={selectedElement}
+                  onSelectElement={handleElementClick}
+                />
+              ) : activePage === 'kiosk' ? (
+                <KioskPreview
+                  theme={theme}
+                  colorMode={colorMode}
+                  selectedElement={selectedElement}
+                  onSelectElement={handleElementClick}
+                />
+              ) : activePage === 'modal' ? (
+                <ModalPreview
                   theme={theme}
                   colorMode={colorMode}
                   selectedElement={selectedElement}
@@ -444,6 +665,41 @@ export function InteractivePreview({
                 />
               ) : activePage === 'settings' ? (
                 <SettingsPreview
+                  theme={theme}
+                  colorMode={colorMode}
+                  selectedElement={selectedElement}
+                  onSelectElement={handleElementClick}
+                />
+              ) : activePage === 'budget' ? (
+                <BudgetPreview
+                  theme={theme}
+                  colorMode={colorMode}
+                  selectedElement={selectedElement}
+                  onSelectElement={handleElementClick}
+                />
+              ) : activePage === 'meals' ? (
+                <MealsPreview
+                  theme={theme}
+                  colorMode={colorMode}
+                  selectedElement={selectedElement}
+                  onSelectElement={handleElementClick}
+                />
+              ) : activePage === 'recipes' ? (
+                <RecipesPreview
+                  theme={theme}
+                  colorMode={colorMode}
+                  selectedElement={selectedElement}
+                  onSelectElement={handleElementClick}
+                />
+              ) : activePage === 'paidchores' ? (
+                <PaidChoresPreview
+                  theme={theme}
+                  colorMode={colorMode}
+                  selectedElement={selectedElement}
+                  onSelectElement={handleElementClick}
+                />
+              ) : activePage === 'family' ? (
+                <FamilyPreview
                   theme={theme}
                   colorMode={colorMode}
                   selectedElement={selectedElement}
@@ -511,16 +767,10 @@ export function ClickableElement({
         />
       )}
 
-      {/* Element label */}
+      {/* Element label - only show on hover, not when selected (selected uses highlight border only) */}
       {isHovered && !isSelected && (
-        <div className="absolute top-1 right-1 px-2 py-0.5 bg-emerald-500 text-white text-xs rounded shadow-lg pointer-events-none z-50">
+        <div className="absolute top-1 left-1 px-2 py-0.5 bg-emerald-500 text-white text-xs rounded shadow-lg pointer-events-none z-50">
           Click to edit {element.replace('-', ' ')}
-        </div>
-      )}
-
-      {isSelected && (
-        <div className="absolute top-1 right-1 px-2 py-0.5 bg-emerald-600 text-white text-xs rounded shadow-lg pointer-events-none z-50">
-          Editing: {element.replace('-', ' ')}
         </div>
       )}
     </div>

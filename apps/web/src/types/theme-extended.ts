@@ -5,27 +5,23 @@
  * All themeable element types in the application.
  * Each element can have its own custom styling.
  *
- * Global elements (apply everywhere unless overridden):
- * - page-background, sidebar, header, card, widget, button-primary, button-secondary, modal, input
+ * Global elements (shared across all pages):
+ * - sidebar: Navigation sidebar
+ * - button-primary, button-secondary: Action buttons
+ * - modal: Popup dialogs
+ * - input: Form fields
  *
- * Page-specific backgrounds (override global page-background for that page):
- * - dashboard-background: Home/Dashboard page
- * - calendar-background: Calendar page
- * - chores-background: Chores page
- * - shopping-background: Shopping page
- * - messages-background: Messages/Notifications page
- * - settings-background: Settings page
- * - budget-background: Budget page
- * - meals-background: Meals page
- * - recipes-background: Recipes page
+ * Page-specific elements (each page has its own independent theme):
  *
- * Page-specific elements (override global styles for that page):
- *
- * Dashboard page:
- * - dashboard-stats-widget: Quick stats widgets at top
- * - dashboard-chores-card: Today's chores card
- * - dashboard-events-card: Today's events card
- * - dashboard-weather-widget: Weather widget
+ * Home page:
+ * - home-title: Page heading ("Home")
+ * - home-stats-widget: Quick stats summary widget
+ * - home-chores-card: Today's chores card
+ * - home-events-card: Today's events card
+ * - home-weather-widget: Weather widget
+ * - home-leaderboard-widget: Leaderboard widget
+ * - home-meals-widget: Upcoming meals widget
+ * - dashboard-background: Home page background
  *
  * Calendar page:
  * - calendar-grid: Main calendar card
@@ -60,8 +56,9 @@ export type ThemeableElement =
   | 'modal'
   | 'input'
   | 'login-page'
+  | 'kiosk'
   // Page-specific backgrounds
-  | 'dashboard-background'
+  | 'home-background'
   | 'calendar-background'
   | 'chores-background'
   | 'shopping-background'
@@ -70,12 +67,19 @@ export type ThemeableElement =
   | 'budget-background'
   | 'meals-background'
   | 'recipes-background'
-  // Dashboard page specific elements
-  | 'dashboard-stats-widget'
-  | 'dashboard-chores-card'
-  | 'dashboard-events-card'
-  | 'dashboard-weather-widget'
+  | 'paidchores-background'
+  | 'family-background'
+  // Home/Dashboard page specific elements
+  | 'home-title'
+  | 'home-welcome-banner'
+  | 'home-stats-widget'
+  | 'home-chores-card'
+  | 'home-events-card'
+  | 'home-weather-widget'
+  | 'home-leaderboard-widget'
+  | 'home-meals-widget'
   // Calendar page specific elements
+  | 'calendar-title'
   | 'calendar-grid'
   | 'calendar-meal-widget'
   | 'calendar-user-card'
@@ -124,6 +128,24 @@ export interface ElementStyle {
   blur?: number; // backdrop blur in px
   opacity?: number; // 0-1
 
+  // Transform effects
+  scale?: number; // 0.5 to 1.5 (1 = normal)
+  rotate?: number; // degrees (-180 to 180)
+  skewX?: number; // degrees (-30 to 30)
+  skewY?: number; // degrees (-30 to 30)
+
+  // Glow effect
+  glowColor?: string; // color for glow effect
+  glowSize?: number; // glow spread in px (0-30)
+
+  // Filters
+  saturation?: number; // 0-200 (100 = normal)
+  grayscale?: number; // 0-100 (0 = normal, 100 = fully gray)
+
+  // Hover effects
+  hoverScale?: number; // scale on hover (e.g., 1.02)
+  hoverOpacity?: number; // opacity on hover (0-1)
+
   // Spacing
   padding?: string; // e.g., '8px', '8px 16px'
   margin?: string;
@@ -158,6 +180,45 @@ export interface LoginPageStyle {
   brandName?: string;
   brandColor?: string;
   cardStyle?: ElementStyle;
+}
+
+/**
+ * Kiosk mode styling configuration (admin-only editable).
+ * Controls the appearance of the tablet/kiosk login screen.
+ */
+export interface KioskStyle {
+  // Background gradient
+  backgroundGradient?: {
+    from: string; // Default: #8b5cf6 (purple)
+    to: string; // Default: #3b82f6 (blue)
+    direction?: string; // Default: 'to bottom right'
+  };
+  // Or solid/image background
+  backgroundType?: 'gradient' | 'solid' | 'image';
+  backgroundColor?: string;
+  backgroundImage?: string;
+
+  // Text colors
+  textColor?: string; // Default: white
+  textMutedColor?: string; // Default: rgba(255,255,255,0.8)
+
+  // Button styling
+  buttonBgColor?: string; // Default: rgba(255,255,255,0.2)
+  buttonHoverColor?: string; // Default: rgba(255,255,255,0.3)
+  buttonActiveColor?: string; // Default: rgba(255,255,255,0.4)
+  buttonTextColor?: string; // Default: white
+  accentColor?: string; // Default: white (Enter button background)
+
+  // Effects
+  blur?: number; // backdrop blur in px
+  borderWidth?: number; // user card border width
+
+  // Error styling
+  errorBgColor?: string;
+  errorTextColor?: string;
+
+  // Custom CSS
+  customCSS?: string;
 }
 
 /**

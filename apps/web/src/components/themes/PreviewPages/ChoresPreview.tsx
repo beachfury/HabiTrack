@@ -44,34 +44,60 @@ export function ChoresPreview({
   onSelectElement,
 }: ChoresPreviewProps) {
   const colors = colorMode === 'light' ? theme.colorsLight : theme.colorsDark;
-  const cardStyle = theme.elementStyles?.card || {};
-  const widgetStyle = theme.elementStyles?.widget || {};
-  const buttonPrimaryStyle = theme.elementStyles?.['button-primary'] || {};
 
   // Default fallbacks
   const defaultRadius = RADIUS_MAP[theme.ui.borderRadius] || '8px';
   const defaultShadow = SHADOW_MAP[theme.ui.shadowIntensity] || 'none';
 
-  // Build computed styles
-  const computedCardStyle = buildElementStyle(cardStyle, colors.card, colors.border, defaultRadius, defaultShadow, colors.cardForeground);
-  const computedWidgetStyle = buildElementStyle(widgetStyle, colors.muted, colors.border, defaultRadius, 'none', colors.foreground);
-  const computedButtonPrimaryStyle = buildButtonStyle(buttonPrimaryStyle, colors.primary, colors.primaryForeground, 'transparent', '8px');
-
-  // Page-specific background
+  // Page-specific background - check early for card fallback logic
   const choresBgStyle = theme.elementStyles?.['chores-background'] || {};
   const globalPageBgStyle = theme.elementStyles?.['page-background'] || {};
-  const { style: pageBgStyle, backgroundImageUrl } = buildPageBackgroundStyle(
+
+  // Check if chores background has custom styling
+  const hasCustomChoresBg = choresBgStyle.backgroundColor || choresBgStyle.backgroundGradient || choresBgStyle.backgroundImage || choresBgStyle.customCSS;
+
+  // When chores has custom background, use semi-transparent card backgrounds by default
+  const cardBgFallback = hasCustomChoresBg ? 'rgba(255,255,255,0.08)' : colors.card;
+  const cardBorderFallback = hasCustomChoresBg ? 'rgba(255,255,255,0.15)' : colors.border;
+
+  const cardStyle = theme.elementStyles?.card || {};
+  const widgetStyle = theme.elementStyles?.widget || {};
+  const buttonPrimaryStyle = theme.elementStyles?.['button-primary'] || {};
+
+  // Build computed styles with semi-transparent fallbacks
+  const computedCardStyle = buildElementStyle(cardStyle, cardBgFallback, cardBorderFallback, defaultRadius, defaultShadow, colors.cardForeground);
+  const computedWidgetStyle = buildElementStyle(widgetStyle, hasCustomChoresBg ? 'rgba(255,255,255,0.06)' : colors.muted, cardBorderFallback, defaultRadius, 'none', colors.foreground);
+  const computedButtonPrimaryStyle = buildButtonStyle(buttonPrimaryStyle, colors.primary, colors.primaryForeground, 'transparent', '8px');
+  const { style: pageBgStyle, backgroundImageUrl, customCSS } = buildPageBackgroundStyle(
     choresBgStyle,
     globalPageBgStyle,
     colors.background
   );
+
+  // Detect animated background effect classes from customCSS
+  const getAnimatedBgClasses = (css?: string): string => {
+    if (!css) return '';
+    const classes: string[] = [];
+    if (css.includes('matrix-rain: true') || css.includes('matrix-rain:true')) {
+      classes.push('matrix-rain-bg');
+      const speedMatch = css.match(/matrix-rain-speed:\s*(slow|normal|fast|veryfast)/i);
+      if (speedMatch) classes.push(`matrix-rain-${speedMatch[1].toLowerCase()}`);
+    }
+    if (css.includes('snowfall: true') || css.includes('snowfall:true')) classes.push('snowfall-bg');
+    if (css.includes('sparkle: true') || css.includes('sparkle:true')) classes.push('sparkle-bg');
+    if (css.includes('bubbles: true') || css.includes('bubbles:true')) classes.push('bubbles-bg');
+    if (css.includes('embers: true') || css.includes('embers:true')) classes.push('embers-bg');
+    return classes.join(' ');
+  };
+
+  const animatedBgClasses = getAnimatedBgClasses(customCSS);
 
   return (
     <ClickableElement
       element="chores-background"
       isSelected={selectedElement === 'chores-background'}
       onClick={() => onSelectElement('chores-background')}
-      className="flex-1 overflow-auto"
+      className={`flex-1 overflow-auto ${animatedBgClasses}`}
       style={pageBgStyle}
     >
       {backgroundImageUrl && (

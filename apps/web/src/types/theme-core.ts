@@ -116,7 +116,7 @@ export interface ThemeIcons {
 export type ThemeMode = 'light' | 'dark' | 'system' | 'auto';
 
 // Import extended types for full Theme interface
-import type { ThemeableElement, ElementStyle, WidgetStyleOverride, LoginPageStyle, LcarsMode } from './theme-extended';
+import type { ThemeableElement, ElementStyle, WidgetStyleOverride, LoginPageStyle, LcarsMode, KioskStyle } from './theme-extended';
 
 // ============================================
 // Full Theme Definition
@@ -142,6 +142,7 @@ export interface Theme {
   widgetOverrides?: WidgetStyleOverride[];
   loginPage?: LoginPageStyle;
   lcarsMode?: LcarsMode;
+  kioskStyle?: KioskStyle;
 
   // Metadata
   createdBy: number;
@@ -207,6 +208,7 @@ export interface CreateThemeInput {
   widgetOverrides?: WidgetStyleOverride[];
   loginPage?: LoginPageStyle;
   lcarsMode?: LcarsMode;
+  kioskStyle?: KioskStyle;
 }
 
 export type UpdateThemeInput = Partial<CreateThemeInput>;

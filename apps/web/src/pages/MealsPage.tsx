@@ -14,6 +14,7 @@ import {
   UtensilsCrossed,
 } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
+import { useTheme } from '../context/ThemeContext';
 import { mealsApi } from '../api/meals';
 import type { MealPlan, Recipe } from '../types/meals';
 import {
@@ -31,7 +32,9 @@ type ViewMode = 'week' | 'month';
 
 export function MealsPage() {
   const { user } = useAuth();
+  const { getPageAnimationClasses } = useTheme();
   const isAdmin = user?.role === 'admin';
+  const animationClasses = getPageAnimationClasses('meals-background');
 
   // View mode
   const [viewMode, setViewMode] = useState<ViewMode>('week');
@@ -217,7 +220,8 @@ export function MealsPage() {
   };
 
   return (
-    <div className="p-8 h-full flex flex-col themed-meals-bg">
+    <div className={`min-h-screen themed-meals-bg ${animationClasses}`}>
+      <div className="p-8 flex flex-col">
       {/* Header */}
       <div className="flex items-center justify-between mb-6">
         <div className="flex items-center gap-3">
@@ -409,6 +413,7 @@ export function MealsPage() {
           }}
         />
       )}
+      </div>
     </div>
   );
 }

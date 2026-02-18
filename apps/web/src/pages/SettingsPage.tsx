@@ -18,6 +18,7 @@ import {
 } from 'lucide-react';
 
 import { useAuth } from '../context/AuthContext';
+import { useTheme } from '../context/ThemeContext';
 import { UserSettings, HouseholdSettings } from '../types';
 import { ColorPicker } from '../components/common/ColorPicker';
 import { ThemePicker, KidThemePicker } from '../components/themes';
@@ -125,7 +126,11 @@ type Tab = 'profile' | 'themes' | 'security' | 'notifications' | 'household' | '
 
 export function SettingsPage() {
   const { user } = useAuth();
+  const { getPageAnimationClasses } = useTheme();
   const [activeTab, setActiveTab] = useState<Tab>('profile');
+
+  // Get animation classes for the settings page background
+  const animationClasses = getPageAnimationClasses('settings-background');
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState('');
@@ -352,7 +357,8 @@ export function SettingsPage() {
   ];
 
   return (
-    <div className="p-8 h-full themed-settings-bg">
+    <div className={`min-h-screen themed-settings-bg ${animationClasses}`}>
+      <div className="p-8">
       {/* Header */}
       <div className="mb-8">
         <h1 className="text-3xl font-bold text-[var(--color-foreground)] flex items-center gap-3">
@@ -677,6 +683,7 @@ export function SettingsPage() {
             <AboutTab />
           )}
         </div>
+      </div>
       </div>
     </div>
   );

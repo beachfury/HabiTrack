@@ -24,6 +24,7 @@ import {
 import { ModalPortal, ModalBody } from '../components/common/ModalPortal';
 import { api } from '../api';
 import { useAuth } from '../context/AuthContext';
+import { useTheme } from '../context/ThemeContext';
 import { dispatchMessageReadEvent } from '../components/Layout';
 import type { Message } from '../types';
 import type { Announcement, Conversation, DirectMessage } from '../api/messages';
@@ -101,7 +102,11 @@ function getPriorityClass(priority: string) {
 
 export function MessagesPage() {
   const { user } = useAuth();
+  const { getPageAnimationClasses } = useTheme();
   const [activeTab, setActiveTab] = useState<TabType>('notifications');
+
+  // Get animation classes for the messages page background
+  const animationClasses = getPageAnimationClasses('messages-background');
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
@@ -362,7 +367,8 @@ export function MessagesPage() {
   const totalUnread = unreadNotifications + unreadAnnouncements + unreadMessages;
 
   return (
-    <div className="max-w-4xl mx-auto h-full themed-messages-bg p-6">
+    <div className={`min-h-screen themed-messages-bg ${animationClasses}`}>
+      <div className="max-w-4xl mx-auto p-6">
       {/* Header */}
       <div className="flex items-center justify-between mb-6">
         <div className="flex items-center gap-3">
@@ -853,6 +859,7 @@ export function MessagesPage() {
           currentUserId={user?.id || 0}
         />
       )}
+      </div>
     </div>
   );
 }

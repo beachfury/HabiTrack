@@ -13,6 +13,7 @@ import {
 import { api, type CalendarEvent, type CreateEventData, type ChoreInstance } from '../api';
 import { mealsApi } from '../api/meals';
 import { useAuth } from '../context/AuthContext';
+import { useTheme } from '../context/ThemeContext';
 import type { MealPlan } from '../types/meals';
 import { ModalPortal, ModalBody } from '../components/common/ModalPortal';
 import { normalizeDate, formatDateLocal, formatDateTimeLocal, EVENT_COLORS, DAYS_SHORT, MONTHS } from '../utils';
@@ -27,8 +28,12 @@ const COLORS = EVENT_COLORS;
 
 export function CalendarPage() {
   const { user } = useAuth();
+  const { getPageAnimationClasses } = useTheme();
   const navigate = useNavigate();
   const [currentDate, setCurrentDate] = useState(new Date());
+
+  // Get animation classes for the calendar page background
+  const animationClasses = getPageAnimationClasses('calendar-background');
   const [events, setEvents] = useState<CalendarEvent[]>([]);
   const [chores, setChores] = useState<ChoreInstance[]>([]);
   const [users, setUsers] = useState<CalendarUser[]>([]);
@@ -404,11 +409,12 @@ export function CalendarPage() {
   };
 
   return (
-    <div className="p-8 h-full flex flex-col themed-calendar-bg">
+    <div className={`min-h-screen themed-calendar-bg ${animationClasses}`}>
+      <div className="p-8 flex flex-col">
       {/* Header */}
       <div className="flex items-center justify-between mb-6">
         <div className="flex items-center gap-4">
-          <h1 className="text-3xl font-bold text-[var(--color-foreground)]">
+          <h1 className="themed-calendar-title">
             {MONTHS[month]} {year}
           </h1>
           <div className="flex items-center gap-1">
@@ -458,7 +464,7 @@ export function CalendarPage() {
       {/* Calendar Grid */}
       <div className="flex-1 themed-calendar-grid overflow-hidden flex flex-col">
         {/* Day headers - use inherit for font styles from themed container */}
-        <div className="grid grid-cols-7 border-b border-[var(--color-border)]">
+        <div className="grid grid-cols-7" style={{ borderBottom: '1px solid var(--calendar-grid-border, rgba(255,255,255,0.15))' }}>
           {DAYS.map((day) => (
             <div
               key={day}
@@ -482,7 +488,8 @@ export function CalendarPage() {
               return (
                 <div
                   key={index}
-                  className="border-b border-r border-[var(--color-border)]/30"
+                  className="border-b border-r"
+                  style={{ borderColor: 'var(--calendar-grid-border, rgba(255,255,255,0.1))' }}
                 />
               );
 
@@ -500,9 +507,10 @@ export function CalendarPage() {
               <div
                 key={index}
                 onClick={() => openDayModal(date)}
-                className={`border-b border-r border-[var(--color-border)]/30 p-1 cursor-pointer hover:bg-[var(--color-muted)]/50 transition-colors min-h-[100px] ${
+                className={`border-b border-r p-1 cursor-pointer hover:bg-[var(--color-muted)]/50 transition-colors min-h-[100px] ${
                   !inCurrentMonth ? 'bg-[var(--color-muted)]/30' : ''
                 }`}
+                style={{ borderColor: 'var(--calendar-grid-border, rgba(255,255,255,0.1))' }}
               >
                 <div className="flex items-center justify-center mb-1">
                   <span
@@ -847,6 +855,7 @@ export function CalendarPage() {
           }}
         />
       )}
+      </div>
     </div>
   );
 }

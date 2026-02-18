@@ -33,6 +33,76 @@ function resolveImageUrl(url: string | undefined): string | undefined {
   return url;
 }
 
+// Parse CSS string to React CSSProperties object
+// Converts "background: red; box-shadow: 0 0 10px blue;" to { background: 'red', boxShadow: '0 0 10px blue' }
+function parseCustomCssToStyle(cssString: string): React.CSSProperties {
+  const style: Record<string, string> = {};
+
+  // Remove comments
+  const cleanCss = cssString.replace(/\/\*[\s\S]*?\*\//g, '');
+
+  // Split by semicolons, but be careful with values containing semicolons (rare but possible)
+  const declarations = cleanCss.split(';').filter(d => d.trim());
+
+  for (const declaration of declarations) {
+    const colonIndex = declaration.indexOf(':');
+    if (colonIndex === -1) continue;
+
+    const property = declaration.substring(0, colonIndex).trim();
+    const value = declaration.substring(colonIndex + 1).trim();
+
+    if (!property || !value) continue;
+
+    // Convert CSS property name to camelCase (e.g., "box-shadow" -> "boxShadow")
+    const camelProperty = property.replace(/-([a-z])/g, (_, letter) => letter.toUpperCase());
+
+    style[camelProperty] = value;
+  }
+
+  return style as React.CSSProperties;
+}
+
+// Detect animated background effect classes from customCSS string
+// Supports: matrix-rain (with speed variants), snowfall, sparkle, bubbles, embers
+function getAnimatedBackgroundClasses(customCSS?: string): string {
+  if (!customCSS) return '';
+
+  const classes: string[] = [];
+
+  // Matrix rain effect with speed variants
+  if (customCSS.includes('matrix-rain: true') || customCSS.includes('matrix-rain:true')) {
+    classes.push('matrix-rain-bg');
+
+    // Check for speed setting: matrix-rain-speed: slow | normal | fast | veryfast
+    const speedMatch = customCSS.match(/matrix-rain-speed:\s*(slow|normal|fast|veryfast)/i);
+    if (speedMatch) {
+      classes.push(`matrix-rain-${speedMatch[1].toLowerCase()}`);
+    }
+  }
+
+  // Snowfall effect
+  if (customCSS.includes('snowfall: true') || customCSS.includes('snowfall:true')) {
+    classes.push('snowfall-bg');
+  }
+
+  // Sparkle/stars effect
+  if (customCSS.includes('sparkle: true') || customCSS.includes('sparkle:true')) {
+    classes.push('sparkle-bg');
+  }
+
+  // Bubbles effect
+  if (customCSS.includes('bubbles: true') || customCSS.includes('bubbles:true')) {
+    classes.push('bubbles-bg');
+  }
+
+  // Embers/fire effect
+  if (customCSS.includes('embers: true') || customCSS.includes('embers:true')) {
+    classes.push('embers-bg');
+  }
+
+  return classes.join(' ');
+}
+
 interface SidebarLayoutProps {
   children: React.ReactNode;
   theme: Theme | null;
@@ -104,21 +174,46 @@ export function SidebarLayout({
   // Get elementStyles from extended theme (new system)
   const extTheme = theme as ExtendedTheme | null;
   const sidebarElementStyle = extTheme?.elementStyles?.sidebar;
-  const pageBackgroundStyle = extTheme?.elementStyles?.['page-background'];
+
+  // Get page-specific background style based on current route
+  const getPageBackgroundElement = (): 'page-background' | 'home-background' | 'calendar-background' | 'chores-background' | 'shopping-background' | 'messages-background' | 'settings-background' | 'budget-background' | 'meals-background' | 'recipes-background' => {
+    const path = location.pathname;
+    if (path === '/' || path === '/home') return 'home-background';
+    if (path === '/calendar') return 'calendar-background';
+    if (path === '/chores' || path === '/paid-chores') return 'chores-background';
+    if (path === '/shopping') return 'shopping-background';
+    if (path === '/messages') return 'messages-background';
+    if (path === '/settings') return 'settings-background';
+    if (path === '/budgets') return 'budget-background';
+    if (path === '/meals') return 'meals-background';
+    if (path === '/recipes') return 'recipes-background';
+    return 'page-background';
+  };
+
+  const pageBackgroundElement = getPageBackgroundElement();
+  const pageSpecificStyle = extTheme?.elementStyles?.[pageBackgroundElement];
+  const globalPageStyle = extTheme?.elementStyles?.['page-background'];
+  // Use page-specific style if it has any background customization, otherwise fall back to global
+  const pageBackgroundStyle = (pageSpecificStyle && (
+    pageSpecificStyle.backgroundColor ||
+    pageSpecificStyle.backgroundGradient ||
+    pageSpecificStyle.backgroundImage ||
+    pageSpecificStyle.customCSS
+  )) ? pageSpecificStyle : globalPageStyle;
 
   // Build sidebar styles - prioritize elementStyles (new system) over sidebar (old system)
   // Use theme's primary color for sidebar accents (NOT household accentColor - that's login-only)
   const accentColor = colors?.primary || '#3cb371';
 
-  // Check if using new elementStyles system
-  const hasElementStyles = sidebarElementStyle && (
+  // Check if using new elementStyles system for BACKGROUND
+  const hasBackgroundElementStyles = sidebarElementStyle && (
     sidebarElementStyle.backgroundColor ||
     sidebarElementStyle.backgroundGradient ||
     sidebarElementStyle.backgroundImage
   );
 
   // Check for legacy image background
-  const hasLegacyImageBackground = !hasElementStyles && sidebar?.backgroundType === 'image' && sidebar?.imageUrl;
+  const hasLegacyImageBackground = !hasBackgroundElementStyles && sidebar?.backgroundType === 'image' && sidebar?.imageUrl;
   // Check for new elementStyles image background
   const hasElementStyleImage = sidebarElementStyle?.backgroundImage;
   const hasImageBackground = hasLegacyImageBackground || hasElementStyleImage;
@@ -130,9 +225,21 @@ export function SidebarLayout({
     overflow: 'hidden',
   };
 
-  // Apply styles - prioritize elementStyles (new) over sidebar (legacy)
-  if (hasElementStyles) {
-    // NEW SYSTEM: Use elementStyles
+  // Apply text styling from elementStyles
+  if (sidebarElementStyle?.fontFamily) {
+    sidebarStyle.fontFamily = sidebarElementStyle.fontFamily;
+  }
+  if (sidebarElementStyle?.fontWeight) {
+    const weightMap: Record<string, number> = { normal: 400, medium: 500, semibold: 600, bold: 700 };
+    sidebarStyle.fontWeight = weightMap[sidebarElementStyle.fontWeight] || 400;
+  }
+  if (sidebarElementStyle?.textSize) {
+    sidebarStyle.fontSize = `${sidebarElementStyle.textSize}px`;
+  }
+
+  // Apply BACKGROUND styles - prioritize elementStyles (new) over sidebar (legacy)
+  if (hasBackgroundElementStyles) {
+    // NEW SYSTEM: Use elementStyles for background
     if (sidebarElementStyle.backgroundGradient) {
       const { from, to, direction } = sidebarElementStyle.backgroundGradient;
       sidebarStyle.background = `linear-gradient(${direction || 'to bottom'}, ${from}, ${to})`;
@@ -141,27 +248,6 @@ export function SidebarLayout({
       sidebarStyle.backgroundColor = sidebarElementStyle.backgroundColor || colors?.card || (resolvedMode === 'dark' ? '#1f2937' : '#ffffff');
     } else if (sidebarElementStyle.backgroundColor) {
       sidebarStyle.backgroundColor = sidebarElementStyle.backgroundColor;
-    }
-
-    // Apply border radius from elementStyles
-    if (sidebarElementStyle.borderRadius !== undefined) {
-      sidebarStyle.borderRadius = `${sidebarElementStyle.borderRadius}px`;
-    }
-
-    // Apply border from elementStyles
-    if (sidebarElementStyle.borderWidth && sidebarElementStyle.borderColor) {
-      sidebarStyle.border = `${sidebarElementStyle.borderWidth}px ${sidebarElementStyle.borderStyle || 'solid'} ${sidebarElementStyle.borderColor}`;
-    }
-
-    // Apply shadow from elementStyles
-    if (sidebarElementStyle.boxShadow) {
-      const shadowMap: Record<string, string> = {
-        none: 'none',
-        subtle: '0 1px 3px rgba(0,0,0,0.08)',
-        medium: '0 4px 6px rgba(0,0,0,0.1)',
-        strong: '0 10px 15px rgba(0,0,0,0.15)',
-      };
-      sidebarStyle.boxShadow = shadowMap[sidebarElementStyle.boxShadow] || sidebarElementStyle.boxShadow;
     }
   } else if (sidebar) {
     // LEGACY SYSTEM: Use theme.sidebar
@@ -179,9 +265,123 @@ export function SidebarLayout({
     sidebarStyle.backgroundColor = colors?.card || (resolvedMode === 'dark' ? '#1f2937' : '#ffffff');
   }
 
-  const textColor = sidebar?.textColor || colors?.foreground || (resolvedMode === 'dark' ? '#f9fafb' : '#1f2937');
+  // Apply border, shadow, blur, and effects from elementStyles (independent of background)
+  if (sidebarElementStyle) {
+    if (sidebarElementStyle.borderRadius !== undefined) {
+      sidebarStyle.borderRadius = `${sidebarElementStyle.borderRadius}px`;
+    }
+    if (sidebarElementStyle.borderWidth && sidebarElementStyle.borderColor) {
+      sidebarStyle.border = `${sidebarElementStyle.borderWidth}px ${sidebarElementStyle.borderStyle || 'solid'} ${sidebarElementStyle.borderColor}`;
+    }
+
+    // Box shadow and glow
+    let shadowValue = '';
+    if (sidebarElementStyle.boxShadow) {
+      const shadowMap: Record<string, string> = {
+        none: 'none',
+        subtle: '0 1px 3px rgba(0,0,0,0.08)',
+        medium: '0 4px 6px rgba(0,0,0,0.1)',
+        strong: '0 10px 15px rgba(0,0,0,0.15)',
+      };
+      shadowValue = shadowMap[sidebarElementStyle.boxShadow] || sidebarElementStyle.boxShadow;
+    }
+    if (sidebarElementStyle.glowColor && sidebarElementStyle.glowSize) {
+      const glowShadow = `0 0 ${sidebarElementStyle.glowSize}px ${sidebarElementStyle.glowColor}`;
+      shadowValue = shadowValue && shadowValue !== 'none' ? `${shadowValue}, ${glowShadow}` : glowShadow;
+    }
+    if (shadowValue) {
+      sidebarStyle.boxShadow = shadowValue;
+    }
+
+    if (sidebarElementStyle.blur) {
+      sidebarStyle.backdropFilter = `blur(${sidebarElementStyle.blur}px)`;
+    }
+    if (sidebarElementStyle.opacity !== undefined) {
+      sidebarStyle.opacity = sidebarElementStyle.opacity;
+    }
+    if (sidebarElementStyle.padding) {
+      sidebarStyle.padding = sidebarElementStyle.padding;
+    }
+    if (sidebarElementStyle.margin) {
+      sidebarStyle.margin = sidebarElementStyle.margin;
+    }
+
+    // Transform effects
+    const transforms: string[] = [];
+    if (sidebarElementStyle.scale !== undefined && sidebarElementStyle.scale !== 1) {
+      transforms.push(`scale(${sidebarElementStyle.scale})`);
+    }
+    if (sidebarElementStyle.rotate !== undefined && sidebarElementStyle.rotate !== 0) {
+      transforms.push(`rotate(${sidebarElementStyle.rotate}deg)`);
+    }
+    if (sidebarElementStyle.skewX !== undefined && sidebarElementStyle.skewX !== 0) {
+      transforms.push(`skewX(${sidebarElementStyle.skewX}deg)`);
+    }
+    if (sidebarElementStyle.skewY !== undefined && sidebarElementStyle.skewY !== 0) {
+      transforms.push(`skewY(${sidebarElementStyle.skewY}deg)`);
+    }
+    if (transforms.length > 0) {
+      sidebarStyle.transform = transforms.join(' ');
+    }
+
+    // Filters
+    const filters: string[] = [];
+    if (sidebarElementStyle.saturation !== undefined && sidebarElementStyle.saturation !== 100) {
+      filters.push(`saturate(${sidebarElementStyle.saturation}%)`);
+    }
+    if (sidebarElementStyle.grayscale !== undefined && sidebarElementStyle.grayscale !== 0) {
+      filters.push(`grayscale(${sidebarElementStyle.grayscale}%)`);
+    }
+    if (filters.length > 0) {
+      sidebarStyle.filter = filters.join(' ');
+    }
+
+    // Transition for hover effects
+    if (sidebarElementStyle.hoverScale || sidebarElementStyle.hoverOpacity) {
+      sidebarStyle.transition = 'transform 0.2s ease, opacity 0.2s ease';
+    }
+
+    // Apply customCSS as inline styles (highest priority)
+    // Parse CSS string and convert to React style object
+    if (sidebarElementStyle.customCSS) {
+      const customStyles = parseCustomCssToStyle(sidebarElementStyle.customCSS);
+
+      // Clear conflicting properties before applying custom CSS
+      // CSS shorthand properties (like 'background') don't override longhand (like 'backgroundColor') in JS objects
+      if ('background' in customStyles) {
+        delete sidebarStyle.backgroundColor;
+        delete sidebarStyle.backgroundImage;
+      }
+      if ('border' in customStyles) {
+        delete sidebarStyle.borderColor;
+        delete sidebarStyle.borderWidth;
+        delete sidebarStyle.borderStyle;
+      }
+      if ('borderRight' in customStyles) {
+        delete sidebarStyle.borderRightColor;
+        delete sidebarStyle.borderRightWidth;
+        delete sidebarStyle.borderRightStyle;
+      }
+
+      Object.assign(sidebarStyle, customStyles);
+    }
+  }
+
+  // Text color: prioritize new elementStyles system over legacy sidebar system
+  const textColor = sidebarElementStyle?.textColor || sidebar?.textColor || colors?.foreground || (resolvedMode === 'dark' ? '#f9fafb' : '#1f2937');
   const iconColor = sidebar?.iconColor || textColor;
   const mutedColor = colors?.mutedForeground || (resolvedMode === 'dark' ? '#9ca3af' : '#6b7280');
+
+  // Apply text color to sidebar style for CSS inheritance
+  sidebarStyle.color = textColor;
+
+  // Extract text styling for use in nav items (from customCSS and elementStyles)
+  const textStyling: React.CSSProperties = {
+    textShadow: sidebarStyle.textShadow,
+    fontFamily: sidebarStyle.fontFamily,
+    fontWeight: sidebarStyle.fontWeight,
+    fontSize: sidebarStyle.fontSize,
+  };
 
   // Border radius from theme
   const radiusMap = { none: '0', small: '0.25rem', medium: '0.5rem', large: '0.75rem' };
@@ -200,6 +400,7 @@ export function SidebarLayout({
           borderRadius,
           backgroundColor: active ? `${accentColor}20` : 'transparent',
           color: active ? accentColor : textColor,
+          ...textStyling,
         }}
         title={navStyle === 'icons-only' ? item.label : undefined}
       >
@@ -278,7 +479,7 @@ export function SidebarLayout({
           {navStyle !== 'icons-only' && (
             <h1
               className="text-xl font-bold"
-              style={{ color: accentColor }}
+              style={{ color: accentColor, textShadow: textStyling.textShadow }}
             >
               {householdSettings?.name || 'HabiTrack'}
             </h1>
@@ -300,7 +501,7 @@ export function SidebarLayout({
               {navStyle !== 'icons-only' && (
                 <p
                   className="px-4 text-xs font-semibold uppercase tracking-wider mb-2"
-                  style={{ color: mutedColor }}
+                  style={{ color: mutedColor, textShadow: textStyling.textShadow }}
                 >
                   Admin
                 </p>
@@ -335,10 +536,10 @@ export function SidebarLayout({
           )}
           {navStyle !== 'icons-only' && (
             <div className="flex-1 min-w-0">
-              <p className="font-medium truncate" style={{ color: textColor }}>
+              <p className="font-medium truncate" style={{ color: textColor, textShadow: textStyling.textShadow }}>
                 {user?.displayName || 'Guest'}
               </p>
-              <p className="text-sm capitalize" style={{ color: mutedColor }}>
+              <p className="text-sm capitalize" style={{ color: mutedColor, textShadow: textStyling.textShadow }}>
                 {user?.role || 'Not logged in'}
               </p>
             </div>
@@ -358,7 +559,7 @@ export function SidebarLayout({
           <button
             onClick={onShowUserSwitcher}
             className="w-full mt-2 flex items-center justify-center gap-2 px-4 py-2 text-sm rounded-xl transition-colors hover:opacity-80"
-            style={{ color: accentColor, borderRadius }}
+            style={{ color: accentColor, borderRadius, textShadow: textStyling.textShadow }}
           >
             <UserCheck size={16} />
             {impersonation.active ? 'Switch User' : 'View as User'}
@@ -414,10 +615,12 @@ export function SidebarLayout({
 
       <div className={`flex-1 flex ${side === 'right' ? 'flex-row-reverse' : ''}`}>
         {/* Sidebar - desktop */}
+        {/* Note: We only apply default border classes when there's no customCSS that might define its own border */}
+        {/* Check for animated background effect flags in customCSS */}
         <aside
           className={`hidden lg:flex flex-col relative overflow-hidden ${
-            side === 'right' ? 'border-l' : 'border-r'
-          } border-gray-200 dark:border-gray-700`}
+            !sidebarElementStyle?.customCSS ? (side === 'right' ? 'border-l border-gray-200 dark:border-gray-700' : 'border-r border-gray-200 dark:border-gray-700') : ''
+          } ${getAnimatedBackgroundClasses(sidebarElementStyle?.customCSS)}`}
           style={sidebarStyle}
         >
           {sidebarContent}
@@ -435,7 +638,7 @@ export function SidebarLayout({
 
         {/* Main content */}
         <main
-          className="flex-1 overflow-auto relative"
+          className={`flex-1 overflow-auto relative ${getAnimatedBackgroundClasses(pageBackgroundStyle?.customCSS)}`}
           style={(() => {
             const mainStyle: React.CSSProperties = {
               // Apply global typography from theme
@@ -483,7 +686,7 @@ export function SidebarLayout({
               }}
             />
           )}
-          <div className="p-8 lg:p-8 pt-16 lg:pt-8 relative z-10">
+          <div className="relative z-10 min-h-full pt-16 lg:pt-0">
             {children}
           </div>
         </main>

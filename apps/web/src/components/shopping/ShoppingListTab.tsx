@@ -66,7 +66,7 @@ export function ShoppingListTab({
 
       {/* Shopping List by Store */}
       {!hasItems ? (
-        <div className="themed-card p-8 text-center">
+        <div className="themed-shopping-list p-8 text-center">
           <ShoppingCart
             size={48}
             className="mx-auto mb-3 text-[var(--color-muted-foreground)] opacity-50"
@@ -94,7 +94,7 @@ export function ShoppingListTab({
           const isExpanded = expandedStores.has(storeName);
 
           return (
-            <div key={storeName} className="themed-card overflow-hidden">
+            <div key={storeName} className="themed-shopping-list overflow-hidden">
               <button
                 onClick={() => toggleStore(storeName)}
                 className="w-full p-3 flex items-center gap-3 hover:bg-[var(--color-muted)] transition-colors"

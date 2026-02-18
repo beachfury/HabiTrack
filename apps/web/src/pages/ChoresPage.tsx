@@ -16,6 +16,7 @@ import {
   FileText,
 } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
+import { useTheme } from '../context/ThemeContext';
 import { choresApi, familyApi } from '../api';
 import { ManageView } from '../components/chores/ManageView';
 import type {
@@ -45,7 +46,11 @@ type View = 'my-chores' | 'all-chores' | 'leaderboard' | 'manage' | 'points';
 
 export function ChoresPage() {
   const { user } = useAuth();
+  const { getPageAnimationClasses } = useTheme();
   const isAdmin = user?.role === 'admin';
+
+  // Get animation classes for the chores page background
+  const animationClasses = getPageAnimationClasses('chores-background');
 
   // Data state
   const [view, setView] = useState<View>('my-chores');
@@ -293,7 +298,8 @@ export function ChoresPage() {
   }
 
   return (
-    <div className="p-4 md:p-8 max-w-6xl mx-auto h-full themed-chores-bg">
+    <div className={`min-h-screen themed-chores-bg ${animationClasses}`}>
+      <div className="p-4 md:p-8 max-w-6xl mx-auto">
       {/* Header */}
       <div className="flex items-center justify-between mb-6">
         <div>
@@ -459,6 +465,7 @@ export function ChoresPage() {
           onClose={() => setShowAddTemplateModal(false)}
         />
       )}
+      </div>
     </div>
   );
 }

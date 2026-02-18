@@ -297,7 +297,7 @@ export function CatalogTab({
 
       {/* Items - Collapsible by Category */}
       {Object.keys(itemsByCategory).length === 0 ? (
-        <div className="themed-card p-6 text-center">
+        <div className="themed-shopping-list p-6 text-center">
           <Package
             size={48}
             className="mx-auto mb-3 text-[var(--color-muted-foreground)] opacity-50"
@@ -395,7 +395,7 @@ export function CatalogTab({
           const category = categories.find((c) => c.name === catName);
 
           return (
-            <div key={catName} className="themed-card overflow-hidden">
+            <div key={catName} className="themed-shopping-list overflow-hidden">
               {/* Category Header - Clickable to expand/collapse */}
               <button
                 onClick={() => toggleCategory(catName)}

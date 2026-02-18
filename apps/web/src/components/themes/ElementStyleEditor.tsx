@@ -11,6 +11,7 @@ import {
 } from '../../types/theme';
 import { ColorPickerModal } from '../common/ColorPickerModal';
 import { ModalPortal, ModalBody } from '../common/ModalPortal';
+import { AdvancedCSSEffects } from './AdvancedCSSEffects';
 
 // Helper to resolve image URLs - converts relative API paths to full URLs
 const API_BASE = import.meta.env.VITE_API_BASE_URL || 'http://localhost:3000';
@@ -22,6 +23,52 @@ function resolveImageUrl(url: string | undefined): string | undefined {
   }
   // Already an absolute URL
   return url;
+}
+
+// Reusable slider with number input for fine control
+interface SliderWithInputProps {
+  label: string;
+  value: number;
+  min: number;
+  max: number;
+  step?: number;
+  unit?: string;
+  onChange: (value: number) => void;
+  className?: string;
+}
+
+function SliderWithInput({ label, value, min, max, step = 1, unit = '', onChange, className = '' }: SliderWithInputProps) {
+  return (
+    <div className={className}>
+      <label className="text-xs text-gray-400 block mb-1">{label}</label>
+      <div className="flex items-center gap-2">
+        <input
+          type="range"
+          min={min}
+          max={max}
+          step={step}
+          value={value}
+          onChange={(e) => onChange(parseFloat(e.target.value))}
+          className="flex-1 accent-emerald-500"
+        />
+        <input
+          type="number"
+          min={min}
+          max={max}
+          step={step}
+          value={value}
+          onChange={(e) => {
+            const val = parseFloat(e.target.value);
+            if (!isNaN(val)) {
+              onChange(Math.min(max, Math.max(min, val)));
+            }
+          }}
+          className="w-16 px-2 py-1 text-xs bg-gray-800 border border-gray-600 rounded text-white text-right"
+        />
+        {unit && <span className="text-xs text-gray-500 w-6">{unit}</span>}
+      </div>
+    </div>
+  );
 }
 
 // HabiTrack Classic default styles for each element type
@@ -88,6 +135,7 @@ interface ElementStyleEditorProps {
   onApplyToAll?: () => void; // Apply style to all elements of same type (deprecated - use onApplyAsDefault)
   onApplyAsDefault?: (globalElement: ThemeableElement) => void; // Apply this page-specific style as the global default
   isReadOnly?: boolean; // For system themes
+  layout?: 'vertical' | 'horizontal'; // Layout mode: vertical (right panel) or horizontal (bottom panel)
 }
 
 const ELEMENT_LABELS: Record<ThemeableElement, string> = {
@@ -102,8 +150,9 @@ const ELEMENT_LABELS: Record<ThemeableElement, string> = {
   modal: 'Modal',
   input: 'Input Field',
   'login-page': 'Login Page',
+  kiosk: 'Kiosk Mode',
   // Page-specific backgrounds
-  'dashboard-background': 'Dashboard Background',
+  'home-background': 'Home Background',
   'calendar-background': 'Calendar Background',
   'chores-background': 'Chores Background',
   'shopping-background': 'Shopping Background',
@@ -112,12 +161,19 @@ const ELEMENT_LABELS: Record<ThemeableElement, string> = {
   'budget-background': 'Budget Background',
   'meals-background': 'Meals Background',
   'recipes-background': 'Recipes Background',
-  // Dashboard page specific elements
-  'dashboard-stats-widget': 'Stats Widget',
-  'dashboard-chores-card': 'Chores Card',
-  'dashboard-events-card': 'Events Card',
-  'dashboard-weather-widget': 'Weather Widget',
+  'paidchores-background': 'Paid Chores Background',
+  'family-background': 'Family Background',
+  // Home page specific elements
+  'home-title': 'Page Title',
+  'home-welcome-banner': 'Welcome Banner',
+  'home-stats-widget': 'Stats Widget',
+  'home-chores-card': 'Chores Card',
+  'home-events-card': 'Events Card',
+  'home-weather-widget': 'Weather Widget',
+  'home-leaderboard-widget': 'Leaderboard Widget',
+  'home-meals-widget': 'Meals Widget',
   // Calendar page specific elements
+  'calendar-title': 'Page Title',
   'calendar-grid': 'Calendar Grid',
   'calendar-meal-widget': 'Meal Planner Widget',
   'calendar-user-card': 'User Schedule Card',
@@ -136,22 +192,13 @@ const ELEMENT_LABELS: Record<ThemeableElement, string> = {
 };
 
 // Mapping from page-specific elements to their global fallback type
+// Note: Page elements are independent - no global fallbacks
 const PAGE_ELEMENT_TO_GLOBAL: Partial<Record<ThemeableElement, ThemeableElement>> = {
-  // Page-specific backgrounds fall back to global page-background
-  'dashboard-background': 'page-background',
-  'calendar-background': 'page-background',
-  'chores-background': 'page-background',
-  'shopping-background': 'page-background',
-  'messages-background': 'page-background',
-  'settings-background': 'page-background',
-  'budget-background': 'page-background',
-  'meals-background': 'page-background',
-  'recipes-background': 'page-background',
-  // Dashboard page elements
-  'dashboard-stats-widget': 'widget',
-  'dashboard-chores-card': 'card',
-  'dashboard-events-card': 'card',
-  'dashboard-weather-widget': 'widget',
+  // Page-specific backgrounds (optional: could fall back to page-background for initial styling)
+  // Home page elements - no fallback, each page is independent
+  // 'home-title' - text element, no fallback
+  // 'home-stats-widget' - independent
+  // etc.
   // Calendar page elements
   'calendar-grid': 'card',
   'calendar-meal-widget': 'widget',
@@ -235,10 +282,12 @@ export function ElementStyleEditor({
   onApplyToAll,
   onApplyAsDefault,
   isReadOnly = false,
+  layout = 'vertical',
 }: ElementStyleEditorProps) {
   const [activeTab, setActiveTab] = useState<EditorTab>('background');
   const isPageSpecific = isPageSpecificElement(element);
   const globalElement = getGlobalElement(element);
+  const isHorizontal = layout === 'horizontal';
 
   const updateStyle = (updates: Partial<ElementStyle>) => {
     if (isReadOnly) return;
@@ -280,6 +329,87 @@ export function ElementStyleEditor({
     { id: 'advanced', label: 'Advanced', icon: Code },
   ];
 
+  // Horizontal layout (bottom panel)
+  if (isHorizontal) {
+    return (
+      <div className="h-full flex flex-col bg-white dark:bg-gray-800">
+        {/* Top bar - Element name, horizontal tabs, and close button */}
+        <div className="flex items-center gap-4 px-4 py-2 border-b border-gray-200 dark:border-gray-700 flex-shrink-0">
+          {/* Element name */}
+          <div className="flex items-center gap-2 min-w-0">
+            <h3 className="font-semibold text-gray-900 dark:text-white text-sm whitespace-nowrap">
+              {ELEMENT_LABELS[element]}
+            </h3>
+            {isReadOnly && (
+              <span className="px-1.5 py-0.5 text-xs bg-gray-200 dark:bg-gray-600 text-gray-500 dark:text-gray-400 rounded">
+                View only
+              </span>
+            )}
+          </div>
+
+          {/* Horizontal tabs */}
+          <div className="flex items-center gap-1 flex-1">
+            {tabs.map((tab) => (
+              <button
+                key={tab.id}
+                onClick={() => setActiveTab(tab.id)}
+                className={`flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium rounded-lg transition-colors whitespace-nowrap ${
+                  activeTab === tab.id
+                    ? 'bg-emerald-100 dark:bg-emerald-900/30 text-emerald-700 dark:text-emerald-300'
+                    : 'text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-700'
+                }`}
+              >
+                <tab.icon size={12} />
+                {tab.label}
+              </button>
+            ))}
+          </div>
+
+          {/* Actions */}
+          <div className="flex items-center gap-2 flex-shrink-0">
+            {!isReadOnly && (
+              <button
+                onClick={resetStyle}
+                className="flex items-center gap-1 px-2 py-1 text-xs font-medium text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 rounded transition-colors"
+                title="Reset to default"
+              >
+                <RotateCcw size={12} />
+                Reset
+              </button>
+            )}
+            <button
+              onClick={onClose}
+              className="p-1 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 rounded hover:bg-gray-100 dark:hover:bg-gray-700"
+              title="Close"
+            >
+              <X size={16} />
+            </button>
+          </div>
+        </div>
+
+        {/* Tab content area */}
+        <div className="flex-1 overflow-x-auto overflow-y-auto px-6 py-4">
+          {activeTab === 'background' && (
+            <BackgroundTab style={style} onChange={updateStyle} layout="horizontal" />
+          )}
+          {activeTab === 'text' && (
+            <TextTab style={style} onChange={updateStyle} layout="horizontal" />
+          )}
+          {activeTab === 'border' && (
+            <BorderTab style={style} onChange={updateStyle} layout="horizontal" />
+          )}
+          {activeTab === 'effects' && (
+            <EffectsTab style={style} onChange={updateStyle} layout="horizontal" />
+          )}
+          {activeTab === 'advanced' && (
+            <AdvancedCSSEffects style={style} onChange={updateStyle} layout="horizontal" />
+          )}
+        </div>
+      </div>
+    );
+  }
+
+  // Vertical layout (right panel) - original
   return (
     <div className="h-full flex flex-col bg-white dark:bg-gray-800 border-l border-gray-200 dark:border-gray-700">
       {/* Header */}
@@ -344,7 +474,7 @@ export function ElementStyleEditor({
           <EffectsTab style={style} onChange={updateStyle} />
         )}
         {activeTab === 'advanced' && (
-          <AdvancedTab style={style} onChange={updateStyle} />
+          <AdvancedCSSEffects style={style} onChange={updateStyle} />
         )}
       </div>
 
@@ -408,7 +538,7 @@ function ColorInput({
           value={value || ''}
           onChange={(e) => onChange(e.target.value)}
           placeholder={placeholder}
-          className="flex-1 px-3 py-2 text-sm border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white font-mono"
+          className="flex-1 px-3 py-2 text-sm border border-gray-300 dark:border-gray-600 rounded-lg bg-gray-50 dark:bg-gray-700 text-gray-900 dark:text-white font-mono"
         />
       </div>
       {showPicker && (
@@ -426,10 +556,13 @@ function ColorInput({
 function BackgroundTab({
   style,
   onChange,
+  layout = 'vertical',
 }: {
   style: ElementStyle;
   onChange: (updates: Partial<ElementStyle>) => void;
+  layout?: 'vertical' | 'horizontal';
 }) {
+  const isHorizontal = layout === 'horizontal';
   // Determine current type from style
   const currentBgType = style.backgroundImage ? 'image' : style.backgroundGradient ? 'gradient' : style.backgroundColor ? 'solid' : 'none';
   const [bgType, setBgType] = useState<'solid' | 'gradient' | 'image' | 'none'>(currentBgType);
@@ -460,6 +593,154 @@ function BackgroundTab({
     }
   };
 
+  // Horizontal layout renders controls side by side
+  if (isHorizontal) {
+    return (
+      <div className="flex items-start gap-8">
+        {/* Background type */}
+        <div className="flex-shrink-0">
+          <label className="block text-xs font-medium text-gray-700 dark:text-gray-300 mb-1.5">
+            Type
+          </label>
+          <div className="flex gap-1">
+            {(['none', 'solid', 'gradient', 'image'] as const).map((type) => (
+              <button
+                key={type}
+                onClick={() => handleBgTypeChange(type)}
+                className={`px-3 py-1.5 text-xs font-medium rounded capitalize transition-colors ${
+                  bgType === type
+                    ? 'bg-emerald-100 dark:bg-emerald-900/30 text-emerald-700 dark:text-emerald-300'
+                    : 'bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-400 hover:bg-gray-200 dark:hover:bg-gray-600'
+                }`}
+              >
+                {type}
+              </button>
+            ))}
+          </div>
+        </div>
+
+        {/* Solid color picker */}
+        {bgType === 'solid' && (
+          <div className="flex-1 min-w-[200px] max-w-[300px]">
+            <label className="block text-xs font-medium text-gray-700 dark:text-gray-300 mb-1.5">
+              Color
+            </label>
+            <ColorInput
+              value={style.backgroundColor}
+              onChange={(color) => onChange({ backgroundColor: color })}
+              placeholder="#ffffff"
+            />
+          </div>
+        )}
+
+        {/* Gradient controls */}
+        {bgType === 'gradient' && (
+          <>
+            <div className="flex-1 min-w-[180px] max-w-[280px]">
+              <label className="block text-xs font-medium text-gray-700 dark:text-gray-300 mb-1.5">
+                Start Color
+              </label>
+              <ColorInput
+                value={style.backgroundGradient?.from}
+                onChange={(color) =>
+                  onChange({
+                    backgroundGradient: {
+                      from: color,
+                      to: style.backgroundGradient?.to || '#ec4899',
+                      direction: style.backgroundGradient?.direction,
+                    },
+                  })
+                }
+                placeholder="#3cb371"
+              />
+            </div>
+            <div className="flex-1 min-w-[180px] max-w-[280px]">
+              <label className="block text-xs font-medium text-gray-700 dark:text-gray-300 mb-1.5">
+                End Color
+              </label>
+              <ColorInput
+                value={style.backgroundGradient?.to}
+                onChange={(color) =>
+                  onChange({
+                    backgroundGradient: {
+                      from: style.backgroundGradient?.from || '#3cb371',
+                      to: color,
+                      direction: style.backgroundGradient?.direction,
+                    },
+                  })
+                }
+                placeholder="#ec4899"
+              />
+            </div>
+            <div className="flex-shrink-0 min-w-[140px]">
+              <label className="block text-xs font-medium text-gray-700 dark:text-gray-300 mb-1.5">
+                Direction
+              </label>
+              <select
+                value={style.backgroundGradient?.direction || 'to bottom'}
+                onChange={(e) =>
+                  onChange({
+                    backgroundGradient: {
+                      from: style.backgroundGradient?.from || '#3cb371',
+                      to: style.backgroundGradient?.to || '#ec4899',
+                      direction: e.target.value,
+                    },
+                  })
+                }
+                className="w-full px-2 py-2 text-xs border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
+              >
+                <option value="to bottom">↓ Down</option>
+                <option value="to right">→ Right</option>
+                <option value="to bottom right">↘ Diagonal</option>
+                <option value="45deg">45°</option>
+              </select>
+            </div>
+          </>
+        )}
+
+        {/* Image controls */}
+        {bgType === 'image' && (
+          <div className="flex-1 min-w-[250px] max-w-[400px]">
+            <ImageUploadSection
+              value={style.backgroundImage}
+              onChange={(url) => onChange({ backgroundImage: url || undefined })}
+            />
+          </div>
+        )}
+
+        {/* Opacity */}
+        <div className="flex-1 min-w-[150px] max-w-[250px]">
+          <label className="block text-xs font-medium text-gray-700 dark:text-gray-300 mb-1.5">
+            Opacity
+          </label>
+          <div className="flex items-center gap-2">
+            <input
+              type="range"
+              min="0"
+              max="100"
+              value={(style.backgroundOpacity ?? 1) * 100}
+              onChange={(e) => onChange({ backgroundOpacity: parseInt(e.target.value) / 100 })}
+              className="flex-1 accent-emerald-500"
+            />
+            <input
+              type="number"
+              min="0"
+              max="100"
+              value={Math.round((style.backgroundOpacity ?? 1) * 100)}
+              onChange={(e) => {
+                const val = parseInt(e.target.value);
+                if (!isNaN(val) && val >= 0 && val <= 100) onChange({ backgroundOpacity: val / 100 });
+              }}
+              className="w-12 px-1 py-1 text-xs bg-gray-800 border border-gray-600 rounded text-white text-right"
+            />
+            <span className="text-xs text-gray-500">%</span>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  // Vertical layout (original)
   return (
     <div className="space-y-4">
       {/* Background type */}
@@ -597,16 +878,152 @@ function BackgroundTab({
 function TextTab({
   style,
   onChange,
+  layout = 'vertical',
 }: {
   style: ElementStyle;
   onChange: (updates: Partial<ElementStyle>) => void;
+  layout?: 'vertical' | 'horizontal';
 }) {
   const [showCustomFont, setShowCustomFont] = useState(false);
   const isCustomFont = style.fontFamily && !FONT_FAMILY_OPTIONS.some(opt => opt.value === style.fontFamily);
+  const isHorizontal = layout === 'horizontal';
 
   // Check if any text overrides are set
   const hasOverrides = style.textColor || style.fontFamily || style.fontWeight || style.textSize;
 
+  // Horizontal layout
+  if (isHorizontal) {
+    return (
+      <div className="flex items-start gap-8">
+        {/* Text color */}
+        <div className="flex-1 min-w-[200px] max-w-[300px]">
+          <div className="flex items-center justify-between mb-1.5">
+            <label className="text-xs font-medium text-gray-700 dark:text-gray-300">
+              Text Color
+            </label>
+            {style.textColor && (
+              <button
+                onClick={() => onChange({ textColor: undefined })}
+                className="text-xs text-gray-500 hover:text-gray-700 dark:hover:text-gray-300"
+              >
+                Reset
+              </button>
+            )}
+          </div>
+          <ColorInput
+            value={style.textColor}
+            onChange={(color) => onChange({ textColor: color })}
+            placeholder="Inherit"
+          />
+        </div>
+
+        {/* Font family */}
+        <div className="flex-1 min-w-[200px] max-w-[300px]">
+          <label className="block text-xs font-medium text-gray-700 dark:text-gray-300 mb-1.5">
+            Font Family
+          </label>
+          <select
+            value={isCustomFont ? '__custom__' : (style.fontFamily || '')}
+            onChange={(e) => {
+              const value = e.target.value;
+              if (value === '__custom__') {
+                setShowCustomFont(true);
+                onChange({ fontFamily: '' });
+              } else if (value === '') {
+                onChange({ fontFamily: undefined });
+                setShowCustomFont(false);
+              } else {
+                onChange({ fontFamily: value });
+                setShowCustomFont(false);
+              }
+            }}
+            className="w-full px-3 py-2 text-xs border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
+          >
+            <option value="">Inherit from Theme</option>
+            <optgroup label="System Fonts">
+              {SYSTEM_FONTS.filter(o => o.group === 'system').map((option) => (
+                <option key={option.value} value={option.value}>{option.label}</option>
+              ))}
+            </optgroup>
+            <optgroup label="Monospace">
+              {SYSTEM_FONTS.filter(o => o.group === 'monospace').map((option) => (
+                <option key={option.value} value={option.value}>{option.label}</option>
+              ))}
+            </optgroup>
+            <optgroup label="Google Fonts">
+              {GOOGLE_FONTS.map((option) => (
+                <option key={option.value} value={option.value}>{option.label}</option>
+              ))}
+            </optgroup>
+            <option value="__custom__">Custom...</option>
+          </select>
+        </div>
+
+        {/* Font weight */}
+        <div className="flex-shrink-0">
+          <label className="block text-xs font-medium text-gray-700 dark:text-gray-300 mb-1.5">
+            Font Weight
+          </label>
+          <div className="flex gap-1">
+            <button
+              onClick={() => onChange({ fontWeight: undefined })}
+              className={`px-3 py-1.5 text-xs rounded transition-colors ${!style.fontWeight ? 'bg-emerald-100 dark:bg-emerald-900/30 text-emerald-700 dark:text-emerald-300' : 'bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-400 hover:bg-gray-200 dark:hover:bg-gray-600'}`}
+            >
+              Auto
+            </button>
+            {FONT_WEIGHT_OPTIONS.map((option) => (
+              <button
+                key={option.value}
+                onClick={() => onChange({ fontWeight: option.value as ElementStyle['fontWeight'] })}
+                className={`px-3 py-1.5 text-xs rounded transition-colors ${style.fontWeight === option.value ? 'bg-emerald-100 dark:bg-emerald-900/30 text-emerald-700 dark:text-emerald-300' : 'bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-400 hover:bg-gray-200 dark:hover:bg-gray-600'}`}
+              >
+                {option.label}
+              </button>
+            ))}
+          </div>
+        </div>
+
+        {/* Text size */}
+        <div className="flex-1 min-w-[200px] max-w-[300px]">
+          <label className="block text-xs font-medium text-gray-700 dark:text-gray-300 mb-1.5">
+            Text Size
+          </label>
+          <div className="flex items-center gap-2">
+            <button
+              onClick={() => onChange({ textSize: undefined })}
+              className={`px-3 py-1.5 text-xs rounded transition-colors ${!style.textSize ? 'bg-emerald-100 dark:bg-emerald-900/30 text-emerald-700 dark:text-emerald-300' : 'bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-400 hover:bg-gray-200 dark:hover:bg-gray-600'}`}
+            >
+              Auto
+            </button>
+            <input
+              type="range"
+              min="10"
+              max="48"
+              value={style.textSize || 16}
+              onChange={(e) => onChange({ textSize: parseInt(e.target.value) })}
+              className="flex-1 accent-emerald-500"
+            />
+            <input
+              type="number"
+              min="8"
+              max="72"
+              value={style.textSize || 16}
+              onChange={(e) => {
+                const val = parseInt(e.target.value);
+                if (!isNaN(val) && val >= 8 && val <= 72) {
+                  onChange({ textSize: val });
+                }
+              }}
+              className="w-14 px-2 py-1 text-xs bg-gray-800 border border-gray-600 rounded text-white text-right"
+            />
+            <span className="text-xs text-gray-500">px</span>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  // Vertical layout (original)
   return (
     <div className="space-y-4">
       {/* Info banner */}
@@ -812,17 +1229,30 @@ function TextTab({
                 : 'bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-400 hover:bg-gray-200 dark:hover:bg-gray-600'
             }`}
           >
-            Inherit
+            Auto
           </button>
           <input
             type="range"
             min="10"
-            max="32"
+            max="48"
             value={style.textSize || 16}
             onChange={(e) => onChange({ textSize: parseInt(e.target.value) })}
             className="flex-1"
           />
-          <span className="text-xs text-gray-500 w-8">{style.textSize || 16}px</span>
+          <input
+            type="number"
+            min="8"
+            max="72"
+            value={style.textSize || 16}
+            onChange={(e) => {
+              const val = parseInt(e.target.value);
+              if (!isNaN(val) && val >= 8 && val <= 72) {
+                onChange({ textSize: val });
+              }
+            }}
+            className="w-14 px-2 py-1 text-xs bg-gray-800 border border-gray-600 rounded text-white text-right"
+          />
+          <span className="text-xs text-gray-500">px</span>
         </div>
       </div>
 
@@ -842,10 +1272,114 @@ function TextTab({
 function BorderTab({
   style,
   onChange,
+  layout = 'vertical',
 }: {
   style: ElementStyle;
   onChange: (updates: Partial<ElementStyle>) => void;
+  layout?: 'vertical' | 'horizontal';
 }) {
+  const isHorizontal = layout === 'horizontal';
+
+  // Horizontal layout
+  if (isHorizontal) {
+    return (
+      <div className="flex items-start gap-8">
+        {/* Border radius */}
+        <div className="flex-1 min-w-[150px] max-w-[250px]">
+          <label className="block text-xs font-medium text-gray-700 dark:text-gray-300 mb-1.5">
+            Border Radius
+          </label>
+          <div className="flex items-center gap-2">
+            <input
+              type="range"
+              min="0"
+              max="50"
+              value={style.borderRadius ?? 12}
+              onChange={(e) => onChange({ borderRadius: parseInt(e.target.value) })}
+              className="flex-1 accent-emerald-500"
+            />
+            <input
+              type="number"
+              min="0"
+              max="100"
+              value={style.borderRadius ?? 12}
+              onChange={(e) => {
+                const val = parseInt(e.target.value);
+                if (!isNaN(val) && val >= 0) onChange({ borderRadius: val });
+              }}
+              className="w-14 px-2 py-1 text-xs bg-gray-800 border border-gray-600 rounded text-white text-right"
+            />
+            <span className="text-xs text-gray-500">px</span>
+          </div>
+        </div>
+
+        {/* Border width */}
+        <div className="flex-1 min-w-[120px] max-w-[200px]">
+          <label className="block text-xs font-medium text-gray-700 dark:text-gray-300 mb-1.5">
+            Border Width
+          </label>
+          <div className="flex items-center gap-2">
+            <input
+              type="range"
+              min="0"
+              max="10"
+              value={style.borderWidth ?? 1}
+              onChange={(e) => onChange({ borderWidth: parseInt(e.target.value) })}
+              className="flex-1 accent-emerald-500"
+            />
+            <input
+              type="number"
+              min="0"
+              max="20"
+              value={style.borderWidth ?? 1}
+              onChange={(e) => {
+                const val = parseInt(e.target.value);
+                if (!isNaN(val) && val >= 0) onChange({ borderWidth: val });
+              }}
+              className="w-14 px-2 py-1 text-xs bg-gray-800 border border-gray-600 rounded text-white text-right"
+            />
+            <span className="text-xs text-gray-500">px</span>
+          </div>
+        </div>
+
+        {/* Border color */}
+        <div className="flex-1 min-w-[200px] max-w-[300px]">
+          <label className="block text-xs font-medium text-gray-700 dark:text-gray-300 mb-1.5">
+            Border Color
+          </label>
+          <ColorInput
+            value={style.borderColor}
+            onChange={(color) => onChange({ borderColor: color })}
+            placeholder="#e5e7eb"
+          />
+        </div>
+
+        {/* Border style */}
+        <div className="flex-shrink-0">
+          <label className="block text-xs font-medium text-gray-700 dark:text-gray-300 mb-1.5">
+            Border Style
+          </label>
+          <div className="flex gap-1">
+            {(['solid', 'dashed', 'dotted', 'none'] as const).map((bs) => (
+              <button
+                key={bs}
+                onClick={() => onChange({ borderStyle: bs })}
+                className={`px-3 py-1.5 text-xs font-medium rounded capitalize transition-colors ${
+                  (style.borderStyle || 'solid') === bs
+                    ? 'bg-emerald-100 dark:bg-emerald-900/30 text-emerald-700 dark:text-emerald-300'
+                    : 'bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-400 hover:bg-gray-200 dark:hover:bg-gray-600'
+                }`}
+              >
+                {bs}
+              </button>
+            ))}
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  // Vertical layout (original)
   return (
     <div className="space-y-4">
       {/* Border radius */}
@@ -924,10 +1458,417 @@ function BorderTab({
 function EffectsTab({
   style,
   onChange,
+  layout = 'vertical',
 }: {
   style: ElementStyle;
   onChange: (updates: Partial<ElementStyle>) => void;
+  layout?: 'vertical' | 'horizontal';
 }) {
+  const isHorizontal = layout === 'horizontal';
+
+  // Horizontal layout - organized rows with good spacing
+  if (isHorizontal) {
+    return (
+      <div className="space-y-8">
+        {/* Row 1: Shadow, Blur, Opacity */}
+        <div className="flex items-start gap-16">
+          {/* Shadow preset */}
+          <div className="flex-shrink-0">
+            <label className="block text-xs font-medium text-gray-700 dark:text-gray-300 mb-1.5">
+              Shadow
+            </label>
+            <div className="flex gap-1">
+              {SHADOW_PRESETS.map((preset) => (
+                <button
+                  key={preset.value}
+                  onClick={() => onChange({ boxShadow: preset.value })}
+                  className={`px-2.5 py-1.5 text-xs font-medium rounded transition-colors ${
+                    (style.boxShadow || 'subtle') === preset.value
+                      ? 'bg-emerald-100 dark:bg-emerald-900/30 text-emerald-700 dark:text-emerald-300'
+                      : 'bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-400 hover:bg-gray-200 dark:hover:bg-gray-600'
+                  }`}
+                >
+                  {preset.label}
+                </button>
+              ))}
+            </div>
+          </div>
+
+          {/* Blur */}
+          <div className="w-40">
+            <label className="block text-xs font-medium text-gray-700 dark:text-gray-300 mb-1.5">
+              Blur
+            </label>
+            <div className="flex items-center gap-2">
+              <input
+                type="range"
+                min="0"
+                max="20"
+                value={style.blur ?? 0}
+                onChange={(e) => onChange({ blur: parseInt(e.target.value) })}
+                className="flex-1 accent-emerald-500"
+              />
+              <input
+                type="number"
+                min="0"
+                max="50"
+                value={style.blur ?? 0}
+                onChange={(e) => {
+                  const val = parseInt(e.target.value);
+                  if (!isNaN(val) && val >= 0) onChange({ blur: val });
+                }}
+                className="w-12 px-1 py-1 text-xs bg-gray-800 border border-gray-600 rounded text-white text-right"
+              />
+              <span className="text-xs text-gray-500">px</span>
+            </div>
+          </div>
+
+          {/* Opacity */}
+          <div className="w-40">
+            <label className="block text-xs font-medium text-gray-700 dark:text-gray-300 mb-1.5">
+              Opacity
+            </label>
+            <div className="flex items-center gap-2">
+              <input
+                type="range"
+                min="0"
+                max="100"
+                value={(style.opacity ?? 1) * 100}
+                onChange={(e) => onChange({ opacity: parseInt(e.target.value) / 100 })}
+                className="flex-1 accent-emerald-500"
+              />
+              <input
+                type="number"
+                min="0"
+                max="100"
+                value={Math.round((style.opacity ?? 1) * 100)}
+                onChange={(e) => {
+                  const val = parseInt(e.target.value);
+                  if (!isNaN(val) && val >= 0 && val <= 100) onChange({ opacity: val / 100 });
+                }}
+                className="w-12 px-1 py-1 text-xs bg-gray-800 border border-gray-600 rounded text-white text-right"
+              />
+              <span className="text-xs text-gray-500">%</span>
+            </div>
+          </div>
+
+        </div>
+
+        {/* Row 2: Transforms - Scale, Rotate, Skew X, Skew Y */}
+        <div className="flex items-start gap-12">
+          <div className="w-40">
+            <label className="block text-xs font-medium text-gray-700 dark:text-gray-300 mb-1.5">
+              Scale
+            </label>
+            <div className="flex items-center gap-2">
+              <input
+                type="range"
+                min="50"
+                max="150"
+                value={(style.scale ?? 1) * 100}
+                onChange={(e) => onChange({ scale: parseInt(e.target.value) / 100 })}
+                className="flex-1 accent-emerald-500"
+              />
+              <input
+                type="number"
+                min="10"
+                max="200"
+                value={Math.round((style.scale ?? 1) * 100)}
+                onChange={(e) => {
+                  const val = parseInt(e.target.value);
+                  if (!isNaN(val) && val >= 10) onChange({ scale: val / 100 });
+                }}
+                className="w-12 px-1 py-1 text-xs bg-gray-800 border border-gray-600 rounded text-white text-right"
+              />
+              <span className="text-xs text-gray-500">%</span>
+            </div>
+          </div>
+
+          <div className="w-40">
+            <label className="block text-xs font-medium text-gray-700 dark:text-gray-300 mb-1.5">
+              Rotate
+            </label>
+            <div className="flex items-center gap-2">
+              <input
+                type="range"
+                min="-180"
+                max="180"
+                value={style.rotate ?? 0}
+                onChange={(e) => onChange({ rotate: parseInt(e.target.value) })}
+                className="flex-1 accent-emerald-500"
+              />
+              <input
+                type="number"
+                min="-360"
+                max="360"
+                value={style.rotate ?? 0}
+                onChange={(e) => {
+                  const val = parseInt(e.target.value);
+                  if (!isNaN(val)) onChange({ rotate: val });
+                }}
+                className="w-12 px-1 py-1 text-xs bg-gray-800 border border-gray-600 rounded text-white text-right"
+              />
+              <span className="text-xs text-gray-500">°</span>
+            </div>
+          </div>
+
+          <div className="w-36">
+            <label className="block text-xs font-medium text-gray-700 dark:text-gray-300 mb-1.5">
+              Skew X
+            </label>
+            <div className="flex items-center gap-2">
+              <input
+                type="range"
+                min="-30"
+                max="30"
+                value={style.skewX ?? 0}
+                onChange={(e) => onChange({ skewX: parseInt(e.target.value) })}
+                className="flex-1 accent-emerald-500"
+              />
+              <input
+                type="number"
+                min="-90"
+                max="90"
+                value={style.skewX ?? 0}
+                onChange={(e) => {
+                  const val = parseInt(e.target.value);
+                  if (!isNaN(val)) onChange({ skewX: val });
+                }}
+                className="w-12 px-1 py-1 text-xs bg-gray-800 border border-gray-600 rounded text-white text-right"
+              />
+              <span className="text-xs text-gray-500">°</span>
+            </div>
+          </div>
+
+          <div className="w-36">
+            <label className="block text-xs font-medium text-gray-700 dark:text-gray-300 mb-1.5">
+              Skew Y
+            </label>
+            <div className="flex items-center gap-2">
+              <input
+                type="range"
+                min="-30"
+                max="30"
+                value={style.skewY ?? 0}
+                onChange={(e) => onChange({ skewY: parseInt(e.target.value) })}
+                className="flex-1 accent-emerald-500"
+              />
+              <input
+                type="number"
+                min="-90"
+                max="90"
+                value={style.skewY ?? 0}
+                onChange={(e) => {
+                  const val = parseInt(e.target.value);
+                  if (!isNaN(val)) onChange({ skewY: val });
+                }}
+                className="w-12 px-1 py-1 text-xs bg-gray-800 border border-gray-600 rounded text-white text-right"
+              />
+              <span className="text-xs text-gray-500">°</span>
+            </div>
+          </div>
+        </div>
+
+        {/* Row 3: Filters and Hover Effects */}
+        <div className="flex items-start gap-12">
+          <div className="w-40">
+            <label className="block text-xs font-medium text-gray-700 dark:text-gray-300 mb-1.5">
+              Saturate
+            </label>
+            <div className="flex items-center gap-2">
+              <input
+                type="range"
+                min="0"
+                max="200"
+                value={style.saturation ?? 100}
+                onChange={(e) => onChange({ saturation: parseInt(e.target.value) })}
+                className="flex-1 accent-emerald-500"
+              />
+              <input
+                type="number"
+                min="0"
+                max="300"
+                value={style.saturation ?? 100}
+                onChange={(e) => {
+                  const val = parseInt(e.target.value);
+                  if (!isNaN(val) && val >= 0) onChange({ saturation: val });
+                }}
+                className="w-12 px-1 py-1 text-xs bg-gray-800 border border-gray-600 rounded text-white text-right"
+              />
+              <span className="text-xs text-gray-500">%</span>
+            </div>
+          </div>
+
+          <div className="w-40">
+            <label className="block text-xs font-medium text-gray-700 dark:text-gray-300 mb-1.5">
+              Grayscale
+            </label>
+            <div className="flex items-center gap-2">
+              <input
+                type="range"
+                min="0"
+                max="100"
+                value={style.grayscale ?? 0}
+                onChange={(e) => onChange({ grayscale: parseInt(e.target.value) })}
+                className="flex-1 accent-emerald-500"
+              />
+              <input
+                type="number"
+                min="0"
+                max="100"
+                value={style.grayscale ?? 0}
+                onChange={(e) => {
+                  const val = parseInt(e.target.value);
+                  if (!isNaN(val) && val >= 0 && val <= 100) onChange({ grayscale: val });
+                }}
+                className="w-12 px-1 py-1 text-xs bg-gray-800 border border-gray-600 rounded text-white text-right"
+              />
+              <span className="text-xs text-gray-500">%</span>
+            </div>
+          </div>
+
+          {/* Hover Effects */}
+          <div className="w-40">
+            <label className="block text-xs font-medium text-gray-700 dark:text-gray-300 mb-1.5">
+              Hover Scale
+            </label>
+            <div className="flex items-center gap-2">
+              <input
+                type="range"
+                min="100"
+                max="120"
+                value={(style.hoverScale ?? 1) * 100}
+                onChange={(e) => onChange({ hoverScale: parseInt(e.target.value) / 100 })}
+                className="flex-1 accent-emerald-500"
+              />
+              <input
+                type="number"
+                min="100"
+                max="150"
+                value={Math.round((style.hoverScale ?? 1) * 100)}
+                onChange={(e) => {
+                  const val = parseInt(e.target.value);
+                  if (!isNaN(val) && val >= 100) onChange({ hoverScale: val / 100 });
+                }}
+                className="w-12 px-1 py-1 text-xs bg-gray-800 border border-gray-600 rounded text-white text-right"
+              />
+              <span className="text-xs text-gray-500">%</span>
+            </div>
+          </div>
+
+          <div className="w-40">
+            <label className="block text-xs font-medium text-gray-700 dark:text-gray-300 mb-1.5">
+              Hover Opacity
+            </label>
+            <div className="flex items-center gap-2">
+              <input
+                type="range"
+                min="50"
+                max="100"
+                value={(style.hoverOpacity ?? 1) * 100}
+                onChange={(e) => onChange({ hoverOpacity: parseInt(e.target.value) / 100 })}
+                className="flex-1 accent-emerald-500"
+              />
+              <input
+                type="number"
+                min="0"
+                max="100"
+                value={Math.round((style.hoverOpacity ?? 1) * 100)}
+                onChange={(e) => {
+                  const val = parseInt(e.target.value);
+                  if (!isNaN(val) && val >= 0 && val <= 100) onChange({ hoverOpacity: val / 100 });
+                }}
+                className="w-12 px-1 py-1 text-xs bg-gray-800 border border-gray-600 rounded text-white text-right"
+              />
+              <span className="text-xs text-gray-500">%</span>
+            </div>
+          </div>
+        </div>
+
+        {/* Row 4: Glow and Spacing */}
+        <div className="flex items-start gap-12">
+          <div className="w-48">
+            <label className="block text-xs font-medium text-gray-700 dark:text-gray-300 mb-1.5">
+              Glow Color
+            </label>
+            <ColorInput
+              value={style.glowColor}
+              onChange={(color) => {
+                // When setting a glow color, also set a default glow size if not already set
+                if (color && !style.glowSize) {
+                  onChange({ glowColor: color, glowSize: 15 });
+                } else {
+                  onChange({ glowColor: color });
+                }
+              }}
+              placeholder="None"
+            />
+          </div>
+
+          {/* Glow Size (only shown when glow color is set) */}
+          {style.glowColor && (
+            <div className="w-48">
+              <label className="block text-xs font-medium text-gray-700 dark:text-gray-300 mb-1.5">
+                Glow Size
+              </label>
+              <div className="flex items-center gap-2">
+                <input
+                  type="range"
+                  min="0"
+                  max="30"
+                  value={style.glowSize ?? 0}
+                  onChange={(e) => onChange({ glowSize: parseInt(e.target.value) })}
+                  className="flex-1 accent-emerald-500"
+                />
+                <input
+                  type="number"
+                  min="0"
+                  max="100"
+                  value={style.glowSize ?? 0}
+                  onChange={(e) => {
+                    const val = parseInt(e.target.value);
+                    if (!isNaN(val) && val >= 0) onChange({ glowSize: val });
+                  }}
+                  className="w-12 px-1 py-1 text-xs bg-gray-800 border border-gray-600 rounded text-white text-right"
+                />
+                <span className="text-xs text-gray-500">px</span>
+              </div>
+            </div>
+          )}
+
+          {/* Padding */}
+          <div className="w-32">
+            <label className="block text-xs font-medium text-gray-700 dark:text-gray-300 mb-1.5">
+              Padding
+            </label>
+            <input
+              type="text"
+              value={style.padding || ''}
+              onChange={(e) => onChange({ padding: e.target.value || undefined })}
+              placeholder="16px"
+              className="w-full px-2 py-1.5 text-xs border border-gray-300 dark:border-gray-600 rounded bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
+            />
+          </div>
+
+          {/* Margin */}
+          <div className="w-32">
+            <label className="block text-xs font-medium text-gray-700 dark:text-gray-300 mb-1.5">
+              Margin
+            </label>
+            <input
+              type="text"
+              value={style.margin || ''}
+              onChange={(e) => onChange({ margin: e.target.value || undefined })}
+              placeholder="0px"
+              className="w-full px-2 py-1.5 text-xs border border-gray-300 dark:border-gray-600 rounded bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
+            />
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  // Vertical layout (original)
   return (
     <div className="space-y-4">
       {/* Shadow preset */}
@@ -995,6 +1936,213 @@ function EffectsTab({
           className="w-full px-3 py-2 text-sm border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
         />
       </div>
+
+      {/* Margin */}
+      <div>
+        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+          Margin
+        </label>
+        <input
+          type="text"
+          value={style.margin || ''}
+          onChange={(e) => onChange({ margin: e.target.value || undefined })}
+          placeholder="e.g., 8px"
+          className="w-full px-3 py-2 text-sm border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
+        />
+      </div>
+
+      {/* Transform section */}
+      <div className="border-t border-gray-200 dark:border-gray-700 pt-4 mt-4">
+        <h4 className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-3">Transforms</h4>
+
+        {/* Scale */}
+        <div className="mb-3">
+          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+            Scale: {((style.scale ?? 1) * 100).toFixed(0)}%
+          </label>
+          <input
+            type="range"
+            min="50"
+            max="150"
+            value={(style.scale ?? 1) * 100}
+            onChange={(e) => onChange({ scale: parseInt(e.target.value) / 100 })}
+            className="w-full"
+          />
+        </div>
+
+        {/* Rotate */}
+        <div className="mb-3">
+          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+            Rotate: {style.rotate ?? 0}°
+          </label>
+          <input
+            type="range"
+            min="-180"
+            max="180"
+            value={style.rotate ?? 0}
+            onChange={(e) => onChange({ rotate: parseInt(e.target.value) })}
+            className="w-full"
+          />
+        </div>
+
+        {/* Skew X */}
+        <div className="mb-3">
+          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+            Skew X: {style.skewX ?? 0}°
+          </label>
+          <input
+            type="range"
+            min="-30"
+            max="30"
+            value={style.skewX ?? 0}
+            onChange={(e) => onChange({ skewX: parseInt(e.target.value) })}
+            className="w-full"
+          />
+        </div>
+
+        {/* Skew Y */}
+        <div className="mb-3">
+          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+            Skew Y: {style.skewY ?? 0}°
+          </label>
+          <input
+            type="range"
+            min="-30"
+            max="30"
+            value={style.skewY ?? 0}
+            onChange={(e) => onChange({ skewY: parseInt(e.target.value) })}
+            className="w-full"
+          />
+        </div>
+      </div>
+
+      {/* Filters section */}
+      <div className="border-t border-gray-200 dark:border-gray-700 pt-4 mt-4">
+        <h4 className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-3">Filters</h4>
+
+        {/* Saturation */}
+        <div className="mb-3">
+          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+            Saturation: {style.saturation ?? 100}%
+          </label>
+          <input
+            type="range"
+            min="0"
+            max="200"
+            value={style.saturation ?? 100}
+            onChange={(e) => onChange({ saturation: parseInt(e.target.value) })}
+            className="w-full"
+          />
+        </div>
+
+        {/* Grayscale */}
+        <div className="mb-3">
+          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+            Grayscale: {style.grayscale ?? 0}%
+          </label>
+          <input
+            type="range"
+            min="0"
+            max="100"
+            value={style.grayscale ?? 0}
+            onChange={(e) => onChange({ grayscale: parseInt(e.target.value) })}
+            className="w-full"
+          />
+        </div>
+      </div>
+
+      {/* Glow section */}
+      <div className="border-t border-gray-200 dark:border-gray-700 pt-4 mt-4">
+        <h4 className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-3">Glow Effect</h4>
+
+        {/* Glow Color */}
+        <div className="mb-3">
+          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+            Glow Color
+          </label>
+          <ColorInput
+            value={style.glowColor}
+            onChange={(color) => {
+              // When setting a glow color, also set a default glow size if not already set
+              if (color && !style.glowSize) {
+                onChange({ glowColor: color, glowSize: 15 });
+              } else {
+                onChange({ glowColor: color });
+              }
+            }}
+            placeholder="No glow"
+          />
+        </div>
+
+        {/* Glow Size */}
+        <div className="mb-3">
+          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+            Glow Size: {style.glowSize ?? 0}px
+          </label>
+          <input
+            type="range"
+            min="0"
+            max="30"
+            value={style.glowSize ?? 0}
+            onChange={(e) => onChange({ glowSize: parseInt(e.target.value) })}
+            className="w-full"
+          />
+        </div>
+      </div>
+
+      {/* Hover effects section */}
+      <div className="border-t border-gray-200 dark:border-gray-700 pt-4 mt-4">
+        <h4 className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-3">Hover Effects</h4>
+
+        {/* Hover Scale */}
+        <div className="mb-3">
+          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+            Hover Scale: {((style.hoverScale ?? 1) * 100).toFixed(0)}%
+          </label>
+          <input
+            type="range"
+            min="100"
+            max="120"
+            value={(style.hoverScale ?? 1) * 100}
+            onChange={(e) => onChange({ hoverScale: parseInt(e.target.value) / 100 })}
+            className="w-full"
+          />
+        </div>
+
+        {/* Hover Opacity */}
+        <div className="mb-3">
+          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+            Hover Opacity: {Math.round((style.hoverOpacity ?? 1) * 100)}%
+          </label>
+          <input
+            type="range"
+            min="50"
+            max="100"
+            value={(style.hoverOpacity ?? 1) * 100}
+            onChange={(e) => onChange({ hoverOpacity: parseInt(e.target.value) / 100 })}
+            className="w-full"
+          />
+        </div>
+      </div>
+
+      {/* Reset button */}
+      <button
+        onClick={() => onChange({
+          scale: undefined,
+          rotate: undefined,
+          skewX: undefined,
+          skewY: undefined,
+          saturation: undefined,
+          grayscale: undefined,
+          glowColor: undefined,
+          glowSize: undefined,
+          hoverScale: undefined,
+          hoverOpacity: undefined,
+        })}
+        className="w-full mt-4 px-3 py-2 text-sm font-medium text-gray-600 dark:text-gray-400 bg-gray-100 dark:bg-gray-700 rounded-lg hover:bg-gray-200 dark:hover:bg-gray-600 transition-colors"
+      >
+        Reset All Effects
+      </button>
     </div>
   );
 }
@@ -1003,10 +2151,239 @@ function EffectsTab({
 function AdvancedTab({
   style,
   onChange,
+  layout = 'vertical',
 }: {
   style: ElementStyle;
   onChange: (updates: Partial<ElementStyle>) => void;
+  layout?: 'vertical' | 'horizontal';
 }) {
+  const isHorizontal = layout === 'horizontal';
+
+  // Preset categories for the Advanced tab
+  const PRESET_CATEGORIES = {
+    matrix: {
+      label: '🖥️ Matrix/Hacker',
+      presets: [
+        {
+          name: 'Matrix Glow',
+          css: 'text-shadow: 0 0 5px #00ff00, 0 0 10px #00ff00, 0 0 20px #00ff00; box-shadow: 0 0 10px rgba(0,255,0,0.3), inset 0 0 10px rgba(0,255,0,0.1);',
+        },
+        {
+          name: 'Terminal Green',
+          css: 'background: linear-gradient(180deg, rgba(0,20,0,0.95) 0%, rgba(0,40,0,0.9) 100%); border: 1px solid #00ff00; box-shadow: 0 0 15px rgba(0,255,0,0.4), inset 0 0 30px rgba(0,255,0,0.05);',
+        },
+        {
+          name: 'Scanlines',
+          css: 'background-image: repeating-linear-gradient(0deg, transparent, transparent 2px, rgba(0,255,0,0.03) 2px, rgba(0,255,0,0.03) 4px);',
+        },
+        {
+          name: 'CRT Flicker',
+          css: 'animation: crt-flicker 0.15s infinite; box-shadow: 0 0 20px rgba(0,255,0,0.5);',
+        },
+        {
+          name: 'Hacker Border',
+          css: 'border: 2px solid #00ff00; border-image: linear-gradient(45deg, #00ff00, #00aa00, #00ff00) 1; box-shadow: 0 0 10px #00ff00;',
+        },
+        {
+          name: 'Digital Rain BG',
+          css: 'background: linear-gradient(180deg, #000 0%, #001a00 50%, #000 100%); position: relative;',
+        },
+      ],
+    },
+    retro: {
+      label: '📺 Retro/CRT',
+      presets: [
+        {
+          name: 'CRT Curve',
+          css: 'border-radius: 20px / 40px; box-shadow: inset 0 0 50px rgba(0,0,0,0.5), 0 0 20px rgba(0,255,0,0.2);',
+        },
+        {
+          name: 'VHS Glitch',
+          css: 'text-shadow: 2px 0 #ff0000, -2px 0 #00ffff; animation: vhs-glitch 0.5s infinite;',
+        },
+        {
+          name: 'Phosphor Burn',
+          css: 'background: radial-gradient(ellipse at center, rgba(0,50,0,0.8) 0%, rgba(0,20,0,0.95) 70%, rgba(0,0,0,1) 100%);',
+        },
+        {
+          name: '80s Neon',
+          css: 'border: 2px solid #ff00ff; box-shadow: 0 0 10px #ff00ff, 0 0 20px #ff00ff, 0 0 40px #ff00ff, inset 0 0 15px rgba(255,0,255,0.1);',
+        },
+        {
+          name: 'Synthwave',
+          css: 'background: linear-gradient(180deg, #2b1055 0%, #7597de 50%, #ff6b6b 100%); border-bottom: 3px solid #ff00ff;',
+        },
+        {
+          name: 'Amber CRT',
+          css: 'background: #1a0f00; color: #ffb000; text-shadow: 0 0 5px #ffb000; box-shadow: inset 0 0 50px rgba(255,176,0,0.1);',
+        },
+      ],
+    },
+    effects: {
+      label: '✨ Effects',
+      presets: [
+        {
+          name: 'Glass Panel',
+          css: 'backdrop-filter: blur(10px); background: rgba(0,0,0,0.5); border: 1px solid rgba(255,255,255,0.1);',
+        },
+        {
+          name: 'Hologram',
+          css: 'background: linear-gradient(135deg, rgba(0,255,255,0.1) 0%, rgba(255,0,255,0.1) 50%, rgba(0,255,255,0.1) 100%); border: 1px solid rgba(0,255,255,0.5); box-shadow: 0 0 20px rgba(0,255,255,0.3);',
+        },
+        {
+          name: 'Pulse Glow',
+          css: 'animation: pulse-glow 2s ease-in-out infinite; box-shadow: 0 0 20px currentColor;',
+        },
+        {
+          name: 'Gradient Border',
+          css: 'border: 2px solid transparent; background-clip: padding-box; background-image: linear-gradient(#000, #000), linear-gradient(45deg, #00ff00, #00ffff, #ff00ff); background-origin: border-box;',
+        },
+        {
+          name: 'Soft Shadow',
+          css: 'box-shadow: 0 10px 40px rgba(0,0,0,0.3), 0 0 0 1px rgba(255,255,255,0.05);',
+        },
+        {
+          name: 'Inner Glow',
+          css: 'box-shadow: inset 0 0 30px rgba(0,255,0,0.2), inset 0 0 60px rgba(0,255,0,0.1);',
+        },
+      ],
+    },
+    shapes: {
+      label: '🔷 Shapes',
+      presets: [
+        {
+          name: 'LCARS Curve',
+          css: 'border-top-right-radius: 40px; border-bottom-right-radius: 40px;',
+        },
+        {
+          name: 'LCARS Clip',
+          css: 'clip-path: polygon(10% 0, 100% 0, 100% 100%, 0 100%, 0 25%);',
+        },
+        {
+          name: 'Skew Left',
+          css: 'transform: skewX(-3deg);',
+        },
+        {
+          name: 'Skew Right',
+          css: 'transform: skewX(3deg);',
+        },
+        {
+          name: 'Hexagon',
+          css: 'clip-path: polygon(25% 0%, 75% 0%, 100% 50%, 75% 100%, 25% 100%, 0% 50%);',
+        },
+        {
+          name: 'Notched',
+          css: 'clip-path: polygon(0 0, calc(100% - 20px) 0, 100% 20px, 100% 100%, 20px 100%, 0 calc(100% - 20px));',
+        },
+      ],
+    },
+    animations: {
+      label: '🎬 Animations',
+      presets: [
+        {
+          name: 'Breathing',
+          css: 'animation: breathing 3s ease-in-out infinite;',
+        },
+        {
+          name: 'Border Flow',
+          css: 'animation: border-flow 3s linear infinite; border: 2px solid;',
+        },
+        {
+          name: 'Shimmer',
+          css: 'background: linear-gradient(90deg, transparent 0%, rgba(255,255,255,0.1) 50%, transparent 100%); background-size: 200% 100%; animation: shimmer 2s infinite;',
+        },
+        {
+          name: 'Float',
+          css: 'animation: float 3s ease-in-out infinite;',
+        },
+        {
+          name: 'Rotate Slow',
+          css: 'animation: rotate-slow 20s linear infinite;',
+        },
+        {
+          name: 'Glitch',
+          css: 'animation: glitch 0.3s infinite;',
+        },
+      ],
+    },
+  };
+
+  const [selectedCategory, setSelectedCategory] = useState<keyof typeof PRESET_CATEGORIES>('matrix');
+
+  // Horizontal layout
+  if (isHorizontal) {
+    return (
+      <div className="flex items-start gap-6">
+        {/* Custom CSS */}
+        <div className="flex-1 min-w-[280px]">
+          <label className="block text-xs font-medium text-gray-700 dark:text-gray-300 mb-1.5">
+            Custom CSS Properties
+          </label>
+          <textarea
+            value={style.customCSS || ''}
+            onChange={(e) => onChange({ customCSS: e.target.value || undefined })}
+            placeholder="e.g., text-shadow: 0 0 10px #00ff00;&#10;animation: glow 2s infinite;&#10;transform: skewX(-3deg);"
+            rows={5}
+            className="w-full px-3 py-2 text-xs font-mono border border-gray-300 dark:border-gray-600 rounded-lg bg-gray-50 dark:bg-gray-700 text-gray-900 dark:text-white resize-y min-h-[80px] max-h-[300px]"
+          />
+          <div className="flex items-center gap-2 mt-1.5">
+            <p className="text-xs text-gray-500 dark:text-gray-400 flex-1">
+              Raw CSS for transforms, animations, clip-paths, etc.
+            </p>
+            {style.customCSS && (
+              <button
+                onClick={() => onChange({ customCSS: undefined })}
+                className="text-xs text-red-500 hover:text-red-600 dark:text-red-400"
+              >
+                Clear
+              </button>
+            )}
+          </div>
+        </div>
+
+        {/* Preset categories */}
+        <div className="flex-shrink-0 w-[420px]">
+          {/* Category tabs */}
+          <div className="flex gap-1 mb-2 overflow-x-auto pb-1">
+            {Object.entries(PRESET_CATEGORIES).map(([key, cat]) => (
+              <button
+                key={key}
+                onClick={() => setSelectedCategory(key as keyof typeof PRESET_CATEGORIES)}
+                className={`px-2 py-1 text-xs font-medium rounded whitespace-nowrap transition-colors ${
+                  selectedCategory === key
+                    ? 'bg-emerald-100 dark:bg-emerald-900/30 text-emerald-700 dark:text-emerald-300'
+                    : 'text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-700'
+                }`}
+              >
+                {cat.label}
+              </button>
+            ))}
+          </div>
+
+          {/* Presets grid */}
+          <div className="grid grid-cols-3 gap-1.5">
+            {PRESET_CATEGORIES[selectedCategory].presets.map((preset) => (
+              <button
+                key={preset.name}
+                onClick={() => onChange({ customCSS: preset.css })}
+                className="px-2 py-1.5 text-xs text-left bg-gray-100 dark:bg-gray-700 rounded hover:bg-gray-200 dark:hover:bg-gray-600 transition-colors truncate"
+                title={preset.css}
+              >
+                {preset.name}
+              </button>
+            ))}
+          </div>
+
+          {/* Append mode hint */}
+          <p className="text-xs text-gray-400 dark:text-gray-500 mt-2">
+            💡 Tip: Copy current CSS, click preset, then paste back to combine effects
+          </p>
+        </div>
+      </div>
+    );
+  }
+
+  // Vertical layout (original)
   return (
     <div className="space-y-4">
       <div className="p-3 bg-yellow-50 dark:bg-yellow-900/20 rounded-lg border border-yellow-200 dark:border-yellow-800">

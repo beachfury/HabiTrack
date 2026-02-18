@@ -162,7 +162,7 @@ export function RequestsTab({
           <button
             key={item.id}
             onClick={() => onAddToList(item)}
-            className="themed-card p-3 text-left hover:ring-2 hover:ring-[var(--color-primary)] transition-all"
+            className="themed-shopping-list p-3 text-left hover:ring-2 hover:ring-[var(--color-primary)] transition-all"
           >
             <ItemImage url={item.imageUrl} size="lg" />
             <p className="font-medium text-[var(--color-foreground)] mt-2 truncate text-sm">
@@ -179,7 +179,7 @@ export function RequestsTab({
       </div>
 
       {filteredItems.length === 0 && (
-        <div className="themed-card p-8 text-center">
+        <div className="themed-shopping-list p-8 text-center">
           <Package size={48} className="mx-auto mb-3 text-[var(--color-muted-foreground)] opacity-50" />
           <p className="text-[var(--color-muted-foreground)]">No items found</p>
           <button

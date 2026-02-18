@@ -17,6 +17,7 @@ import {
 } from 'lucide-react';
 import { Navigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
+import { useTheme } from '../context/ThemeContext';
 import { budgetsApi } from '../api/budgets';
 import type {
   BudgetCategory,
@@ -42,7 +43,9 @@ type Tab = 'overview' | 'budgets' | 'entries' | 'analytics' | 'categories';
 
 export function BudgetPage() {
   const { user } = useAuth();
+  const { getPageAnimationClasses } = useTheme();
   const isAdmin = user?.role === 'admin';
+  const animationClasses = getPageAnimationClasses('budget-background');
 
   // If not admin, redirect to home
   if (!isAdmin) {
@@ -306,7 +309,8 @@ export function BudgetPage() {
   }, [error]);
 
   return (
-    <div className="space-y-6 h-full p-8 themed-budget-bg">
+    <div className={`min-h-screen themed-budget-bg ${animationClasses}`}>
+      <div className="space-y-6 p-8">
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div>
@@ -507,6 +511,7 @@ export function BudgetPage() {
           }}
         />
       )}
+      </div>
     </div>
   );
 }

@@ -215,7 +215,7 @@ export function ManageTab({
             {storeRequests.map((req) => (
               <div
                 key={req.id}
-                className="flex items-center justify-between themed-card p-2"
+                className="flex items-center justify-between themed-shopping-list p-2"
               >
                 <span className="text-[var(--color-foreground)]">{req.name}</span>
                 <div className="flex gap-2">
@@ -293,7 +293,7 @@ export function ManageTab({
                 return (
                   <div
                     key={category.id}
-                    className="themed-card overflow-hidden"
+                    className="themed-shopping-list overflow-hidden"
                   >
                     <button
                       onClick={() => toggleCategory(category.id)}
@@ -353,7 +353,7 @@ export function ManageTab({
 
               {/* Uncategorized items */}
               {uncategorizedItems.length > 0 && (
-                <div className="themed-card overflow-hidden">
+                <div className="themed-shopping-list overflow-hidden">
                   <button
                     onClick={() => toggleCategory(0)}
                     className="w-full flex items-center gap-3 p-3 hover:bg-[var(--color-muted)]"
@@ -419,7 +419,7 @@ export function ManageTab({
       {activeSubTab === 'categories' && (
         <div className="space-y-3">
           {/* Add Category Form */}
-          <div className="themed-card p-4">
+          <div className="themed-shopping-list p-4">
             <h3 className="font-semibold text-[var(--color-foreground)] mb-3 flex items-center gap-2">
               <Plus size={18} className="text-[var(--color-primary)]" />
               Add Category
@@ -449,7 +449,7 @@ export function ManageTab({
             {categories.map((cat) => (
               <div
                 key={cat.id}
-                className="flex items-center gap-3 p-3 themed-card"
+                className="flex items-center gap-3 p-3 themed-shopping-list"
               >
                 <span
                   className="w-4 h-4 rounded-full"
@@ -478,7 +478,7 @@ export function ManageTab({
       {activeSubTab === 'stores' && (
         <div className="space-y-3">
           {/* Add Store Form */}
-          <div className="themed-card p-4">
+          <div className="themed-shopping-list p-4">
             <h3 className="font-semibold text-[var(--color-foreground)] mb-3 flex items-center gap-2">
               <Plus size={18} className="text-[var(--color-primary)]" />
               Add Store
@@ -507,7 +507,7 @@ export function ManageTab({
             {stores.map((store) => (
               <div
                 key={store.id}
-                className="flex items-center gap-3 p-3 themed-card"
+                className="flex items-center gap-3 p-3 themed-shopping-list"
               >
                 <Store size={18} className="text-[var(--color-info)]" />
                 <span className="flex-1 font-medium text-[var(--color-foreground)]">

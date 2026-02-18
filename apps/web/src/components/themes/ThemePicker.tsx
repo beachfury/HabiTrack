@@ -96,7 +96,7 @@ export function ThemePicker({ userRole = 'member' }: ThemePickerProps) {
   };
 
   const handleEditorSave = async (theme: Theme) => {
-    setShowEditor(false);
+    // Don't close the editor on save - user can exit manually when done
     await loadThemes();
     await setActiveTheme(theme.id);
   };

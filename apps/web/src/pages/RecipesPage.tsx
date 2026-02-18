@@ -13,6 +13,7 @@ import {
   Loader2,
 } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
+import { useTheme } from '../context/ThemeContext';
 import { mealsApi } from '../api/meals';
 import type { Recipe, RecipeStatus, RecipeDifficulty } from '../types/meals';
 
@@ -24,7 +25,9 @@ type RecipeTab = 'all' | 'pending' | 'my-recipes';
 
 export function RecipesPage() {
   const { user } = useAuth();
+  const { getPageAnimationClasses } = useTheme();
   const isAdmin = user?.role === 'admin';
+  const animationClasses = getPageAnimationClasses('recipes-background');
 
   // Data state
   const [recipes, setRecipes] = useState<Recipe[]>([]);
@@ -140,7 +143,8 @@ export function RecipesPage() {
   }
 
   return (
-    <div className="p-8 h-full flex flex-col themed-recipes-bg">
+    <div className={`min-h-screen themed-recipes-bg ${animationClasses}`}>
+      <div className="p-8 flex flex-col">
       {/* Header */}
       <div className="flex items-center justify-between mb-6">
         <div className="flex items-center gap-3">
@@ -315,6 +319,7 @@ export function RecipesPage() {
           }}
         />
       )}
+      </div>
     </div>
   );
 }

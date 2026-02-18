@@ -3,6 +3,7 @@ import { Users, Plus, Edit2, Key, Hash, Trash2, X, Check, AlertCircle } from 'lu
 import { ModalPortal, ModalBody } from '../components/common/ModalPortal';
 import { api, type FamilyMember } from '../api';
 import { useAuth } from '../context/AuthContext';
+import { useTheme } from '../context/ThemeContext';
 
 const ROLES = [
   { value: 'admin', label: 'Admin', description: 'Full access to everything' },
@@ -28,6 +29,8 @@ type ModalType = 'add' | 'edit' | 'password' | 'pin' | null;
 
 export function FamilyPage() {
   const { user } = useAuth();
+  const { getPageAnimationClasses } = useTheme();
+  const animationClasses = getPageAnimationClasses('family-background');
   const [members, setMembers] = useState<FamilyMember[]>([]);
   const [loading, setLoading] = useState(true);
   const [modalType, setModalType] = useState<ModalType>(null);
@@ -249,7 +252,8 @@ export function FamilyPage() {
   }
 
   return (
-    <div className="p-8">
+    <div className={`min-h-screen themed-family-bg ${animationClasses}`}>
+      <div className="p-8">
       {/* Header */}
       <div className="flex items-center justify-between mb-8">
         <div>
@@ -706,6 +710,7 @@ export function FamilyPage() {
           </ModalBody>
         </ModalPortal>
       )}
+      </div>
     </div>
   );
 }
