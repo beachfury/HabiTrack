@@ -628,11 +628,25 @@ export function SidebarLayout({
         </aside>
 
         {/* Sidebar - mobile */}
+        {/* IMPORTANT: We build a separate mobile style to avoid inheriting transform/position/width
+            overrides from theme customCSS that would break the fixed overlay behavior.
+            We also set transform directly in inline style since Tailwind classes lose to inline styles. */}
         <aside
-          className={`lg:hidden fixed inset-y-0 ${side === 'right' ? 'right-0' : 'left-0'} z-40 flex flex-col overflow-hidden transition-transform duration-300 ${
-            mobileMenuOpen ? 'translate-x-0' : side === 'right' ? 'translate-x-full' : '-translate-x-full'
-          }`}
-          style={{ ...sidebarStyle, width: 280, position: 'fixed' }}
+          className={`lg:hidden inset-y-0 ${side === 'right' ? 'right-0' : 'left-0'} z-40 flex flex-col overflow-hidden transition-transform duration-300`}
+          style={(() => {
+            // Start from sidebarStyle but override properties that must be mobile-specific
+            const mobileStyle: React.CSSProperties = { ...sidebarStyle };
+            // Force mobile-specific layout — these MUST win over theme customCSS
+            mobileStyle.width = 280;
+            mobileStyle.minWidth = 280;
+            mobileStyle.position = 'fixed';
+            // Set transform directly so inline style doesn't fight with Tailwind translate classes
+            const translateX = mobileMenuOpen
+              ? 'translateX(0)'
+              : side === 'right' ? 'translateX(100%)' : 'translateX(-100%)';
+            mobileStyle.transform = translateX;
+            return mobileStyle;
+          })()}
         >
           {sidebarContent}
         </aside>
