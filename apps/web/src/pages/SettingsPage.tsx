@@ -26,6 +26,7 @@ import { NotificationsTab } from '../components/settings/NotificationsTab';
 import { EmailSettingsTab } from '../components/settings/EmailSettingsTab';
 import { DebugSettingsTab } from '../components/settings/DebugSettingsTab';
 import { AboutTab } from '../components/settings/AboutTab';
+import { HouseholdTab } from '../components/settings/HouseholdTab';
 
 const API_BASE = (import.meta.env.VITE_API_BASE_URL as string) || '';
 
@@ -608,86 +609,12 @@ export function SettingsPage() {
           {activeTab === 'household' && isAdmin && (
             <div className="space-y-6">
               <h2 className="text-xl font-semibold text-[var(--color-foreground)] mb-6">Household Settings</h2>
-
-              <form onSubmit={handleSaveHousehold} className="space-y-6">
-                {/* Household Name */}
-                <div>
-                  <label className="block text-sm font-medium text-[var(--color-foreground)] mb-1">
-                    Household Name
-                  </label>
-                  <input
-                    type="text"
-                    value={householdForm.name}
-                    onChange={(e) => setHouseholdForm({ ...householdForm, name: e.target.value })}
-                    className="themed-input w-full max-w-md"
-                    placeholder="The Smith Family"
-                  />
-                </div>
-
-                {/* Timezone */}
-                <div>
-                  <label className="block text-sm font-medium text-[var(--color-foreground)] mb-2">Timezone</label>
-                  <select
-                    value={householdForm.timezone}
-                    onChange={(e) =>
-                      setHouseholdForm({ ...householdForm, timezone: e.target.value })
-                    }
-                    className="themed-input w-full max-w-md"
-                  >
-                    <optgroup label="United States">
-                      <option value="America/New_York">Eastern Time (ET)</option>
-                      <option value="America/Chicago">Central Time (CT)</option>
-                      <option value="America/Denver">Mountain Time (MT)</option>
-                      <option value="America/Phoenix">Arizona (MST - No DST)</option>
-                      <option value="America/Los_Angeles">Pacific Time (PT)</option>
-                      <option value="America/Anchorage">Alaska Time (AKT)</option>
-                      <option value="Pacific/Honolulu">Hawaii Time (HST)</option>
-                    </optgroup>
-                    <optgroup label="Other">
-                      <option value="UTC">UTC</option>
-                      <option value="Europe/London">London (GMT/BST)</option>
-                      <option value="Europe/Paris">Paris (CET/CEST)</option>
-                      <option value="Europe/Berlin">Berlin (CET/CEST)</option>
-                      <option value="Asia/Tokyo">Tokyo (JST)</option>
-                      <option value="Asia/Shanghai">Shanghai (CST)</option>
-                      <option value="Australia/Sydney">Sydney (AEST/AEDT)</option>
-                    </optgroup>
-                  </select>
-                  <p className="mt-1 text-xs text-[var(--color-muted-foreground)]">
-                    This affects when daily chores reset and scheduling
-                  </p>
-                </div>
-
-                {/* Branding Notice */}
-                <div className="p-4 bg-[var(--color-primary)]/10 border border-[var(--color-primary)]/20 rounded-xl">
-                  <div className="flex items-start gap-3">
-                    <Palette size={20} className="text-[var(--color-primary)] mt-0.5" />
-                    <div>
-                      <p className="text-sm font-medium text-[var(--color-foreground)]">
-                        Looking for branding options?
-                      </p>
-                      <p className="text-sm text-[var(--color-muted-foreground)] mt-1">
-                        Logo, brand colors, and login page appearance are now configured in the Theme Editor.
-                      </p>
-                      <button
-                        type="button"
-                        onClick={() => setActiveTab('themes')}
-                        className="inline-block mt-2 text-sm font-medium text-[var(--color-primary)] hover:underline"
-                      >
-                        Go to Theme Editor →
-                      </button>
-                    </div>
-                  </div>
-                </div>
-
-                <button
-                  type="submit"
-                  disabled={saving}
-                  className="themed-btn-primary disabled:opacity-50"
-                >
-                  {saving ? 'Saving...' : 'Save Household Settings'}
-                </button>
-              </form>
+              <HouseholdTab
+                form={householdForm}
+                saving={saving}
+                onChange={setHouseholdForm}
+                onSave={handleSaveHousehold}
+              />
             </div>
           )}
 
