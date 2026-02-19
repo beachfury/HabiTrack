@@ -7,6 +7,7 @@ import { apiClient } from '../../api/client';
 
 const AVAILABLE_COUNTRIES = [
   { code: 'US', name: 'United States' },
+  { code: 'PR', name: 'Puerto Rico' },
   { code: 'CA', name: 'Canada' },
   { code: 'GB', name: 'United Kingdom' },
   { code: 'DE', name: 'Germany' },
