@@ -95,7 +95,11 @@ export function DayDetailModal({
                   <div className="flex items-start gap-3">
                     <div
                       className="w-3 h-3 rounded-full mt-1.5 flex-shrink-0"
-                      style={{ backgroundColor: event.color || '#3b82f6' }}
+                      style={{
+                        ...(event.holidayGradient
+                          ? { background: event.holidayGradient }
+                          : { backgroundColor: event.color || '#3b82f6' }),
+                      }}
                     />
                     <div className="flex-1 min-w-0">
                       <p className="font-medium text-[var(--color-foreground)]">

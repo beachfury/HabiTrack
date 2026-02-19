@@ -108,7 +108,17 @@ export function CalendarGrid({
                       style={{ backgroundColor: event.color || '#3b82f6' }}
                       title={event.title}
                     >
-                      {(isStart || !multiDay) && event.title}
+                      {(isStart || !multiDay) && (
+                        <span className="flex items-center gap-1">
+                          {event.holidayGradient && (
+                            <span
+                              className="inline-block w-3 h-2.5 rounded-sm flex-shrink-0"
+                              style={{ background: event.holidayGradient }}
+                            />
+                          )}
+                          <span className="truncate">{event.title}</span>
+                        </span>
+                      )}
                     </div>
                   );
                 })}

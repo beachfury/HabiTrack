@@ -6,32 +6,32 @@ import { Link } from 'react-router-dom';
 import { apiClient } from '../../api/client';
 
 const AVAILABLE_COUNTRIES = [
-  { code: 'US', name: 'United States' },
-  { code: 'PR', name: 'Puerto Rico' },
-  { code: 'CA', name: 'Canada' },
-  { code: 'GB', name: 'United Kingdom' },
-  { code: 'DE', name: 'Germany' },
-  { code: 'FR', name: 'France' },
-  { code: 'AU', name: 'Australia' },
-  { code: 'NZ', name: 'New Zealand' },
-  { code: 'MX', name: 'Mexico' },
-  { code: 'BR', name: 'Brazil' },
-  { code: 'JP', name: 'Japan' },
-  { code: 'KR', name: 'South Korea' },
-  { code: 'IN', name: 'India' },
-  { code: 'IT', name: 'Italy' },
-  { code: 'ES', name: 'Spain' },
-  { code: 'NL', name: 'Netherlands' },
-  { code: 'BE', name: 'Belgium' },
-  { code: 'SE', name: 'Sweden' },
-  { code: 'NO', name: 'Norway' },
-  { code: 'DK', name: 'Denmark' },
-  { code: 'FI', name: 'Finland' },
-  { code: 'AT', name: 'Austria' },
-  { code: 'CH', name: 'Switzerland' },
-  { code: 'IE', name: 'Ireland' },
-  { code: 'PL', name: 'Poland' },
-  { code: 'PT', name: 'Portugal' },
+  { code: 'US', name: 'United States', gradient: ['#B22234', '#FFFFFF', '#3C3B6E'] },
+  { code: 'PR', name: 'Puerto Rico', gradient: ['#E42131', '#FFFFFF', '#0050F0'] },
+  { code: 'CA', name: 'Canada', gradient: ['#FF0000', '#FFFFFF', '#FF0000'] },
+  { code: 'GB', name: 'United Kingdom', gradient: ['#012169', '#CF142B', '#FFFFFF'] },
+  { code: 'DE', name: 'Germany', gradient: ['#000000', '#DD0000', '#FFCC00'] },
+  { code: 'FR', name: 'France', gradient: ['#002395', '#FFFFFF', '#ED2939'] },
+  { code: 'AU', name: 'Australia', gradient: ['#00008B', '#FFFFFF', '#FF0000'] },
+  { code: 'NZ', name: 'New Zealand', gradient: ['#00247D', '#CC142B'] },
+  { code: 'MX', name: 'Mexico', gradient: ['#006847', '#FFFFFF', '#CE1126'] },
+  { code: 'BR', name: 'Brazil', gradient: ['#009739', '#FEDD00', '#002776'] },
+  { code: 'JP', name: 'Japan', gradient: ['#BC002D', '#FFFFFF', '#BC002D'] },
+  { code: 'KR', name: 'South Korea', gradient: ['#003478', '#CD2E3A', '#FFFFFF'] },
+  { code: 'IN', name: 'India', gradient: ['#FF9933', '#FFFFFF', '#138808'] },
+  { code: 'IT', name: 'Italy', gradient: ['#009246', '#FFFFFF', '#CE2B37'] },
+  { code: 'ES', name: 'Spain', gradient: ['#AA151B', '#F1BF00', '#AA151B'] },
+  { code: 'NL', name: 'Netherlands', gradient: ['#AE1C28', '#FFFFFF', '#21468B'] },
+  { code: 'BE', name: 'Belgium', gradient: ['#000000', '#FAE042', '#ED2939'] },
+  { code: 'SE', name: 'Sweden', gradient: ['#006AA7', '#FECC00'] },
+  { code: 'NO', name: 'Norway', gradient: ['#BA0C2F', '#FFFFFF', '#00205B'] },
+  { code: 'DK', name: 'Denmark', gradient: ['#C60C30', '#FFFFFF', '#C60C30'] },
+  { code: 'FI', name: 'Finland', gradient: ['#FFFFFF', '#003580', '#FFFFFF'] },
+  { code: 'AT', name: 'Austria', gradient: ['#ED2939', '#FFFFFF', '#ED2939'] },
+  { code: 'CH', name: 'Switzerland', gradient: ['#FF0000', '#FFFFFF', '#FF0000'] },
+  { code: 'IE', name: 'Ireland', gradient: ['#169B62', '#FFFFFF', '#FF883E'] },
+  { code: 'PL', name: 'Poland', gradient: ['#FFFFFF', '#DC143C'] },
+  { code: 'PT', name: 'Portugal', gradient: ['#006600', '#FF0000'] },
 ];
 
 interface HouseholdForm {
@@ -227,8 +227,12 @@ export function HouseholdTab({
                     >
                       {isSelected && <Check size={10} className="text-white" />}
                     </div>
+                    <div
+                      className="w-6 h-4 rounded-sm flex-shrink-0 border border-black/10"
+                      style={{ background: `linear-gradient(to right, ${country.gradient.join(', ')})` }}
+                    />
                     <span className="truncate">
-                      {country.code} — {country.name}
+                      {country.name}
                     </span>
                   </button>
                 );

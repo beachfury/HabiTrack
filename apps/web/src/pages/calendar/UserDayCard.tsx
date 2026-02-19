@@ -171,7 +171,11 @@ export function UserDayCard({
           >
             <div
               className="w-2 h-2 rounded-full flex-shrink-0"
-              style={{ backgroundColor: event.color || '#3b82f6' }}
+              style={{
+                ...(event.holidayGradient
+                  ? { background: event.holidayGradient }
+                  : { backgroundColor: event.color || '#3b82f6' }),
+              }}
             />
             <div className="flex-1 min-w-0">
               <p
