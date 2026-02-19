@@ -9,6 +9,7 @@ interface Event {
   endTime: string;
   color: string;
   allDay: boolean;
+  holidayGradient?: string | null;
 }
 
 interface UpcomingEventsWidgetProps {
@@ -83,7 +84,11 @@ export function UpcomingEventsWidget({ events = [] }: UpcomingEventsWidgetProps)
             <div key={event.id} className="themed-widget flex items-center gap-3">
               <div
                 className="w-1 h-10 rounded-full"
-                style={{ backgroundColor: event.color || 'var(--color-primary)' }}
+                style={{
+                  ...(event.holidayGradient
+                    ? { background: event.holidayGradient }
+                    : { backgroundColor: event.color || 'var(--color-primary)' }),
+                }}
               />
               <div className="flex-1 min-w-0">
                 <p className="text-sm font-medium text-[var(--color-foreground)] truncate">

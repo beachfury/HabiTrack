@@ -94,6 +94,7 @@ export interface DashboardData {
     endTime: string;
     color: string;
     allDay: boolean;
+    holidayGradient?: string | null;
   }>;
   upcomingEvents?: Array<{
     id: number;
@@ -102,6 +103,7 @@ export interface DashboardData {
     endTime: string;
     color: string;
     allDay: boolean;
+    holidayGradient?: string | null;
   }>;
   todaysChores?: Array<{
     id: number;

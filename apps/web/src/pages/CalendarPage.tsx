@@ -569,7 +569,13 @@ export function CalendarPage() {
                         }}
                       >
                         {isStart || dayOfWeek === 0 ? (
-                          <span className="truncate block">
+                          <span className="truncate block flex items-center gap-1">
+                            {event.holidayGradient && (
+                              <span
+                                className="inline-block w-4 h-3 rounded-sm flex-shrink-0"
+                                style={{ background: event.holidayGradient }}
+                              />
+                            )}
                             {displayName && <span className="font-semibold">{displayName}: </span>}
                             {event.title}
                           </span>

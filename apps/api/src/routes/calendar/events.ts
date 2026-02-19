@@ -169,6 +169,42 @@ export async function getEvents(req: Request, res: Response) {
       return virtualEvents;
     });
 
+    // Country flag gradient colors for holiday event bars
+    // Each entry is an array of CSS colors representing the country's flag
+    const COUNTRY_GRADIENT: Record<string, string[]> = {
+      US: ['#B22234', '#FFFFFF', '#3C3B6E'],   // Red, White, Blue
+      PR: ['#E42131', '#FFFFFF', '#0050F0'],   // Red, White, Blue
+      CA: ['#FF0000', '#FFFFFF', '#FF0000'],   // Red, White, Red
+      GB: ['#012169', '#CF142B', '#FFFFFF'],   // Blue, Red, White
+      DE: ['#000000', '#DD0000', '#FFCC00'],   // Black, Red, Gold
+      FR: ['#002395', '#FFFFFF', '#ED2939'],   // Blue, White, Red
+      AU: ['#00008B', '#FFFFFF', '#FF0000'],   // Blue, White, Red
+      NZ: ['#00247D', '#CC142B'],              // Blue, Red
+      MX: ['#006847', '#FFFFFF', '#CE1126'],   // Green, White, Red
+      BR: ['#009739', '#FEDD00', '#002776'],   // Green, Gold, Blue
+      JP: ['#BC002D', '#FFFFFF', '#BC002D'],   // Red, White, Red
+      KR: ['#003478', '#CD2E3A', '#FFFFFF'],   // Blue, Red, White
+      IN: ['#FF9933', '#FFFFFF', '#138808'],   // Saffron, White, Green
+      IT: ['#009246', '#FFFFFF', '#CE2B37'],   // Green, White, Red
+      ES: ['#AA151B', '#F1BF00', '#AA151B'],   // Red, Yellow, Red
+      NL: ['#AE1C28', '#FFFFFF', '#21468B'],   // Red, White, Blue
+      BE: ['#000000', '#FAE042', '#ED2939'],   // Black, Yellow, Red
+      SE: ['#006AA7', '#FECC00'],              // Blue, Yellow
+      NO: ['#BA0C2F', '#FFFFFF', '#00205B'],   // Red, White, Blue
+      DK: ['#C60C30', '#FFFFFF', '#C60C30'],   // Red, White, Red
+      FI: ['#FFFFFF', '#003580', '#FFFFFF'],   // White, Blue, White
+      AT: ['#ED2939', '#FFFFFF', '#ED2939'],   // Red, White, Red
+      CH: ['#FF0000', '#FFFFFF', '#FF0000'],   // Red, White, Red
+      IE: ['#169B62', '#FFFFFF', '#FF883E'],   // Green, White, Orange
+      PL: ['#FFFFFF', '#DC143C'],              // White, Red
+      CZ: ['#FFFFFF', '#11457E', '#D7141A'],   // White, Blue, Red
+      PT: ['#006600', '#FF0000'],              // Green, Red
+      ZA: ['#007749', '#FFB81C', '#000000', '#DE3831', '#002395'], // Green, Gold, Black, Red, Blue
+      NG: ['#008751', '#FFFFFF', '#008751'],   // Green, White, Green
+      PH: ['#0038A8', '#CE1126', '#FCD116'],   // Blue, Red, Yellow
+      SG: ['#ED2939', '#FFFFFF'],              // Red, White
+    };
+
     // Get holiday events if countries are configured
     let holidayEvents: any[] = [];
     try {
@@ -185,28 +221,67 @@ export async function getEvents(req: Request, res: Response) {
           const { getCachedHolidays } = await import('./holidays');
           const holidays = await getCachedHolidays(countries, startDate.getFullYear(), endDate.getFullYear());
 
+          // Helper to format date as YYYY-MM-DD
+          const fmtDate = (d: Date) => d.toISOString().split('T')[0];
+
+          // Helper to add days to a date
+          const addDays = (d: Date, n: number) => {
+            const r = new Date(d);
+            r.setDate(r.getDate() + n);
+            return r;
+          };
+
           holidayEvents = holidays
             .filter((h) => {
-              const hDate = new Date(h.date);
-              return hDate >= startDate && hDate <= endDate;
+              const hDate = new Date(h.date + 'T12:00:00');
+              // Extend filter window by 2 days to catch weekend-extended holidays
+              const extStart = addDays(startDate, -2);
+              const extEnd = addDays(endDate, 2);
+              return hDate >= extStart && hDate <= extEnd;
             })
-            .map((h) => ({
-              id: `holiday-${h.countryCode}-${h.date}`,
-              title: `🌟 ${h.localName || h.name}`,
-              description: `National holiday (${h.countryCode})`,
-              start: `${h.date}T00:00:00`,
-              end: `${h.date}T23:59:59`,
-              allDay: true,
-              color: '#fbbf24',
-              eventColor: '#fbbf24',
-              location: null,
-              createdBy: null,
-              createdByName: null,
-              assignedTo: null,
-              assignedToName: null,
-              isHoliday: true,
-              countryCode: h.countryCode,
-            }));
+            .map((h) => {
+              const gradientColors = COUNTRY_GRADIENT[h.countryCode];
+              const gradient = gradientColors
+                ? `linear-gradient(to right, ${gradientColors.join(', ')})`
+                : null;
+              // Use the first non-white color as fallback solid color
+              const fallbackColor = gradientColors
+                ? (gradientColors.find((c) => c !== '#FFFFFF') || '#fbbf24')
+                : '#fbbf24';
+
+              // Extend holidays that land on Fri or Mon to cover the long weekend
+              const hDate = new Date(h.date + 'T12:00:00');
+              const dayOfWeek = hDate.getDay(); // 0=Sun, 1=Mon, 5=Fri, 6=Sat
+              let eventStart = h.date;
+              let eventEnd = h.date;
+
+              if (dayOfWeek === 5) {
+                // Friday observed → extend through Sunday (Fri-Sun)
+                eventEnd = fmtDate(addDays(hDate, 2));
+              } else if (dayOfWeek === 1) {
+                // Monday observed → extend from Saturday (Sat-Mon)
+                eventStart = fmtDate(addDays(hDate, -2));
+              }
+
+              return {
+                id: `holiday-${h.countryCode}-${h.date}`,
+                title: h.localName || h.name,
+                description: `National holiday (${h.countryCode})`,
+                start: `${eventStart}T00:00:00`,
+                end: `${eventEnd}T23:59:59`,
+                allDay: true,
+                color: fallbackColor,
+                eventColor: fallbackColor,
+                holidayGradient: gradient,
+                location: null,
+                createdBy: null,
+                createdByName: null,
+                assignedTo: null,
+                assignedToName: null,
+                isHoliday: true,
+                countryCode: h.countryCode,
+              };
+            });
         }
       }
     } catch (holidayErr) {

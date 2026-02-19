@@ -24,6 +24,7 @@ export interface CalendarEvent {
   // Holiday specific fields
   isHoliday?: boolean;
   countryCode?: string;
+  holidayGradient?: string | null;
 }
 
 export interface CreateEventData {
