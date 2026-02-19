@@ -4,6 +4,7 @@
 import { Request, Response, NextFunction } from 'express';
 
 export { getEvents, getCalendarUsers, createEvent, updateEvent, deleteEvent } from './events';
+export { getHolidaySettings, updateHolidaySettings, getHolidays } from './holidays';
 
 export function addReminder(
   arg0: string,

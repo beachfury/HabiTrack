@@ -10,6 +10,7 @@ import { messagesApi } from './messages';
 import { settingsApi } from './settings';
 import { shoppingApi } from './shopping';
 import { uploadApi } from './upload';
+import { incomeApi } from './income';
 
 // Re-export types from types/ for backward compatibility
 export type { CalendarEvent, CreateEventData } from '../types/calendar';
@@ -228,6 +229,18 @@ export const api = {
   addShoppingSuggestion: mealsApi.addShoppingSuggestion,
   dismissShoppingSuggestion: mealsApi.dismissShoppingSuggestion,
   bulkAddShoppingSuggestions: mealsApi.bulkAddShoppingSuggestions,
+
+  // Income
+  getIncomeDefinitions: incomeApi.getDefinitions,
+  getIncomeDefinition: incomeApi.getDefinition,
+  createIncomeDefinition: incomeApi.createDefinition,
+  updateIncomeDefinition: incomeApi.updateDefinition,
+  deleteIncomeDefinition: incomeApi.deleteDefinition,
+  getIncomeEntries: incomeApi.getEntries,
+  createIncomeEntry: incomeApi.createEntry,
+  updateIncomeEntry: incomeApi.updateEntry,
+  deleteIncomeEntry: incomeApi.deleteEntry,
+  getIncomeSummary: incomeApi.getSummary,
 };
 
 // Export individual APIs
@@ -236,6 +249,7 @@ export {
   calendarApi,
   choresApi,
   familyApi,
+  incomeApi,
   mealsApi,
   messagesApi,
   settingsApi,

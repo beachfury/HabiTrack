@@ -8,6 +8,7 @@ import {
   Receipt,
   PieChart,
   FolderOpen,
+  DollarSign,
   Plus,
   AlertCircle,
   CheckCircle,
@@ -19,6 +20,7 @@ import { Navigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { useTheme } from '../context/ThemeContext';
 import { budgetsApi } from '../api/budgets';
+import { incomeApi } from '../api/income';
 import type {
   BudgetCategory,
   Budget,
@@ -26,6 +28,7 @@ import type {
   BudgetAnalytics,
   BudgetSummary,
 } from '../types/budget';
+import type { IncomeDefinition, IncomeEntry, IncomeSummary, CreateIncomeData, CreateIncomeEntryData } from '../types/budget';
 
 // Import tab components
 import { OverviewTab } from '../components/budgets/OverviewTab';
@@ -33,13 +36,16 @@ import { BudgetsTab } from '../components/budgets/BudgetsTab';
 import { EntriesTab } from '../components/budgets/EntriesTab';
 import { AnalyticsTab } from '../components/budgets/AnalyticsTab';
 import { CategoriesTab } from '../components/budgets/CategoriesTab';
+import { IncomeTab } from '../components/budgets/IncomeTab';
 
 // Import modals
 import { AddBudgetModal } from '../components/budgets/modals/AddBudgetModal';
 import { AddEntryModal } from '../components/budgets/modals/AddEntryModal';
 import { CategoryModal } from '../components/budgets/modals/CategoryModal';
+import { AddIncomeModal } from '../components/budgets/modals/AddIncomeModal';
+import { AddIncomeEntryModal } from '../components/budgets/modals/AddIncomeEntryModal';
 
-type Tab = 'overview' | 'budgets' | 'entries' | 'analytics' | 'categories';
+type Tab = 'overview' | 'budgets' | 'entries' | 'analytics' | 'categories' | 'income';
 
 export function BudgetPage() {
   const { user } = useAuth();
@@ -86,6 +92,15 @@ export function BudgetPage() {
   const [editingCategory, setEditingCategory] = useState<BudgetCategory | null>(null);
   const [preselectedBudgetId, setPreselectedBudgetId] = useState<number | null>(null);
 
+  // Income state
+  const [incomeSources, setIncomeSources] = useState<IncomeDefinition[]>([]);
+  const [incomeEntries, setIncomeEntries] = useState<IncomeEntry[]>([]);
+  const [incomeSummary, setIncomeSummary] = useState<IncomeSummary | null>(null);
+  const [showIncomeModal, setShowIncomeModal] = useState(false);
+  const [showIncomeEntryModal, setShowIncomeEntryModal] = useState(false);
+  const [editingIncome, setEditingIncome] = useState<IncomeDefinition | null>(null);
+  const [preselectedIncomeId, setPreselectedIncomeId] = useState<number | undefined>();
+
   // Tabs definition
   const tabs = [
     { id: 'overview' as Tab, label: 'Overview', icon: LayoutDashboard },
@@ -93,6 +108,7 @@ export function BudgetPage() {
     { id: 'entries' as Tab, label: 'Entries', icon: Receipt },
     { id: 'analytics' as Tab, label: 'Analytics', icon: PieChart },
     { id: 'categories' as Tab, label: 'Categories', icon: FolderOpen },
+    { id: 'income' as Tab, label: 'Income', icon: DollarSign },
   ];
 
   // Fetch data on tab change
@@ -115,6 +131,8 @@ export function BudgetPage() {
         await Promise.all([fetchEntries(), fetchBudgets()]);
       } else if (activeTab === 'analytics') {
         await fetchAnalytics();
+      } else if (activeTab === 'income') {
+        await fetchIncome();
       }
       // Categories tab just needs categories which we already fetched
     } catch (err) {
@@ -168,6 +186,21 @@ export function BudgetPage() {
       setRecentEntries(data.recentEntries);
     } catch (err) {
       console.error('Failed to fetch summary:', err);
+    }
+  }
+
+  async function fetchIncome() {
+    try {
+      const [defsData, entriesData, summaryData] = await Promise.all([
+        incomeApi.getDefinitions(),
+        incomeApi.getEntries({ limit: 100 }),
+        incomeApi.getSummary(),
+      ]);
+      setIncomeSources(defsData.incomeDefinitions);
+      setIncomeEntries(entriesData.entries);
+      setIncomeSummary(summaryData.summary);
+    } catch (err) {
+      console.error('Failed to fetch income data:', err);
     }
   }
 
@@ -293,6 +326,62 @@ export function BudgetPage() {
     setShowAddEntryModal(true);
   }
 
+  // Income CRUD handlers
+  async function handleSaveIncome(data: CreateIncomeData) {
+    try {
+      if (editingIncome) {
+        await incomeApi.updateDefinition(editingIncome.id, data);
+        setSuccess('Income source updated successfully');
+      } else {
+        await incomeApi.createDefinition(data);
+        setSuccess('Income source created successfully');
+      }
+      setShowIncomeModal(false);
+      setEditingIncome(null);
+      await fetchIncome();
+    } catch (err: any) {
+      setError(err.message || 'Failed to save income source');
+    }
+  }
+
+  async function handleDeleteIncome(id: number) {
+    if (!confirm('Are you sure you want to delete this income source? All associated entries will be deleted.')) {
+      return;
+    }
+    try {
+      await incomeApi.deleteDefinition(id);
+      setSuccess('Income source deleted successfully');
+      await fetchIncome();
+    } catch (err: any) {
+      setError(err.message || 'Failed to delete income source');
+    }
+  }
+
+  async function handleSaveIncomeEntry(data: CreateIncomeEntryData) {
+    try {
+      await incomeApi.createEntry(data);
+      setSuccess('Income entry recorded successfully');
+      setShowIncomeEntryModal(false);
+      setPreselectedIncomeId(undefined);
+      await fetchIncome();
+    } catch (err: any) {
+      setError(err.message || 'Failed to create income entry');
+    }
+  }
+
+  async function handleDeleteIncomeEntry(id: number) {
+    if (!confirm('Are you sure you want to delete this income entry?')) {
+      return;
+    }
+    try {
+      await incomeApi.deleteEntry(id);
+      setSuccess('Income entry deleted successfully');
+      await fetchIncome();
+    } catch (err: any) {
+      setError(err.message || 'Failed to delete income entry');
+    }
+  }
+
   // Clear messages after delay
   useEffect(() => {
     if (success) {
@@ -411,6 +500,7 @@ export function BudgetPage() {
           {activeTab === 'overview' && (
             <OverviewTab
               summary={summary}
+              incomeSummary={incomeSummary}
               budgets={budgets}
               recentEntries={recentEntries}
               categories={categories}
@@ -471,6 +561,26 @@ export function BudgetPage() {
               onDeleteCategory={handleDeleteCategory}
             />
           )}
+
+          {activeTab === 'income' && (
+            <IncomeTab
+              incomeSources={incomeSources}
+              incomeEntries={incomeEntries}
+              incomeSummary={incomeSummary}
+              onAddSource={() => setShowIncomeModal(true)}
+              onEditSource={(source: IncomeDefinition) => {
+                setEditingIncome(source);
+                setShowIncomeModal(true);
+              }}
+              onDeleteSource={handleDeleteIncome}
+              onAddEntry={(incomeId?: number) => {
+                setPreselectedIncomeId(incomeId);
+                setShowIncomeEntryModal(true);
+              }}
+              onDeleteEntry={handleDeleteIncomeEntry}
+              onRefresh={fetchIncome}
+            />
+          )}
         </>
       )}
 
@@ -508,6 +618,30 @@ export function BudgetPage() {
           onClose={() => {
             setShowCategoryModal(false);
             setEditingCategory(null);
+          }}
+        />
+      )}
+
+      {showIncomeModal && (
+        <AddIncomeModal
+          income={editingIncome}
+          onSave={handleSaveIncome}
+          onClose={() => {
+            setShowIncomeModal(false);
+            setEditingIncome(null);
+          }}
+        />
+      )}
+
+      {showIncomeEntryModal && (
+        <AddIncomeEntryModal
+          incomeSources={incomeSources}
+          entry={null}
+          preselectedIncomeId={preselectedIncomeId}
+          onSave={handleSaveIncomeEntry}
+          onClose={() => {
+            setShowIncomeEntryModal(false);
+            setPreselectedIncomeId(undefined);
           }}
         />
       )}

@@ -114,22 +114,27 @@ export function CalendarGrid({
                 })}
 
                 {/* Chores */}
-                {dayChores.slice(0, 2).map((chore) => (
-                  <div
-                    key={`chore-${chore.id}`}
-                    onClick={() => onDayClick(date)}
-                    className={`px-1.5 py-0.5 text-xs rounded truncate cursor-pointer border-l-2 ${
-                      chore.status === 'approved'
-                        ? 'bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-300 border-green-500'
-                        : chore.status === 'completed'
-                          ? 'bg-yellow-100 dark:bg-yellow-900/30 text-yellow-700 dark:text-yellow-300 border-yellow-500'
-                          : 'bg-purple-100 dark:bg-purple-900/30 text-purple-700 dark:text-purple-300 border-purple-500'
-                    }`}
-                    title={chore.title}
-                  >
-                    {chore.title}
-                  </div>
-                ))}
+                {dayChores.slice(0, 2).map((chore) => {
+                  const choreColor = chore.categoryColor || '#8b5cf6';
+                  const isCompleted = chore.status === 'completed' || chore.status === 'approved';
+                  return (
+                    <div
+                      key={`chore-${chore.id}`}
+                      onClick={() => onDayClick(date)}
+                      className={`px-1.5 py-0.5 text-xs rounded truncate cursor-pointer border-l-2 ${
+                        isCompleted ? 'line-through opacity-60' : ''
+                      }`}
+                      style={{
+                        backgroundColor: `${choreColor}1A`,
+                        color: choreColor,
+                        borderLeftColor: choreColor,
+                      }}
+                      title={chore.title}
+                    >
+                      {chore.title}
+                    </div>
+                  );
+                })}
 
                 {/* More indicator */}
                 {dayEvents.length + dayChores.length > 4 && (
