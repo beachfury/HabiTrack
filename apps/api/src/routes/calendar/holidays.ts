@@ -21,9 +21,9 @@ interface Holiday {
 }
 
 const VALID_COUNTRIES = [
-  'US', 'CA', 'GB', 'DE', 'FR', 'AU', 'NZ', 'MX', 'BR', 'JP',
-  'KR', 'IN', 'IT', 'ES', 'NL', 'BE', 'SE', 'NO', 'DK', 'FI',
-  'AT', 'CH', 'IE', 'PL', 'CZ', 'PT', 'ZA', 'NG', 'PH', 'SG',
+  'US', 'PR', 'CA', 'GB', 'DE', 'FR', 'AU', 'NZ', 'MX', 'BR',
+  'JP', 'KR', 'IN', 'IT', 'ES', 'NL', 'BE', 'SE', 'NO', 'DK',
+  'FI', 'AT', 'CH', 'IE', 'PL', 'CZ', 'PT', 'ZA', 'NG', 'PH', 'SG',
 ];
 
 // In-memory cache keyed by "${countryCode}-${year}"
