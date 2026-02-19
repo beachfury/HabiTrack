@@ -19,6 +19,11 @@ export interface CalendarEvent {
   isMealPlan?: boolean;
   mealPlanId?: number;
   mealStatus?: 'planned' | 'voting' | 'finalized';
+  // Birthday specific fields
+  isBirthday?: boolean;
+  // Holiday specific fields
+  isHoliday?: boolean;
+  countryCode?: string;
 }
 
 export interface CreateEventData {

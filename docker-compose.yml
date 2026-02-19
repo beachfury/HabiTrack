@@ -10,10 +10,10 @@ services:
     container_name: habitrack-db
     restart: unless-stopped
     environment:
-      MARIADB_ROOT_PASSWORD: ${DB_ROOT_PASSWORD:-habitrack_root_secret}
+      MARIADB_ROOT_PASSWORD: ${DB_ROOT_PASSWORD:?DB_ROOT_PASSWORD is required in .env}
       MARIADB_DATABASE: ${DB_NAME:-habitrack}
       MARIADB_USER: ${DB_USER:-habitrack_app}
-      MARIADB_PASSWORD: ${DB_PASSWORD:-habitrack_secret}
+      MARIADB_PASSWORD: ${DB_PASSWORD:?DB_PASSWORD is required in .env}
     volumes:
       - habitrack-db-data:/var/lib/mysql
       # Minimal init only (schema comes from API migrations)
@@ -60,7 +60,7 @@ services:
       HABITRACK_DB_PORT: 3306
       HABITRACK_DB_NAME: ${DB_NAME:-habitrack}
       HABITRACK_DB_USER: ${DB_USER:-habitrack_app}
-      HABITRACK_DB_PASSWORD: ${DB_PASSWORD:-habitrack_secret}
+      HABITRACK_DB_PASSWORD: ${DB_PASSWORD:?DB_PASSWORD is required in .env}
       HABITRACK_DB_POOL_MIN: 1
       HABITRACK_DB_POOL_MAX: 10
 

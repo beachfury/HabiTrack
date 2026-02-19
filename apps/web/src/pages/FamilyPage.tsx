@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Users, Plus, Edit2, Key, Hash, Trash2, X, Check, AlertCircle, UserCheck, UserX } from 'lucide-react';
+import { Users, Plus, Edit2, Key, Hash, Trash2, X, Check, AlertCircle, UserCheck, UserX, Cake } from 'lucide-react';
 import { ModalPortal, ModalBody } from '../components/common/ModalPortal';
 import { api, type FamilyMember } from '../api';
 import { useAuth } from '../context/AuthContext';
@@ -48,6 +48,7 @@ export function FamilyPage() {
     password: '',
     confirmPassword: '',
     pin: '',
+    dateOfBirth: '',
   });
 
   useEffect(() => {
@@ -76,6 +77,7 @@ export function FamilyPage() {
       password: '',
       confirmPassword: '',
       pin: '',
+      dateOfBirth: '',
     });
     setError('');
     setModalType('add');
@@ -92,6 +94,7 @@ export function FamilyPage() {
       password: '',
       confirmPassword: '',
       pin: '',
+      dateOfBirth: member.dateOfBirth || '',
     });
     setError('');
     setModalType('edit');
@@ -145,6 +148,7 @@ export function FamilyPage() {
         color: formData.color,
         password: formData.password || undefined,
         pin: formData.pin || undefined,
+        dateOfBirth: formData.dateOfBirth || undefined,
       });
       setSuccess('Family member added successfully!');
       setTimeout(() => setSuccess(''), 3000);
@@ -167,6 +171,7 @@ export function FamilyPage() {
         email: formData.email || undefined,
         role: formData.role,
         color: formData.color,
+        dateOfBirth: formData.dateOfBirth || undefined,
       });
       setSuccess('Member updated successfully!');
       setTimeout(() => setSuccess(''), 3000);
@@ -559,6 +564,24 @@ export function FamilyPage() {
                     </option>
                   ))}
                 </select>
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-[var(--color-foreground)] mb-1">
+                  <span className="flex items-center gap-1">
+                    <Cake size={14} />
+                    Birthday
+                  </span>
+                </label>
+                <input
+                  type="date"
+                  value={formData.dateOfBirth}
+                  onChange={(e) => setFormData({ ...formData, dateOfBirth: e.target.value })}
+                  className="w-full px-3 py-2 border border-[var(--color-border)] rounded-xl bg-[var(--color-card)] text-[var(--color-foreground)] focus:ring-2 focus:ring-[var(--color-primary)]"
+                />
+                <p className="text-xs text-[var(--color-muted-foreground)] mt-1">
+                  Birthdays will automatically appear on the calendar
+                </p>
               </div>
 
               {modalType === 'add' && (

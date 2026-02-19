@@ -592,12 +592,14 @@ export function CalendarPage() {
                         }}
                         title={`${chore.assignedToName ? `${chore.assignedToName}: ` : ''}${chore.title} (${chore.points} pts)`}
                         className={`text-xs px-2 py-1 rounded truncate flex items-center gap-1 cursor-pointer hover:opacity-80 ${
-                          isCompleted
-                            ? 'bg-[var(--color-success)]/10 text-[var(--color-success)] line-through'
-                            : chore.status === 'pending'
-                              ? 'bg-[var(--color-primary)]/10 text-[var(--color-primary)]'
-                              : 'bg-[var(--color-muted)] text-[var(--color-muted-foreground)]'
+                          isCompleted ? 'line-through opacity-60' : ''
                         }`}
+                        style={{
+                          backgroundColor: chore.categoryColor
+                            ? `${chore.categoryColor}1A`
+                            : undefined,
+                          color: chore.categoryColor || undefined,
+                        }}
                       >
                         <CheckSquare size={10} className="flex-shrink-0" />
                         <span className="truncate">

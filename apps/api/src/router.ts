@@ -29,6 +29,7 @@ import * as themes from './routes/themes';
 import * as paidChores from './routes/paid-chores';
 import * as dashboard from './routes/dashboard';
 import * as budgets from './routes/budgets';
+import * as income from './routes/income';
 import * as meals from './routes/meals';
 import { deleteDirectMessage, deleteConversation } from './routes/messages/direct';
 import notificationsRouter from './routes/notifications';
@@ -523,6 +524,30 @@ router.get('/budgets/:id', requireAuth('admin'), budgets.getBudget);
 router.put('/budgets/:id', requireAuth('admin'), writeRateLimiter, budgets.updateBudget);
 router.delete('/budgets/:id', requireAuth('admin'), budgets.deleteBudget);
 router.get('/budgets/:id/history', requireAuth('admin'), budgets.getBudgetHistory);
+
+// =============================================================================
+// INCOME ROUTES (Admin only)
+// =============================================================================
+// Summary & Entries (before :id routes)
+router.get('/income/summary', requireAuth('admin'), income.getIncomeSummary);
+router.get('/income/entries', requireAuth('admin'), income.getIncomeEntries);
+router.post('/income/entries', requireAuth('admin'), writeRateLimiter, income.createIncomeEntry);
+router.put('/income/entries/:id', requireAuth('admin'), writeRateLimiter, income.updateIncomeEntry);
+router.delete('/income/entries/:id', requireAuth('admin'), income.deleteIncomeEntry);
+
+// Income definitions (generic :id routes last)
+router.get('/income', requireAuth('admin'), income.getIncomeDefinitions);
+router.post('/income', requireAuth('admin'), writeRateLimiter, income.createIncomeDefinition);
+router.get('/income/:id', requireAuth('admin'), income.getIncomeDefinition);
+router.put('/income/:id', requireAuth('admin'), writeRateLimiter, income.updateIncomeDefinition);
+router.delete('/income/:id', requireAuth('admin'), income.deleteIncomeDefinition);
+
+// =============================================================================
+// HOLIDAY SETTINGS (Admin only)
+// =============================================================================
+router.get('/settings/holidays', requireAuth('admin'), calendar.getHolidaySettings);
+router.put('/settings/holidays', requireAuth('admin'), writeRateLimiter, calendar.updateHolidaySettings);
+router.get('/calendar/holidays', requireAuth(), calendar.getHolidays);
 
 // =============================================================================
 // MEALS / DINNER PLANNER ROUTES

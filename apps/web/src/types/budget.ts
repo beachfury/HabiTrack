@@ -217,3 +217,70 @@ export interface HistoryResponse {
   budgetName: string;
   history: BudgetHistory[];
 }
+
+// ===========================================
+// Income Types
+// ===========================================
+export type IncomeType = 'salary' | 'bonus' | 'side-income' | 'investment' | 'other';
+export type IncomeFrequency = 'monthly' | 'bi-weekly' | 'weekly' | 'yearly' | 'one-time' | 'irregular';
+
+export interface IncomeDefinition {
+  id: number;
+  name: string;
+  description: string | null;
+  amount: number;
+  incomeType: IncomeType;
+  frequency: IncomeFrequency;
+  dayOfMonth: number | null;
+  startDate: string | null;
+  endDate: string | null;
+  active: boolean;
+  createdBy: number;
+  createdAt: string;
+  updatedAt: string;
+  // Computed
+  receivedThisMonth: number;
+}
+
+export interface IncomeEntry {
+  id: number;
+  incomeId: number;
+  incomeName: string;
+  amount: number;
+  receivedDate: string;
+  notes: string | null;
+  createdBy: number;
+  creatorName: string;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface IncomeSummary {
+  totalExpectedMonthly: number;
+  totalReceivedThisMonth: number;
+  totalBudgetedExpenses: number;
+  netPosition: number;
+  incomeSourceCount: number;
+}
+
+export interface CreateIncomeData {
+  name: string;
+  description?: string;
+  amount: number;
+  incomeType?: IncomeType;
+  frequency?: IncomeFrequency;
+  dayOfMonth?: number;
+  startDate?: string;
+  endDate?: string;
+}
+
+export interface UpdateIncomeData extends Partial<CreateIncomeData> {
+  active?: boolean;
+}
+
+export interface CreateIncomeEntryData {
+  incomeId: number;
+  amount: number;
+  receivedDate: string;
+  notes?: string;
+}

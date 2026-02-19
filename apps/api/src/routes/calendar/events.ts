@@ -127,8 +127,94 @@ export async function getEvents(req: Request, res: Response) {
       };
     });
 
+    // Get birthday events — virtual events generated from users.dateOfBirth
+    const birthdayUsers = await q<Array<{ id: number; displayName: string; dateOfBirth: string; color: string | null }>>(
+      `SELECT id, displayName, dateOfBirth, color FROM users
+       WHERE dateOfBirth IS NOT NULL AND active = 1 AND kioskOnly = 0`
+    );
+
+    const startDate = new Date(String(start).split('T')[0]);
+    const endDate = new Date(String(end).split('T')[0]);
+
+    const birthdayEvents = birthdayUsers.flatMap((u) => {
+      const dob = new Date(u.dateOfBirth);
+      const birthMonth = dob.getUTCMonth();
+      const birthDay = dob.getUTCDate();
+      const birthYear = dob.getUTCFullYear();
+      const virtualEvents: any[] = [];
+
+      for (let year = startDate.getFullYear(); year <= endDate.getFullYear(); year++) {
+        const birthdayDate = new Date(year, birthMonth, birthDay);
+        if (birthdayDate >= startDate && birthdayDate <= endDate) {
+          const dateStr = birthdayDate.toISOString().split('T')[0];
+          const age = year - birthYear;
+          virtualEvents.push({
+            id: `birthday-${u.id}-${year}`,
+            title: `🎂 ${u.displayName}'s Birthday${age > 0 ? ` (${age})` : ''}`,
+            description: null,
+            start: `${dateStr}T00:00:00`,
+            end: `${dateStr}T23:59:59`,
+            allDay: true,
+            color: u.color || '#ec4899',
+            eventColor: '#ec4899',
+            location: null,
+            createdBy: null,
+            createdByName: null,
+            assignedTo: null,
+            assignedToName: null,
+            isBirthday: true,
+          });
+        }
+      }
+      return virtualEvents;
+    });
+
+    // Get holiday events if countries are configured
+    let holidayEvents: any[] = [];
+    try {
+      const [settings] = await q<Array<{ holidayCountries: string | null }>>(
+        `SELECT holidayCountries FROM settings WHERE id = 1`
+      );
+
+      if (settings?.holidayCountries) {
+        const countries: string[] = typeof settings.holidayCountries === 'string'
+          ? JSON.parse(settings.holidayCountries)
+          : settings.holidayCountries;
+
+        if (countries.length > 0) {
+          const { getCachedHolidays } = await import('./holidays');
+          const holidays = await getCachedHolidays(countries, startDate.getFullYear(), endDate.getFullYear());
+
+          holidayEvents = holidays
+            .filter((h) => {
+              const hDate = new Date(h.date);
+              return hDate >= startDate && hDate <= endDate;
+            })
+            .map((h) => ({
+              id: `holiday-${h.countryCode}-${h.date}`,
+              title: `🌟 ${h.localName || h.name}`,
+              description: `National holiday (${h.countryCode})`,
+              start: `${h.date}T00:00:00`,
+              end: `${h.date}T23:59:59`,
+              allDay: true,
+              color: '#fbbf24',
+              eventColor: '#fbbf24',
+              location: null,
+              createdBy: null,
+              createdByName: null,
+              assignedTo: null,
+              assignedToName: null,
+              isHoliday: true,
+              countryCode: h.countryCode,
+            }));
+        }
+      }
+    } catch (holidayErr) {
+      log.warn('Failed to fetch holiday events', { error: String(holidayErr) });
+    }
+
     // Combine and sort by start time
-    const allEvents = [...events, ...mealEvents].sort((a, b) => {
+    const allEvents = [...events, ...mealEvents, ...birthdayEvents, ...holidayEvents].sort((a, b) => {
       return new Date(a.start).getTime() - new Date(b.start).getTime();
     });
 

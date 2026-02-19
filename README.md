@@ -59,6 +59,8 @@
 - Per-member event filtering
 - Day detail view with all activities
 - Integration with chores and meals
+- 🎂 Automatic birthday display for family members
+- 🌟 National holiday display (multi-country support via admin settings)
 
 ### 🍽️ Meals & Recipes
 - Weekly meal planning
@@ -75,6 +77,9 @@
 - Budget vs. actual comparison charts
 - Expense history and trends
 - Entry management with filters and search
+- 💰 Income tracking with multiple sources (salary, bonus, side-income, investment)
+- Income vs. expenses net position overview
+- Flexible frequency support (monthly, bi-weekly, weekly, yearly, one-time, irregular)
 
 ### 💬 Messaging
 - System notifications for chore completions, events, etc.
@@ -89,6 +94,7 @@
 - Custom avatars with image upload or color selection
 - Password and PIN management
 - Activity tracking
+- Birthday tracking with automatic calendar display
 
 ### 🎨 Advanced Theming System
 HabiTrack features a powerful theming system that allows deep customization:
@@ -114,7 +120,7 @@ HabiTrack features a powerful theming system that allows deep customization:
 - **Themes**: Full theme editor with live preview
 - **Notifications**: Configure notification preferences
 - **Security**: Password management
-- **Household** (Admin): Household name, timezone settings
+- **Household** (Admin): Household name, timezone, national holiday country selection
 - **Email** (Admin): SMTP configuration for notifications
 - **Debug** (Admin): System diagnostics and logging
 - **About**: Version info and system requirements
@@ -185,12 +191,23 @@ cd HabiTrack
 
 # Copy and configure environment
 cp .env.example .env
-# Edit .env with your settings (see Configuration section)
+```
+
+> **⚠️ IMPORTANT: You MUST edit `.env` before starting.** The database passwords have no defaults — Docker Compose will refuse to start without them. Generate strong, unique passwords for `DB_PASSWORD` and `DB_ROOT_PASSWORD`:
+>
+> ```bash
+> # Generate secure passwords
+> openssl rand -hex 24  # Run twice: once for DB_PASSWORD, once for DB_ROOT_PASSWORD
+> ```
+
+```bash
+# Edit .env with your passwords and settings
+nano .env  # or your editor of choice
 
 # Start all services
 docker compose up -d
 
-# Open http://localhost:3000 in your browser
+# Open http://localhost:8080 in your browser
 ```
 
 ### Local Development
@@ -1187,6 +1204,7 @@ habitrack/
 │   │       │   ├── shopping/       # Shopping lists
 │   │       │   ├── calendar/       # Calendar events
 │   │       │   ├── budgets/        # Budget tracking
+│   │       │   ├── income/         # Income management
 │   │       │   ├── meals/          # Meal planning
 │   │       │   ├── recipes/        # Recipe management
 │   │       │   ├── themes/         # Theme system
@@ -1201,6 +1219,7 @@ habitrack/
 │           │   ├── themes/         # Theme editor components
 │           │   ├── dashboard/      # Dashboard widgets
 │           │   ├── chores/         # Chores components
+│           │   ├── budgets/        # Budget & income components
 │           │   ├── settings/       # Settings tab components
 │           │   ├── common/         # Shared components (modals, color pickers)
 │           │   └── ...
@@ -1220,27 +1239,27 @@ habitrack/
 
 ## Environment Variables
 
-```env
-# Database
-DB_HOST=localhost
-DB_PORT=3306
-DB_NAME=habitrackdb
-DB_USER=habitrack
-DB_PASSWORD=changeme
+All configuration is done via the `.env` file in the project root. Copy `.env.example` to get started.
 
-# API
-API_PORT=3001
-API_SECRET=change-this-to-a-long-random-string
-SESSION_SECRET=change-this-too
-CORS_ORIGIN=http://localhost:5173
+> **⚠️ Security:** `DB_PASSWORD` and `DB_ROOT_PASSWORD` are **required** — Docker Compose will not start without them. Never commit your `.env` file to version control.
 
-# Frontend (build-time)
-VITE_API_URL=http://localhost:3001/api
-VITE_API_BASE_URL=http://localhost:3001
+| Variable | Required | Description |
+|----------|----------|-------------|
+| `DB_ROOT_PASSWORD` | **Yes** | MariaDB root password |
+| `DB_PASSWORD` | **Yes** | Application database password |
+| `DB_NAME` | No | Database name (default: `habitrack`) |
+| `DB_USER` | No | Database user (default: `habitrack_app`) |
+| `DB_PORT` | No | Database port (default: `3306`) |
+| `API_PORT` | No | API server port (default: `3000`) |
+| `WEB_PORT` | No | Web UI port (default: `8080`) |
+| `HABITRACK_ENV` | No | Set to `production` for HTTPS/secure cookies |
+| `HABITRACK_BASE_URL` | No | Public URL (default: `http://localhost:8080`) |
+| `HABITRACK_ALLOWED_ORIGINS` | No | CORS origins (default: matches BASE_URL) |
+| `HABITRACK_TRUSTED_PROXIES` | No | Trusted proxy CIDRs for reverse proxy setups |
+| `VITE_API_URL` | No | API URL for frontend (default: `/api`) |
+| `WEATHER_API_KEY` | No | OpenWeatherMap API key for weather widget |
 
-# Optional: Weather API
-WEATHER_API_KEY=your-openweathermap-api-key
-```
+See `.env.example` for the full list including session, CSRF, rate limiting, and kiosk settings.
 
 ---
 
@@ -1505,6 +1524,14 @@ HabiTrack provides a RESTful API for all operations:
 | `GET /api/calendar/events` | List calendar events |
 | `GET /api/budgets` | List budgets |
 | `GET /api/budgets/:id/entries` | List budget entries |
+| `GET /api/income` | List income sources |
+| `POST /api/income` | Create income source |
+| `GET /api/income/summary` | Income vs. expenses summary |
+| `GET /api/income/entries` | List income entries |
+| `POST /api/income/entries` | Record received income |
+| `GET /api/calendar/holidays` | Get holidays for selected countries |
+| `GET /api/settings/holidays` | Get holiday country settings |
+| `PUT /api/settings/holidays` | Update holiday countries (admin) |
 | `GET /api/themes` | List available themes |
 | `POST /api/themes` | Create a new theme |
 | `PUT /api/themes/:id` | Update a theme |

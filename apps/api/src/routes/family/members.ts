@@ -21,6 +21,7 @@ interface FamilyMember {
   active: boolean;
   hasPassword: boolean;
   hasPin: boolean;
+  dateOfBirth: string | null;
   createdAt: Date;
 }
 
@@ -55,6 +56,7 @@ export async function getMembers(req: Request, res: Response) {
       email: string | null;
       roleId: string;
       color: string | null;
+      dateOfBirth: string | null;
       active: number;
       createdAt: Date;
       hasPassword: number;
@@ -62,7 +64,7 @@ export async function getMembers(req: Request, res: Response) {
     }>>(
       `SELECT
         u.id, u.displayName, u.nickname, u.email, u.roleId, u.color,
-        u.active, u.createdAt,
+        u.dateOfBirth, u.active, u.createdAt,
         (SELECT COUNT(*) FROM credentials c WHERE c.userId = u.id AND c.provider = 'password') as hasPassword,
         (SELECT COUNT(*) FROM credentials c WHERE c.userId = u.id AND c.provider = 'kiosk_pin') as hasPin
        FROM users u
@@ -88,6 +90,7 @@ export async function getMembers(req: Request, res: Response) {
         active: Boolean(m.active),
         hasPassword: Boolean(m.hasPassword),
         hasPin: Boolean(m.hasPin),
+        dateOfBirth: m.dateOfBirth ? String(m.dateOfBirth).split('T')[0] : null,
         createdAt: m.createdAt,
       })),
     });
@@ -111,6 +114,7 @@ export async function getMember(req: Request, res: Response) {
       email: string | null;
       roleId: string;
       color: string | null;
+      dateOfBirth: string | null;
       active: number;
       createdAt: Date;
       hasPassword: number;
@@ -118,7 +122,7 @@ export async function getMember(req: Request, res: Response) {
     }>>(
       `SELECT
         u.id, u.displayName, u.nickname, u.email, u.roleId, u.color,
-        u.active, u.createdAt,
+        u.dateOfBirth, u.active, u.createdAt,
         (SELECT COUNT(*) FROM credentials c WHERE c.userId = u.id AND c.provider = 'password') as hasPassword,
         (SELECT COUNT(*) FROM credentials c WHERE c.userId = u.id AND c.provider = 'kiosk_pin') as hasPin
        FROM users u
@@ -141,6 +145,7 @@ export async function getMember(req: Request, res: Response) {
         active: Boolean(member.active),
         hasPassword: Boolean(member.hasPassword),
         hasPin: Boolean(member.hasPin),
+        dateOfBirth: member.dateOfBirth ? String(member.dateOfBirth).split('T')[0] : null,
         createdAt: member.createdAt,
       },
     });
@@ -157,7 +162,7 @@ export async function createMember(req: Request, res: Response) {
   const admin = getUser(req);
   if (!admin) return res.status(401).json({ error: { code: 'AUTH_REQUIRED' } });
 
-  const { displayName, nickname, email, role, color, password, pin } = req.body;
+  const { displayName, nickname, email, role, color, password, pin, dateOfBirth } = req.body;
 
   if (!isValidString(displayName, 2)) {
     return validationError(res, 'Display name is required (min 2 characters)');
@@ -187,9 +192,9 @@ export async function createMember(req: Request, res: Response) {
     const requireFirstLogin = password && password.length >= 8 ? 1 : 0;
 
     const result: any = await q(
-      `INSERT INTO users (displayName, nickname, email, roleId, color, kioskOnly, active, firstLoginRequired)
-       VALUES (?, ?, ?, ?, ?, 0, 1, ?)`,
-      [displayName.trim(), nickname?.trim() || null, email?.trim().toLowerCase() || null, role, color || null, requireFirstLogin]
+      `INSERT INTO users (displayName, nickname, email, roleId, color, dateOfBirth, kioskOnly, active, firstLoginRequired)
+       VALUES (?, ?, ?, ?, ?, ?, 0, 1, ?)`,
+      [displayName.trim(), nickname?.trim() || null, email?.trim().toLowerCase() || null, role, color || null, dateOfBirth || null, requireFirstLogin]
     );
 
     const userId = result.insertId as number;
@@ -282,7 +287,7 @@ export async function updateMember(req: Request, res: Response) {
   if (!admin) return res.status(401).json({ error: { code: 'AUTH_REQUIRED' } });
 
   const memberId = Number(req.params.id);
-  const { displayName, nickname, email, role, color, active } = req.body;
+  const { displayName, nickname, email, role, color, active, dateOfBirth } = req.body;
 
   if (!memberId) {
     return validationError(res, 'Invalid member ID');
@@ -330,6 +335,10 @@ export async function updateMember(req: Request, res: Response) {
     if (active !== undefined) {
       updates.push('active = ?');
       params.push(active ? 1 : 0);
+    }
+    if (dateOfBirth !== undefined) {
+      updates.push('dateOfBirth = ?');
+      params.push(dateOfBirth || null);
     }
 
     if (updates.length > 0) {

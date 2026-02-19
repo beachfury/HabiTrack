@@ -12,10 +12,11 @@ import {
   Edit,
   RefreshCw,
 } from 'lucide-react';
-import type { Budget, BudgetEntry, BudgetCategory, BudgetSummary } from '../../types/budget';
+import type { Budget, BudgetEntry, BudgetCategory, BudgetSummary, IncomeSummary } from '../../types/budget';
 
 interface OverviewTabProps {
   summary: BudgetSummary | null;
+  incomeSummary?: IncomeSummary | null;
   budgets: Budget[];
   recentEntries: BudgetEntry[];
   categories: BudgetCategory[];
@@ -26,6 +27,7 @@ interface OverviewTabProps {
 
 export function OverviewTab({
   summary,
+  incomeSummary,
   budgets,
   recentEntries,
   categories,
@@ -168,6 +170,32 @@ export function OverviewTab({
           </div>
         </div>
       </div>
+
+      {/* Income vs Expenses Summary */}
+      {incomeSummary && incomeSummary.incomeSourceCount > 0 && (
+        <div className="themed-card rounded-xl p-6 shadow-sm">
+          <h3 className="text-sm font-medium text-[var(--color-muted-foreground)] mb-3">Income vs Expenses</h3>
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+            <div>
+              <p className="text-xs text-[var(--color-muted-foreground)]">Expected Income</p>
+              <p className="text-lg font-bold text-[var(--color-success)]">{formatCurrency(incomeSummary.totalExpectedMonthly)}</p>
+            </div>
+            <div>
+              <p className="text-xs text-[var(--color-muted-foreground)]">Budgeted Expenses</p>
+              <p className="text-lg font-bold text-[var(--color-foreground)]">{formatCurrency(incomeSummary.totalBudgetedExpenses)}</p>
+            </div>
+            <div>
+              <p className="text-xs text-[var(--color-muted-foreground)]">Net Position</p>
+              <p
+                className="text-lg font-bold"
+                style={{ color: incomeSummary.netPosition >= 0 ? 'var(--color-success)' : 'var(--color-destructive)' }}
+              >
+                {incomeSummary.netPosition >= 0 ? '+' : ''}{formatCurrency(incomeSummary.netPosition)}
+              </p>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Alert Section - Unpaid Bills and Over-Budget Spending */}
       {(unpaidBills.length > 0 || alertBudgets.length > 0) && (

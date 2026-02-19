@@ -19,6 +19,7 @@ export interface FamilyMember extends User {
   active: boolean;
   hasPassword: boolean;
   hasPin: boolean;
+  dateOfBirth: string | null;
   createdAt: string;
 }
 
@@ -51,6 +52,7 @@ export interface CreateFamilyMemberData {
   color?: string;
   password?: string;
   pin?: string;
+  dateOfBirth?: string;
 }
 
 export interface HouseholdSettings {
