@@ -207,7 +207,7 @@ export function IncomeTab({
             </button>
             <button
               onClick={onAddSource}
-              className="inline-flex items-center px-4 py-2 bg-[var(--color-primary)] text-white rounded-lg hover:opacity-90 transition-opacity"
+              className="inline-flex items-center px-4 py-2 bg-[var(--color-primary)] text-[var(--color-primary-foreground)] rounded-lg hover:opacity-90 transition-opacity"
             >
               <Plus className="w-4 h-4 mr-2" />
               Add Source
@@ -340,7 +340,7 @@ export function IncomeTab({
             </p>
             <button
               onClick={onAddSource}
-              className="inline-flex items-center px-4 py-2 bg-[var(--color-primary)] text-white rounded-lg hover:opacity-90 transition-opacity"
+              className="inline-flex items-center px-4 py-2 bg-[var(--color-primary)] text-[var(--color-primary-foreground)] rounded-lg hover:opacity-90 transition-opacity"
             >
               <Plus className="w-4 h-4 mr-2" />
               Add Income Source
@@ -355,7 +355,7 @@ export function IncomeTab({
           <h3 className="font-semibold text-[var(--color-foreground)]">Recent Income</h3>
           <button
             onClick={() => onAddEntry()}
-            className="inline-flex items-center px-3 py-1.5 text-sm bg-[var(--color-success)] text-white rounded-lg hover:opacity-90 transition-opacity"
+            className="inline-flex items-center px-3 py-1.5 text-sm bg-[var(--color-success)] text-[var(--color-success-foreground)] rounded-lg hover:opacity-90 transition-opacity"
           >
             <Plus className="w-4 h-4 mr-1" />
             Record Income

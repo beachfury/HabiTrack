@@ -4,7 +4,6 @@
 import { Settings, User, Palette, Lock, Home, Sun, Moon, Monitor, Camera } from 'lucide-react';
 import type { ExtendedTheme, ThemeableElement } from '../../../types/theme';
 import { ClickableElement } from '../InteractivePreview';
-import { buildElementStyle, buildButtonStyle, buildPageBackgroundStyle, RADIUS_MAP, SHADOW_MAP } from './styleUtils';
 
 interface SettingsPreviewProps {
   theme: ExtendedTheme;
@@ -37,84 +36,25 @@ export function SettingsPreview({
 }: SettingsPreviewProps) {
   const colors = colorMode === 'light' ? theme.colorsLight : theme.colorsDark;
 
-  // Default fallbacks
-  const defaultRadius = RADIUS_MAP[theme.ui.borderRadius] || '8px';
-  const defaultShadow = SHADOW_MAP[theme.ui.shadowIntensity] || 'none';
-
-  // Page-specific background - check early for card fallback logic
-  const settingsBgStyle = theme.elementStyles?.['settings-background'] || {};
-  const globalPageBgStyle = theme.elementStyles?.['page-background'] || {};
-
-  // Check if settings background has custom styling
-  const hasCustomSettingsBg = settingsBgStyle.backgroundColor || settingsBgStyle.backgroundGradient || settingsBgStyle.backgroundImage || settingsBgStyle.customCSS;
-
-  // When settings has custom background, use semi-transparent card backgrounds by default
-  const cardBgFallback = hasCustomSettingsBg ? 'rgba(255,255,255,0.08)' : colors.card;
-  const cardBorderFallback = hasCustomSettingsBg ? 'rgba(255,255,255,0.15)' : colors.border;
-
-  const cardStyle = theme.elementStyles?.card || {};
-  const widgetStyle = theme.elementStyles?.widget || {};
-  const buttonPrimaryStyle = theme.elementStyles?.['button-primary'] || {};
-  const inputStyle = theme.elementStyles?.input || {};
-
-  // Build computed styles with semi-transparent fallbacks
-  const computedCardStyle = buildElementStyle(cardStyle, cardBgFallback, cardBorderFallback, defaultRadius, defaultShadow, colors.cardForeground);
-  const computedWidgetStyle = buildElementStyle(widgetStyle, hasCustomSettingsBg ? 'rgba(255,255,255,0.06)' : colors.muted, cardBorderFallback, defaultRadius, 'none', colors.foreground);
-  const computedButtonPrimaryStyle = buildButtonStyle(buttonPrimaryStyle, colors.primary, colors.primaryForeground, 'transparent', '8px');
-  const computedInputStyle = buildElementStyle(inputStyle, hasCustomSettingsBg ? 'rgba(255,255,255,0.05)' : colors.background, cardBorderFallback, defaultRadius, 'none', colors.foreground);
-  const { style: pageBgStyle, backgroundImageUrl, customCSS } = buildPageBackgroundStyle(
-    settingsBgStyle,
-    globalPageBgStyle,
-    colors.background
-  );
-
-  // Detect animated background effect classes from customCSS
-  const getAnimatedBgClasses = (css?: string): string => {
-    if (!css) return '';
-    const classes: string[] = [];
-    if (css.includes('matrix-rain: true') || css.includes('matrix-rain:true')) {
-      classes.push('matrix-rain-bg');
-      const speedMatch = css.match(/matrix-rain-speed:\s*(slow|normal|fast|veryfast)/i);
-      if (speedMatch) classes.push(`matrix-rain-${speedMatch[1].toLowerCase()}`);
-    }
-    if (css.includes('snowfall: true') || css.includes('snowfall:true')) classes.push('snowfall-bg');
-    if (css.includes('sparkle: true') || css.includes('sparkle:true')) classes.push('sparkle-bg');
-    if (css.includes('bubbles: true') || css.includes('bubbles:true')) classes.push('bubbles-bg');
-    if (css.includes('embers: true') || css.includes('embers:true')) classes.push('embers-bg');
-    return classes.join(' ');
-  };
-
-  const animatedBgClasses = getAnimatedBgClasses(customCSS);
-
   return (
     <ClickableElement
       element="settings-background"
       isSelected={selectedElement === 'settings-background'}
       onClick={() => onSelectElement('settings-background')}
-      className={`flex-1 overflow-auto ${animatedBgClasses}`}
-      style={pageBgStyle}
+      className="themed-settings-bg flex-1 overflow-auto"
     >
-      {backgroundImageUrl && (
-        <div
-          className="absolute inset-0 pointer-events-none"
-          style={{
-            backgroundImage: `url(${backgroundImageUrl})`,
-            backgroundSize: 'cover',
-            backgroundPosition: 'center',
-            opacity: settingsBgStyle.backgroundOpacity ?? globalPageBgStyle.backgroundOpacity ?? 1,
-          }}
-        />
-      )}
-      <div className="relative z-10 p-4">
+      <div className="relative z-10 p-4 space-y-4">
         {/* Page header - matches real SettingsPage */}
-        <div className="mb-4">
-          <h1 className="text-xl font-bold flex items-center gap-2" style={{ color: colors.foreground }}>
-            <Settings size={20} style={{ color: colors.primary }} />
-            Settings
-          </h1>
-          <p className="text-xs mt-1" style={{ color: colors.mutedForeground }}>
-            Manage your account and preferences
-          </p>
+        <div className="flex items-center gap-2">
+          <Settings size={20} style={{ color: colors.primary }} />
+          <div>
+            <h1 className="text-lg font-bold">
+              Settings
+            </h1>
+            <p className="text-[10px]" style={{ color: 'var(--color-muted-foreground)' }}>
+              Manage your account and preferences
+            </p>
+          </div>
         </div>
 
         <div className="flex gap-4">
@@ -123,7 +63,7 @@ export function SettingsPreview({
             element="settings-nav-card"
             isSelected={selectedElement === 'settings-nav-card'}
             onClick={() => onSelectElement('settings-nav-card')}
-            className="w-32 flex-shrink-0"
+            className="themed-settings-nav w-32 flex-shrink-0"
           >
             <nav className="space-y-0.5">
               {TABS.map((tab) => (
@@ -147,15 +87,12 @@ export function SettingsPreview({
             element="settings-content-card"
             isSelected={selectedElement === 'settings-content-card'}
             onClick={() => onSelectElement('settings-content-card')}
-            className="flex-1"
-            style={{
-              ...computedCardStyle,
-              padding: '12px',
-            }}
+            className="themed-settings-content flex-1 space-y-4"
+            style={{ padding: '12px' }}
           >
             {/* Profile section */}
-            <div className="mb-4">
-              <h2 className="text-sm font-semibold mb-3" style={{ color: colors.foreground }}>
+            <div>
+              <h2 className="text-sm font-semibold mb-3">
                 Profile Settings
               </h2>
               <div className="flex items-center gap-3">
@@ -172,15 +109,15 @@ export function SettingsPreview({
                   </button>
                 </div>
                 <div className="flex-1">
-                  <p className="text-sm font-medium" style={{ color: colors.foreground }}>User Name</p>
-                  <p className="text-[10px]" style={{ color: colors.mutedForeground }}>Admin</p>
+                  <p className="text-sm font-medium">User Name</p>
+                  <p className="text-[10px]" style={{ color: 'var(--color-muted-foreground)' }}>Admin</p>
                 </div>
               </div>
             </div>
 
             {/* Theme mode selector - matches real Appearance tab */}
-            <div className="mb-4">
-              <label className="block text-xs font-medium mb-2" style={{ color: colors.foreground }}>
+            <div>
+              <label className="block text-xs font-medium mb-2">
                 Theme
               </label>
               <div className="flex gap-2">
@@ -202,8 +139,8 @@ export function SettingsPreview({
             </div>
 
             {/* Input field example */}
-            <div className="mb-4">
-              <label className="block text-xs font-medium mb-1" style={{ color: colors.foreground }}>
+            <div>
+              <label className="block text-xs font-medium mb-1">
                 Nickname
               </label>
               <ClickableElement
@@ -214,12 +151,7 @@ export function SettingsPreview({
                 <input
                   type="text"
                   defaultValue="User"
-                  className="w-full px-2 py-1.5 outline-none text-xs"
-                  style={{
-                    ...computedInputStyle,
-                    color: colors.foreground,
-                    borderRadius: defaultRadius,
-                  }}
+                  className="themed-input w-full px-2 py-1.5 outline-none text-xs"
                   readOnly
                 />
               </ClickableElement>
@@ -232,8 +164,7 @@ export function SettingsPreview({
               onClick={() => onSelectElement('button-primary')}
             >
               <button
-                className="px-4 py-1.5 text-xs font-medium"
-                style={computedButtonPrimaryStyle}
+                className="themed-btn-primary px-3 py-1.5 text-xs font-medium"
               >
                 Save Profile
               </button>

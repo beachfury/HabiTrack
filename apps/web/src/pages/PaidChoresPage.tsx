@@ -18,6 +18,7 @@ import {
   X,
 } from 'lucide-react';
 import { ModalPortal, ModalBody } from '../components/common/ModalPortal';
+import { PageHeader } from '../components/common/PageHeader';
 import { useAuth } from '../context/AuthContext';
 import { useTheme } from '../context/ThemeContext';
 import * as paidChoresApi from '../api/paid-chores';
@@ -164,40 +165,36 @@ export function PaidChoresPage() {
     <div className={`min-h-screen themed-paidchores-bg ${animationClasses}`}>
       <div className="p-3 sm:p-4 md:p-6 lg:p-8">
       {/* Header */}
-      <div className="flex flex-wrap items-center justify-between mb-8">
-        <div>
-          <h1 className="text-3xl font-bold text-[var(--color-foreground)] flex items-center gap-3">
-            <DollarSign className="text-[var(--color-success)]" />
-            Paid Chores
-          </h1>
-          <p className="text-[var(--color-muted-foreground)] mt-1">
-            Race to claim chores and earn real money!
-          </p>
-        </div>
-        <div className="flex items-center gap-2 sm:gap-4">
-          {/* My Earnings */}
-          <div
-            className="px-4 py-2 rounded-xl"
-            style={{
-              backgroundColor: 'color-mix(in srgb, var(--color-success) 15%, transparent)',
-            }}
-          >
-            <p className="text-sm text-[var(--color-success)]">My Earnings</p>
-            <p className="text-2xl font-bold text-[var(--color-success)]">
-              ${myEarnings.toFixed(2)}
-            </p>
-          </div>
-          {isAdmin && (
-            <button
-              onClick={() => setShowCreateModal(true)}
-              className="flex items-center gap-2 bg-[var(--color-primary)] hover:opacity-90 text-[var(--color-primary-foreground)] px-4 py-2 rounded-xl transition-opacity"
+      <PageHeader
+        icon={DollarSign}
+        iconColor="var(--color-success)"
+        title="Paid Chores"
+        subtitle="Race to claim chores and earn real money!"
+        actions={
+          <>
+            <div
+              className="px-4 py-2 rounded-xl"
+              style={{
+                backgroundColor: 'color-mix(in srgb, var(--color-success) 15%, transparent)',
+              }}
             >
-              <Plus size={20} />
-              Create Paid Chore
-            </button>
-          )}
-        </div>
-      </div>
+              <p className="text-sm text-[var(--color-success)]">My Earnings</p>
+              <p className="text-2xl font-bold text-[var(--color-success)]">
+                ${myEarnings.toFixed(2)}
+              </p>
+            </div>
+            {isAdmin && (
+              <button
+                onClick={() => setShowCreateModal(true)}
+                className="flex items-center gap-2 bg-[var(--color-primary)] hover:opacity-90 text-[var(--color-primary-foreground)] px-4 py-2 rounded-xl transition-opacity"
+              >
+                <Plus size={20} />
+                Create Paid Chore
+              </button>
+            )}
+          </>
+        }
+      />
 
       {/* Messages */}
       {success && (
@@ -238,7 +235,7 @@ export function PaidChoresPage() {
           <button
             key={tab.id}
             onClick={() => setActiveTab(tab.id)}
-            className="flex items-center gap-2 px-4 py-3 border-b-2 transition-colors"
+            className="flex items-center gap-2 px-4 py-3 border-b-2 transition-colors text-sm font-medium"
             style={
               activeTab === tab.id
                 ? { borderColor: 'var(--color-primary)', color: 'var(--color-primary)' }
@@ -326,7 +323,7 @@ export function PaidChoresPage() {
               </button>
               <button
                 onClick={handleComplete}
-                className="flex-1 py-2 bg-[var(--color-success)] hover:opacity-90 text-white rounded-xl transition-opacity"
+                className="flex-1 py-2 bg-[var(--color-success)] hover:opacity-90 text-[var(--color-success-foreground)] rounded-xl transition-opacity"
               >
                 Mark Complete
               </button>
@@ -488,7 +485,7 @@ function ChoreCard({
         {chore.status === 'available' && (
           <button
             onClick={onClaim}
-            className="flex-1 py-2 bg-[var(--color-success)] hover:opacity-90 text-white rounded-xl font-medium flex items-center justify-center gap-2 transition-opacity"
+            className="flex-1 py-2 bg-[var(--color-success)] hover:opacity-90 text-[var(--color-success-foreground)] rounded-xl font-medium flex items-center justify-center gap-2 transition-opacity"
           >
             <Zap size={18} />
             Claim It!
@@ -509,14 +506,14 @@ function ChoreCard({
           <>
             <button
               onClick={onVerify}
-              className="flex-1 py-2 bg-[var(--color-success)] hover:opacity-90 text-white rounded-xl font-medium flex items-center justify-center gap-2 transition-opacity"
+              className="flex-1 py-2 bg-[var(--color-success)] hover:opacity-90 text-[var(--color-success-foreground)] rounded-xl font-medium flex items-center justify-center gap-2 transition-opacity"
             >
               <CheckCircle size={18} />
               Verify & Pay
             </button>
             <button
               onClick={() => onReject(true)}
-              className="py-2 px-3 bg-[var(--color-warning)] hover:opacity-90 text-white rounded-xl transition-opacity"
+              className="py-2 px-3 bg-[var(--color-warning)] hover:opacity-90 text-[var(--color-warning-foreground)] rounded-xl transition-opacity"
               title="Reject and reopen"
             >
               <XCircle size={18} />

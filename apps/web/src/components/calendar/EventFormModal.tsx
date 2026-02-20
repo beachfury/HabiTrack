@@ -3,6 +3,7 @@ import { Trash2 } from 'lucide-react';
 import { ColorPicker } from '../common/ColorPicker';
 import type { CalendarEvent, CreateEventData, UserOption } from '../../types';
 import { ModalPortal, ModalBody } from '../common/ModalPortal';
+import { ModalFooterButtons } from '../common/ModalFooterButtons';
 
 interface EventFormModalProps {
   event: CalendarEvent | null;
@@ -28,32 +29,22 @@ export function EventFormModal({
   const isEditing = !!event;
 
   const footer = (
-    <div className="flex gap-2">
-      {isEditing && (
-        <button
-          type="button"
-          onClick={onDelete}
-          className="p-2 text-[var(--color-destructive)] hover:bg-[var(--color-destructive)]/10 rounded-xl"
-        >
-          <Trash2 size={20} />
-        </button>
-      )}
-      <button
-        type="button"
-        onClick={onClose}
-        className="flex-1 py-2 bg-[var(--color-muted)] text-[var(--color-foreground)] rounded-xl font-medium hover:opacity-90"
-      >
-        Cancel
-      </button>
-      <button
-        type="submit"
-        form="event-form"
-        onClick={onSubmit}
-        className="flex-1 py-2 bg-[var(--color-primary)] text-[var(--color-primary-foreground)] rounded-xl font-medium hover:opacity-90"
-      >
-        {isEditing ? 'Save' : 'Create'}
-      </button>
-    </div>
+    <ModalFooterButtons
+      onCancel={onClose}
+      formId="event-form"
+      submitText={isEditing ? 'Save' : 'Create'}
+      leftActions={
+        isEditing ? (
+          <button
+            type="button"
+            onClick={onDelete}
+            className="p-2 text-[var(--color-destructive)] hover:bg-[var(--color-destructive)]/10 rounded-xl transition-opacity"
+          >
+            <Trash2 size={20} />
+          </button>
+        ) : undefined
+      }
+    />
   );
 
   return (

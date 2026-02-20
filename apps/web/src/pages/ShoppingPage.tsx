@@ -15,6 +15,7 @@ import {
 } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { useTheme } from '../context/ThemeContext';
+import { PageHeader } from '../components/common/PageHeader';
 import { shoppingApi } from '../api';
 import type {
   ShoppingCategory,
@@ -454,78 +455,72 @@ export function ShoppingPage() {
 
   return (
     <div className={`min-h-screen pb-24 overflow-x-hidden themed-shopping-bg ${animationClasses}`}>
+      <div className="p-3 sm:p-4 md:p-6 lg:p-8">
       {/* Header */}
-      <div className="themed-shopping-filter border-b border-[var(--color-border)] sticky top-0 z-10 rounded-none">
-        <div className="max-w-4xl mx-auto px-3 py-3">
-          <div className="flex items-center justify-between mb-3">
-            <h1 className="text-xl font-bold text-[var(--color-foreground)] flex items-center gap-2">
-              <ShoppingCart className="text-[var(--color-warning)]" size={22} />
-              Shopping
-            </h1>
-            {activeTab === 'list' && (
-              <div className="text-right text-sm">
-                <p className="text-[var(--color-muted-foreground)]">
-                  Needs:{' '}
-                  <span className="font-semibold text-[var(--color-success)]">
-                    ${Number(totals.needsOnly).toFixed(2)}
-                  </span>
-                </p>
-                <p className="text-[var(--color-muted-foreground)]">
-                  Total:{' '}
-                  <span className="font-semibold text-[var(--color-warning)]">
-                    ${Number(totals.needsPlusWants).toFixed(2)}
-                  </span>
-                </p>
-              </div>
-            )}
-          </div>
+      <PageHeader
+        title="Shopping"
+        icon={ShoppingCart}
+        iconColor="var(--color-warning)"
+        actions={
+          activeTab === 'list' ? (
+            <div className="text-right text-sm">
+              <p className="text-[var(--color-muted-foreground)]">
+                Needs:{' '}
+                <span className="font-semibold text-[var(--color-success)]">
+                  ${Number(totals.needsOnly).toFixed(2)}
+                </span>
+              </p>
+              <p className="text-[var(--color-muted-foreground)]">
+                Total:{' '}
+                <span className="font-semibold text-[var(--color-warning)]">
+                  ${Number(totals.needsPlusWants).toFixed(2)}
+                </span>
+              </p>
+            </div>
+          ) : undefined
+        }
+      />
 
-          {/* Tabs */}
-          <div className="flex gap-1 overflow-x-auto pb-1 -mx-3 px-3 scrollbar-hide">
-            {tabs
-              .filter((t) => t.show)
-              .map((tab) => (
-                <button
-                  key={tab.id}
-                  onClick={() => setActiveTab(tab.id)}
-                  className={`flex items-center gap-1 px-3 py-2 rounded-lg text-sm font-medium whitespace-nowrap flex-shrink-0 transition-colors ${
-                    activeTab === tab.id
-                      ? 'bg-[var(--color-primary)] text-[var(--color-primary-foreground)]'
-                      : 'bg-[var(--color-muted)] text-[var(--color-muted-foreground)] hover:bg-[var(--color-muted)]/80'
-                  }`}
-                >
-                  <tab.icon size={16} />
-                  {tab.label}
-                </button>
-              ))}
-          </div>
-        </div>
+      {/* Tabs */}
+      <div className="flex gap-1 mb-6 border-b border-[var(--color-border)] overflow-x-auto">
+        {tabs
+          .filter((t) => t.show)
+          .map((tab) => (
+            <button
+              key={tab.id}
+              onClick={() => setActiveTab(tab.id)}
+              className={`flex items-center gap-2 px-4 py-3 border-b-2 text-sm font-medium whitespace-nowrap flex-shrink-0 transition-colors ${
+                activeTab === tab.id
+                  ? 'border-[var(--color-primary)] text-[var(--color-primary)]'
+                  : 'border-transparent text-[var(--color-muted-foreground)] hover:text-[var(--color-foreground)]'
+              }`}
+            >
+              <tab.icon size={16} />
+              {tab.label}
+            </button>
+          ))}
       </div>
 
       {/* Alerts */}
       {error && (
-        <div className="max-w-4xl mx-auto px-3 mt-3">
-          <div className="p-3 bg-[var(--color-destructive)]/10 text-[var(--color-destructive)] rounded-xl flex items-center gap-2">
-            <AlertCircle size={18} />
-            {error}
-            <button onClick={() => setError('')} className="ml-auto">
-              <X size={18} />
-            </button>
-          </div>
+        <div className="mb-4 p-3 bg-[var(--color-destructive)]/10 text-[var(--color-destructive)] rounded-xl flex items-center gap-2">
+          <AlertCircle size={18} />
+          {error}
+          <button onClick={() => setError('')} className="ml-auto">
+            <X size={18} />
+          </button>
         </div>
       )}
 
       {success && (
-        <div className="max-w-4xl mx-auto px-3 mt-3">
-          <div className="p-3 bg-[var(--color-success)]/10 text-[var(--color-success)] rounded-xl flex items-center gap-2">
-            <CheckCircle size={18} />
-            {success}
-          </div>
+        <div className="mb-4 p-3 bg-[var(--color-success)]/10 text-[var(--color-success)] rounded-xl flex items-center gap-2">
+          <CheckCircle size={18} />
+          {success}
         </div>
       )}
 
       {/* Content */}
-      <div className="max-w-4xl mx-auto px-3 py-4">
+      <div>
         {loading ? (
           <div className="flex items-center justify-center py-12">
             <RefreshCw size={32} className="animate-spin text-[var(--color-primary)]" />
@@ -621,6 +616,7 @@ export function ShoppingPage() {
             )}
           </>
         )}
+      </div>
       </div>
 
       {/* Modals */}

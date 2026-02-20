@@ -121,6 +121,7 @@ const ELEMENT_LABELS: Record<ThemeableElement, string> = {
   'recipes-background': 'Recipes Background',
   'paidchores-background': 'Paid Chores Background',
   'family-background': 'Family Background',
+  'store-background': 'Store Background',
   // Home page specific elements
   'home-title': 'Page Title',
   'home-welcome-banner': 'Welcome Banner',
@@ -130,6 +131,10 @@ const ELEMENT_LABELS: Record<ThemeableElement, string> = {
   'home-weather-widget': 'Weather Widget',
   'home-leaderboard-widget': 'Leaderboard Widget',
   'home-meals-widget': 'Meals Widget',
+  'home-shopping-widget': 'Shopping Widget',
+  'home-earnings-widget': 'Earnings Widget',
+  'home-family-widget': 'Family Widget',
+  'home-announcements-widget': 'Announcements Widget',
   // Calendar page specific elements
   'calendar-title': 'Page Title',
   'calendar-grid': 'Calendar Grid',

@@ -77,7 +77,7 @@ export function CategoriesTab({
         </div>
         <button
           onClick={onAddCategory}
-          className="inline-flex items-center px-4 py-2 bg-[var(--color-primary)] text-white rounded-lg hover:opacity-90 transition-opacity"
+          className="inline-flex items-center px-4 py-2 bg-[var(--color-primary)] text-[var(--color-primary-foreground)] rounded-lg hover:opacity-90 transition-opacity"
         >
           <Plus className="w-4 h-4 mr-2" />
           Add Category
@@ -170,7 +170,7 @@ export function CategoriesTab({
           </p>
           <button
             onClick={onAddCategory}
-            className="inline-flex items-center px-4 py-2 bg-[var(--color-primary)] text-white rounded-lg hover:opacity-90 transition-opacity"
+            className="inline-flex items-center px-4 py-2 bg-[var(--color-primary)] text-[var(--color-primary-foreground)] rounded-lg hover:opacity-90 transition-opacity"
           >
             <Plus className="w-4 h-4 mr-2" />
             Create Category

@@ -6,6 +6,104 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ---
 
+## [1.4.0] - 2026-02-19
+
+### Added
+
+#### Design System Standardization
+- **Reusable UI components** — New `Button`, `Input`, `Card`, `Badge`, `Alert`, `EmptyState`, `Spinner`, `PageHeader`, and `ModalFooterButtons` components with consistent theming via CSS variables
+- **CSS utility layer** — Global utility classes in `index.css` for themed cards, buttons, inputs, badges, alerts, and more — replacing scattered inline styles across all pages
+- **All pages refactored** to use standardized components — HomePage, ChoresPage, ShoppingPage, CalendarPage, BudgetPage, MealsPage, RecipesPage, PaidChoresPage, FamilyPage, MessagesPage, SettingsPage
+- **All modals refactored** to use consistent themed styling — AddChoreModal, AddTemplateModal, AdminActionModal, CompleteChoreModal, EventFormModal, AddBudgetModal, AddEntryModal, AddIncomeModal, AddIncomeEntryModal, CategoryModal, MemberFormModal, PasswordModal, PinModal, PlanMealModal, VotingModal, ApprovalModal, BackupRestoreModal, UpdateModal, EditListItemModal, NewItemModal, StoreSelectModal, FirstLoginModal
+
+#### Store Page Previews
+- **Widget preview modals** — Click "Preview" on any widget card in the Store to see a live preview with sample data, rendered inside a sandboxed container
+- **Widget card mockups** — Visual abstract mockups on widget cards showing stat bars, list lines, ranking bars, people icons, or weather based on widget type
+- **Theme preview modals** — Click "Preview" on any theme card in the Store to see a full interactive preview using the theme editor's `InteractivePreview` component
+- **Theme card mockups** — Mini UI layout mockups on theme cards showing sidebar, header, content cards, and color palette dots using the theme's actual colors
+- **Static weather preview** — Weather widget preview uses a static mockup to avoid API calls in the Store context
+- **Preview sample data system** — Centralized `previewData.ts` provides realistic mock data for all 14 widget previews
+
+#### Widget Architecture Overhaul
+- **`_built-in/` directory** — All 14 built-in widget components moved to `widgets/_built-in/` with shared types and barrel exports
+- **`_registry/` directory** — Widget registry, manifests, adapters, validation, and preview infrastructure moved to `widgets/_registry/`
+- **Community widget validation** — `validateManifest()` and `scanWidgetCode()` functions for future community widget support
+- **Widget config schema** — New migration (`015_widget_config_schema.sql`) adding `configSchema` column to `dashboard_widgets` table
+
+#### Theme System Enhancements
+- **Store page background** — Added `store-background` as a themeable element with CSS variable `--store-page-bg`
+- **Store preview page** — Added 15th preview page (Store) to the theme editor's `InteractivePreview`
+- **Theme tags migration** — New migration (`016_theme_tags.sql`) for theme categorization
+
+### Changed
+- **Widget `index.ts`** reduced from ~400 lines to ~30-line barrel re-export from `_registry/`
+- **`InteractivePreview`** reduced from ~600 lines to ~300 lines by extracting inline styles to CSS utility classes
+- **All PreviewPages** (Home, Calendar, Chores, Shopping, Messages, Settings, Budget, Meals, Recipes, Paid Chores, Family, Modal) refactored to use CSS utility classes instead of inline `style` objects
+- **Removed `styleUtils.ts`** (423 lines) — Preview pages now use global CSS classes
+- **Removed `widgetValidation.ts`** (163 lines) — Replaced by `_registry/validation.ts`
+- **Removed `Modal.tsx`** (115 lines) — Replaced by `ModalPortal` and `ModalFooterButtons`
+- **Store page** completely rebuilt with tabbed layout, preview modals, and improved card designs
+- **`WidgetConfigModal`** extracted from `HomePage.tsx` into its own file
+
+### Fixed
+- **Missing page background routes** — SidebarLayout now maps `/store`, `/family`, and `/paidchores` routes to their dedicated background CSS variables
+- **Theme CSS variable prefixes** — `buildCssVariables()` now correctly prefixes Store-related element variables
+- **MemoryRouter crash** — Removed `MemoryRouter` from `WidgetPreviewModal` that caused nested router errors; replaced with click-interceptor for preview links
+- **"Apply to All" theme backgrounds** — Fixed to correctly iterate all page background elements including Store
+- **Widget data fixes migration** — `017_widget_data_fixes.sql` corrects stale widget metadata in the database
+
+---
+
+## [1.3.0] - 2026-02-18
+
+### Added
+
+#### Income Tracking
+- **Income sources** — Track multiple income sources (salary, bonus, side-income, investment, other)
+- **Income entries** — Record received income with amount, date, and notes
+- **Income summary** — View income vs. expenses net position overview
+- **Flexible frequencies** — Monthly, bi-weekly, weekly, yearly, one-time, and irregular income support
+- **Income tab** in Budget page with full CRUD management
+- **API endpoints** — `GET/POST /api/income`, `GET/POST /api/income/entries`, `GET /api/income/summary`
+
+#### Birthday & Holiday Calendar Integration
+- **Automatic birthday display** — Family member birthdays appear on the calendar with cake icon
+- **National holiday support** — Configure holiday countries in Settings > Household
+- **Multi-country holidays** — Support for US, Canada, UK, Mexico, Australia, Germany, France, India, Japan, Brazil, Puerto Rico, and more
+- **Holiday calendar bars** — Holidays display with country flag gradient swatches
+
+#### Family Management
+- **Soft delete + hard delete** — Family members can be deactivated (soft delete) or permanently removed (hard delete)
+- **Birthday tracking** — Family member profiles now include birthday field
+
+### Fixed
+- **Chore color display** — Fixed chore category colors not rendering correctly
+- **HouseholdTab wiring** — Connected HouseholdTab component to SettingsPage
+- **pnpm-lock.yaml** — Updated for TypeScript version alignment
+
+---
+
+## [1.2.0] - 2026-02-18
+
+### Added
+
+#### Widget & Theme Store
+- **Store page** (`/store`) — Browse all available widgets and themes in one place
+- **Widget manifest system** — Each widget has a typed manifest with id, name, description, category, icon, size constraints, data sources, roles, and tags
+- **Theme catalog** — Browse built-in system themes and user-created public themes
+- **Import/Export** — Admins can import `.habi-theme` files and export existing themes from the Store
+- **Request system** — Members and Kids can submit install requests; Admins review from Pending Requests section
+- **Permission model** — Role-based access: Admins can import/install, Members can browse/request, Kids see filtered catalog
+
+#### Welcome Email System
+- **Welcome email** on family member creation with household information and login instructions
+
+### Changed
+- **Widget registration** moved to centralized manifest-based system
+- **Theme browsing** integrated into Store page alongside widgets
+
+---
+
 ## [1.1.3] - 2025-02-18
 
 ### Changed
@@ -59,7 +157,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 - **Fixed modal sizing overflow on small screens** — All modals now properly constrain to viewport width on phones (375px+)
 - **Fixed 7-column calendar grid on mobile** — Calendar and month views now horizontally scroll on small screens instead of being illegibly compressed
 - **Fixed Settings page sidebar on mobile** — Converted fixed-width sidebar to horizontal scrollable tabs on screens below 768px
-- **Fixed Meals page week/month grids** — Week view now uses responsive column counts (1→2→4→7 columns across breakpoints); month view scrolls horizontally
+- **Fixed Meals page week/month grids** — Week view now uses responsive column counts (1->2->4->7 columns across breakpoints); month view scrolls horizontally
 - **Fixed Messages page fixed height** — Conversation area now uses viewport-relative height on mobile
 - **Fixed hardcoded padding on 7 pages** — CalendarPage, SettingsPage, MealsPage, RecipesPage, FamilyPage, PaidChoresPage, BudgetPage now use responsive padding (`p-3 sm:p-4 md:p-6 lg:p-8`)
 - **Fixed all modal form grids** — 2-column form layouts in AddChoreModal, AdminActionModal, AddTemplateModal, EventFormModal, CatalogBrowserModal, and others now stack to single column on mobile
@@ -101,26 +199,6 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
   - `GET /api/updates/check` - Check for available updates from GitHub releases
   - `POST /api/updates/apply` - Pull latest code (admin only)
   - `GET /api/updates/status` - Get current git status and version info
-
-#### Documentation
-- **Nginx Proxy Manager Setup Guide**
-  - Detailed instructions for configuring NPM with HabiTrack
-  - Production environment settings for HTTPS
-  - Troubleshooting guide for common proxy issues
-
-### Changed
-- Settings > About tab now shows update status for admins
-- Family member creation sets `firstLoginRequired` flag when temporary password is provided
-
-### Fixed
-- Cookie security configuration for HTTPS via reverse proxy
-- Docker health check timing and URL improvements
-
----
-
-## [Unreleased]
-
-### Added
 
 #### Advanced Per-Page Theme System
 - **Expanded Page Previews in Theme Editor**
@@ -180,11 +258,19 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
   - Log entries include user ID, action details, and timestamps
   - Error logging with stack traces for debugging
 
+#### Documentation
+- **Nginx Proxy Manager Setup Guide**
+  - Detailed instructions for configuring NPM with HabiTrack
+  - Production environment settings for HTTPS
+  - Troubleshooting guide for common proxy issues
+
 #### Database
 - New `debug_settings` columns in `household_settings` table
 - Migration `012_debug_settings.sql` for debug configuration storage
 
 ### Changed
+- Settings > About tab now shows update status for admins
+- Family member creation sets `firstLoginRequired` flag when temporary password is provided
 - Refactored large page components into modular sub-components
 - Consolidated 33 migrations into 11 organized files
 - Split ThemeContext for better maintainability
@@ -193,6 +279,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 - Pages now use CSS variables consistently for theming
 
 ### Fixed
+- Cookie security configuration for HTTPS via reverse proxy
+- Docker health check timing and URL improvements
 - Page backgrounds now extend from edge to edge (no visible gaps)
 - Animation classes now properly apply to all pages (Budget, Meals, Recipes, Paid Chores, Family)
 - "Apply to All" feature now works correctly for all page backgrounds

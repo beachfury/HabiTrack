@@ -15,4 +15,4 @@ export { MealsPreview } from './MealsPreview';
 export { RecipesPreview } from './RecipesPreview';
 export { PaidChoresPreview } from './PaidChoresPreview';
 export { FamilyPreview } from './FamilyPreview';
-export { buildElementStyle, buildButtonStyle, RADIUS_MAP, SHADOW_MAP } from './styleUtils';
+export { StorePreview } from './StorePreview';

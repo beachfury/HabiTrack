@@ -36,13 +36,39 @@ export async function getCatalog(req: Request, res: Response) {
       return authRequired(res);
     }
 
-    // Widgets: always the built-in set
-    const widgets = BUILT_IN_WIDGETS;
+    // Widgets: query from database (with hardcoded fallback)
+    let widgets;
+    try {
+      const dbWidgets = await q<any[]>(`
+        SELECT id, name, description, icon, category, version, author,
+               defaultW, defaultH, configSchema IS NOT NULL as hasConfigSchema,
+               tags, builtIn
+        FROM dashboard_widgets
+        WHERE active = 1
+        ORDER BY sortOrder ASC
+      `);
+      widgets = dbWidgets.map((w: any) => ({
+        id: w.id,
+        name: w.name,
+        description: w.description,
+        icon: w.icon,
+        category: w.category,
+        version: w.version,
+        author: w.author,
+        builtIn: Boolean(w.builtIn),
+        tags: typeof w.tags === 'string' ? JSON.parse(w.tags) : (w.tags ?? []),
+        size: { defaultW: w.defaultW, defaultH: w.defaultH },
+        hasConfigSchema: Boolean(w.hasConfigSchema),
+      }));
+    } catch {
+      // Table doesn't exist, use hardcoded fallback
+      widgets = BUILT_IN_WIDGETS;
+    }
 
     // Themes: public themes from the database
     let themeSql = `
       SELECT id, name, description, semver AS version, author, source, tags,
-             isPublic, isApprovedForKids, createdAt
+             isPublic, isApprovedForKids, colorsLight, createdAt
       FROM themes
       WHERE isPublic = 1
     `;
@@ -57,11 +83,40 @@ export async function getCatalog(req: Request, res: Response) {
 
     const themes = await q<any[]>(themeSql, params);
 
-    // Parse tags if stored as JSON string
-    const parsedThemes = themes.map((t: any) => ({
-      ...t,
-      tags: typeof t.tags === 'string' ? JSON.parse(t.tags) : (t.tags ?? []),
-    }));
+    // Parse tags + extract preview colors + derive category from source
+    const parsedThemes = themes.map((t: any) => {
+      let previewColors = null;
+      try {
+        const colors = typeof t.colorsLight === 'string' ? JSON.parse(t.colorsLight) : (t.colorsLight || {});
+        previewColors = {
+          primary: colors.primary || '#3cb371',
+          accent: colors.accent || '#3cb371',
+          background: colors.background || '#ffffff',
+          card: colors.card || '#ffffff',
+          foreground: colors.foreground || '#3d4f5f',
+        };
+      } catch {
+        // ignore parse errors
+      }
+
+      // Derive category from source column
+      const category = t.source === 'built-in' ? 'official' : t.source === 'imported' ? 'imported' : 'custom';
+
+      return {
+        id: t.id,
+        name: t.name,
+        description: t.description,
+        version: t.version,
+        author: t.author,
+        source: t.source,
+        category,
+        tags: typeof t.tags === 'string' ? JSON.parse(t.tags) : (t.tags ?? []),
+        builtIn: t.source === 'built-in',
+        isApprovedForKids: Boolean(t.isApprovedForKids),
+        previewColors,
+        createdAt: t.createdAt,
+      };
+    });
 
     res.json({ widgets, themes: parsedThemes });
   } catch (err) {

@@ -162,7 +162,7 @@ export function UpdateModal({ onClose }: UpdateModalProps) {
                   v{release.version}
                 </span>
                 {release.prerelease && (
-                  <span className="px-1.5 py-0.5 text-[10px] font-medium bg-amber-500/10 text-amber-600 rounded">
+                  <span className="px-1.5 py-0.5 text-[10px] font-medium bg-[var(--color-warning)]/10 text-[var(--color-warning)] rounded">
                     Pre-release
                   </span>
                 )}
@@ -172,10 +172,10 @@ export function UpdateModal({ onClose }: UpdateModalProps) {
                   </span>
                 )}
                 {release.isNewer && (
-                  <ArrowUp size={14} className="text-green-500" />
+                  <ArrowUp size={14} className="text-[var(--color-success)]" />
                 )}
                 {release.isOlder && (
-                  <ArrowDown size={14} className="text-amber-500" />
+                  <ArrowDown size={14} className="text-[var(--color-warning)]" />
                 )}
               </div>
               <span className="text-xs text-[var(--color-muted-foreground)]">
@@ -212,7 +212,7 @@ export function UpdateModal({ onClose }: UpdateModalProps) {
               <p className="text-lg font-bold text-[var(--color-foreground)]">v{currentVersion}</p>
             </div>
             <div className="px-4">
-              <span className={`text-2xl ${isDowngrade ? 'text-amber-500' : 'text-[var(--color-primary)]'}`}>
+              <span className={`text-2xl ${isDowngrade ? 'text-[var(--color-warning)]' : 'text-[var(--color-primary)]'}`}>
                 &rarr;
               </span>
             </div>
@@ -220,7 +220,7 @@ export function UpdateModal({ onClose }: UpdateModalProps) {
               <p className="text-sm text-[var(--color-muted-foreground)]">
                 {isDowngrade ? 'Rollback to' : 'Upgrade to'}
               </p>
-              <p className={`text-lg font-bold ${isDowngrade ? 'text-amber-500' : 'text-[var(--color-primary)]'}`}>
+              <p className={`text-lg font-bold ${isDowngrade ? 'text-[var(--color-warning)]' : 'text-[var(--color-primary)]'}`}>
                 v{selectedRelease.version}
               </p>
             </div>
@@ -249,21 +249,21 @@ export function UpdateModal({ onClose }: UpdateModalProps) {
         )}
 
         {/* Backup reminder */}
-        <div className="mt-4 p-3 bg-amber-500/10 border border-amber-500/30 rounded-xl">
+        <div className="mt-4 p-3 rounded-xl" style={{ backgroundColor: 'color-mix(in srgb, var(--color-warning) 10%, transparent)', border: '1px solid color-mix(in srgb, var(--color-warning) 30%, transparent)' }}>
           <div className="flex items-start gap-2">
-            <Shield className="text-amber-500 mt-0.5 flex-shrink-0" size={16} />
+            <Shield className="text-[var(--color-warning)] mt-0.5 flex-shrink-0" size={16} />
             <div className="text-sm flex-1">
-              <p className="font-medium text-amber-700 dark:text-amber-400">
+              <p className="font-medium text-[var(--color-warning)]">
                 Backup Recommended
               </p>
-              <p className="text-amber-600 dark:text-amber-300 mt-1">
+              <p className="text-[var(--color-warning)] opacity-80 mt-1">
                 We recommend creating a database backup before changing versions, especially when rolling back.
               </p>
               <div className="mt-3 flex flex-wrap gap-2">
                 <button
                   onClick={createBackup}
                   disabled={backupInProgress || backupDone}
-                  className="px-3 py-1.5 text-xs font-medium rounded-lg bg-amber-500 text-white hover:bg-amber-600 disabled:opacity-50 flex items-center gap-1.5"
+                  className="px-3 py-1.5 text-xs font-medium rounded-lg bg-[var(--color-warning)] text-[var(--color-warning-foreground)] hover:opacity-90 disabled:opacity-50 flex items-center gap-1.5"
                 >
                   {backupInProgress ? (
                     <><Loader2 size={12} className="animate-spin" /> Creating...</>
@@ -279,10 +279,10 @@ export function UpdateModal({ onClose }: UpdateModalProps) {
         </div>
 
         {isDowngrade && (
-          <div className="mt-4 p-3 bg-red-500/10 border border-red-500/30 rounded-xl">
+          <div className="mt-4 p-3 rounded-xl" style={{ backgroundColor: 'color-mix(in srgb, var(--color-destructive) 10%, transparent)', border: '1px solid color-mix(in srgb, var(--color-destructive) 30%, transparent)' }}>
             <div className="flex items-start gap-2">
-              <AlertTriangle className="text-red-500 mt-0.5 flex-shrink-0" size={16} />
-              <p className="text-sm text-red-600 dark:text-red-300">
+              <AlertTriangle className="text-[var(--color-destructive)] mt-0.5 flex-shrink-0" size={16} />
+              <p className="text-sm text-[var(--color-destructive)]">
                 <strong>Downgrade warning:</strong> Rolling back may cause issues if database migrations
                 from newer versions have already been applied. A backup is strongly recommended.
               </p>
@@ -311,8 +311,8 @@ export function UpdateModal({ onClose }: UpdateModalProps) {
   const renderSuccess = () => (
     <div className="py-4">
       <div className="text-center mb-6">
-        <div className="w-16 h-16 mx-auto mb-4 bg-green-500/10 rounded-full flex items-center justify-center">
-          <CheckCircle className="text-green-500" size={32} />
+        <div className="w-16 h-16 mx-auto mb-4 rounded-full flex items-center justify-center" style={{ backgroundColor: 'color-mix(in srgb, var(--color-success) 10%, transparent)' }}>
+          <CheckCircle className="text-[var(--color-success)]" size={32} />
         </div>
         <h3 className="text-lg font-medium text-[var(--color-foreground)]">
           Version Changed!
@@ -338,10 +338,10 @@ export function UpdateModal({ onClose }: UpdateModalProps) {
         </div>
       )}
 
-      <div className="mt-4 p-3 bg-amber-500/10 border border-amber-500/30 rounded-xl">
+      <div className="mt-4 p-3 rounded-xl" style={{ backgroundColor: 'color-mix(in srgb, var(--color-warning) 10%, transparent)', border: '1px solid color-mix(in srgb, var(--color-warning) 30%, transparent)' }}>
         <div className="flex items-start gap-2">
-          <AlertTriangle className="text-amber-500 mt-0.5 flex-shrink-0" size={16} />
-          <p className="text-sm text-amber-600 dark:text-amber-300">
+          <AlertTriangle className="text-[var(--color-warning)] mt-0.5 flex-shrink-0" size={16} />
+          <p className="text-sm text-[var(--color-warning)]">
             The application will be temporarily unavailable during the restart.
           </p>
         </div>
@@ -351,8 +351,8 @@ export function UpdateModal({ onClose }: UpdateModalProps) {
 
   const renderError = () => (
     <div className="py-8 text-center">
-      <div className="w-16 h-16 mx-auto mb-4 bg-red-500/10 rounded-full flex items-center justify-center">
-        <XCircle className="text-red-500" size={32} />
+      <div className="w-16 h-16 mx-auto mb-4 rounded-full flex items-center justify-center" style={{ backgroundColor: 'color-mix(in srgb, var(--color-destructive) 10%, transparent)' }}>
+        <XCircle className="text-[var(--color-destructive)]" size={32} />
       </div>
       <h3 className="text-lg font-medium text-[var(--color-foreground)]">Update Failed</h3>
       <p className="text-sm text-[var(--color-destructive)] mt-2">{error}</p>
@@ -411,8 +411,8 @@ export function UpdateModal({ onClose }: UpdateModalProps) {
             </button>
             <button
               onClick={applyUpdate}
-              className={`flex-1 py-2.5 rounded-xl font-medium hover:opacity-90 transition-opacity flex items-center justify-center gap-2 text-white ${
-                selectedRelease?.isOlder ? 'bg-amber-500' : 'bg-[var(--color-primary)]'
+              className={`flex-1 py-2.5 rounded-xl font-medium hover:opacity-90 transition-opacity flex items-center justify-center gap-2 ${
+                selectedRelease?.isOlder ? 'bg-[var(--color-warning)] text-[var(--color-warning-foreground)]' : 'bg-[var(--color-primary)] text-[var(--color-primary-foreground)]'
               }`}
             >
               <Download size={18} />

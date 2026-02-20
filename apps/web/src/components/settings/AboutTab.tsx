@@ -377,7 +377,7 @@ export function AboutTab() {
             ) : (
               <div className="p-4 bg-[var(--color-background)] rounded-xl">
                 <div className="flex items-center gap-3">
-                  <CheckCircle className="text-green-500" size={20} />
+                  <CheckCircle className="text-[var(--color-success)]" size={20} />
                   <div>
                     <p className="font-medium text-[var(--color-foreground)]">You're up to date!</p>
                     <p className="text-sm text-[var(--color-muted-foreground)]">
@@ -458,14 +458,14 @@ export function AboutTab() {
                     </a>
                     <button
                       onClick={() => setRestoreTarget(backup.filename)}
-                      className="p-1.5 rounded-lg hover:bg-amber-500/10 transition-colors text-[var(--color-muted-foreground)] hover:text-amber-500"
+                      className="p-1.5 rounded-lg hover:bg-[var(--color-warning)]/10 transition-colors text-[var(--color-muted-foreground)] hover:text-[var(--color-warning)]"
                       title="Restore"
                     >
                       <RotateCcw size={14} />
                     </button>
                     <button
                       onClick={() => deleteBackup(backup.filename)}
-                      className="p-1.5 rounded-lg hover:bg-red-500/10 transition-colors text-[var(--color-muted-foreground)] hover:text-red-500"
+                      className="p-1.5 rounded-lg hover:bg-[var(--color-destructive)]/10 transition-colors text-[var(--color-muted-foreground)] hover:text-[var(--color-destructive)]"
                       title="Delete"
                     >
                       <Trash2 size={14} />

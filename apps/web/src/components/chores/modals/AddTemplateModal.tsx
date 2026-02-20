@@ -4,6 +4,7 @@ import { FileText } from 'lucide-react';
 import { choresApi } from '../../../api';
 import type { ChoreCategory, ChoreTemplate } from '../../../types';
 import { ModalPortal, ModalBody } from '../../common/ModalPortal';
+import { ModalFooterButtons } from '../../common/ModalFooterButtons';
 
 type Difficulty = 'easy' | 'medium' | 'hard';
 
@@ -89,21 +90,12 @@ export function AddTemplateModal({
   };
 
   const footer = (
-    <div className="flex gap-3">
-      <button
-        onClick={onClose}
-        className="flex-1 py-2 px-4 border border-[var(--color-border)] rounded-xl text-[var(--color-muted-foreground)] hover:bg-[var(--color-muted)] transition-colors"
-      >
-        Cancel
-      </button>
-      <button
-        onClick={handleSubmit}
-        disabled={saving}
-        className="flex-1 py-2 px-4 bg-[var(--color-primary)] text-[var(--color-primary-foreground)] rounded-xl hover:opacity-90 transition-colors disabled:opacity-50"
-      >
-        {saving ? 'Saving...' : isEdit ? 'Save Changes' : 'Create Template'}
-      </button>
-    </div>
+    <ModalFooterButtons
+      onCancel={onClose}
+      onSubmit={handleSubmit}
+      submitText={isEdit ? 'Save Changes' : 'Create Template'}
+      submitting={saving}
+    />
   );
 
   return (

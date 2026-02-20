@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { Users, Plus, Edit2, Key, Hash, Trash2, X, Check, AlertCircle, UserCheck, UserX, Cake } from 'lucide-react';
 import { ModalPortal, ModalBody } from '../components/common/ModalPortal';
+import { PageHeader } from '../components/common/PageHeader';
 import { api, type FamilyMember } from '../api';
 import { useAuth } from '../context/AuthContext';
 import { useTheme } from '../context/ThemeContext';
@@ -294,22 +295,20 @@ export function FamilyPage() {
     <div className={`min-h-screen themed-family-bg ${animationClasses}`}>
       <div className="p-3 sm:p-4 md:p-6 lg:p-8">
       {/* Header */}
-      <div className="flex flex-wrap items-center justify-between mb-8">
-        <div>
-          <h1 className="text-3xl font-bold text-[var(--color-foreground)] flex items-center gap-3">
-            <Users className="text-[var(--color-primary)]" />
-            Family Members
-          </h1>
-          <p className="text-[var(--color-muted-foreground)] mt-1">Manage your household members and their access</p>
-        </div>
-        <button
-          onClick={openAddModal}
-          className="flex items-center gap-2 bg-[var(--color-primary)] hover:opacity-90 text-[var(--color-primary-foreground)] px-4 py-2 rounded-xl transition-opacity"
-        >
-          <Plus size={20} />
-          Add Member
-        </button>
-      </div>
+      <PageHeader
+        icon={Users}
+        title="Family Members"
+        subtitle="Manage your household members and their access"
+        actions={
+          <button
+            onClick={openAddModal}
+            className="flex items-center gap-2 bg-[var(--color-primary)] hover:opacity-90 text-[var(--color-primary-foreground)] px-4 py-2 rounded-xl transition-opacity"
+          >
+            <Plus size={20} />
+            Add Member
+          </button>
+        }
+      />
 
       {/* Success message */}
       {success && (
