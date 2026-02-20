@@ -6,6 +6,32 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ---
 
+## [1.4.1] - 2026-02-19
+
+### Added
+
+#### Session & Idle Management
+- **Universal idle timeout** — All sessions now show an "Are you still there?" warning with a live countdown timer before automatic logout (regular: 30 min, kiosk: 15 min)
+- **Idle warning modal** — Full-screen countdown modal with context-aware messaging (logout for regular sessions, return to PIN screen for kiosk)
+- **Session janitor** — Expired sessions are now automatically cleaned up from the database (existing `startJanitor()` was never wired into server startup)
+
+#### Day Rollover Auto-Refresh
+- **Automatic midnight refresh** — Pages now reload automatically when the day changes, ensuring chore lists, calendar events, and stats are always current
+- **Dual-approach reliability** — Precise `setTimeout` targeting midnight with a 60-second fallback interval for browser timer suspension
+
+#### Chore Deadline Reminders
+- **Configurable reminder times** — Admins can set up to 4 daily check times in Settings > Notifications (e.g., 12:00 and 19:00)
+- **Automatic email reminders** — When chores due today are still pending at a configured time, email notifications are sent to the assigned user and all admin users
+- **In-app notifications** — Assigned users also receive in-app notifications alongside email reminders
+- **Deduplication tracking** — Each chore is only reminded once per slot per day, preventing duplicate notifications
+- **Database migration** — New `018_chore_deadline_reminders.sql` adds settings columns and dedup tracking table
+
+### Changed
+- **`useKioskIdleTimeout` renamed to `useIdleTimeout`** — Now supports both regular and kiosk sessions with configurable timeouts and warning durations
+- **Backward-compatible export** — `useKioskIdleTimeout` remains as an alias for existing imports
+
+---
+
 ## [1.4.0] - 2026-02-19
 
 ### Added

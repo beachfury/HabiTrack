@@ -4,7 +4,8 @@
 export * from './useDebounce';
 export * from './useLocalStorage';
 export * from './useClickOutside';
-export * from './useKioskIdleTimeout';
+export * from './useIdleTimeout';
+export * from './useDayRollover';
 
 // Re-export context hooks for convenience
 export { useAuth } from '../context/AuthContext';

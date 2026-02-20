@@ -18,6 +18,14 @@ interface HouseholdSettings {
   loginBackground: string | null;
   loginBackgroundValue: string | null;
   timezone: string | null;
+  choreDeadlineReminder1Enabled: boolean;
+  choreDeadlineReminder1Time: string;
+  choreDeadlineReminder2Enabled: boolean;
+  choreDeadlineReminder2Time: string;
+  choreDeadlineReminder3Enabled: boolean;
+  choreDeadlineReminder3Time: string;
+  choreDeadlineReminder4Enabled: boolean;
+  choreDeadlineReminder4Time: string;
 }
 
 /**
@@ -34,10 +42,26 @@ export async function getHouseholdSettings(req: Request, res: Response) {
 
   try {
     const [settings] = await q<HouseholdSettings[]>(
-      `SELECT id, householdName as name, brandColor, logoUrl, loginBackground, loginBackgroundValue, timezone FROM settings WHERE id = 1`,
+      `SELECT id, householdName as name, brandColor, logoUrl, loginBackground, loginBackgroundValue, timezone,
+        choreDeadlineReminder1Enabled, choreDeadlineReminder1Time,
+        choreDeadlineReminder2Enabled, choreDeadlineReminder2Time,
+        choreDeadlineReminder3Enabled, choreDeadlineReminder3Time,
+        choreDeadlineReminder4Enabled, choreDeadlineReminder4Time
+       FROM settings WHERE id = 1`,
     );
 
-    return success(res, { household: settings || {} });
+    // Convert booleans from tinyint for deadline reminders
+    const household = settings
+      ? {
+          ...settings,
+          choreDeadlineReminder1Enabled: !!settings.choreDeadlineReminder1Enabled,
+          choreDeadlineReminder2Enabled: !!settings.choreDeadlineReminder2Enabled,
+          choreDeadlineReminder3Enabled: !!settings.choreDeadlineReminder3Enabled,
+          choreDeadlineReminder4Enabled: !!settings.choreDeadlineReminder4Enabled,
+        }
+      : {};
+
+    return success(res, { household });
   } catch (err) {
     return serverError(res, err as Error);
   }
@@ -55,7 +79,13 @@ export async function updateHouseholdSettings(req: Request, res: Response) {
     return forbidden(res, 'Admin access required');
   }
 
-  const { name, brandColor, logoUrl, loginBackground, loginBackgroundValue, timezone } = req.body;
+  const {
+    name, brandColor, logoUrl, loginBackground, loginBackgroundValue, timezone,
+    choreDeadlineReminder1Enabled, choreDeadlineReminder1Time,
+    choreDeadlineReminder2Enabled, choreDeadlineReminder2Time,
+    choreDeadlineReminder3Enabled, choreDeadlineReminder3Time,
+    choreDeadlineReminder4Enabled, choreDeadlineReminder4Time,
+  } = req.body;
 
   try {
     const updates: string[] = [];
@@ -84,6 +114,25 @@ export async function updateHouseholdSettings(req: Request, res: Response) {
     if (timezone !== undefined) {
       updates.push('timezone = ?');
       params.push(timezone || null);
+    }
+
+    // Chore deadline reminder settings (up to 4 slots)
+    const deadlineFields = [
+      { key: 'choreDeadlineReminder1Enabled', value: choreDeadlineReminder1Enabled, isBool: true },
+      { key: 'choreDeadlineReminder1Time', value: choreDeadlineReminder1Time, isBool: false },
+      { key: 'choreDeadlineReminder2Enabled', value: choreDeadlineReminder2Enabled, isBool: true },
+      { key: 'choreDeadlineReminder2Time', value: choreDeadlineReminder2Time, isBool: false },
+      { key: 'choreDeadlineReminder3Enabled', value: choreDeadlineReminder3Enabled, isBool: true },
+      { key: 'choreDeadlineReminder3Time', value: choreDeadlineReminder3Time, isBool: false },
+      { key: 'choreDeadlineReminder4Enabled', value: choreDeadlineReminder4Enabled, isBool: true },
+      { key: 'choreDeadlineReminder4Time', value: choreDeadlineReminder4Time, isBool: false },
+    ];
+
+    for (const field of deadlineFields) {
+      if (field.value !== undefined) {
+        updates.push(`${field.key} = ?`);
+        params.push(field.isBool ? (field.value ? 1 : 0) : field.value);
+      }
     }
 
     if (updates.length > 0) {

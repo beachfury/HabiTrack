@@ -18,27 +18,33 @@ import { BudgetPage } from './pages/BudgetPage';
 import { RecipesPage } from './pages/RecipesPage';
 import { MealsPage } from './pages/MealsPage';
 import { StorePage } from './pages/StorePage';
-import { useKioskIdleTimeout } from './hooks';
+import { useIdleTimeout, useDayRollover } from './hooks';
+import { IdleWarningModal } from './components/common/IdleWarningModal';
 import { ErrorBoundary } from './components/ErrorBoundary';
 
 function ProtectedRoute({ children }: { children: React.ReactNode }) {
   const { user, loading } = useAuth();
   const navigate = useNavigate();
   const [showIdleWarning, setShowIdleWarning] = useState(false);
+  const [warningSeconds, setWarningSeconds] = useState(60);
 
-  // Handle kiosk idle timeout
+  const isKiosk = !!user?.isKiosk;
+  const idleTimeoutMs = isKiosk ? 15 * 60 * 1000 : 30 * 60 * 1000;
+
+  // Handle idle timeout warning
   const handleIdleWarning = useCallback((secondsRemaining: number) => {
+    setWarningSeconds(secondsRemaining);
     setShowIdleWarning(true);
   }, []);
 
   const handleIdleLogout = useCallback(() => {
     setShowIdleWarning(false);
-    navigate('/kiosk');
-  }, [navigate]);
+    navigate(isKiosk ? '/kiosk' : '/login');
+  }, [navigate, isKiosk]);
 
-  const { resetTimer } = useKioskIdleTimeout({
-    enabled: !!user?.isKiosk,
-    timeoutMs: 15 * 60 * 1000, // 15 minutes
+  const { resetTimer } = useIdleTimeout({
+    enabled: !!user,
+    timeoutMs: idleTimeoutMs,
     onWarning: handleIdleWarning,
     onLogout: handleIdleLogout,
   });
@@ -48,6 +54,9 @@ function ProtectedRoute({ children }: { children: React.ReactNode }) {
     setShowIdleWarning(false);
     resetTimer();
   }, [resetTimer]);
+
+  // Auto-reload at midnight to refresh stale data
+  useDayRollover();
 
   if (loading) {
     return <LoadingScreen />;
@@ -60,24 +69,13 @@ function ProtectedRoute({ children }: { children: React.ReactNode }) {
   return (
     <Layout>
       {children}
-      {/* Kiosk idle warning modal */}
-      {showIdleWarning && (
-        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
-          <div className="bg-[var(--color-card)] rounded-lg p-6 max-w-md mx-4 text-center shadow-xl">
-            <div className="text-4xl mb-4">⏰</div>
-            <h2 className="text-xl font-bold text-[var(--color-foreground)] mb-2">Still there?</h2>
-            <p className="text-[var(--color-muted-foreground)] mb-4">
-              You'll be logged out in 1 minute due to inactivity.
-            </p>
-            <button
-              onClick={handleDismissWarning}
-              className="px-6 py-2 bg-[var(--color-primary)] text-[var(--color-primary-foreground)] rounded-lg hover:opacity-90 transition-opacity"
-            >
-              I'm still here
-            </button>
-          </div>
-        </div>
-      )}
+      <IdleWarningModal
+        isOpen={showIdleWarning}
+        initialSeconds={warningSeconds}
+        onDismiss={handleDismissWarning}
+        onTimeout={handleIdleLogout}
+        sessionType={isKiosk ? 'kiosk' : 'regular'}
+      />
     </Layout>
   );
 }
