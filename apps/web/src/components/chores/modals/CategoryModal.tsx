@@ -5,6 +5,7 @@ import { choresApi } from '../../../api';
 import type { ChoreCategory } from '../../../types';
 import ColorPicker from '../../common/ColorPicker';
 import { ModalPortal, ModalBody } from '../../common/ModalPortal';
+import { ModalFooterButtons } from '../../common/ModalFooterButtons';
 
 interface CategoryModalProps {
   category?: ChoreCategory | null; // If provided, edit mode
@@ -67,21 +68,12 @@ export function CategoryModal({ category, onSuccess, onClose }: CategoryModalPro
   };
 
   const footer = (
-    <div className="flex gap-2">
-      <button
-        onClick={onClose}
-        className="flex-1 py-2 bg-[var(--color-muted)] text-[var(--color-muted-foreground)] rounded-xl font-medium hover:opacity-80 transition-opacity"
-      >
-        Cancel
-      </button>
-      <button
-        onClick={handleSubmit}
-        disabled={saving}
-        className="flex-1 py-2 bg-[var(--color-primary)] text-[var(--color-primary-foreground)] rounded-xl font-medium hover:opacity-90 disabled:opacity-50"
-      >
-        {saving ? 'Saving...' : isEdit ? 'Save' : 'Create'}
-      </button>
-    </div>
+    <ModalFooterButtons
+      onCancel={onClose}
+      onSubmit={handleSubmit}
+      submitText={isEdit ? 'Save' : 'Create'}
+      submitting={saving}
+    />
   );
 
   return (

@@ -268,7 +268,7 @@ export function VotingModal({
                 <button
                   onClick={() => handleFinalize()}
                   disabled={submitting}
-                  className="w-full py-3 rounded-xl bg-[var(--color-success)] text-white hover:bg-[var(--color-success)]/90 transition-colors flex items-center justify-center gap-2"
+                  className="w-full py-3 rounded-xl bg-[var(--color-success)] text-[var(--color-success-foreground)] hover:bg-[var(--color-success)]/90 transition-colors flex items-center justify-center gap-2"
                 >
                   <Check size={18} />
                   {submitting ? 'Finalizing...' : 'Finalize with Top Vote'}

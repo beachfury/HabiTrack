@@ -41,6 +41,7 @@ import {
 } from '../components/chores';
 import { CategoryModal } from '../components/chores/modals/CategoryModal';
 import { AddTemplateModal } from '../components/chores/modals/AddTemplateModal';
+import { PageHeader } from '../components/common/PageHeader';
 
 type View = 'my-chores' | 'all-chores' | 'leaderboard' | 'manage' | 'points';
 
@@ -299,40 +300,35 @@ export function ChoresPage() {
 
   return (
     <div className={`min-h-screen themed-chores-bg ${animationClasses}`}>
-      <div className="p-4 md:p-8 max-w-6xl mx-auto">
+      <div className="p-3 sm:p-4 md:p-6 lg:p-8">
       {/* Header */}
-      <div className="flex items-center justify-between mb-6">
-        <div>
-          <h1 className="text-2xl md:text-3xl font-bold text-[var(--color-foreground)] flex items-center gap-3">
-            <CheckSquare className="text-[var(--color-primary)]" />
-            Chores
-          </h1>
-          <p className="text-[var(--color-muted-foreground)] mt-1">Track and complete your tasks</p>
-        </div>
-
-        {isAdmin && (
-          <div className="flex items-center gap-2">
-            {/* Add Template Button - only show in Manage view */}
-            {view === 'manage' && (
+      <PageHeader
+        title="Chores"
+        icon={CheckSquare}
+        subtitle="Track and complete your tasks"
+        actions={
+          isAdmin ? (
+            <div className="flex items-center gap-2">
+              {view === 'manage' && (
+                <button
+                  onClick={() => setShowAddTemplateModal(true)}
+                  className="themed-btn-secondary flex items-center gap-2"
+                >
+                  <FileText size={20} />
+                  <span className="hidden sm:inline">Add Template</span>
+                </button>
+              )}
               <button
-                onClick={() => setShowAddTemplateModal(true)}
-                className="themed-btn-secondary flex items-center gap-2"
+                onClick={() => setShowAddChoreModal(true)}
+                className="themed-btn-primary flex items-center gap-2"
               >
-                <FileText size={20} />
-                <span className="hidden sm:inline">Add Template</span>
+                <Plus size={20} />
+                <span className="hidden sm:inline">Add Chore</span>
               </button>
-            )}
-            {/* Add Chore Button */}
-            <button
-              onClick={() => setShowAddChoreModal(true)}
-              className="themed-btn-primary flex items-center gap-2"
-            >
-              <Plus size={20} />
-              <span className="hidden sm:inline">Add Chore</span>
-            </button>
-          </div>
-        )}
-      </div>
+            </div>
+          ) : undefined
+        }
+      />
 
       {/* Alerts */}
       {success && (
@@ -355,20 +351,20 @@ export function ChoresPage() {
       {stats && <StatsBar stats={stats} />}
 
       {/* View Tabs */}
-      <div className="flex gap-2 mb-6 overflow-x-auto pb-2">
+      <div className="flex gap-1 mb-6 border-b border-[var(--color-border)] overflow-x-auto">
         {views
           .filter((v) => v.show)
           .map((v) => (
             <button
               key={v.id}
               onClick={() => setView(v.id)}
-              className={`flex items-center gap-2 px-4 py-2 rounded-[var(--radius-lg)] font-medium whitespace-nowrap transition-colors ${
+              className={`flex items-center gap-2 px-4 py-3 border-b-2 transition-colors whitespace-nowrap text-sm font-medium ${
                 view === v.id
-                  ? 'bg-[var(--color-primary)] text-[var(--color-primary-foreground)]'
-                  : 'bg-[var(--color-muted)] text-[var(--color-muted-foreground)] hover:bg-[var(--color-muted)]/80'
+                  ? 'border-[var(--color-primary)] text-[var(--color-primary)]'
+                  : 'border-transparent text-[var(--color-muted-foreground)] hover:text-[var(--color-foreground)]'
               }`}
             >
-              <v.icon size={18} />
+              <v.icon size={16} />
               {v.label}
             </button>
           ))}

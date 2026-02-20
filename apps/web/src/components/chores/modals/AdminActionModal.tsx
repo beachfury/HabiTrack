@@ -3,6 +3,7 @@ import { UserPlus, Check, SkipForward, Clock, Star } from 'lucide-react';
 import type { ChoreInstance } from '../../../types';
 import type { UserOption } from '../../../types';
 import { ModalPortal, ModalBody } from '../../common/ModalPortal';
+import { ModalFooterButtons } from '../../common/ModalFooterButtons';
 import { getDifficultyStyle } from '../../../utils';
 
 interface AdminActionModalProps {
@@ -25,7 +26,12 @@ export function AdminActionModal({
   const footer = (
     <button
       onClick={onClose}
-      className="w-full py-2 bg-[var(--color-muted)] text-[var(--color-muted-foreground)] rounded-xl font-medium hover:opacity-80 transition-opacity"
+      className="w-full py-2 font-medium transition-opacity hover:opacity-80"
+      style={{
+        background: 'var(--color-muted)',
+        color: 'var(--color-muted-foreground)',
+        borderRadius: 'var(--btn-secondary-radius)',
+      }}
     >
       Cancel
     </button>

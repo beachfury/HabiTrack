@@ -35,6 +35,7 @@ export const ELEMENT_PREFIX_MAP: Record<ThemeableElement, string> = {
   'recipes-background': 'recipes-page',
   'paidchores-background': 'paidchores-page',
   'family-background': 'family-page',
+  'store-background': 'store-page',
   // Home page specific elements
   'home-title': 'home-title',
   'home-welcome-banner': 'home-welcome',
@@ -44,6 +45,10 @@ export const ELEMENT_PREFIX_MAP: Record<ThemeableElement, string> = {
   'home-weather-widget': 'home-weather',
   'home-leaderboard-widget': 'home-leaderboard',
   'home-meals-widget': 'home-meals',
+  'home-shopping-widget': 'home-shopping',
+  'home-earnings-widget': 'home-earnings',
+  'home-family-widget': 'home-family',
+  'home-announcements-widget': 'home-announcements',
   // Calendar page specific elements
   'calendar-title': 'calendar-title',
   'calendar-grid': 'calendar-grid',
@@ -87,6 +92,10 @@ export const ELEMENT_CSS_SELECTORS: Partial<Record<ThemeableElement, string>> = 
   'home-weather-widget': '.themed-home-weather, [data-theme-element="home-weather-widget"]',
   'home-leaderboard-widget': '.themed-home-leaderboard, [data-theme-element="home-leaderboard-widget"]',
   'home-meals-widget': '.themed-home-meals, [data-theme-element="home-meals-widget"]',
+  'home-shopping-widget': '.themed-home-shopping, [data-theme-element="home-shopping-widget"]',
+  'home-earnings-widget': '.themed-home-earnings, [data-theme-element="home-earnings-widget"]',
+  'home-family-widget': '.themed-home-family, [data-theme-element="home-family-widget"]',
+  'home-announcements-widget': '.themed-home-announcements, [data-theme-element="home-announcements-widget"]',
   'home-background': '.themed-home-bg, [data-theme-element="home-background"]',
   // Calendar page elements
   'calendar-title': '.themed-calendar-title, [data-theme-element="calendar-title"]',
@@ -120,6 +129,8 @@ export const ELEMENT_CSS_SELECTORS: Partial<Record<ThemeableElement, string>> = 
   'paidchores-background': '.themed-paidchores-bg, [data-theme-element="paidchores-background"]',
   // Family page elements
   'family-background': '.themed-family-bg, [data-theme-element="family-background"]',
+  // Store page elements
+  'store-background': '.themed-store-bg, [data-theme-element="store-background"]',
 };
 
 /**

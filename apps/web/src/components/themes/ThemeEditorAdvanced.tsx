@@ -439,7 +439,7 @@ export function ThemeEditorAdvanced({ theme, onSave, onClose }: ThemeEditorAdvan
   }, [selectedElement, elementStyles]);
 
   // Handle "Apply to all pages" - copies one page's element styles to all other pages
-  const handleApplyPageToAll = useCallback((sourcePage: 'home' | 'calendar' | 'chores' | 'shopping' | 'messages' | 'settings') => {
+  const handleApplyPageToAll = useCallback((sourcePage: 'home' | 'calendar' | 'chores' | 'shopping' | 'messages' | 'settings' | 'store') => {
     // Define element type mappings: what kind of element each page element is
     // This maps source elements to their "type" (background, card, widget, title)
     const pageElementTypes: Record<string, Record<string, string>> = {
@@ -452,6 +452,10 @@ export function ThemeEditorAdvanced({ theme, onSave, onClose }: ThemeEditorAdvan
         'home-weather-widget': 'widget',
         'home-leaderboard-widget': 'widget',
         'home-meals-widget': 'widget',
+        'home-shopping-widget': 'widget',
+        'home-earnings-widget': 'widget',
+        'home-family-widget': 'widget',
+        'home-announcements-widget': 'widget',
         'home-welcome-banner': 'banner',
       },
       calendar: {
@@ -480,6 +484,9 @@ export function ThemeEditorAdvanced({ theme, onSave, onClose }: ThemeEditorAdvan
         'settings-background': 'background',
         'settings-nav-card': 'card',
         'settings-content-card': 'card',
+      },
+      store: {
+        'store-background': 'background',
       },
     };
 
@@ -513,6 +520,9 @@ export function ThemeEditorAdvanced({ theme, onSave, onClose }: ThemeEditorAdvan
         card: 'home-chores-card',
         widget: 'home-stats-widget',
         title: 'home-title',
+      },
+      store: {
+        background: 'store-background',
       },
       budget: {
         background: 'budget-background',
@@ -553,6 +563,8 @@ export function ThemeEditorAdvanced({ theme, onSave, onClose }: ThemeEditorAdvan
     }
 
     setElementStyles(newStyles);
+    setSuccessMessage('Styles applied to all pages!');
+    setTimeout(() => setSuccessMessage(null), 3000);
   }, [elementStyles]);
 
   // Handle element selection from preview

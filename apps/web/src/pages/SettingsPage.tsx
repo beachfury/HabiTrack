@@ -27,6 +27,7 @@ import { EmailSettingsTab } from '../components/settings/EmailSettingsTab';
 import { DebugSettingsTab } from '../components/settings/DebugSettingsTab';
 import { AboutTab } from '../components/settings/AboutTab';
 import { HouseholdTab } from '../components/settings/HouseholdTab';
+import { PageHeader } from '../components/common/PageHeader';
 
 const API_BASE = (import.meta.env.VITE_API_BASE_URL as string) || '';
 
@@ -361,13 +362,11 @@ export function SettingsPage() {
     <div className={`min-h-screen themed-settings-bg ${animationClasses}`}>
       <div className="p-3 sm:p-4 md:p-6 lg:p-8">
       {/* Header */}
-      <div className="mb-8">
-        <h1 className="text-3xl font-bold text-[var(--color-foreground)] flex items-center gap-3">
-          <Settings className="text-[var(--color-primary)]" />
-          Settings
-        </h1>
-        <p className="text-[var(--color-muted-foreground)] mt-1">Manage your account and preferences</p>
-      </div>
+      <PageHeader
+        title="Settings"
+        icon={Settings}
+        subtitle="Manage your account and preferences"
+      />
 
       {/* Success/Error messages */}
       {success && (
@@ -387,15 +386,15 @@ export function SettingsPage() {
       )}
 
       {/* Mobile Tabs - horizontal scrollable */}
-      <div className="flex md:hidden overflow-x-auto gap-1 pb-2 mb-4 -mx-1 px-1">
+      <div className="flex md:hidden overflow-x-auto gap-1 mb-4 -mx-1 px-1 border-b border-[var(--color-border)]">
         {tabs.map((tab) => (
           <button
             key={tab.id}
             onClick={() => setActiveTab(tab.id)}
-            className={`flex items-center gap-2 px-3 py-2 rounded-lg transition-colors whitespace-nowrap text-sm ${
+            className={`flex items-center gap-2 px-3 py-2 border-b-2 transition-colors whitespace-nowrap text-sm ${
               activeTab === tab.id
-                ? 'bg-[var(--color-primary)]/10 text-[var(--color-primary)] font-medium'
-                : 'text-[var(--color-muted-foreground)] hover:bg-[var(--color-muted)]'
+                ? 'border-[var(--color-primary)] text-[var(--color-primary)] font-medium'
+                : 'border-transparent text-[var(--color-muted-foreground)] hover:text-[var(--color-foreground)]'
             }`}
           >
             <tab.icon size={16} />

@@ -19,6 +19,7 @@ import type { Recipe, RecipeStatus, RecipeDifficulty } from '../types/meals';
 
 // Import split components
 import { RecipeCard, AddRecipeModal, RecipeDetailModal, ApprovalModal } from './recipes';
+import { PageHeader } from '../components/common/PageHeader';
 
 // Tabs for recipe filtering
 type RecipeTab = 'all' | 'pending' | 'my-recipes';
@@ -145,20 +146,19 @@ export function RecipesPage() {
   return (
     <div className={`min-h-screen themed-recipes-bg ${animationClasses}`}>
       <div className="p-3 sm:p-4 md:p-6 lg:p-8 flex flex-col">
-      {/* Header */}
-      <div className="flex flex-wrap items-center justify-between mb-6">
-        <div className="flex items-center gap-3">
-          <BookOpen className="w-8 h-8 text-[var(--color-primary)]" />
-          <h1 className="text-3xl font-bold text-[var(--color-foreground)]">Recipe Book</h1>
-        </div>
-        <button
-          onClick={() => setShowAddModal(true)}
-          className="themed-btn-primary flex items-center gap-2"
-        >
-          <Plus size={20} />
-          Add Recipe
-        </button>
-      </div>
+      <PageHeader
+        title="Recipe Book"
+        icon={BookOpen}
+        actions={
+          <button
+            onClick={() => setShowAddModal(true)}
+            className="themed-btn-primary flex items-center gap-2"
+          >
+            <Plus size={20} />
+            Add Recipe
+          </button>
+        }
+      />
 
       {/* Success/Error Messages */}
       {success && (
@@ -178,20 +178,20 @@ export function RecipesPage() {
       )}
 
       {/* Tabs */}
-      <div className="flex items-center gap-2 mb-4 overflow-x-auto">
+      <div className="flex gap-1 mb-6 border-b border-[var(--color-border)] overflow-x-auto">
         {tabs.map((tab) => (
           <button
             key={tab.id}
             onClick={() => setActiveTab(tab.id)}
-            className={`px-4 py-2 rounded-xl font-medium transition-colors whitespace-nowrap flex items-center gap-2 ${
+            className={`flex items-center gap-2 px-4 py-3 border-b-2 transition-colors whitespace-nowrap text-sm font-medium ${
               activeTab === tab.id
-                ? 'bg-[var(--color-primary)] text-[var(--color-primary-foreground)]'
-                : 'bg-[var(--color-muted)] text-[var(--color-muted-foreground)] hover:bg-[var(--color-muted)]/80'
+                ? 'border-[var(--color-primary)] text-[var(--color-primary)]'
+                : 'border-transparent text-[var(--color-muted-foreground)] hover:text-[var(--color-foreground)]'
             }`}
           >
             {tab.label}
             {tab.badge !== undefined && tab.badge > 0 && (
-              <span className="px-2 py-0.5 text-xs rounded-full bg-[var(--color-destructive)] text-white">
+              <span className="px-1.5 py-0.5 text-xs bg-[var(--color-destructive)] text-[var(--color-destructive-foreground)] rounded-full">
                 {tab.badge}
               </span>
             )}

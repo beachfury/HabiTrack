@@ -1,7 +1,8 @@
 // apps/web/src/components/shopping/modals/EditListItemModal.tsx
 import { useState, useEffect } from 'react';
-import { Save, DollarSign } from 'lucide-react';
+import { DollarSign } from 'lucide-react';
 import { ModalPortal } from '../../common/ModalPortal';
+import { ModalFooterButtons } from '../../common/ModalFooterButtons';
 import { shoppingApi } from '../../../api';
 import type { ShoppingListItem, ShoppingStore } from '../../../types';
 
@@ -122,7 +123,7 @@ export function EditListItemModal({ item, stores, onClose, onSave }: EditListIte
               onClick={() => setListType('need')}
               className={`flex-1 py-2 px-3 rounded-lg text-sm font-medium transition-colors ${
                 listType === 'need'
-                  ? 'bg-[var(--color-success)] text-white'
+                  ? 'bg-[var(--color-success)] text-[var(--color-success-foreground)]'
                   : 'bg-[var(--color-muted)] text-[var(--color-muted-foreground)] hover:bg-[var(--color-muted)]/80'
               }`}
             >
@@ -133,7 +134,7 @@ export function EditListItemModal({ item, stores, onClose, onSave }: EditListIte
               onClick={() => setListType('want')}
               className={`flex-1 py-2 px-3 rounded-lg text-sm font-medium transition-colors ${
                 listType === 'want'
-                  ? 'bg-[var(--color-warning)] text-white'
+                  ? 'bg-[var(--color-warning)] text-[var(--color-warning-foreground)]'
                   : 'bg-[var(--color-muted)] text-[var(--color-muted-foreground)] hover:bg-[var(--color-muted)]/80'
               }`}
             >
@@ -256,23 +257,12 @@ export function EditListItemModal({ item, stores, onClose, onSave }: EditListIte
         </div>
 
         {/* Actions */}
-        <div className="flex gap-2 pt-2">
-          <button
-            type="button"
-            onClick={onClose}
-            className="flex-1 px-4 py-2 border border-[var(--color-border)] rounded-lg text-[var(--color-muted-foreground)] hover:bg-[var(--color-muted)] transition-colors"
-          >
-            Cancel
-          </button>
-          <button
-            type="submit"
-            disabled={saving}
-            className="flex-1 px-4 py-2 bg-[var(--color-primary)] text-[var(--color-primary-foreground)] rounded-lg hover:opacity-90 disabled:opacity-50 flex items-center justify-center gap-2"
-          >
-            <Save size={16} />
-            {saving ? 'Saving...' : 'Save Changes'}
-          </button>
-        </div>
+        <ModalFooterButtons
+          onCancel={onClose}
+          submitText="Save Changes"
+          submitting={saving}
+          className="pt-2"
+        />
       </form>
     </ModalPortal>
   );

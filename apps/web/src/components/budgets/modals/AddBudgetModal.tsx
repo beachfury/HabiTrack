@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react';
 import { Wallet, Calendar, DollarSign, FileText } from 'lucide-react';
 import type { Budget, BudgetCategory, CreateBudgetData, PeriodType, BudgetType } from '../../../types/budget';
 import { ModalPortal, ModalBody } from '../../common/ModalPortal';
+import { ModalFooterButtons } from '../../common/ModalFooterButtons';
 
 interface AddBudgetModalProps {
   categories: BudgetCategory[];
@@ -115,23 +116,12 @@ export function AddBudgetModal({
   };
 
   const footer = (
-    <div className="flex gap-3">
-      <button
-        type="button"
-        onClick={onClose}
-        className="flex-1 px-4 py-2 bg-[var(--color-muted)] text-[var(--color-muted-foreground)] rounded-lg hover:opacity-80 transition-opacity"
-      >
-        Cancel
-      </button>
-      <button
-        type="submit"
-        form="budget-form"
-        disabled={submitting}
-        className="flex-1 px-4 py-2 bg-[var(--color-primary)] text-white rounded-lg hover:opacity-90 transition-opacity disabled:opacity-50 disabled:cursor-not-allowed"
-      >
-        {submitting ? 'Saving...' : budget ? 'Update Budget' : 'Create Budget'}
-      </button>
-    </div>
+    <ModalFooterButtons
+      onCancel={onClose}
+      formId="budget-form"
+      submitText={budget ? 'Update Budget' : 'Create Budget'}
+      submitting={submitting}
+    />
   );
 
   return (

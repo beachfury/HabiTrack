@@ -1,4 +1,5 @@
 // apps/web/src/components/common/Avatar.tsx
+// Uses CSS color variables for themed ring/status colors
 import { getInitials, getContrastColor } from '../../utils';
 
 type AvatarSize = 'xs' | 'sm' | 'md' | 'lg' | 'xl';
@@ -53,9 +54,13 @@ export function AvatarWithStatus({
       <Avatar {...props} />
       {isOnline !== undefined && (
         <span
-          className={`absolute bottom-0 right-0 w-3 h-3 rounded-full border-2 border-white dark:border-gray-800 ${
-            isOnline ? 'bg-green-500' : 'bg-gray-400'
-          }`}
+          className="absolute bottom-0 right-0 w-3 h-3 rounded-full"
+          style={{
+            borderWidth: 2,
+            borderStyle: 'solid',
+            borderColor: 'var(--color-card)',
+            backgroundColor: isOnline ? 'var(--color-success)' : 'var(--color-muted-foreground)',
+          }}
         />
       )}
     </div>
@@ -82,12 +87,19 @@ export function AvatarGroup({
           key={i}
           {...user}
           size={size}
-          className="ring-2 ring-white dark:ring-gray-800"
+          className="ring-2"
+          // ring color uses card bg so avatars overlap cleanly on any background
         />
       ))}
       {remaining > 0 && (
         <div
-          className={`${sizeClasses[size]} rounded-full bg-gray-200 dark:bg-gray-700 flex items-center justify-center font-medium text-gray-600 dark:text-gray-300 ring-2 ring-white dark:ring-gray-800`}
+          className={`${sizeClasses[size]} rounded-full flex items-center justify-center font-medium ring-2`}
+          style={{
+            backgroundColor: 'var(--color-muted)',
+            color: 'var(--color-muted-foreground)',
+            // @ts-expect-error CSS custom property
+            '--tw-ring-color': 'var(--color-card)',
+          }}
         >
           +{remaining}
         </div>

@@ -63,15 +63,15 @@ function ProtectedRoute({ children }: { children: React.ReactNode }) {
       {/* Kiosk idle warning modal */}
       {showIdleWarning && (
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
-          <div className="bg-white dark:bg-gray-800 rounded-lg p-6 max-w-md mx-4 text-center shadow-xl">
+          <div className="bg-[var(--color-card)] rounded-lg p-6 max-w-md mx-4 text-center shadow-xl">
             <div className="text-4xl mb-4">⏰</div>
-            <h2 className="text-xl font-bold mb-2">Still there?</h2>
-            <p className="text-gray-600 dark:text-gray-400 mb-4">
+            <h2 className="text-xl font-bold text-[var(--color-foreground)] mb-2">Still there?</h2>
+            <p className="text-[var(--color-muted-foreground)] mb-4">
               You'll be logged out in 1 minute due to inactivity.
             </p>
             <button
               onClick={handleDismissWarning}
-              className="px-6 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-colors"
+              className="px-6 py-2 bg-[var(--color-primary)] text-[var(--color-primary-foreground)] rounded-lg hover:opacity-90 transition-opacity"
             >
               I'm still here
             </button>

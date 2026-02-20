@@ -1,5 +1,6 @@
 // apps/web/src/components/common/Alert.tsx
-import { ReactNode } from 'react';
+// Uses CSS color variables with color-mix() for themed alert backgrounds
+import { ReactNode, CSSProperties } from 'react';
 import { AlertCircle, CheckCircle, Info, AlertTriangle, X } from 'lucide-react';
 
 type AlertVariant = 'success' | 'error' | 'warning' | 'info';
@@ -12,12 +13,22 @@ interface AlertProps {
   className?: string;
 }
 
-const variantClasses: Record<AlertVariant, string> = {
-  success: 'bg-green-50 dark:bg-green-900/20 border-green-200 dark:border-green-800 text-green-700 dark:text-green-400',
-  error: 'bg-red-50 dark:bg-red-900/20 border-red-200 dark:border-red-800 text-red-700 dark:text-red-400',
-  warning: 'bg-yellow-50 dark:bg-yellow-900/20 border-yellow-200 dark:border-yellow-800 text-yellow-700 dark:text-yellow-400',
-  info: 'bg-blue-50 dark:bg-blue-900/20 border-blue-200 dark:border-blue-800 text-blue-700 dark:text-blue-400',
+// CSS variable mapping for each variant
+const variantColorVar: Record<AlertVariant, string> = {
+  success: '--color-success',
+  error: '--color-destructive',
+  warning: '--color-warning',
+  info: '--color-primary',
 };
+
+function getVariantStyle(variant: AlertVariant): CSSProperties {
+  const colorVar = variantColorVar[variant];
+  return {
+    backgroundColor: `color-mix(in srgb, var(${colorVar}) 10%, transparent)`,
+    borderColor: `color-mix(in srgb, var(${colorVar}) 30%, transparent)`,
+    color: `var(${colorVar})`,
+  };
+}
 
 const iconMap: Record<AlertVariant, typeof AlertCircle> = {
   success: CheckCircle,
@@ -32,10 +43,13 @@ export function Alert({ variant, children, title, onClose, className = '' }: Ale
   return (
     <div
       className={`
-        flex items-start gap-3 p-4 rounded-xl border
-        ${variantClasses[variant]}
+        flex items-start gap-3 p-4 border
         ${className}
       `}
+      style={{
+        ...getVariantStyle(variant),
+        borderRadius: 'var(--radius-lg)',
+      }}
       role="alert"
     >
       <Icon size={20} className="flex-shrink-0 mt-0.5" />

@@ -3,7 +3,7 @@
 
 import type { ThemeableElement, ElementStyle } from '../../types/theme';
 
-export type PreviewPage = 'home' | 'chores' | 'calendar' | 'shopping' | 'messages' | 'settings' | 'budget' | 'meals' | 'recipes' | 'paidchores' | 'family' | 'modal' | 'login' | 'kiosk';
+export type PreviewPage = 'home' | 'chores' | 'calendar' | 'shopping' | 'messages' | 'settings' | 'budget' | 'meals' | 'recipes' | 'paidchores' | 'family' | 'store' | 'modal' | 'login' | 'kiosk';
 
 export function ElementsTab({
   elementStyles,
@@ -17,7 +17,7 @@ export function ElementsTab({
   elementStyles: Partial<Record<ThemeableElement, ElementStyle>>;
   onSelectElement: (element: ThemeableElement) => void;
   selectedElement: ThemeableElement | null;
-  onApplyPageToAll: (sourcePage: 'home' | 'calendar' | 'chores' | 'shopping' | 'messages' | 'settings') => void;
+  onApplyPageToAll: (sourcePage: 'home' | 'calendar' | 'chores' | 'shopping' | 'messages' | 'settings' | 'store') => void;
   currentPage: PreviewPage;
   isSystemTheme?: boolean;
   isAdmin?: boolean;
@@ -42,6 +42,10 @@ export function ElementsTab({
       { id: 'home-weather-widget', label: 'Weather Widget', description: 'Weather display widget' },
       { id: 'home-leaderboard-widget', label: 'Leaderboard Widget', description: 'Points leaderboard' },
       { id: 'home-meals-widget', label: 'Meals Widget', description: 'Upcoming meals preview' },
+      { id: 'home-shopping-widget', label: 'Shopping Widget', description: 'Shopping list preview' },
+      { id: 'home-earnings-widget', label: 'Earnings Widget', description: 'Earnings summary' },
+      { id: 'home-family-widget', label: 'Family Widget', description: 'Family members display' },
+      { id: 'home-announcements-widget', label: 'Announcements Widget', description: 'Family announcements' },
     ],
     calendar: [
       { id: 'calendar-background', label: 'Page Background', description: 'Calendar page background' },
@@ -84,6 +88,9 @@ export function ElementsTab({
     ],
     family: [
       { id: 'family-background', label: 'Page Background', description: 'Family page background' },
+    ],
+    store: [
+      { id: 'store-background', label: 'Page Background', description: 'Store page background' },
     ],
     modal: [
       { id: 'modal', label: 'Modal Dialog', description: 'Popup dialog styling' },
@@ -140,7 +147,7 @@ export function ElementsTab({
   };
 
   // Determine if current page supports "Apply to all"
-  const canApplyToAll = ['home', 'calendar', 'chores', 'shopping', 'messages', 'settings'].includes(currentPage);
+  const canApplyToAll = ['home', 'calendar', 'chores', 'shopping', 'messages', 'settings', 'store'].includes(currentPage);
 
   return (
     <div className="space-y-4">
@@ -159,7 +166,7 @@ export function ElementsTab({
             </h4>
             {!isSystemTheme && canApplyToAll && (
               <button
-                onClick={() => onApplyPageToAll(currentPage as 'home' | 'calendar' | 'chores' | 'shopping' | 'messages' | 'settings')}
+                onClick={() => onApplyPageToAll(currentPage as 'home' | 'calendar' | 'chores' | 'shopping' | 'messages' | 'settings' | 'store')}
                 className="text-[10px] px-2 py-0.5 bg-emerald-100 dark:bg-emerald-900/30 text-emerald-700 dark:text-emerald-300 rounded hover:bg-emerald-200 dark:hover:bg-emerald-900/50 transition-colors"
                 title={`Apply ${pageName} page styling to all other pages`}
               >

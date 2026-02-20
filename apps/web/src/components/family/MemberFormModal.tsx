@@ -1,5 +1,6 @@
 // apps/web/src/components/family/MemberFormModal.tsx
 import { ModalPortal, ModalBody } from '../common/ModalPortal';
+import { ModalFooterButtons } from '../common/ModalFooterButtons';
 
 const ROLES = [
   { value: 'admin', label: 'Admin', description: 'Full access to everything' },
@@ -38,23 +39,11 @@ export function MemberFormModal({
   const isAdd = mode === 'add';
 
   const footer = (
-    <div className="flex gap-2">
-      <button
-        type="button"
-        onClick={onClose}
-        className="flex-1 py-2 bg-[var(--color-muted)] text-[var(--color-muted-foreground)] rounded-xl font-medium hover:opacity-80 transition-opacity"
-      >
-        Cancel
-      </button>
-      <button
-        type="submit"
-        form="member-form"
-        onClick={onSubmit}
-        className="flex-1 py-2 bg-[var(--color-primary)] text-[var(--color-primary-foreground)] rounded-xl font-medium hover:opacity-90 transition-opacity"
-      >
-        {isAdd ? 'Add Member' : 'Save Changes'}
-      </button>
-    </div>
+    <ModalFooterButtons
+      onCancel={onClose}
+      formId="member-form"
+      submitText={isAdd ? 'Add Member' : 'Save Changes'}
+    />
   );
 
   return (

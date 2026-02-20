@@ -272,13 +272,13 @@ export function ColorPickerModal({ currentColor, onSelect, onClose }: ColorPicke
     <div className="flex gap-2">
       <button
         onClick={onClose}
-        className="flex-1 py-2 px-4 border border-gray-300 dark:border-gray-600 rounded-xl text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700"
+        className="flex-1 py-2 px-4 border border-[var(--color-border)] rounded-xl text-[var(--color-foreground)] hover:bg-[var(--color-muted)]"
       >
         Cancel
       </button>
       <button
         onClick={handleSelect}
-        className="flex-1 py-2 px-4 bg-purple-600 text-white rounded-xl hover:bg-purple-700 flex items-center justify-center gap-2"
+        className="flex-1 py-2 px-4 bg-[var(--color-accent)] text-[var(--color-primary-foreground)] rounded-xl hover:opacity-90 flex items-center justify-center gap-2"
       >
         <Check size={18} />
         Select Color
@@ -302,8 +302,8 @@ export function ColorPickerModal({ currentColor, onSelect, onClose }: ColorPicke
               onClick={() => setMode('swatches')}
               className={`flex-1 py-2 px-4 rounded-lg font-medium text-sm transition-colors ${
                 mode === 'swatches'
-                  ? 'bg-purple-100 dark:bg-purple-900/30 text-purple-700 dark:text-purple-300'
-                  : 'text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-700'
+                  ? 'bg-[var(--color-accent)]/15 text-[var(--color-accent)]'
+                  : 'text-[var(--color-muted-foreground)] hover:bg-[var(--color-muted)]'
               }`}
             >
               Swatches
@@ -312,8 +312,8 @@ export function ColorPickerModal({ currentColor, onSelect, onClose }: ColorPicke
               onClick={() => setMode('custom')}
               className={`flex-1 py-2 px-4 rounded-lg font-medium text-sm transition-colors ${
                 mode === 'custom'
-                  ? 'bg-purple-100 dark:bg-purple-900/30 text-purple-700 dark:text-purple-300'
-                  : 'text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-700'
+                  ? 'bg-[var(--color-accent)]/15 text-[var(--color-accent)]'
+                  : 'text-[var(--color-muted-foreground)] hover:bg-[var(--color-muted)]'
               }`}
             >
               Custom
@@ -321,20 +321,20 @@ export function ColorPickerModal({ currentColor, onSelect, onClose }: ColorPicke
           </div>
 
           {/* Preview */}
-          <div className="flex items-center gap-4 p-3 bg-gray-100 dark:bg-gray-700/50 rounded-xl">
+          <div className="flex items-center gap-4 p-3 bg-[var(--color-muted)] rounded-xl">
             <div
-              className="w-12 h-12 rounded-xl shadow-inner border border-gray-200 dark:border-gray-600"
+              className="w-12 h-12 rounded-xl shadow-inner border border-[var(--color-border)]"
               style={{ backgroundColor: selectedColor }}
             />
             <div className="flex-1">
-              <p className="text-sm text-gray-500 dark:text-gray-400">Selected</p>
-              <p className="font-mono font-medium text-gray-900 dark:text-white uppercase">
+              <p className="text-sm text-[var(--color-muted-foreground)]">Selected</p>
+              <p className="font-mono font-medium text-[var(--color-foreground)] uppercase">
                 {selectedColor}
               </p>
             </div>
             <button
               onClick={handleReset}
-              className="p-2 hover:bg-gray-200 dark:hover:bg-gray-600 rounded-lg text-gray-500"
+              className="p-2 hover:bg-[var(--color-muted)] rounded-lg text-[var(--color-muted-foreground)]"
               title="Reset to original"
             >
               <RotateCcw size={18} />
@@ -347,7 +347,7 @@ export function ColorPickerModal({ currentColor, onSelect, onClose }: ColorPicke
               {/* Recent Colors */}
               {recentColors.length > 0 && (
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                  <label className="block text-sm font-medium text-[var(--color-foreground)] mb-2">
                     Recent
                   </label>
                   <div className="flex flex-wrap gap-2">
@@ -362,7 +362,7 @@ export function ColorPickerModal({ currentColor, onSelect, onClose }: ColorPicke
                         }}
                         className={`w-10 h-10 sm:w-8 sm:h-8 rounded-lg transition-transform border-2 ${
                           selectedColor === color
-                            ? 'border-purple-500 scale-110 ring-2 ring-purple-300'
+                            ? 'border-[var(--color-accent)] scale-110 ring-2 ring-[var(--color-accent)]/50'
                             : 'border-transparent hover:scale-105'
                         }`}
                         style={{ backgroundColor: color }}
@@ -374,11 +374,11 @@ export function ColorPickerModal({ currentColor, onSelect, onClose }: ColorPicke
 
               {/* Default Swatches */}
               <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                <label className="block text-sm font-medium text-[var(--color-foreground)] mb-2">
                   Colors
                 </label>
                 {loading ? (
-                  <div className="text-center py-4 text-gray-500">Loading...</div>
+                  <div className="text-center py-4 text-[var(--color-muted-foreground)]">Loading...</div>
                 ) : (
                   <div className="flex flex-wrap gap-2">
                     {defaultSwatches.map((swatch) => (
@@ -392,7 +392,7 @@ export function ColorPickerModal({ currentColor, onSelect, onClose }: ColorPicke
                         }}
                         className={`w-10 h-10 sm:w-8 sm:h-8 rounded-lg transition-transform border-2 ${
                           selectedColor === swatch.hexColor
-                            ? 'border-purple-500 scale-110 ring-2 ring-purple-300'
+                            ? 'border-[var(--color-accent)] scale-110 ring-2 ring-[var(--color-accent)]/50'
                             : 'border-transparent hover:scale-105'
                         }`}
                         style={{ backgroundColor: swatch.hexColor }}
@@ -406,7 +406,7 @@ export function ColorPickerModal({ currentColor, onSelect, onClose }: ColorPicke
               {/* Custom Swatches */}
               {customSwatches.length > 0 && (
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                  <label className="block text-sm font-medium text-[var(--color-foreground)] mb-2">
                     My Colors
                   </label>
                   <div className="flex flex-wrap gap-2">
@@ -421,7 +421,7 @@ export function ColorPickerModal({ currentColor, onSelect, onClose }: ColorPicke
                           }}
                           className={`w-10 h-10 sm:w-8 sm:h-8 rounded-lg transition-transform border-2 ${
                             selectedColor === swatch.hexColor
-                              ? 'border-purple-500 scale-110 ring-2 ring-purple-300'
+                              ? 'border-[var(--color-accent)] scale-110 ring-2 ring-[var(--color-accent)]/50'
                               : 'border-transparent hover:scale-105'
                           }`}
                           style={{ backgroundColor: swatch.hexColor }}
@@ -429,7 +429,7 @@ export function ColorPickerModal({ currentColor, onSelect, onClose }: ColorPicke
                         />
                         <button
                           onClick={() => deleteCustomSwatch(swatch.id)}
-                          className="absolute -top-1 -right-1 w-5 h-5 bg-red-500 text-white rounded-full opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center"
+                          className="absolute -top-1 -right-1 w-5 h-5 bg-[var(--color-destructive)] text-[var(--color-destructive-foreground)] rounded-full opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center"
                         >
                           <X size={12} />
                         </button>
@@ -450,8 +450,8 @@ export function ColorPickerModal({ currentColor, onSelect, onClose }: ColorPicke
                   onClick={() => setSliderMode('hsl')}
                   className={`px-3 py-1 rounded-lg text-sm font-medium ${
                     sliderMode === 'hsl'
-                      ? 'bg-purple-100 dark:bg-purple-900/30 text-purple-700 dark:text-purple-300'
-                      : 'text-gray-500 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-700'
+                      ? 'bg-[var(--color-accent)]/15 text-[var(--color-accent)]'
+                      : 'text-[var(--color-muted-foreground)] hover:bg-[var(--color-muted)]'
                   }`}
                 >
                   HSL
@@ -460,8 +460,8 @@ export function ColorPickerModal({ currentColor, onSelect, onClose }: ColorPicke
                   onClick={() => setSliderMode('rgb')}
                   className={`px-3 py-1 rounded-lg text-sm font-medium ${
                     sliderMode === 'rgb'
-                      ? 'bg-purple-100 dark:bg-purple-900/30 text-purple-700 dark:text-purple-300'
-                      : 'text-gray-500 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-700'
+                      ? 'bg-[var(--color-accent)]/15 text-[var(--color-accent)]'
+                      : 'text-[var(--color-muted-foreground)] hover:bg-[var(--color-muted)]'
                   }`}
                 >
                   RGB
@@ -474,8 +474,8 @@ export function ColorPickerModal({ currentColor, onSelect, onClose }: ColorPicke
                   {/* Hue */}
                   <div>
                     <div className="flex justify-between text-sm mb-1">
-                      <span className="text-gray-600 dark:text-gray-400">Hue</span>
-                      <span className="font-mono text-gray-900 dark:text-white">{hsl.h}°</span>
+                      <span className="text-[var(--color-muted-foreground)]">Hue</span>
+                      <span className="font-mono text-[var(--color-foreground)]">{hsl.h}°</span>
                     </div>
                     <input
                       type="range"
@@ -500,8 +500,8 @@ export function ColorPickerModal({ currentColor, onSelect, onClose }: ColorPicke
                   {/* Saturation */}
                   <div>
                     <div className="flex justify-between text-sm mb-1">
-                      <span className="text-gray-600 dark:text-gray-400">Saturation</span>
-                      <span className="font-mono text-gray-900 dark:text-white">{hsl.s}%</span>
+                      <span className="text-[var(--color-muted-foreground)]">Saturation</span>
+                      <span className="font-mono text-[var(--color-foreground)]">{hsl.s}%</span>
                     </div>
                     <input
                       type="range"
@@ -521,8 +521,8 @@ export function ColorPickerModal({ currentColor, onSelect, onClose }: ColorPicke
                   {/* Lightness */}
                   <div>
                     <div className="flex justify-between text-sm mb-1">
-                      <span className="text-gray-600 dark:text-gray-400">Lightness</span>
-                      <span className="font-mono text-gray-900 dark:text-white">{hsl.l}%</span>
+                      <span className="text-[var(--color-muted-foreground)]">Lightness</span>
+                      <span className="font-mono text-[var(--color-foreground)]">{hsl.l}%</span>
                     </div>
                     <input
                       type="range"
@@ -549,7 +549,7 @@ export function ColorPickerModal({ currentColor, onSelect, onClose }: ColorPicke
                   <div>
                     <div className="flex justify-between text-sm mb-1">
                       <span className="text-red-600 dark:text-red-400">Red</span>
-                      <span className="font-mono text-gray-900 dark:text-white">{rgb.r}</span>
+                      <span className="font-mono text-[var(--color-foreground)]">{rgb.r}</span>
                     </div>
                     <input
                       type="range"
@@ -570,7 +570,7 @@ export function ColorPickerModal({ currentColor, onSelect, onClose }: ColorPicke
                   <div>
                     <div className="flex justify-between text-sm mb-1">
                       <span className="text-green-600 dark:text-green-400">Green</span>
-                      <span className="font-mono text-gray-900 dark:text-white">{rgb.g}</span>
+                      <span className="font-mono text-[var(--color-foreground)]">{rgb.g}</span>
                     </div>
                     <input
                       type="range"
@@ -591,7 +591,7 @@ export function ColorPickerModal({ currentColor, onSelect, onClose }: ColorPicke
                   <div>
                     <div className="flex justify-between text-sm mb-1">
                       <span className="text-blue-600 dark:text-blue-400">Blue</span>
-                      <span className="font-mono text-gray-900 dark:text-white">{rgb.b}</span>
+                      <span className="font-mono text-[var(--color-foreground)]">{rgb.b}</span>
                     </div>
                     <input
                       type="range"
@@ -612,7 +612,7 @@ export function ColorPickerModal({ currentColor, onSelect, onClose }: ColorPicke
 
               {/* Hex Input */}
               <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                <label className="block text-sm font-medium text-[var(--color-foreground)] mb-1">
                   Hex Code
                 </label>
                 <input
@@ -628,7 +628,7 @@ export function ColorPickerModal({ currentColor, onSelect, onClose }: ColorPicke
                       }
                     }
                   }}
-                  className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-xl bg-gray-50 dark:bg-gray-800 text-gray-900 dark:text-white font-mono uppercase"
+                  className="w-full px-3 py-2 border border-[var(--color-border)] rounded-xl bg-[var(--color-muted)] text-[var(--color-foreground)] font-mono uppercase"
                   placeholder="#000000"
                   maxLength={7}
                 />
@@ -638,7 +638,7 @@ export function ColorPickerModal({ currentColor, onSelect, onClose }: ColorPicke
               {!showSaveInput ? (
                 <button
                   onClick={() => setShowSaveInput(true)}
-                  className="flex items-center gap-2 text-sm text-purple-600 dark:text-purple-400 hover:underline"
+                  className="flex items-center gap-2 text-sm text-[var(--color-accent)] hover:underline"
                 >
                   <Plus size={16} />
                   Save as custom color
@@ -650,13 +650,13 @@ export function ColorPickerModal({ currentColor, onSelect, onClose }: ColorPicke
                     value={swatchName}
                     onChange={(e) => setSwatchName(e.target.value)}
                     placeholder="Color name..."
-                    className="flex-1 px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-xl bg-gray-50 dark:bg-gray-800 text-gray-900 dark:text-white text-sm"
+                    className="flex-1 px-3 py-2 border border-[var(--color-border)] rounded-xl bg-[var(--color-muted)] text-[var(--color-foreground)] text-sm"
                     autoFocus
                   />
                   <button
                     onClick={saveCustomSwatch}
                     disabled={!swatchName.trim() || saving}
-                    className="px-3 py-2 bg-purple-600 text-white rounded-xl text-sm disabled:opacity-50"
+                    className="px-3 py-2 bg-[var(--color-accent)] text-[var(--color-primary-foreground)] rounded-xl text-sm disabled:opacity-50"
                   >
                     {saving ? '...' : 'Save'}
                   </button>
@@ -665,7 +665,7 @@ export function ColorPickerModal({ currentColor, onSelect, onClose }: ColorPicke
                       setShowSaveInput(false);
                       setSwatchName('');
                     }}
-                    className="px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-xl text-sm"
+                    className="px-3 py-2 border border-[var(--color-border)] rounded-xl text-[var(--color-foreground)] text-sm"
                   >
                     Cancel
                   </button>

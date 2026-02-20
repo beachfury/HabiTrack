@@ -61,6 +61,7 @@ export interface WidgetLayout {
   maxH: number | null;
   visible: boolean;
   config: any;
+  configSchema?: Record<string, unknown> | null;
 }
 
 export interface DashboardWidget {

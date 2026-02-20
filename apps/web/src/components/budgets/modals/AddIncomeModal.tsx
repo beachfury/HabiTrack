@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react';
 import { DollarSign, Calendar } from 'lucide-react';
 import type { IncomeDefinition, CreateIncomeData, IncomeType, IncomeFrequency } from '../../../types/budget';
 import { ModalPortal, ModalBody } from '../../common/ModalPortal';
+import { ModalFooterButtons } from '../../common/ModalFooterButtons';
 
 interface AddIncomeModalProps {
   income: IncomeDefinition | null; // null = create, set = edit
@@ -104,23 +105,12 @@ export function AddIncomeModal({
   };
 
   const footer = (
-    <div className="flex gap-3">
-      <button
-        type="button"
-        onClick={onClose}
-        className="flex-1 px-4 py-2 bg-[var(--color-muted)] text-[var(--color-muted-foreground)] rounded-lg hover:opacity-80 transition-opacity"
-      >
-        Cancel
-      </button>
-      <button
-        type="submit"
-        form="income-form"
-        disabled={submitting}
-        className="flex-1 px-4 py-2 bg-[var(--color-primary)] text-white rounded-lg hover:opacity-90 transition-opacity disabled:opacity-50 disabled:cursor-not-allowed"
-      >
-        {submitting ? 'Saving...' : income ? 'Update Income Source' : 'Create Income Source'}
-      </button>
-    </div>
+    <ModalFooterButtons
+      onCancel={onClose}
+      formId="income-form"
+      submitText={income ? 'Update Income Source' : 'Create Income Source'}
+      submitting={submitting}
+    />
   );
 
   return (

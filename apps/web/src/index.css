@@ -110,6 +110,10 @@
   --family-page-bg-image: var(--page-bg-image);
   --family-page-bg-opacity: var(--page-bg-opacity);
 
+  --store-page-bg: var(--page-bg);
+  --store-page-bg-image: var(--page-bg-image);
+  --store-page-bg-opacity: var(--page-bg-opacity);
+
   /* ============================================
      ELEMENT-SPECIFIC CSS VARIABLES
      Per-element customization for advanced theming
@@ -717,6 +721,48 @@
 .themed-sidebar {
   background: var(--sidebar-bg);
   color: var(--sidebar-text);
+  font-family: var(--sidebar-font-family, inherit);
+  font-size: var(--sidebar-font-size, inherit);
+  font-weight: var(--sidebar-font-weight, inherit);
+  border-width: var(--sidebar-border-width, 0);
+  border-style: var(--sidebar-border-style, solid);
+  border-color: var(--sidebar-border, transparent);
+  border-radius: var(--sidebar-radius, 0);
+  box-shadow: var(--sidebar-shadow, none), 0 0 var(--sidebar-glow-size, 0px) var(--sidebar-glow-color, transparent);
+  padding: var(--sidebar-padding);
+  /* Effects */
+  opacity: var(--sidebar-opacity, 1);
+  backdrop-filter: blur(var(--sidebar-blur, 0px));
+  filter: saturate(var(--sidebar-saturation, 100%)) grayscale(var(--sidebar-grayscale, 0%));
+  transform: scale(var(--sidebar-scale, 1)) rotate(var(--sidebar-rotate, 0deg)) skewX(var(--sidebar-skew-x, 0deg)) skewY(var(--sidebar-skew-y, 0deg));
+  transition: transform 0.2s ease, opacity 0.2s ease;
+  position: relative;
+  overflow: hidden;
+}
+
+.themed-sidebar:hover {
+  transform: scale(var(--sidebar-hover-scale, var(--sidebar-scale, 1))) rotate(var(--sidebar-rotate, 0deg)) skewX(var(--sidebar-skew-x, 0deg)) skewY(var(--sidebar-skew-y, 0deg));
+  opacity: var(--sidebar-hover-opacity, var(--sidebar-opacity, 1));
+}
+
+/* Background image layer for sidebar */
+.themed-sidebar::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background-image: var(--sidebar-bg-image, var(--sidebar-image));
+  background-size: cover;
+  background-position: center;
+  opacity: var(--sidebar-bg-opacity, calc(var(--sidebar-image-opacity, 100) / 100));
+  z-index: 0;
+  pointer-events: none;
+  border-radius: inherit;
+}
+
+/* Ensure content is above the background image */
+.themed-sidebar > * {
+  position: relative;
+  z-index: 1;
 }
 
 /* ============================================
@@ -973,6 +1019,29 @@
 }
 
 .themed-family-bg > * {
+  position: relative;
+  z-index: 1;
+}
+
+/* Store Page Background */
+.themed-store-bg {
+  background: var(--store-page-bg);
+  position: relative;
+}
+
+.themed-store-bg::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background-image: var(--store-page-bg-image);
+  background-size: cover;
+  background-position: center;
+  opacity: var(--store-page-bg-opacity, 1);
+  z-index: 0;
+  pointer-events: none;
+}
+
+.themed-store-bg > * {
   position: relative;
   z-index: 1;
 }
@@ -1375,6 +1444,138 @@
 }
 
 .themed-home-meals > * {
+  position: relative;
+  z-index: 1;
+}
+
+/* Home - Shopping List Widget */
+.themed-home-shopping {
+  background: var(--home-shopping-bg, var(--widget-bg));
+  color: var(--home-shopping-text, var(--widget-text));
+  font-size: var(--home-shopping-font-size, inherit);
+  font-weight: var(--home-shopping-font-weight, inherit);
+  font-family: var(--home-shopping-font-family, inherit);
+  border: var(--home-shopping-border-width, var(--widget-border-width)) solid var(--home-shopping-border, var(--widget-border));
+  border-radius: var(--home-shopping-radius, var(--widget-radius));
+  box-shadow: var(--home-shopping-shadow, var(--widget-shadow));
+  padding: var(--home-shopping-padding, var(--widget-padding));
+  position: relative;
+  overflow: hidden;
+}
+
+.themed-home-shopping::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background-image: var(--home-shopping-bg-image);
+  background-size: cover;
+  background-position: center;
+  opacity: var(--home-shopping-bg-opacity, 1);
+  z-index: 0;
+  pointer-events: none;
+  border-radius: inherit;
+}
+
+.themed-home-shopping > * {
+  position: relative;
+  z-index: 1;
+}
+
+/* Home - Earnings Widget */
+.themed-home-earnings {
+  background: var(--home-earnings-bg, var(--widget-bg));
+  color: var(--home-earnings-text, var(--widget-text));
+  font-size: var(--home-earnings-font-size, inherit);
+  font-weight: var(--home-earnings-font-weight, inherit);
+  font-family: var(--home-earnings-font-family, inherit);
+  border: var(--home-earnings-border-width, var(--widget-border-width)) solid var(--home-earnings-border, var(--widget-border));
+  border-radius: var(--home-earnings-radius, var(--widget-radius));
+  box-shadow: var(--home-earnings-shadow, var(--widget-shadow));
+  padding: var(--home-earnings-padding, var(--widget-padding));
+  position: relative;
+  overflow: hidden;
+}
+
+.themed-home-earnings::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background-image: var(--home-earnings-bg-image);
+  background-size: cover;
+  background-position: center;
+  opacity: var(--home-earnings-bg-opacity, 1);
+  z-index: 0;
+  pointer-events: none;
+  border-radius: inherit;
+}
+
+.themed-home-earnings > * {
+  position: relative;
+  z-index: 1;
+}
+
+/* Home - Family Widget */
+.themed-home-family {
+  background: var(--home-family-bg, var(--widget-bg));
+  color: var(--home-family-text, var(--widget-text));
+  font-size: var(--home-family-font-size, inherit);
+  font-weight: var(--home-family-font-weight, inherit);
+  font-family: var(--home-family-font-family, inherit);
+  border: var(--home-family-border-width, var(--widget-border-width)) solid var(--home-family-border, var(--widget-border));
+  border-radius: var(--home-family-radius, var(--widget-radius));
+  box-shadow: var(--home-family-shadow, var(--widget-shadow));
+  padding: var(--home-family-padding, var(--widget-padding));
+  position: relative;
+  overflow: hidden;
+}
+
+.themed-home-family::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background-image: var(--home-family-bg-image);
+  background-size: cover;
+  background-position: center;
+  opacity: var(--home-family-bg-opacity, 1);
+  z-index: 0;
+  pointer-events: none;
+  border-radius: inherit;
+}
+
+.themed-home-family > * {
+  position: relative;
+  z-index: 1;
+}
+
+/* Home - Announcements Widget */
+.themed-home-announcements {
+  background: var(--home-announcements-bg, var(--widget-bg));
+  color: var(--home-announcements-text, var(--widget-text));
+  font-size: var(--home-announcements-font-size, inherit);
+  font-weight: var(--home-announcements-font-weight, inherit);
+  font-family: var(--home-announcements-font-family, inherit);
+  border: var(--home-announcements-border-width, var(--widget-border-width)) solid var(--home-announcements-border, var(--widget-border));
+  border-radius: var(--home-announcements-radius, var(--widget-radius));
+  box-shadow: var(--home-announcements-shadow, var(--widget-shadow));
+  padding: var(--home-announcements-padding, var(--widget-padding));
+  position: relative;
+  overflow: hidden;
+}
+
+.themed-home-announcements::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background-image: var(--home-announcements-bg-image);
+  background-size: cover;
+  background-position: center;
+  opacity: var(--home-announcements-bg-opacity, 1);
+  z-index: 0;
+  pointer-events: none;
+  border-radius: inherit;
+}
+
+.themed-home-announcements > * {
   position: relative;
   z-index: 1;
 }

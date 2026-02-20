@@ -28,25 +28,25 @@ export function ColorPicker({ color, onChange, label, className = '' }: ColorPic
     <>
       <div className={className}>
         {label && (
-          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+          <label className="block text-sm font-medium text-[var(--color-foreground)] mb-2">
             {label}
           </label>
         )}
         <button
           type="button"
           onClick={() => setShowModal(true)}
-          className="flex items-center gap-3 px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-xl bg-white dark:bg-gray-800 hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors w-full"
+          className="flex items-center gap-3 px-3 py-2 border border-[var(--color-border)] rounded-xl bg-[var(--color-card)] hover:bg-[var(--color-muted)] transition-colors w-full"
         >
           <span
-            className="w-8 h-8 rounded-lg border border-gray-200 dark:border-gray-600 shadow-inner"
+            className="w-8 h-8 rounded-lg border border-[var(--color-border)] shadow-inner"
             style={{ backgroundColor: color }}
           />
           <span className="flex-1 text-left">
-            <span className="font-mono text-sm text-gray-900 dark:text-white uppercase">
+            <span className="font-mono text-sm text-[var(--color-foreground)] uppercase">
               {color}
             </span>
           </span>
-          <Palette size={18} className="text-gray-400" />
+          <Palette size={18} className="text-[var(--color-muted-foreground)]" />
         </button>
       </div>
 

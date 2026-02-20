@@ -4,7 +4,6 @@
 import { Users, Plus, Edit2, Key, Shield, User } from 'lucide-react';
 import type { ExtendedTheme, ThemeableElement } from '../../../types/theme';
 import { ClickableElement } from '../InteractivePreview';
-import { buildElementStyle, buildButtonStyle, buildPageBackgroundStyle, RADIUS_MAP, SHADOW_MAP } from './styleUtils';
 
 interface FamilyPreviewProps {
   theme: ExtendedTheme;
@@ -29,46 +28,6 @@ export function FamilyPreview({
 }: FamilyPreviewProps) {
   const colors = colorMode === 'light' ? theme.colorsLight : theme.colorsDark;
 
-  const defaultRadius = RADIUS_MAP[theme.ui.borderRadius] || '8px';
-  const defaultShadow = SHADOW_MAP[theme.ui.shadowIntensity] || 'none';
-
-  const familyBgStyle = theme.elementStyles?.['family-background'] || {};
-  const globalPageBgStyle = theme.elementStyles?.['page-background'] || {};
-
-  const hasCustomBg = familyBgStyle.backgroundColor || familyBgStyle.backgroundGradient || familyBgStyle.backgroundImage || familyBgStyle.customCSS;
-
-  const cardBgFallback = hasCustomBg ? 'rgba(255,255,255,0.08)' : colors.card;
-  const cardBorderFallback = hasCustomBg ? 'rgba(255,255,255,0.15)' : colors.border;
-
-  const cardStyle = theme.elementStyles?.card || {};
-  const buttonPrimaryStyle = theme.elementStyles?.['button-primary'] || {};
-
-  const computedCardStyle = buildElementStyle(cardStyle, cardBgFallback, cardBorderFallback, defaultRadius, defaultShadow, colors.cardForeground);
-  const computedButtonPrimaryStyle = buildButtonStyle(buttonPrimaryStyle, colors.primary, colors.primaryForeground, 'transparent', '8px');
-
-  const { style: pageBgStyle, backgroundImageUrl, customCSS } = buildPageBackgroundStyle(
-    familyBgStyle,
-    globalPageBgStyle,
-    colors.background
-  );
-
-  const getAnimatedBgClasses = (css?: string): string => {
-    if (!css) return '';
-    const classes: string[] = [];
-    if (css.includes('matrix-rain: true') || css.includes('matrix-rain:true')) {
-      classes.push('matrix-rain-bg');
-      const speedMatch = css.match(/matrix-rain-speed:\s*(slow|normal|fast|veryfast)/i);
-      if (speedMatch) classes.push(`matrix-rain-${speedMatch[1].toLowerCase()}`);
-    }
-    if (css.includes('snowfall: true') || css.includes('snowfall:true')) classes.push('snowfall-bg');
-    if (css.includes('sparkle: true') || css.includes('sparkle:true')) classes.push('sparkle-bg');
-    if (css.includes('bubbles: true') || css.includes('bubbles:true')) classes.push('bubbles-bg');
-    if (css.includes('embers: true') || css.includes('embers:true')) classes.push('embers-bg');
-    return classes.join(' ');
-  };
-
-  const animatedBgClasses = getAnimatedBgClasses(customCSS);
-
   const getRoleColor = (role: string) => {
     switch (role) {
       case 'admin': return colors.primary;
@@ -90,36 +49,19 @@ export function FamilyPreview({
       element="family-background"
       isSelected={selectedElement === 'family-background'}
       onClick={() => onSelectElement('family-background')}
-      className={`flex-1 overflow-auto ${animatedBgClasses}`}
-      style={{
-        ...pageBgStyle,
-        position: 'relative',
-      }}
+      className="themed-family-bg flex-1 overflow-auto"
     >
-      {backgroundImageUrl && (
-        <div
-          className="absolute inset-0 pointer-events-none"
-          style={{
-            backgroundImage: `url(${backgroundImageUrl})`,
-            backgroundSize: 'cover',
-            backgroundPosition: 'center',
-            opacity: familyBgStyle.backgroundOpacity ?? 1,
-          }}
-        />
-      )}
-
       <div className="relative z-10 p-4 space-y-4">
         {/* Header */}
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-2">
             <Users size={20} style={{ color: colors.primary }} />
-            <h1 className="text-lg font-bold" style={{ color: colors.foreground }}>
+            <h1 className="text-lg font-bold">
               Family Members
             </h1>
           </div>
           <button
-            className="flex items-center gap-1 px-2 py-1 rounded text-xs"
-            style={computedButtonPrimaryStyle}
+            className="themed-btn-primary flex items-center gap-1 px-3 py-1.5 text-xs font-medium"
           >
             <Plus size={12} />
             Add Member
@@ -127,7 +69,7 @@ export function FamilyPreview({
         </div>
 
         {/* Members Card */}
-        <div className="p-4 rounded-lg" style={computedCardStyle}>
+        <div className="themed-card p-4 rounded-lg">
           <div className="space-y-3">
             {MOCK_MEMBERS.map((member) => {
               const RoleIcon = getRoleIcon(member.role);
@@ -147,7 +89,7 @@ export function FamilyPreview({
                     </div>
                     {/* Info */}
                     <div>
-                      <p className="text-sm font-medium" style={{ color: colors.foreground }}>
+                      <p className="text-sm font-medium">
                         {member.name}
                       </p>
                       <div className="flex items-center gap-1">
@@ -165,13 +107,13 @@ export function FamilyPreview({
                   <div className="flex items-center gap-1">
                     <button
                       className="p-1.5 rounded"
-                      style={{ color: colors.mutedForeground }}
+                      style={{ color: 'var(--color-muted-foreground)' }}
                     >
                       <Edit2 size={12} />
                     </button>
                     <button
                       className="p-1.5 rounded"
-                      style={{ color: colors.mutedForeground }}
+                      style={{ color: 'var(--color-muted-foreground)' }}
                     >
                       <Key size={12} />
                     </button>

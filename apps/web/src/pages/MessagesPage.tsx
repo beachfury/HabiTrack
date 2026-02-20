@@ -28,6 +28,7 @@ import { useTheme } from '../context/ThemeContext';
 import { dispatchMessageReadEvent } from '../components/Layout';
 import type { Message } from '../types';
 import type { Announcement, Conversation, DirectMessage } from '../api/messages';
+import { PageHeader } from '../components/common/PageHeader';
 
 type TabType = 'notifications' | 'announcements' | 'messages';
 type FilterType = 'all' | 'unread' | 'chore' | 'calendar' | 'shopping' | 'family' | 'system';
@@ -368,42 +369,42 @@ export function MessagesPage() {
 
   return (
     <div className={`min-h-screen themed-messages-bg ${animationClasses}`}>
-      <div className="max-w-4xl mx-auto p-6">
+      <div className="p-3 sm:p-4 md:p-6 lg:p-8">
       {/* Header */}
-      <div className="flex items-center justify-between mb-6">
-        <div className="flex items-center gap-3">
-          <Bell className="text-[var(--color-primary)]" size={28} />
-          <div>
-            <h1 className="text-2xl font-bold text-[var(--color-foreground)]">Messages</h1>
-            <p className="text-[var(--color-muted-foreground)] text-sm">
-              {totalUnread > 0 ? `${totalUnread} unread` : 'All caught up!'}
-            </p>
-          </div>
-        </div>
-        <button
-          onClick={() => {
-            if (activeTab === 'notifications') fetchNotifications();
-            else if (activeTab === 'announcements') fetchAnnouncements();
-            else fetchConversations();
-          }}
-          className="p-2 text-[var(--color-muted-foreground)] hover:text-[var(--color-foreground)] hover:bg-[var(--color-muted)] rounded-lg transition-colors"
-          title="Refresh"
-        >
-          <RefreshCw size={20} className={loading ? 'animate-spin' : ''} />
-        </button>
-      </div>
+      <PageHeader
+        title="Messages"
+        icon={Bell}
+        subtitleNode={
+          <p className="mt-1" style={{ color: 'var(--color-muted-foreground)' }}>
+            {totalUnread > 0 ? `${totalUnread} unread` : 'All caught up!'}
+          </p>
+        }
+        actions={
+          <button
+            onClick={() => {
+              if (activeTab === 'notifications') fetchNotifications();
+              else if (activeTab === 'announcements') fetchAnnouncements();
+              else fetchConversations();
+            }}
+            className="p-2 text-[var(--color-muted-foreground)] hover:text-[var(--color-foreground)] hover:bg-[var(--color-muted)] rounded-lg transition-colors"
+            title="Refresh"
+          >
+            <RefreshCw size={20} className={loading ? 'animate-spin' : ''} />
+          </button>
+        }
+      />
 
       {/* Tabs */}
-      <div className="flex gap-1 mb-6 bg-[var(--color-muted)] p-1 rounded-lg">
+      <div className="flex gap-1 mb-6 border-b border-[var(--color-border)]">
         <button
           onClick={() => setActiveTab('notifications')}
-          className={`flex-1 flex items-center justify-center gap-2 px-4 py-2 rounded-md text-sm font-medium transition-colors ${
+          className={`flex items-center gap-2 px-4 py-3 border-b-2 transition-colors whitespace-nowrap text-sm font-medium ${
             activeTab === 'notifications'
-              ? 'bg-[var(--color-card)] text-[var(--color-primary)] shadow-sm'
-              : 'text-[var(--color-muted-foreground)] hover:text-[var(--color-foreground)]'
+              ? 'border-[var(--color-primary)] text-[var(--color-primary)]'
+              : 'border-transparent text-[var(--color-muted-foreground)] hover:text-[var(--color-foreground)]'
           }`}
         >
-          <Bell size={18} />
+          <Bell size={16} />
           Notifications
           {unreadNotifications > 0 && (
             <span className="px-1.5 py-0.5 text-xs bg-[var(--color-primary)] text-[var(--color-primary-foreground)] rounded-full">
@@ -413,29 +414,29 @@ export function MessagesPage() {
         </button>
         <button
           onClick={() => setActiveTab('announcements')}
-          className={`flex-1 flex items-center justify-center gap-2 px-4 py-2 rounded-md text-sm font-medium transition-colors ${
+          className={`flex items-center gap-2 px-4 py-3 border-b-2 transition-colors whitespace-nowrap text-sm font-medium ${
             activeTab === 'announcements'
-              ? 'bg-[var(--color-card)] text-[var(--color-primary)] shadow-sm'
-              : 'text-[var(--color-muted-foreground)] hover:text-[var(--color-foreground)]'
+              ? 'border-[var(--color-primary)] text-[var(--color-primary)]'
+              : 'border-transparent text-[var(--color-muted-foreground)] hover:text-[var(--color-foreground)]'
           }`}
         >
-          <Megaphone size={18} />
+          <Megaphone size={16} />
           Announcements
           {unreadAnnouncements > 0 && (
-            <span className="px-1.5 py-0.5 text-xs bg-[var(--color-warning)] text-white rounded-full">
+            <span className="px-1.5 py-0.5 text-xs bg-[var(--color-warning)] text-[var(--color-warning-foreground)] rounded-full">
               {unreadAnnouncements}
             </span>
           )}
         </button>
         <button
           onClick={() => setActiveTab('messages')}
-          className={`flex-1 flex items-center justify-center gap-2 px-4 py-2 rounded-md text-sm font-medium transition-colors ${
+          className={`flex items-center gap-2 px-4 py-3 border-b-2 transition-colors whitespace-nowrap text-sm font-medium ${
             activeTab === 'messages'
-              ? 'bg-[var(--color-card)] text-[var(--color-primary)] shadow-sm'
-              : 'text-[var(--color-muted-foreground)] hover:text-[var(--color-foreground)]'
+              ? 'border-[var(--color-primary)] text-[var(--color-primary)]'
+              : 'border-transparent text-[var(--color-muted-foreground)] hover:text-[var(--color-foreground)]'
           }`}
         >
-          <MessageCircle size={18} />
+          <MessageCircle size={16} />
           Direct Messages
           {unreadMessages > 0 && (
             <span className="px-1.5 py-0.5 text-xs bg-[var(--color-accent)] text-[var(--color-accent-foreground)] rounded-full">

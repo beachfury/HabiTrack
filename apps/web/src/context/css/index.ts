@@ -58,7 +58,7 @@ const ELEMENT_VAR_PREFIXES = [
   '--card-', '--widget-', '--sidebar-', '--header-', '--page-', '--modal-', '--input-',
   '--btn-primary-', '--btn-secondary-', '--login-', '--kiosk-',
   // Home page elements
-  '--home-title-', '--home-welcome-', '--home-stats-', '--home-chores-', '--home-events-', '--home-weather-', '--home-leaderboard-', '--home-meals-', '--home-page-',
+  '--home-title-', '--home-welcome-', '--home-stats-', '--home-chores-', '--home-events-', '--home-weather-', '--home-leaderboard-', '--home-meals-', '--home-shopping-', '--home-earnings-', '--home-family-', '--home-announcements-', '--home-page-',
   // Calendar page elements
   '--calendar-title-', '--calendar-grid-', '--calendar-meal-', '--calendar-user-', '--calendar-page-',
   // Chores page elements
@@ -69,6 +69,12 @@ const ELEMENT_VAR_PREFIXES = [
   '--messages-announcements-', '--messages-chat-', '--messages-page-',
   // Settings page elements
   '--settings-nav-', '--settings-content-', '--settings-page-',
+  // Store page elements
+  '--store-page-',
+  // Paid Chores page elements
+  '--paidchores-page-',
+  // Family page elements
+  '--family-page-',
   // Budget page elements
   '--budget-page-',
   // Meals page elements
@@ -220,8 +226,8 @@ export function buildCssVariables(
     // This prevents gray borders from showing on dark/custom backgrounds
     const pageBackgroundElements: Record<string, { cards: string[]; widgets: string[] }> = {
       'home-background': {
-        cards: ['home-chores', 'home-events', 'home-welcome', 'home-leaderboard'],
-        widgets: ['home-stats', 'home-weather', 'home-meals'],
+        cards: ['home-chores', 'home-events', 'home-welcome', 'home-leaderboard', 'home-family', 'home-announcements'],
+        widgets: ['home-stats', 'home-weather', 'home-meals', 'home-shopping', 'home-earnings'],
       },
       'calendar-background': {
         cards: ['calendar-grid', 'calendar-user'],

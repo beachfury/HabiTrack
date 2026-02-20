@@ -3,6 +3,7 @@ import { useState } from 'react';
 import { Star, Clock, MessageSquare } from 'lucide-react';
 import type { ChoreInstance } from '../../../types';
 import { ModalPortal, ModalBody } from '../../common/ModalPortal';
+import { ModalFooterButtons } from '../../common/ModalFooterButtons';
 import { getDifficultyStyle } from '../../../utils';
 
 interface CompleteChoreModalProps {
@@ -22,21 +23,12 @@ export function CompleteChoreModal({ instance, onComplete, onClose }: CompleteCh
   };
 
   const footer = (
-    <div className="flex gap-2">
-      <button
-        onClick={onClose}
-        className="flex-1 py-2 bg-[var(--color-muted)] text-[var(--color-muted-foreground)] rounded-xl font-medium hover:opacity-80 transition-opacity"
-      >
-        Cancel
-      </button>
-      <button
-        onClick={handleSubmit}
-        disabled={submitting}
-        className="flex-1 py-2 bg-[var(--color-primary)] text-[var(--color-primary-foreground)] rounded-xl font-medium hover:opacity-90 disabled:opacity-50"
-      >
-        {submitting ? 'Completing...' : 'Complete'}
-      </button>
-    </div>
+    <ModalFooterButtons
+      onCancel={onClose}
+      onSubmit={handleSubmit}
+      submitText="Complete"
+      submitting={submitting}
+    />
   );
 
   return (

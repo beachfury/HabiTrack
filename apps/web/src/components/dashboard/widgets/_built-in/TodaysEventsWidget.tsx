@@ -1,19 +1,10 @@
 // apps/web/src/components/dashboard/widgets/TodaysEventsWidget.tsx
 import { Calendar } from 'lucide-react';
 import { Link } from 'react-router-dom';
-
-interface Event {
-  id: number;
-  title: string;
-  startTime: string;
-  endTime: string;
-  color: string;
-  allDay: boolean;
-  holidayGradient?: string | null;
-}
+import type { WidgetEvent } from './types';
 
 interface TodaysEventsWidgetProps {
-  events: Event[];
+  events: WidgetEvent[];
 }
 
 export function TodaysEventsWidget({ events = [] }: TodaysEventsWidgetProps) {

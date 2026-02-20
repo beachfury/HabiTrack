@@ -206,7 +206,7 @@ export function PredictionsTab({
         <div className="flex gap-2 justify-end">
           <button
             onClick={() => onAddAll('high')}
-            className="px-3 py-2 bg-[var(--color-destructive)] text-white rounded-xl hover:opacity-90 transition-colors flex items-center gap-1 text-sm"
+            className="px-3 py-2 bg-[var(--color-destructive)] text-[var(--color-destructive-foreground)] rounded-xl hover:opacity-90 transition-colors flex items-center gap-1 text-sm"
           >
             <Plus size={14} /> Add Overdue
           </button>
@@ -328,10 +328,10 @@ export function PredictionsTab({
                       onClick={() =>
                         onAdd(s.catalogItemId, s.suggestedQuantity, s.suggestedStoreId)
                       }
-                      className={`p-2 text-white rounded-lg ${
+                      className={`p-2 rounded-lg ${
                         s.confidence === 'high'
-                          ? 'bg-[var(--color-destructive)] hover:opacity-90'
-                          : 'bg-[var(--color-success)] hover:opacity-90'
+                          ? 'bg-[var(--color-destructive)] text-[var(--color-destructive-foreground)] hover:opacity-90'
+                          : 'bg-[var(--color-success)] text-[var(--color-success-foreground)] hover:opacity-90'
                       }`}
                       title={`Add ${s.suggestedQuantity || 1} to list`}
                     >
