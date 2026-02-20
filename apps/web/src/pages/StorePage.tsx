@@ -6,10 +6,16 @@ import {
   Sparkles, BarChart3, Calendar, CheckSquare, ListChecks, Trophy,
   ShoppingCart, DollarSign, Wallet, Users, Megaphone, CloudSun,
   UtensilsCrossed, Package, Store, Search, Filter, Upload, Download,
-  Send, Clock, Check, X, AlertCircle, Palette,
+  Send, Clock, Check, X, AlertCircle, Palette, Plus, Minus, Settings,
+  Grid3X3, Loader2, Eye,
 } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
+import { useTheme } from '../context/ThemeContext';
+import { dashboardApi } from '../api/dashboard';
+import { PageHeader } from '../components/common/PageHeader';
 import { ModalPortal, ModalBody } from '../components/common/ModalPortal';
+import { WidgetPreviewModal, WidgetCardMockup } from '../components/dashboard/widgets/_registry/WidgetPreviewModal';
+import { ThemePreviewModal, ThemeCardMockup } from '../components/themes/ThemePreviewModal';
 
 const API_BASE = (import.meta.env.VITE_API_BASE_URL as string) || '';
 
@@ -26,6 +32,17 @@ interface CatalogItem {
   category: string;
   builtIn?: boolean;
   kidApproved?: boolean;
+  isApprovedForKids?: boolean;
+  source?: string;
+  size?: { defaultW: number; defaultH: number };
+  hasConfigSchema?: boolean;
+  previewColors?: {
+    primary: string;
+    accent: string;
+    background: string;
+    card: string;
+    foreground: string;
+  };
 }
 
 interface StoreRequest {
@@ -43,6 +60,25 @@ interface StoreRequest {
 
 type Tab = 'widgets' | 'themes';
 
+// ── Category Config ────────────────────────────────────────────────────────
+
+const CATEGORY_ORDER: { key: string; label: string; icon: React.ComponentType<any> }[] = [
+  { key: 'general', label: 'General', icon: Sparkles },
+  { key: 'calendar', label: 'Calendar', icon: Calendar },
+  { key: 'chores', label: 'Chores', icon: CheckSquare },
+  { key: 'shopping', label: 'Shopping', icon: ShoppingCart },
+  { key: 'meals', label: 'Meals', icon: UtensilsCrossed },
+  { key: 'messages', label: 'Messages', icon: Megaphone },
+  { key: 'family', label: 'Family', icon: Users },
+  { key: 'finance', label: 'Finance', icon: DollarSign },
+];
+
+const THEME_CATEGORY_ORDER: { key: string; label: string; icon: React.ComponentType<any> }[] = [
+  { key: 'official', label: 'Official', icon: Sparkles },
+  { key: 'custom', label: 'Custom', icon: Palette },
+  { key: 'imported', label: 'Imported', icon: Upload },
+];
+
 // ── Helpers ────────────────────────────────────────────────────────────────
 
 async function fetchApi<T>(url: string, options?: RequestInit): Promise<T> {
@@ -57,15 +93,15 @@ async function fetchApi<T>(url: string, options?: RequestInit): Promise<T> {
 
 const iconMap: Record<string, React.ComponentType<any>> = {
   'sparkles': Sparkles, 'bar-chart-3': BarChart3, 'calendar': Calendar,
-  'check-square': CheckSquare, 'list-checks': ListChecks, 'trophy': Trophy,
-  'shopping-cart': ShoppingCart, 'dollar-sign': DollarSign, 'wallet': Wallet,
-  'users': Users, 'megaphone': Megaphone, 'cloud-sun': CloudSun,
-  'utensils-crossed': UtensilsCrossed,
+  'calendar-days': Calendar, 'check-square': CheckSquare, 'list-checks': ListChecks,
+  'trophy': Trophy, 'shopping-cart': ShoppingCart, 'dollar-sign': DollarSign,
+  'wallet': Wallet, 'users': Users, 'megaphone': Megaphone, 'cloud-sun': CloudSun,
+  'utensils-crossed': UtensilsCrossed, 'utensils': UtensilsCrossed,
+  'hand-wave': Sparkles, 'bar-chart': BarChart3,
 };
 
 const getIcon = (name: string) => iconMap[name] || Package;
 
-/** Shared input styling for themed form controls */
 const inputStyle = {
   backgroundColor: 'var(--color-background)',
   borderColor: 'var(--color-border)',
@@ -78,13 +114,16 @@ const badgeMuted = 'text-[10px] font-medium px-2 py-0.5 rounded-full';
 
 export function StorePage() {
   const { user } = useAuth();
+  const { activeThemeId, setActiveTheme, getPageAnimationClasses } = useTheme();
   const isAdmin = user?.role === 'admin';
+  const animationClasses = getPageAnimationClasses('store-background');
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   // Data
   const [widgets, setWidgets] = useState<CatalogItem[]>([]);
   const [themes, setThemes] = useState<CatalogItem[]>([]);
   const [requests, setRequests] = useState<StoreRequest[]>([]);
+  const [userWidgets, setUserWidgets] = useState<Set<string>>(new Set());
 
   // UI
   const [activeTab, setActiveTab] = useState<Tab>('widgets');
@@ -93,6 +132,11 @@ export function StorePage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
+  const [addingWidget, setAddingWidget] = useState<string | null>(null);
+  const [removingWidget, setRemovingWidget] = useState<string | null>(null);
+  const [applyingTheme, setApplyingTheme] = useState<string | null>(null);
+  const [previewWidgetId, setPreviewWidgetId] = useState<string | null>(null);
+  const [previewThemeId, setPreviewThemeId] = useState<string | null>(null);
 
   // Modals
   const [showRequestModal, setShowRequestModal] = useState(false);
@@ -122,7 +166,14 @@ export function StorePage() {
     } catch { /* non-critical */ }
   }, []);
 
-  useEffect(() => { fetchCatalog(); fetchRequests(); }, [fetchCatalog, fetchRequests]);
+  const fetchUserLayout = useCallback(async () => {
+    try {
+      const layouts = await dashboardApi.getLayout();
+      setUserWidgets(new Set(layouts.filter((l) => l.visible).map((l) => l.widgetId)));
+    } catch { /* non-critical */ }
+  }, []);
+
+  useEffect(() => { fetchCatalog(); fetchRequests(); fetchUserLayout(); }, [fetchCatalog, fetchRequests, fetchUserLayout]);
 
   useEffect(() => {
     if (success || error) {
@@ -132,6 +183,48 @@ export function StorePage() {
   }, [success, error]);
 
   // ── Actions ───────────────────────────────────────────────────────────
+
+  const handleAddToDashboard = async (widgetId: string) => {
+    setAddingWidget(widgetId);
+    try {
+      await dashboardApi.addWidget(widgetId);
+      setUserWidgets((prev) => new Set([...prev, widgetId]));
+      setSuccess('Widget added to your dashboard');
+    } catch (err: any) {
+      setError(err.message || 'Failed to add widget');
+    } finally {
+      setAddingWidget(null);
+    }
+  };
+
+  const handleRemoveFromDashboard = async (widgetId: string) => {
+    setRemovingWidget(widgetId);
+    try {
+      await dashboardApi.removeWidget(widgetId);
+      setUserWidgets((prev) => {
+        const next = new Set(prev);
+        next.delete(widgetId);
+        return next;
+      });
+      setSuccess('Widget removed from your dashboard');
+    } catch (err: any) {
+      setError(err.message || 'Failed to remove widget');
+    } finally {
+      setRemovingWidget(null);
+    }
+  };
+
+  const handleApplyTheme = async (themeId: string) => {
+    setApplyingTheme(themeId);
+    try {
+      await setActiveTheme(themeId);
+      setSuccess('Theme applied!');
+    } catch (err: any) {
+      setError(err.message || 'Failed to apply theme');
+    } finally {
+      setApplyingTheme(null);
+    }
+  };
 
   const handleSubmitRequest = async () => {
     if (!requestForm.title.trim()) return;
@@ -193,6 +286,12 @@ export function StorePage() {
 
   const items = activeTab === 'widgets' ? widgets : themes;
   const categories = ['all', ...new Set(items.map((i) => i.category).filter(Boolean))];
+  const activeCategoryOrder = activeTab === 'widgets' ? CATEGORY_ORDER : THEME_CATEGORY_ORDER;
+  const getCategoryLabel = (key: string): string => {
+    if (key === 'all') return 'All Categories';
+    const found = activeCategoryOrder.find((c) => c.key === key);
+    return found ? found.label : key.charAt(0).toUpperCase() + key.slice(1);
+  };
   const lowerSearch = search.toLowerCase();
   const filtered = items.filter((item) => {
     if (categoryFilter !== 'all' && item.category !== categoryFilter) return false;
@@ -202,33 +301,208 @@ export function StorePage() {
       || item.tags.some((t) => t.toLowerCase().includes(lowerSearch));
   });
 
-  // ── Render ────────────────────────────────────────────────────────────
+  // ── Card Renderer ─────────────────────────────────────────────────────
 
-  return (
-    <div className="min-h-screen">
-      <div className="p-3 sm:p-4 md:p-6 lg:p-8">
+  const renderWidgetCard = (item: CatalogItem) => {
+    const Icon = getIcon(item.icon);
+    const isOnDashboard = userWidgets.has(item.id);
+    const isAdding = addingWidget === item.id;
+    const isRemoving = removingWidget === item.id;
 
-        {/* Header */}
-        <div className="mb-6 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-          <div>
-            <h1 className="text-3xl font-bold text-[var(--color-foreground)] flex items-center gap-3">
-              <Store className="text-[var(--color-primary)]" /> Store
-            </h1>
-            <p className="text-[var(--color-muted-foreground)] mt-1">Browse available widgets and themes for your household</p>
+    return (
+      <div key={item.id} className="themed-card rounded-2xl p-5 flex flex-col gap-3 hover:shadow-lg transition-shadow">
+        {/* Top: Visual Mockup + Badges */}
+        <div className="flex items-start justify-between gap-3">
+          <div className="flex-1">
+            <WidgetCardMockup widgetId={item.id} />
           </div>
-          <div className="flex items-center gap-2">
-            {isAdmin && activeTab === 'themes' && (
-              <button onClick={() => setShowImportModal(true)} className="themed-btn-primary flex items-center gap-2">
-                <Upload size={16} /> Import Theme
-              </button>
+          <div className="flex flex-col items-end gap-1 flex-shrink-0">
+            {item.builtIn && (
+              <span className="text-[10px] font-semibold px-2 py-0.5 rounded-full bg-[var(--color-success)]/15 text-[var(--color-success)]">Built-in</span>
             )}
-            {!isAdmin && (
-              <button onClick={() => setShowRequestModal(true)} className="themed-btn-secondary flex items-center gap-2">
-                <Send size={16} /> Request
-              </button>
+            {item.hasConfigSchema && (
+              <span className="text-[10px] font-semibold px-2 py-0.5 rounded-full bg-[var(--color-primary)]/15 text-[var(--color-primary)]" title="Has configurable settings">
+                <Settings size={10} className="inline -mt-px" /> Configurable
+              </span>
             )}
           </div>
         </div>
+
+        {/* Name + Description */}
+        <div className="flex-1">
+          <h3 className="font-semibold text-[var(--color-foreground)] mb-1">{item.name}</h3>
+          <p className="text-sm text-[var(--color-muted-foreground)] line-clamp-2">{item.description}</p>
+        </div>
+
+        {/* Meta: author, version, grid size */}
+        <div className="flex items-center justify-between text-xs text-[var(--color-muted-foreground)]">
+          <span>by {item.author}</span>
+          <div className="flex items-center gap-2">
+            {item.size && (
+              <span className="flex items-center gap-0.5" title={`${item.size.defaultW}×${item.size.defaultH} grid`}>
+                <Grid3X3 size={11} /> {item.size.defaultW}×{item.size.defaultH}
+              </span>
+            )}
+            <span>v{item.version}</span>
+          </div>
+        </div>
+
+        {/* Tags */}
+        {item.tags.length > 0 && (
+          <div className="flex flex-wrap gap-1">
+            {item.tags.slice(0, 4).map((tag) => (
+              <span key={tag} className={`${badgeMuted} rounded-full`} style={{ backgroundColor: 'var(--color-muted)', color: 'var(--color-muted-foreground)' }}>
+                {tag}
+              </span>
+            ))}
+            {item.tags.length > 4 && <span className="text-[10px] text-[var(--color-muted-foreground)]">+{item.tags.length - 4}</span>}
+          </div>
+        )}
+
+        {/* Footer: Category + Preview + Action */}
+        <div className="flex items-center justify-between pt-2" style={{ borderTop: '1px solid var(--color-border)' }}>
+          <div className="flex items-center gap-2">
+            <span className={badgeMuted} style={{ backgroundColor: 'var(--color-muted)', color: 'var(--color-muted-foreground)' }}>{item.category}</span>
+            <button
+              onClick={() => setPreviewWidgetId(item.id)}
+              className="text-xs flex items-center gap-1 text-[var(--color-muted-foreground)] hover:text-[var(--color-foreground)] transition-colors"
+            >
+              <Eye size={12} /> Preview
+            </button>
+          </div>
+          {isOnDashboard ? (
+            <div className="flex items-center gap-2">
+              <span className="text-[10px] font-semibold px-2 py-0.5 rounded-full bg-[var(--color-success)]/15 text-[var(--color-success)] flex items-center gap-1">
+                <Check size={10} /> On Dashboard
+              </span>
+              <button
+                onClick={() => handleRemoveFromDashboard(item.id)}
+                disabled={isRemoving}
+                className="text-xs flex items-center gap-1 text-[var(--color-destructive)] hover:opacity-80 transition-opacity disabled:opacity-50"
+              >
+                {isRemoving ? <Loader2 size={12} className="animate-spin" /> : <Minus size={12} />} Remove
+              </button>
+            </div>
+          ) : (
+            <button
+              onClick={() => handleAddToDashboard(item.id)}
+              disabled={isAdding}
+              className="text-xs flex items-center gap-1 text-[var(--color-primary)] hover:opacity-80 transition-opacity disabled:opacity-50"
+            >
+              {isAdding ? <Loader2 size={12} className="animate-spin" /> : <Plus size={12} />} Add to Dashboard
+            </button>
+          )}
+        </div>
+      </div>
+    );
+  };
+
+  const renderThemeCard = (item: CatalogItem) => {
+    const isActive = activeThemeId === item.id;
+    const isApplying = applyingTheme === item.id;
+
+    return (
+      <div key={item.id} className={`themed-card rounded-2xl p-5 flex flex-col gap-3 hover:shadow-lg transition-shadow ${isActive ? 'ring-2 ring-[var(--color-primary)]' : ''}`}>
+        {/* Visual Mockup */}
+        <ThemeCardMockup previewColors={item.previewColors} />
+
+        {/* Badges */}
+        <div className="flex items-center gap-1.5">
+          {item.builtIn && (
+            <span className="text-[10px] font-semibold px-2 py-0.5 rounded-full bg-[var(--color-success)]/15 text-[var(--color-success)]">Built-in</span>
+          )}
+          {item.isApprovedForKids && (
+            <span className="text-[10px] font-semibold px-2 py-0.5 rounded-full bg-[var(--color-primary)]/15 text-[var(--color-primary)]">Kid Approved</span>
+          )}
+        </div>
+
+        {/* Name + Description */}
+        <div className="flex-1">
+          <h3 className="font-semibold text-[var(--color-foreground)] mb-1">{item.name}</h3>
+          <p className="text-sm text-[var(--color-muted-foreground)] line-clamp-2">{item.description}</p>
+        </div>
+
+        {/* Meta */}
+        <div className="flex items-center justify-between text-xs text-[var(--color-muted-foreground)]">
+          <span>by {item.author}</span>
+          <span>v{item.version}</span>
+        </div>
+
+        {/* Tags */}
+        {item.tags.length > 0 && (
+          <div className="flex flex-wrap gap-1">
+            {item.tags.slice(0, 4).map((tag) => (
+              <span key={tag} className={`${badgeMuted} rounded-full`} style={{ backgroundColor: 'var(--color-muted)', color: 'var(--color-muted-foreground)' }}>
+                {tag}
+              </span>
+            ))}
+            {item.tags.length > 4 && <span className="text-[10px] text-[var(--color-muted-foreground)]">+{item.tags.length - 4}</span>}
+          </div>
+        )}
+
+        {/* Footer: Category + Preview + Actions */}
+        <div className="flex items-center justify-between pt-2" style={{ borderTop: '1px solid var(--color-border)' }}>
+          <div className="flex items-center gap-2">
+            <span className={badgeMuted} style={{ backgroundColor: 'var(--color-muted)', color: 'var(--color-muted-foreground)' }}>{item.category}</span>
+            <button
+              onClick={() => setPreviewThemeId(item.id)}
+              className="text-xs flex items-center gap-1 text-[var(--color-muted-foreground)] hover:text-[var(--color-foreground)] transition-colors"
+            >
+              <Eye size={12} /> Preview
+            </button>
+          </div>
+          <div className="flex items-center gap-2">
+            {isActive ? (
+              <span className="text-[10px] font-semibold px-2 py-0.5 rounded-full bg-[var(--color-success)]/15 text-[var(--color-success)] flex items-center gap-1">
+                <Check size={10} /> Active
+              </span>
+            ) : (
+              <button
+                onClick={() => handleApplyTheme(item.id)}
+                disabled={isApplying}
+                className="text-xs flex items-center gap-1 text-[var(--color-primary)] hover:opacity-80 transition-opacity disabled:opacity-50"
+              >
+                {isApplying ? <Loader2 size={12} className="animate-spin" /> : <Palette size={12} />} Apply
+              </button>
+            )}
+            <button
+              onClick={() => handleExportTheme(item.id)}
+              className="text-xs flex items-center gap-1 text-[var(--color-muted-foreground)] hover:opacity-80 transition-opacity"
+            >
+              <Download size={12} /> Export
+            </button>
+          </div>
+        </div>
+      </div>
+    );
+  };
+
+  // ── Render ────────────────────────────────────────────────────────────
+
+  return (
+    <div className={`min-h-screen themed-store-bg ${animationClasses}`}>
+      <div className="p-3 sm:p-4 md:p-6 lg:p-8">
+
+        {/* Header */}
+        <PageHeader
+          icon={Store}
+          title="Store"
+          subtitle="Browse available widgets and themes for your household"
+          actions={
+            <>
+              {isAdmin && activeTab === 'themes' && (
+                <button onClick={() => setShowImportModal(true)} className="themed-btn-primary flex items-center gap-2">
+                  <Upload size={16} /> Import Theme
+                </button>
+              )}
+              {!isAdmin && (
+                <button onClick={() => setShowRequestModal(true)} className="themed-btn-secondary flex items-center gap-2">
+                  <Send size={16} /> Request
+                </button>
+              )}
+            </>
+          }
+        />
 
         {/* Messages */}
         {success && (
@@ -244,15 +518,15 @@ export function StorePage() {
         )}
 
         {/* Tabs */}
-        <div className="flex gap-1 mb-4">
+        <div className="flex gap-1 mb-6 border-b border-[var(--color-border)]">
           {(['widgets', 'themes'] as Tab[]).map((tab) => (
             <button
               key={tab}
               onClick={() => { setActiveTab(tab); setCategoryFilter('all'); setSearch(''); }}
-              className={`flex items-center gap-2 px-4 py-2 rounded-lg transition-colors text-sm font-medium ${
+              className={`flex items-center gap-2 px-4 py-3 border-b-2 transition-colors whitespace-nowrap text-sm font-medium ${
                 activeTab === tab
-                  ? 'bg-[var(--color-primary)]/10 text-[var(--color-primary)]'
-                  : 'text-[var(--color-muted-foreground)] hover:bg-[var(--color-muted)]'
+                  ? 'border-[var(--color-primary)] text-[var(--color-primary)]'
+                  : 'border-transparent text-[var(--color-muted-foreground)] hover:text-[var(--color-foreground)]'
               }`}
             >
               {tab === 'widgets' ? <Package size={16} /> : <Palette size={16} />}
@@ -278,7 +552,7 @@ export function StorePage() {
               className="pl-9 pr-8 py-2 rounded-lg border text-sm appearance-none cursor-pointer" style={inputStyle}
             >
               {categories.map((c) => (
-                <option key={c} value={c}>{c === 'all' ? 'All Categories' : c}</option>
+                <option key={c} value={c}>{getCategoryLabel(c)}</option>
               ))}
             </select>
           </div>
@@ -301,56 +575,72 @@ export function StorePage() {
           </div>
         )}
 
-        {/* Catalog Grid */}
-        {!loading && filtered.length > 0 && (
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 mb-8">
-            {filtered.map((item) => {
-              const Icon = getIcon(item.icon);
-              return (
-                <div key={item.id} className="themed-card rounded-2xl p-5 flex flex-col gap-3 group hover:shadow-lg transition-shadow">
-                  <div className="flex items-start justify-between">
-                    <div className="p-2.5 rounded-xl" style={{ backgroundColor: 'var(--color-primary, #6366f1)', opacity: 0.12 }}>
-                      <Icon size={22} style={{ color: 'var(--color-primary)' }} />
-                    </div>
-                    <div className="flex items-center gap-1.5">
-                      {item.builtIn && (
-                        <span className="text-[10px] font-semibold px-2 py-0.5 rounded-full bg-[var(--color-success)]/15 text-[var(--color-success)]">Built-in</span>
-                      )}
-                      {activeTab === 'themes' && item.kidApproved && (
-                        <span className="text-[10px] font-semibold px-2 py-0.5 rounded-full bg-[var(--color-primary)]/15 text-[var(--color-primary)]">Kid Approved</span>
-                      )}
-                    </div>
-                  </div>
-                  <div className="flex-1">
-                    <h3 className="font-semibold text-[var(--color-foreground)] mb-1">{item.name}</h3>
-                    <p className="text-sm text-[var(--color-muted-foreground)] line-clamp-2">{item.description}</p>
-                  </div>
-                  <div className="flex items-center justify-between text-xs text-[var(--color-muted-foreground)]">
-                    <span>by {item.author}</span>
-                    <span>v{item.version}</span>
-                  </div>
-                  {item.tags.length > 0 && (
-                    <div className="flex flex-wrap gap-1">
-                      {item.tags.slice(0, 4).map((tag) => (
-                        <span key={tag} className={`${badgeMuted} rounded-full`} style={{ backgroundColor: 'var(--color-muted)', color: 'var(--color-muted-foreground)' }}>
-                          {tag}
+        {/* Catalog — Widgets (category-grouped when showing all) */}
+        {!loading && filtered.length > 0 && activeTab === 'widgets' && (
+          categoryFilter === 'all' ? (
+            // Grouped by category with section headers
+            <div className="space-y-8 mb-8">
+              {CATEGORY_ORDER
+                .filter((cat) => filtered.some((item) => item.category === cat.key))
+                .map((cat) => {
+                  const catItems = filtered.filter((item) => item.category === cat.key);
+                  const CatIcon = cat.icon;
+                  return (
+                    <div key={cat.key}>
+                      <h2 className="flex items-center gap-2 text-lg font-semibold text-[var(--color-foreground)] mb-4">
+                        <CatIcon size={20} style={{ color: 'var(--color-primary)' }} />
+                        {cat.label}
+                        <span className="text-sm font-normal text-[var(--color-muted-foreground)]">
+                          ({catItems.length})
                         </span>
-                      ))}
-                      {item.tags.length > 4 && <span className="text-[10px] text-[var(--color-muted-foreground)]">+{item.tags.length - 4}</span>}
+                      </h2>
+                      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+                        {catItems.map(renderWidgetCard)}
+                      </div>
                     </div>
-                  )}
-                  <div className="flex items-center justify-between pt-2" style={{ borderTop: '1px solid var(--color-border)' }}>
-                    <span className={badgeMuted} style={{ backgroundColor: 'var(--color-muted)', color: 'var(--color-muted-foreground)' }}>{item.category}</span>
-                    {activeTab === 'themes' && (
-                      <button onClick={() => handleExportTheme(item.id)} className="text-xs flex items-center gap-1 text-[var(--color-primary)] hover:opacity-80 transition-opacity">
-                        <Download size={14} /> Export
-                      </button>
-                    )}
-                  </div>
-                </div>
-              );
-            })}
-          </div>
+                  );
+                })}
+            </div>
+          ) : (
+            // Flat grid for single category filter
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 mb-8">
+              {filtered.map(renderWidgetCard)}
+            </div>
+          )
+        )}
+
+        {/* Catalog — Themes (category-grouped when showing all) */}
+        {!loading && filtered.length > 0 && activeTab === 'themes' && (
+          categoryFilter === 'all' ? (
+            // Grouped by category with section headers
+            <div className="space-y-8 mb-8">
+              {THEME_CATEGORY_ORDER
+                .filter((cat) => filtered.some((item) => item.category === cat.key))
+                .map((cat) => {
+                  const catItems = filtered.filter((item) => item.category === cat.key);
+                  const CatIcon = cat.icon;
+                  return (
+                    <div key={cat.key}>
+                      <h2 className="flex items-center gap-2 text-lg font-semibold text-[var(--color-foreground)] mb-4">
+                        <CatIcon size={20} style={{ color: 'var(--color-primary)' }} />
+                        {cat.label}
+                        <span className="text-sm font-normal text-[var(--color-muted-foreground)]">
+                          ({catItems.length})
+                        </span>
+                      </h2>
+                      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+                        {catItems.map(renderThemeCard)}
+                      </div>
+                    </div>
+                  );
+                })}
+            </div>
+          ) : (
+            // Flat grid for single category filter
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 mb-8">
+              {filtered.map(renderThemeCard)}
+            </div>
+          )
         )}
 
         {/* Pending Requests */}
@@ -476,6 +766,30 @@ export function StorePage() {
           </div>
         </ModalBody>
       </ModalPortal>
+
+      {/* ── Widget Preview Modal ──────────────────────────────────────── */}
+      <WidgetPreviewModal
+        isOpen={previewWidgetId !== null}
+        onClose={() => setPreviewWidgetId(null)}
+        widgetId={previewWidgetId}
+        widgetName={previewWidgetId ? widgets.find((w) => w.id === previewWidgetId)?.name || '' : ''}
+        isOnDashboard={previewWidgetId ? userWidgets.has(previewWidgetId) : false}
+        isAdding={addingWidget === previewWidgetId}
+        isRemoving={removingWidget === previewWidgetId}
+        onAdd={handleAddToDashboard}
+        onRemove={handleRemoveFromDashboard}
+      />
+
+      {/* ── Theme Preview Modal ────────────────────────────────────────── */}
+      <ThemePreviewModal
+        isOpen={previewThemeId !== null}
+        onClose={() => setPreviewThemeId(null)}
+        themeId={previewThemeId}
+        themeName={previewThemeId ? themes.find((t) => t.id === previewThemeId)?.name || '' : ''}
+        isActive={previewThemeId ? activeThemeId === previewThemeId : false}
+        isApplying={applyingTheme === previewThemeId}
+        onApply={handleApplyTheme}
+      />
     </div>
   );
 }

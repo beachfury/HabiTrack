@@ -15,6 +15,7 @@ import {
 } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { useTheme } from '../context/ThemeContext';
+import { PageHeader } from '../components/common/PageHeader';
 import { mealsApi } from '../api/meals';
 import type { MealPlan, Recipe } from '../types/meals';
 import {
@@ -223,62 +224,61 @@ export function MealsPage() {
     <div className={`min-h-screen themed-meals-bg ${animationClasses}`}>
       <div className="p-3 sm:p-4 md:p-6 lg:p-8 flex flex-col">
       {/* Header */}
-      <div className="flex flex-wrap items-center justify-between mb-6">
-        <div className="flex items-center gap-3">
-          <UtensilsCrossed className="w-8 h-8 text-[var(--color-primary)]" />
-          <h1 className="text-3xl font-bold text-[var(--color-foreground)]">Dinner Planner</h1>
-        </div>
+      <PageHeader
+        icon={UtensilsCrossed}
+        title="Dinner Planner"
+        actions={
+          <>
+            {/* View Toggle */}
+            <div className="flex rounded-lg border border-[var(--color-border)] overflow-hidden">
+              <button
+                onClick={() => setViewMode('week')}
+                className={`px-3 py-1.5 text-sm font-medium flex items-center gap-1.5 transition-colors ${
+                  viewMode === 'week'
+                    ? 'bg-[var(--color-primary)] text-[var(--color-primary-foreground)]'
+                    : 'bg-[var(--color-card)] text-[var(--color-muted-foreground)] hover:bg-[var(--color-muted)]'
+                }`}
+              >
+                <CalendarDays size={16} />
+                Week
+              </button>
+              <button
+                onClick={() => setViewMode('month')}
+                className={`px-3 py-1.5 text-sm font-medium flex items-center gap-1.5 transition-colors ${
+                  viewMode === 'month'
+                    ? 'bg-[var(--color-primary)] text-[var(--color-primary-foreground)]'
+                    : 'bg-[var(--color-card)] text-[var(--color-muted-foreground)] hover:bg-[var(--color-muted)]'
+                }`}
+              >
+                <Calendar size={16} />
+                Month
+              </button>
+            </div>
 
-        <div className="flex items-center gap-2 sm:gap-4">
-          {/* View Toggle */}
-          <div className="flex rounded-lg border border-[var(--color-border)] overflow-hidden">
-            <button
-              onClick={() => setViewMode('week')}
-              className={`px-3 py-1.5 text-sm font-medium flex items-center gap-1.5 transition-colors ${
-                viewMode === 'week'
-                  ? 'bg-[var(--color-primary)] text-[var(--color-primary-foreground)]'
-                  : 'bg-[var(--color-card)] text-[var(--color-muted-foreground)] hover:bg-[var(--color-muted)]'
-              }`}
-            >
-              <CalendarDays size={16} />
-              Week
-            </button>
-            <button
-              onClick={() => setViewMode('month')}
-              className={`px-3 py-1.5 text-sm font-medium flex items-center gap-1.5 transition-colors ${
-                viewMode === 'month'
-                  ? 'bg-[var(--color-primary)] text-[var(--color-primary-foreground)]'
-                  : 'bg-[var(--color-card)] text-[var(--color-muted-foreground)] hover:bg-[var(--color-muted)]'
-              }`}
-            >
-              <Calendar size={16} />
-              Month
-            </button>
-          </div>
-
-          {/* Navigation */}
-          <div className="flex items-center gap-2">
-            <button
-              onClick={prevPeriod}
-              className="p-2 rounded-lg hover:bg-[var(--color-muted)] transition-colors"
-            >
-              <ChevronLeft size={20} className="text-[var(--color-foreground)]" />
-            </button>
-            <button
-              onClick={goToToday}
-              className="px-4 py-2 text-sm font-medium rounded-lg bg-[var(--color-muted)] hover:bg-[var(--color-muted)]/80 text-[var(--color-foreground)] transition-colors"
-            >
-              Today
-            </button>
-            <button
-              onClick={nextPeriod}
-              className="p-2 rounded-lg hover:bg-[var(--color-muted)] transition-colors"
-            >
-              <ChevronRight size={20} className="text-[var(--color-foreground)]" />
-            </button>
-          </div>
-        </div>
-      </div>
+            {/* Navigation */}
+            <div className="flex items-center gap-2">
+              <button
+                onClick={prevPeriod}
+                className="p-2 rounded-lg hover:bg-[var(--color-muted)] transition-colors"
+              >
+                <ChevronLeft size={20} className="text-[var(--color-foreground)]" />
+              </button>
+              <button
+                onClick={goToToday}
+                className="px-4 py-2 text-sm font-medium rounded-lg bg-[var(--color-muted)] hover:bg-[var(--color-muted)]/80 text-[var(--color-foreground)] transition-colors"
+              >
+                Today
+              </button>
+              <button
+                onClick={nextPeriod}
+                className="p-2 rounded-lg hover:bg-[var(--color-muted)] transition-colors"
+              >
+                <ChevronRight size={20} className="text-[var(--color-foreground)]" />
+              </button>
+            </div>
+          </>
+        }
+      />
 
       {/* Period Header */}
       <div className="text-center mb-6">

@@ -32,9 +32,9 @@ export function MyChoresView({
     <div className="space-y-6">
       {/* Pending Approval (Admin) */}
       {isAdmin && pendingApproval.length > 0 && (
-        <div className="bg-yellow-50 dark:bg-yellow-900/20 border border-yellow-200 dark:border-yellow-800 rounded-2xl p-4">
-          <h2 className="text-lg font-semibold text-yellow-800 dark:text-yellow-300 mb-3 flex items-center gap-2">
-            <AlertCircle className="text-yellow-600" size={20} />
+        <div className="rounded-2xl p-4" style={{ backgroundColor: 'color-mix(in srgb, var(--color-warning) 10%, transparent)', border: '1px solid color-mix(in srgb, var(--color-warning) 30%, transparent)' }}>
+          <h2 className="text-lg font-semibold mb-3 flex items-center gap-2" style={{ color: 'var(--color-warning)' }}>
+            <AlertCircle style={{ color: 'var(--color-warning)' }} size={20} />
             Pending Approval ({pendingApproval.length})
           </h2>
           <div className="space-y-2">
@@ -56,7 +56,7 @@ export function MyChoresView({
       {/* Overdue */}
       {overdueChores.length > 0 && (
         <div>
-          <h2 className="text-lg font-semibold text-red-600 mb-3 flex items-center gap-2">
+          <h2 className="text-lg font-semibold text-[var(--color-destructive)] mb-3 flex items-center gap-2">
             <AlertCircle size={20} />
             Overdue ({overdueChores.length})
           </h2>
@@ -78,12 +78,12 @@ export function MyChoresView({
 
       {/* Today */}
       <div>
-        <h2 className="text-lg font-semibold text-gray-900 dark:text-white mb-3 flex items-center gap-2">
+        <h2 className="text-lg font-semibold text-[var(--color-foreground)] mb-3 flex items-center gap-2">
           <Calendar size={20} />
           Today ({todayChores.length} remaining)
         </h2>
         {todayChores.length === 0 ? (
-          <div className="bg-white dark:bg-gray-800 rounded-xl p-8 text-center text-gray-500 border border-gray-100 dark:border-gray-700">
+          <div className="bg-[var(--color-card)] rounded-xl p-8 text-center text-[var(--color-muted-foreground)] border border-[var(--color-border)]">
             <CheckSquare size={48} className="mx-auto mb-3 opacity-30" />
             <p>No chores for today!</p>
           </div>
@@ -105,7 +105,7 @@ export function MyChoresView({
       {/* Upcoming - grouped by date */}
       {Object.keys(upcomingByDate).length > 0 && (
         <div>
-          <h2 className="text-lg font-semibold text-gray-900 dark:text-white mb-3 flex items-center gap-2">
+          <h2 className="text-lg font-semibold text-[var(--color-foreground)] mb-3 flex items-center gap-2">
             <Clock size={20} />
             Upcoming
           </h2>
@@ -114,7 +114,7 @@ export function MyChoresView({
               .sort(([a], [b]) => a.localeCompare(b))
               .map(([date, dateChores]) => (
                 <div key={date}>
-                  <h3 className="text-sm font-medium text-gray-500 mb-2">{formatDate(date)}</h3>
+                  <h3 className="text-sm font-medium text-[var(--color-muted-foreground)] mb-2">{formatDate(date)}</h3>
                   <div className="space-y-2">
                     {dateChores.map((instance) => (
                       <ChoreCard

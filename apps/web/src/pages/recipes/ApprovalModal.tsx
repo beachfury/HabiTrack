@@ -26,7 +26,7 @@ export function ApprovalModal({ recipe, onApprove, onReject, onClose }: Approval
       </button>
       <button
         onClick={() => onReject(rejectReason)}
-        className="flex-1 py-2 rounded-xl bg-[var(--color-destructive)] text-white hover:bg-[var(--color-destructive)]/90"
+        className="flex-1 py-2 rounded-xl bg-[var(--color-destructive)] text-[var(--color-destructive-foreground)] hover:bg-[var(--color-destructive)]/90"
       >
         Reject Recipe
       </button>
@@ -44,7 +44,7 @@ export function ApprovalModal({ recipe, onApprove, onReject, onClose }: Approval
       </button>
       <button
         onClick={onApprove}
-        className="flex-1 py-2 rounded-xl bg-[var(--color-success)] text-white hover:bg-[var(--color-success)]/90"
+        className="flex-1 py-2 rounded-xl bg-[var(--color-success)] text-[var(--color-success-foreground)] hover:bg-[var(--color-success)]/90"
       >
         Approve
       </button>

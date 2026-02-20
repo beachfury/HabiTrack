@@ -75,6 +75,7 @@ export interface WidgetManifest {
 export type WidgetPropsAdapter = (
   data: Record<string, unknown>,
   currentUserId?: number,
+  config?: Record<string, unknown>,
 ) => Record<string, unknown>;
 
 /** A registered widget — manifest + component + props adapter */

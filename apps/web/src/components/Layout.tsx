@@ -193,14 +193,14 @@ export function Layout({ children }: { children: ReactNode }) {
                 await stopImpersonating();
                 setShowUserSwitcher(false);
               }}
-              className="w-full py-3 bg-amber-500 hover:bg-amber-600 text-white rounded-xl font-medium transition-colors"
+              className="w-full py-3 bg-[var(--color-warning)] text-[var(--color-warning-foreground)] rounded-xl font-medium transition-colors hover:opacity-90"
             >
               Return to {impersonation.originalAdmin?.displayName}
             </button>
           ) : undefined}
         >
           <ModalBody>
-            <p className="text-sm text-gray-500 dark:text-gray-400 mb-4">
+            <p className="text-sm text-[var(--color-muted-foreground)] mb-4">
               Select a user to view the app as them. This is useful for testing permissions.
             </p>
 
@@ -211,7 +211,7 @@ export function Layout({ children }: { children: ReactNode }) {
                   <button
                     key={u.id}
                     onClick={() => handleImpersonate(u.id)}
-                    className="w-full flex items-center gap-3 p-3 rounded-xl hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors text-left"
+                    className="w-full flex items-center gap-3 p-3 rounded-xl hover:bg-[var(--color-muted)] transition-colors text-left"
                   >
                     <div
                       className="w-10 h-10 rounded-full flex items-center justify-center text-white font-semibold"
@@ -220,10 +220,10 @@ export function Layout({ children }: { children: ReactNode }) {
                       {(u.nickname || u.displayName).charAt(0).toUpperCase()}
                     </div>
                     <div>
-                      <p className="font-medium text-gray-900 dark:text-gray-100">
+                      <p className="font-medium text-[var(--color-foreground)]">
                         {u.nickname || u.displayName}
                       </p>
-                      <p className="text-sm text-gray-500 dark:text-gray-400 capitalize">
+                      <p className="text-sm text-[var(--color-muted-foreground)] capitalize">
                         {u.roleId}
                       </p>
                     </div>

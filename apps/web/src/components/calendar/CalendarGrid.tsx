@@ -37,13 +37,13 @@ export function CalendarGrid({
   isMultiDayEvent,
 }: CalendarGridProps) {
   return (
-    <div className="flex-1 bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 overflow-hidden">
+    <div className="flex-1 bg-[var(--color-card)] rounded-xl border border-[var(--color-border)] overflow-hidden">
       {/* Day Headers */}
-      <div className="grid grid-cols-7 border-b border-gray-200 dark:border-gray-700">
+      <div className="grid grid-cols-7 border-b border-[var(--color-border)]">
         {DAYS.map((day) => (
           <div
             key={day}
-            className="py-3 text-center text-sm font-medium text-gray-500 dark:text-gray-400"
+            className="py-3 text-center text-sm font-medium text-[var(--color-muted-foreground)]"
           >
             {day}
           </div>
@@ -63,8 +63,8 @@ export function CalendarGrid({
           return (
             <div
               key={index}
-              className={`min-h-[100px] border-b border-r border-gray-100 dark:border-gray-700 p-1 ${
-                !currentMonth ? 'bg-gray-50 dark:bg-gray-900/50' : ''
+              className={`min-h-[100px] border-b border-r border-[var(--color-border)] p-1 ${
+                !currentMonth ? 'bg-[var(--color-muted)]/50' : ''
               }`}
             >
               {/* Date Header */}
@@ -73,17 +73,17 @@ export function CalendarGrid({
                   onClick={() => onDayClick(date)}
                   className={`w-7 h-7 flex items-center justify-center rounded-full text-sm font-medium transition-colors ${
                     today
-                      ? 'bg-blue-600 text-white'
+                      ? 'bg-[var(--color-primary)] text-[var(--color-primary-foreground)]'
                       : currentMonth
-                        ? 'text-gray-900 dark:text-white hover:bg-gray-100 dark:hover:bg-gray-700'
-                        : 'text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-700'
+                        ? 'text-[var(--color-foreground)] hover:bg-[var(--color-muted)]'
+                        : 'text-[var(--color-muted-foreground)] hover:bg-[var(--color-muted)]'
                   }`}
                 >
                   {date.getDate()}
                 </button>
                 <button
                   onClick={() => onAddEvent(date)}
-                  className="w-6 h-6 flex items-center justify-center text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 rounded opacity-0 group-hover:opacity-100 transition-opacity"
+                  className="w-6 h-6 flex items-center justify-center text-[var(--color-muted-foreground)] hover:text-[var(--color-foreground)] hover:bg-[var(--color-muted)] rounded opacity-0 group-hover:opacity-100 transition-opacity"
                 >
                   <Plus size={14} />
                 </button>
@@ -150,7 +150,7 @@ export function CalendarGrid({
                 {dayEvents.length + dayChores.length > 4 && (
                   <button
                     onClick={() => onDayClick(date)}
-                    className="text-xs text-gray-500 hover:text-gray-700 dark:hover:text-gray-300 px-1"
+                    className="text-xs text-[var(--color-muted-foreground)] hover:text-[var(--color-foreground)] px-1"
                   >
                     +{dayEvents.length + dayChores.length - 4} more
                   </button>

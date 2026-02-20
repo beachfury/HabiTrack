@@ -517,7 +517,7 @@ function AdminContent({
             onClick={() => setMode('voting')}
             className={`flex-1 py-2 px-3 rounded-lg text-sm font-medium transition-colors ${
               mode === 'voting'
-                ? 'bg-[var(--color-info)] text-white'
+                ? 'bg-[var(--color-info)] text-[var(--color-primary-foreground)]'
                 : 'bg-[var(--color-muted)] text-[var(--color-muted-foreground)]'
             }`}
           >
@@ -529,7 +529,7 @@ function AdminContent({
           onClick={() => setMode('ffy')}
           className={`flex-1 py-2 px-3 rounded-lg text-sm font-medium transition-colors ${
             mode === 'ffy'
-              ? 'bg-[var(--color-warning)] text-white'
+              ? 'bg-[var(--color-warning)] text-[var(--color-warning-foreground)]'
               : 'bg-[var(--color-muted)] text-[var(--color-muted-foreground)]'
           }`}
         >
@@ -674,7 +674,7 @@ function AdminContent({
           disabled={saving}
           className={`flex items-center gap-2 ${
             mode === 'voting'
-              ? 'py-2 px-4 rounded-xl bg-[var(--color-info)] text-white hover:bg-[var(--color-info)]/90 transition-colors'
+              ? 'py-2 px-4 rounded-xl bg-[var(--color-info)] text-[var(--color-primary-foreground)] hover:bg-[var(--color-info)]/90 transition-colors'
               : 'themed-btn-primary'
           }`}
         >

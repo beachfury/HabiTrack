@@ -5,6 +5,7 @@ import { ItemImage } from '../ItemImage';
 import { shoppingApi } from '../../../api';
 import type { CatalogItem, CatalogItemPrice, ShoppingStore, ListType } from '../../../types';
 import { ModalPortal, ModalBody } from '../../common/ModalPortal';
+import { ModalFooterButtons } from '../../common/ModalFooterButtons';
 
 interface StoreSelectModalProps {
   item: CatalogItem;
@@ -59,8 +60,9 @@ export function StoreSelectModal({ item, stores, onClose, onAdd, isAdmin }: Stor
   const totalPrice = selectedPrice ? Number(selectedPrice.price) * quantity : 0;
 
   const footer = (
-    <button
-      onClick={() =>
+    <ModalFooterButtons
+      onCancel={onClose}
+      onSubmit={() =>
         onAdd({
           catalogItemId: item.id,
           storeId: selectedStoreId,
@@ -68,10 +70,9 @@ export function StoreSelectModal({ item, stores, onClose, onAdd, isAdmin }: Stor
           quantity,
         })
       }
-      className="w-full py-3 bg-[var(--color-primary)] text-[var(--color-primary-foreground)] rounded-xl font-medium hover:opacity-90 transition-colors"
-    >
-      Add to List
-    </button>
+      submitText="Add to List"
+      hideCancel
+    />
   );
 
   return (

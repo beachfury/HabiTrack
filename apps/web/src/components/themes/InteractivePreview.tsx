@@ -22,8 +22,10 @@ import {
   Wallet,
   UtensilsCrossed,
   BookOpen,
+  Store,
 } from 'lucide-react';
-import type { ExtendedTheme, ThemeableElement, ElementStyle } from '../../types/theme';
+import type { ExtendedTheme, ThemeableElement } from '../../types/theme';
+import { buildCssVariables } from '../../context/css/index';
 import { HomePreview } from './PreviewPages/HomePreview';
 import { ChoresPreview } from './PreviewPages/ChoresPreview';
 import { CalendarPreview } from './PreviewPages/CalendarPreview';
@@ -38,45 +40,7 @@ import { MealsPreview } from './PreviewPages/MealsPreview';
 import { RecipesPreview } from './PreviewPages/RecipesPreview';
 import { PaidChoresPreview } from './PreviewPages/PaidChoresPreview';
 import { FamilyPreview } from './PreviewPages/FamilyPreview';
-
-// Helper to resolve image URLs - converts relative API paths to full URLs
-const API_BASE = import.meta.env.VITE_API_BASE_URL || 'http://localhost:3000';
-function resolveImageUrl(url: string | undefined): string | undefined {
-  if (!url) return undefined;
-  if (url.startsWith('/')) {
-    return `${API_BASE}${url}`;
-  }
-  return url;
-}
-
-// Parse CSS string to React CSSProperties object
-// Converts "background: red; box-shadow: 0 0 10px blue;" to { background: 'red', boxShadow: '0 0 10px blue' }
-function parseCustomCssToStyle(cssString: string): React.CSSProperties {
-  const style: Record<string, string> = {};
-
-  // Remove comments
-  const cleanCss = cssString.replace(/\/\*[\s\S]*?\*\//g, '');
-
-  // Split by semicolons
-  const declarations = cleanCss.split(';').filter(d => d.trim());
-
-  for (const declaration of declarations) {
-    const colonIndex = declaration.indexOf(':');
-    if (colonIndex === -1) continue;
-
-    const property = declaration.substring(0, colonIndex).trim();
-    const value = declaration.substring(colonIndex + 1).trim();
-
-    if (!property || !value) continue;
-
-    // Convert CSS property name to camelCase (e.g., "box-shadow" -> "boxShadow")
-    const camelProperty = property.replace(/-([a-z])/g, (_, letter) => letter.toUpperCase());
-
-    style[camelProperty] = value;
-  }
-
-  return style as React.CSSProperties;
-}
+import { StorePreview } from './PreviewPages/StorePreview';
 
 // Detect animated background effect classes from customCSS string
 // Supports: matrix-rain (with speed variants), snowfall, sparkle, bubbles, embers
@@ -125,12 +89,12 @@ interface InteractivePreviewProps {
   onColorModeChange: (mode: 'light' | 'dark') => void;
   selectedElement: ThemeableElement | null;
   onSelectElement: (element: ThemeableElement | null) => void;
-  onPageChange?: (page: 'home' | 'chores' | 'calendar' | 'shopping' | 'messages' | 'settings' | 'budget' | 'meals' | 'recipes' | 'paidchores' | 'family' | 'modal' | 'login' | 'kiosk') => void;
+  onPageChange?: (page: 'home' | 'chores' | 'calendar' | 'shopping' | 'messages' | 'settings' | 'budget' | 'meals' | 'recipes' | 'paidchores' | 'family' | 'store' | 'modal' | 'login' | 'kiosk') => void;
   isAdmin?: boolean;
   brandingVersion?: number; // Increment to trigger LoginPreview refresh
 }
 
-type PreviewPage = 'home' | 'chores' | 'calendar' | 'shopping' | 'messages' | 'settings' | 'budget' | 'meals' | 'recipes' | 'paidchores' | 'family' | 'modal' | 'login' | 'kiosk';
+type PreviewPage = 'home' | 'chores' | 'calendar' | 'shopping' | 'messages' | 'settings' | 'budget' | 'meals' | 'recipes' | 'paidchores' | 'family' | 'store' | 'modal' | 'login' | 'kiosk';
 
 // Tab order mirrors the actual app sidebar (see SidebarLayout.tsx navItems)
 const PAGE_TABS: { id: PreviewPage; label: string; icon: React.ElementType; adminOnly?: boolean }[] = [
@@ -144,6 +108,7 @@ const PAGE_TABS: { id: PreviewPage; label: string; icon: React.ElementType; admi
   { id: 'meals', label: 'Meals', icon: UtensilsCrossed },
   { id: 'recipes', label: 'Recipes', icon: BookOpen },
   { id: 'family', label: 'Family', icon: Users },
+  { id: 'store', label: 'Store', icon: Store },
   { id: 'settings', label: 'Settings', icon: Settings },
   { id: 'modal', label: 'Modal', icon: LayoutGrid },
   { id: 'login', label: 'Login', icon: Lock, adminOnly: true },
@@ -227,6 +192,14 @@ export function InteractivePreview({
 
   const colors = colorMode === 'light' ? theme.colorsLight : theme.colorsDark;
 
+  // Build scoped CSS variables for the preview container
+  // These override the document-level variables within the preview, so .themed-* classes pick up the editor's theme
+  const previewCssVars = buildCssVariables(theme, colorMode, colors.accent || '#3cb371');
+  const previewVarStyle: React.CSSProperties = {};
+  for (const [key, value] of Object.entries(previewCssVars)) {
+    (previewVarStyle as Record<string, string>)[key] = value;
+  }
+
   // Handle element click
   const handleElementClick = useCallback(
     (element: ThemeableElement) => {
@@ -235,217 +208,20 @@ export function InteractivePreview({
     [selectedElement, onSelectElement]
   );
 
-  // Get element styles with defaults
-  const getElementStyle = useCallback(
-    (element: ThemeableElement): ElementStyle => {
-      return theme.elementStyles?.[element] || {};
-    },
-    [theme.elementStyles]
-  );
+  // Sidebar width (layout property, not theme variable)
+  const sidebarWidth = theme.layout.sidebarWidth || 256;
 
-  // Build sidebar style - prioritize elementStyles over legacy theme.sidebar
-  const sidebarElementStyle = getElementStyle('sidebar');
-  const sidebarStyle: React.CSSProperties = {
-    width: theme.layout.sidebarWidth || 256,
-    position: 'relative',
-    overflow: 'hidden',
-  };
-
-  // Check if there are BACKGROUND element styles defined for sidebar
-  const hasBackgroundElementStyles = sidebarElementStyle && (
-    sidebarElementStyle.backgroundColor ||
-    sidebarElementStyle.backgroundGradient ||
-    sidebarElementStyle.backgroundImage
-  );
-
-  // Apply background styles - prioritize elementStyles over legacy
-  if (hasBackgroundElementStyles) {
-    // Use element styles (new system) for background
-    if (sidebarElementStyle.backgroundGradient) {
-      const { from, to, direction } = sidebarElementStyle.backgroundGradient;
-      sidebarStyle.background = `linear-gradient(${direction || 'to bottom'}, ${from}, ${to})`;
-    } else if (sidebarElementStyle.backgroundImage) {
-      const resolvedUrl = resolveImageUrl(sidebarElementStyle.backgroundImage);
-      if (resolvedUrl) {
-        sidebarStyle.backgroundImage = `url(${resolvedUrl})`;
-      }
-      sidebarStyle.backgroundSize = 'cover';
-      sidebarStyle.backgroundPosition = 'center';
-      if (sidebarElementStyle.backgroundColor) {
-        sidebarStyle.backgroundColor = sidebarElementStyle.backgroundColor;
-      }
-    } else if (sidebarElementStyle.backgroundColor) {
-      sidebarStyle.backgroundColor = sidebarElementStyle.backgroundColor;
-    }
-  } else if (theme.sidebar?.backgroundType === 'solid') {
-    // Fallback to legacy sidebar settings
-    sidebarStyle.backgroundColor = theme.sidebar.backgroundColor || colors.card;
-  } else if (theme.sidebar?.backgroundType === 'gradient') {
-    sidebarStyle.background = `linear-gradient(${theme.sidebar.gradientDirection || '180deg'}, ${theme.sidebar.gradientFrom || colors.primary}, ${theme.sidebar.gradientTo || colors.accent})`;
-  } else if (theme.sidebar?.backgroundType === 'image' && theme.sidebar.imageUrl) {
-    // Legacy image support is handled separately in the JSX
-    sidebarStyle.backgroundColor = colors.card;
-  } else {
-    sidebarStyle.backgroundColor = colors.card;
-  }
-
-  // Apply border, shadow, blur, and effects from elementStyles (independent of background)
-  if (sidebarElementStyle) {
-    if (sidebarElementStyle.borderRadius !== undefined) {
-      sidebarStyle.borderRadius = `${sidebarElementStyle.borderRadius}px`;
-    }
-    if (sidebarElementStyle.borderWidth && sidebarElementStyle.borderColor) {
-      sidebarStyle.border = `${sidebarElementStyle.borderWidth}px ${sidebarElementStyle.borderStyle || 'solid'} ${sidebarElementStyle.borderColor}`;
-    }
-
-    // Box shadow and glow
-    let shadowValue = '';
-    if (sidebarElementStyle.boxShadow) {
-      const shadowMap: Record<string, string> = {
-        none: 'none',
-        subtle: '0 1px 3px rgba(0,0,0,0.08)',
-        medium: '0 4px 6px rgba(0,0,0,0.1)',
-        strong: '0 10px 15px rgba(0,0,0,0.15)',
-      };
-      shadowValue = shadowMap[sidebarElementStyle.boxShadow] || sidebarElementStyle.boxShadow;
-    }
-    if (sidebarElementStyle.glowColor && sidebarElementStyle.glowSize) {
-      const glowShadow = `0 0 ${sidebarElementStyle.glowSize}px ${sidebarElementStyle.glowColor}`;
-      shadowValue = shadowValue && shadowValue !== 'none' ? `${shadowValue}, ${glowShadow}` : glowShadow;
-    }
-    if (shadowValue) {
-      sidebarStyle.boxShadow = shadowValue;
-    }
-
-    if (sidebarElementStyle.blur) {
-      sidebarStyle.backdropFilter = `blur(${sidebarElementStyle.blur}px)`;
-    }
-    if (sidebarElementStyle.opacity !== undefined) {
-      sidebarStyle.opacity = sidebarElementStyle.opacity;
-    }
-    if (sidebarElementStyle.padding) {
-      sidebarStyle.padding = sidebarElementStyle.padding;
-    }
-    if (sidebarElementStyle.margin) {
-      sidebarStyle.margin = sidebarElementStyle.margin;
-    }
-
-    // Transform effects
-    const transforms: string[] = [];
-    if (sidebarElementStyle.scale !== undefined && sidebarElementStyle.scale !== 1) {
-      transforms.push(`scale(${sidebarElementStyle.scale})`);
-    }
-    if (sidebarElementStyle.rotate !== undefined && sidebarElementStyle.rotate !== 0) {
-      transforms.push(`rotate(${sidebarElementStyle.rotate}deg)`);
-    }
-    if (sidebarElementStyle.skewX !== undefined && sidebarElementStyle.skewX !== 0) {
-      transforms.push(`skewX(${sidebarElementStyle.skewX}deg)`);
-    }
-    if (sidebarElementStyle.skewY !== undefined && sidebarElementStyle.skewY !== 0) {
-      transforms.push(`skewY(${sidebarElementStyle.skewY}deg)`);
-    }
-    if (transforms.length > 0) {
-      sidebarStyle.transform = transforms.join(' ');
-    }
-
-    // Filters
-    const filters: string[] = [];
-    if (sidebarElementStyle.saturation !== undefined && sidebarElementStyle.saturation !== 100) {
-      filters.push(`saturate(${sidebarElementStyle.saturation}%)`);
-    }
-    if (sidebarElementStyle.grayscale !== undefined && sidebarElementStyle.grayscale !== 0) {
-      filters.push(`grayscale(${sidebarElementStyle.grayscale}%)`);
-    }
-    if (filters.length > 0) {
-      sidebarStyle.filter = filters.join(' ');
-    }
-
-    // Transition for hover effects
-    if (sidebarElementStyle.hoverScale || sidebarElementStyle.hoverOpacity) {
-      sidebarStyle.transition = 'transform 0.2s ease, opacity 0.2s ease';
-    }
-
-    // Apply customCSS as inline styles (highest priority)
-    if (sidebarElementStyle.customCSS) {
-      const customStyles = parseCustomCssToStyle(sidebarElementStyle.customCSS);
-
-      // Clear conflicting properties before applying custom CSS
-      // CSS shorthand properties (like 'background') don't override longhand (like 'backgroundColor') in JS objects
-      if ('background' in customStyles) {
-        delete sidebarStyle.backgroundColor;
-        delete sidebarStyle.backgroundImage;
-      }
-      if ('border' in customStyles) {
-        delete sidebarStyle.borderColor;
-        delete sidebarStyle.borderWidth;
-        delete sidebarStyle.borderStyle;
-      }
-      if ('borderRight' in customStyles) {
-        delete sidebarStyle.borderRightColor;
-        delete sidebarStyle.borderRightWidth;
-        delete sidebarStyle.borderRightStyle;
-      }
-
-      Object.assign(sidebarStyle, customStyles);
-    }
-  }
-
-  // Page background style - prioritize elementStyles over legacy pageBackground
-  const pageBackgroundStyle = getElementStyle('page-background');
+  // Page background style — CSS variables handle everything now via .themed-* classes
+  // Only keep typography for the main flex container
   const pageStyle: React.CSSProperties = {
     fontFamily: theme.typography.fontFamily,
     fontSize: theme.typography.baseFontSize,
     backgroundColor: colors.background,
   };
 
-  const hasPageBgElementStyles = pageBackgroundStyle && (
-    pageBackgroundStyle.backgroundColor ||
-    pageBackgroundStyle.backgroundGradient ||
-    pageBackgroundStyle.backgroundImage
-  );
-
-  if (hasPageBgElementStyles) {
-    // Use element styles (new system)
-    if (pageBackgroundStyle.backgroundGradient) {
-      const { from, to, direction } = pageBackgroundStyle.backgroundGradient;
-      pageStyle.background = `linear-gradient(${direction || 'to bottom'}, ${from}, ${to})`;
-    } else if (pageBackgroundStyle.backgroundImage) {
-      const resolvedUrl = resolveImageUrl(pageBackgroundStyle.backgroundImage);
-      if (resolvedUrl) {
-        pageStyle.backgroundImage = `url(${resolvedUrl})`;
-      }
-      pageStyle.backgroundSize = 'cover';
-      pageStyle.backgroundPosition = 'center';
-    } else if (pageBackgroundStyle.backgroundColor) {
-      pageStyle.backgroundColor = pageBackgroundStyle.backgroundColor;
-    }
-  } else if (theme.pageBackground?.type === 'solid' && theme.pageBackground.color) {
-    // Fallback to legacy pageBackground settings
-    pageStyle.backgroundColor = theme.pageBackground.color;
-  } else if (theme.pageBackground?.type === 'gradient') {
-    pageStyle.background = `linear-gradient(${theme.pageBackground.gradientDirection || '180deg'}, ${theme.pageBackground.gradientFrom}, ${theme.pageBackground.gradientTo})`;
-  }
-
-  // Border radius
+  // Border radius for sidebar nav items
   const radiusMap = { none: '0', small: '4px', medium: '8px', large: '16px' };
   const borderRadius = radiusMap[theme.ui.borderRadius] || '8px';
-
-  // Text color for sidebar - prioritize elementStyles over legacy sidebar system
-  const textColor = sidebarElementStyle?.textColor || theme.sidebar?.textColor || colors.foreground;
-
-  // Apply text styling from elementStyles to sidebar
-  if (sidebarElementStyle?.fontFamily) {
-    sidebarStyle.fontFamily = sidebarElementStyle.fontFamily;
-  }
-  if (sidebarElementStyle?.fontWeight) {
-    const weightMap: Record<string, number> = { normal: 400, medium: 500, semibold: 600, bold: 700 };
-    sidebarStyle.fontWeight = weightMap[sidebarElementStyle.fontWeight] || 400;
-  }
-  if (sidebarElementStyle?.textSize) {
-    sidebarStyle.fontSize = `${sidebarElementStyle.textSize}px`;
-  }
-  // Apply text color to sidebar style for CSS inheritance
-  sidebarStyle.color = textColor;
 
   // Visible tabs based on admin status
   const visibleTabs = PAGE_TABS.filter((tab) => !tab.adminOnly || isAdmin);
@@ -543,40 +319,20 @@ export function InteractivePreview({
             flexShrink: 0,
           }}
         >
-          {/* App layout preview */}
-          <div className="h-full flex" style={pageStyle}>
+          {/* App layout preview — scoped CSS variables for .themed-* classes */}
+          <div className="h-full flex" style={{ ...pageStyle, ...previewVarStyle }}>
             {/* Sidebar - only show for pages that have sidebars (not login, kiosk, or modal) */}
             {activePage !== 'login' && activePage !== 'kiosk' && activePage !== 'modal' && (theme.layout.type === 'sidebar-left' || theme.layout.type === 'sidebar-right') && (
               <ClickableElement
                 element="sidebar"
                 isSelected={selectedElement === 'sidebar'}
                 onClick={() => handleElementClick('sidebar')}
-                className={`${theme.layout.type === 'sidebar-right' ? 'order-2' : ''} ${getAnimatedBackgroundClasses(sidebarElementStyle?.customCSS)}`}
-                style={sidebarStyle}
+                className={`themed-sidebar ${theme.layout.type === 'sidebar-right' ? 'order-2' : ''} ${getAnimatedBackgroundClasses(theme.elementStyles?.sidebar?.customCSS)}`}
+                style={{ width: sidebarWidth }}
               >
-                {/* Image background */}
-                {theme.sidebar?.backgroundType === 'image' && theme.sidebar.imageUrl && (
-                  <div
-                    className="absolute inset-0"
-                    style={{
-                      backgroundImage: `url(${resolveImageUrl(theme.sidebar.imageUrl)})`,
-                      backgroundSize: 'cover',
-                      backgroundPosition: 'center',
-                      opacity: (theme.sidebar.imageOpacity || 30) / 100,
-                      filter: theme.sidebar.blur ? `blur(${theme.sidebar.blur}px)` : undefined,
-                    }}
-                  />
-                )}
-
-                {/* Sidebar navigation */}
-                <div className="relative z-10 h-full flex flex-col p-4">
-                  <div
-                    className="text-xl font-bold mb-6"
-                    style={{
-                      color: textColor,
-                      textShadow: sidebarStyle.textShadow,
-                    }}
-                  >
+                {/* Sidebar navigation — .themed-sidebar handles bg, text, effects via CSS vars */}
+                <div className="h-full flex flex-col p-4">
+                  <div className="text-xl font-bold mb-6">
                     {theme.name || 'HabiTrack'}
                   </div>
 
@@ -593,11 +349,7 @@ export function InteractivePreview({
                           borderRadius,
                           backgroundColor:
                             activePage === tab.id ? `${colors.primary}20` : 'transparent',
-                          color: activePage === tab.id ? colors.primary : textColor,
-                          textShadow: sidebarStyle.textShadow,
-                          fontFamily: sidebarStyle.fontFamily,
-                          fontWeight: sidebarStyle.fontWeight,
-                          fontSize: sidebarStyle.fontSize,
+                          color: activePage === tab.id ? colors.primary : 'inherit',
                         }}
                       >
                         <tab.icon size={20} />
@@ -700,6 +452,13 @@ export function InteractivePreview({
                 />
               ) : activePage === 'family' ? (
                 <FamilyPreview
+                  theme={theme}
+                  colorMode={colorMode}
+                  selectedElement={selectedElement}
+                  onSelectElement={handleElementClick}
+                />
+              ) : activePage === 'store' ? (
+                <StorePreview
                   theme={theme}
                   colorMode={colorMode}
                   selectedElement={selectedElement}

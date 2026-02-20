@@ -21,6 +21,10 @@
  * - home-weather-widget: Weather widget
  * - home-leaderboard-widget: Leaderboard widget
  * - home-meals-widget: Upcoming meals widget
+ * - home-shopping-widget: Shopping list preview widget
+ * - home-earnings-widget: Earnings summary widget
+ * - home-family-widget: Family members display widget
+ * - home-announcements-widget: Family announcements widget
  * - dashboard-background: Home page background
  *
  * Calendar page:
@@ -69,6 +73,7 @@ export type ThemeableElement =
   | 'recipes-background'
   | 'paidchores-background'
   | 'family-background'
+  | 'store-background'
   // Home/Dashboard page specific elements
   | 'home-title'
   | 'home-welcome-banner'
@@ -78,6 +83,10 @@ export type ThemeableElement =
   | 'home-weather-widget'
   | 'home-leaderboard-widget'
   | 'home-meals-widget'
+  | 'home-shopping-widget'
+  | 'home-earnings-widget'
+  | 'home-family-widget'
+  | 'home-announcements-widget'
   // Calendar page specific elements
   | 'calendar-title'
   | 'calendar-grid'

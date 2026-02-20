@@ -1,11 +1,10 @@
 // apps/web/src/components/themes/PreviewPages/CalendarPreview.tsx
 // Calendar page preview replica for theme editor
-// Uses page-specific element IDs for independent styling
+// Uses .themed-* CSS classes instead of inline style computation
 
-import { ChevronLeft, ChevronRight, Plus, CheckSquare, Utensils, User } from 'lucide-react';
-import type { ExtendedTheme, ThemeableElement, ElementStyle } from '../../../types/theme';
+import { Calendar, ChevronLeft, ChevronRight, Plus, CheckSquare, Utensils, User } from 'lucide-react';
+import type { ExtendedTheme, ThemeableElement } from '../../../types/theme';
 import { ClickableElement } from '../InteractivePreview';
-import { buildElementStyle, buildButtonStyle, buildPageBackgroundStyle, RADIUS_MAP, SHADOW_MAP } from './styleUtils';
 
 interface CalendarPreviewProps {
   theme: ExtendedTheme;
@@ -43,24 +42,6 @@ const MOCK_MEALS = [
 
 const DAYS_OF_WEEK = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
 
-/**
- * Helper to get element style with page-specific override support.
- * Falls back to global style if page-specific is not defined.
- */
-function getElementStyleWithFallback(
-  elementStyles: ExtendedTheme['elementStyles'],
-  pageElement: ThemeableElement,
-  globalElement: ThemeableElement
-): ElementStyle {
-  // First check for page-specific style
-  const pageStyle = elementStyles?.[pageElement];
-  if (pageStyle && Object.keys(pageStyle).length > 0) {
-    return pageStyle;
-  }
-  // Fall back to global element style
-  return elementStyles?.[globalElement] || {};
-}
-
 export function CalendarPreview({
   theme,
   colorMode,
@@ -68,56 +49,6 @@ export function CalendarPreview({
   onSelectElement,
 }: CalendarPreviewProps) {
   const colors = colorMode === 'light' ? theme.colorsLight : theme.colorsDark;
-
-  // Default fallbacks
-  const defaultRadius = RADIUS_MAP[theme.ui.borderRadius] || '8px';
-  const defaultShadow = SHADOW_MAP[theme.ui.shadowIntensity] || 'none';
-
-  // Page-specific background - check early for card fallback logic
-  const calendarBgStyle = theme.elementStyles?.['calendar-background'] || {};
-  const globalPageBgStyle = theme.elementStyles?.['page-background'] || {};
-
-  // Check if calendar background has custom styling (gradient, image, or explicit color)
-  const hasCustomCalendarBg = calendarBgStyle.backgroundColor || calendarBgStyle.backgroundGradient || calendarBgStyle.backgroundImage || calendarBgStyle.customCSS;
-
-  // When calendar has custom background, use semi-transparent card backgrounds by default
-  // This allows the background to show through while still having distinct cards
-  const cardBgFallback = hasCustomCalendarBg ? 'rgba(255,255,255,0.08)' : colors.card;
-  const cardBorderFallback = hasCustomCalendarBg ? 'rgba(255,255,255,0.15)' : colors.border;
-
-  // Get styles with page-specific overrides
-  // calendar-grid -> falls back to card
-  // calendar-meal-widget -> falls back to widget
-  // calendar-user-card -> falls back to card
-  const calendarGridStyle = getElementStyleWithFallback(theme.elementStyles, 'calendar-grid', 'card');
-  const mealWidgetStyle = getElementStyleWithFallback(theme.elementStyles, 'calendar-meal-widget', 'widget');
-  const userCardStyle = getElementStyleWithFallback(theme.elementStyles, 'calendar-user-card', 'card');
-  const buttonPrimaryStyle = theme.elementStyles?.['button-primary'] || {};
-
-  // Build computed styles for each element (with text color fallback and semi-transparent fallbacks)
-  const computedCalendarGridStyle = buildElementStyle(calendarGridStyle, cardBgFallback, cardBorderFallback, defaultRadius, defaultShadow, colors.cardForeground);
-  const computedMealWidgetStyle = buildElementStyle(mealWidgetStyle, hasCustomCalendarBg ? 'rgba(255,255,255,0.06)' : colors.muted, cardBorderFallback, defaultRadius, 'none', colors.foreground);
-  const computedUserCardStyle = buildElementStyle(userCardStyle, cardBgFallback, cardBorderFallback, defaultRadius, defaultShadow, colors.cardForeground);
-  const computedButtonPrimaryStyle = buildButtonStyle(buttonPrimaryStyle, colors.primary, colors.primaryForeground, 'transparent', '8px');
-
-  // Extract text styles for child elements (with fallback to theme/defaults)
-  const calendarGridTextColor = calendarGridStyle.textColor || colors.cardForeground;
-  const calendarGridMutedColor = calendarGridStyle.textColor ? `${calendarGridStyle.textColor}99` : colors.mutedForeground;
-  const calendarGridFontFamily = calendarGridStyle.fontFamily;
-  const calendarGridFontSize = calendarGridStyle.textSize ? `${calendarGridStyle.textSize}px` : undefined;
-  const calendarGridFontWeight = calendarGridStyle.fontWeight ? { normal: 400, medium: 500, semibold: 600, bold: 700 }[calendarGridStyle.fontWeight] : undefined;
-
-  const mealWidgetTextColor = mealWidgetStyle.textColor || colors.foreground;
-  const mealWidgetMutedColor = mealWidgetStyle.textColor ? `${mealWidgetStyle.textColor}99` : colors.mutedForeground;
-  const mealWidgetFontFamily = mealWidgetStyle.fontFamily;
-  const mealWidgetFontSize = mealWidgetStyle.textSize ? `${mealWidgetStyle.textSize}px` : undefined;
-  const mealWidgetFontWeight = mealWidgetStyle.fontWeight ? { normal: 400, medium: 500, semibold: 600, bold: 700 }[mealWidgetStyle.fontWeight] : undefined;
-
-  const userCardTextColor = userCardStyle.textColor || colors.cardForeground;
-  const userCardMutedColor = userCardStyle.textColor ? `${userCardStyle.textColor}99` : colors.mutedForeground;
-  const userCardFontFamily = userCardStyle.fontFamily;
-  const userCardFontSize = userCardStyle.textSize ? `${userCardStyle.textSize}px` : undefined;
-  const userCardFontWeight = userCardStyle.fontWeight ? { normal: 400, medium: 500, semibold: 600, bold: 700 }[userCardStyle.fontWeight] : undefined;
 
   // Generate calendar days (February 2024 as example)
   const today = 15;
@@ -137,73 +68,24 @@ export function CalendarPreview({
   const getEventsForDay = (day: number) => MOCK_EVENTS.filter((e) => e.day === day);
   const getChoresForDay = (day: number) => MOCK_CHORES.filter((c) => c.day === day);
 
-  // Build page background style (calendarBgStyle and globalPageBgStyle already defined above)
-  const { style: pageBgStyle, backgroundImageUrl, customCSS } = buildPageBackgroundStyle(
-    calendarBgStyle,
-    globalPageBgStyle,
-    colors.background
-  );
-
-  // Detect animated background effect classes from customCSS
-  const getAnimatedBgClasses = (css?: string): string => {
-    if (!css) return '';
-    const classes: string[] = [];
-    if (css.includes('matrix-rain: true') || css.includes('matrix-rain:true')) {
-      classes.push('matrix-rain-bg');
-      const speedMatch = css.match(/matrix-rain-speed:\s*(slow|normal|fast|veryfast)/i);
-      if (speedMatch) classes.push(`matrix-rain-${speedMatch[1].toLowerCase()}`);
-    }
-    if (css.includes('snowfall: true') || css.includes('snowfall:true')) classes.push('snowfall-bg');
-    if (css.includes('sparkle: true') || css.includes('sparkle:true')) classes.push('sparkle-bg');
-    if (css.includes('bubbles: true') || css.includes('bubbles:true')) classes.push('bubbles-bg');
-    if (css.includes('embers: true') || css.includes('embers:true')) classes.push('embers-bg');
-    return classes.join(' ');
-  };
-
-  const animatedBgClasses = getAnimatedBgClasses(customCSS);
-
   return (
     <ClickableElement
       element="calendar-background"
       isSelected={selectedElement === 'calendar-background'}
       onClick={() => onSelectElement('calendar-background')}
-      className={`flex-1 overflow-auto flex flex-col ${animatedBgClasses}`}
-      style={pageBgStyle}
+      className="themed-calendar-bg flex-1 overflow-auto flex flex-col"
     >
-      {/* Background image layer */}
-      {backgroundImageUrl && (
-        <div
-          className="absolute inset-0 pointer-events-none"
-          style={{
-            backgroundImage: `url(${backgroundImageUrl})`,
-            backgroundSize: 'cover',
-            backgroundPosition: 'center',
-            opacity: calendarBgStyle.backgroundOpacity ?? globalPageBgStyle.backgroundOpacity ?? 1,
-          }}
-        />
-      )}
-      <div className="relative z-10 p-4 flex-1 flex flex-col">
+      <div className="relative z-10 p-4 flex-1 flex flex-col space-y-4">
       {/* Page header - matches actual CalendarPage */}
-      <div className="flex items-center justify-between mb-4">
-        <div className="flex items-center gap-3">
+      <div className="flex items-center justify-between">
+        <div className="flex items-center gap-2">
+          <Calendar size={20} style={{ color: colors.primary }} />
           <ClickableElement
             element="calendar-title"
             isSelected={selectedElement === 'calendar-title'}
             onClick={() => onSelectElement('calendar-title')}
           >
-            <h1
-              className="text-xl font-bold"
-              style={{
-                color: theme.elementStyles?.['calendar-title']?.textColor || colors.foreground,
-                fontSize: theme.elementStyles?.['calendar-title']?.textSize
-                  ? `${theme.elementStyles['calendar-title'].textSize}px`
-                  : undefined,
-                fontWeight: theme.elementStyles?.['calendar-title']?.fontWeight
-                  ? { normal: 400, medium: 500, semibold: 600, bold: 700 }[theme.elementStyles['calendar-title'].fontWeight]
-                  : undefined,
-                fontFamily: theme.elementStyles?.['calendar-title']?.fontFamily,
-              }}
-            >
+            <h1 className="themed-calendar-title text-lg font-bold">
               February 2024
             </h1>
           </ClickableElement>
@@ -212,13 +94,13 @@ export function CalendarPreview({
               className="p-1.5 rounded-lg transition-colors"
               style={{ backgroundColor: 'transparent' }}
             >
-              <ChevronLeft size={16} style={{ color: colors.mutedForeground }} />
+              <ChevronLeft size={16} style={{ color: 'var(--color-muted-foreground)' }} />
             </button>
             <button
               className="p-1.5 rounded-lg transition-colors"
               style={{ backgroundColor: 'transparent' }}
             >
-              <ChevronRight size={16} style={{ color: colors.mutedForeground }} />
+              <ChevronRight size={16} style={{ color: 'var(--color-muted-foreground)' }} />
             </button>
           </div>
           <button
@@ -246,10 +128,7 @@ export function CalendarPreview({
             isSelected={selectedElement === 'button-primary'}
             onClick={() => onSelectElement('button-primary')}
           >
-            <button
-              className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium"
-              style={computedButtonPrimaryStyle}
-            >
+            <button className="themed-btn-primary flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium">
               <Plus size={14} />
               Add Event
             </button>
@@ -262,10 +141,9 @@ export function CalendarPreview({
         element="calendar-grid"
         isSelected={selectedElement === 'calendar-grid'}
         onClick={() => onSelectElement('calendar-grid')}
-        className="flex-1 mb-3"
+        className="themed-calendar-grid flex-1"
         style={{
-          ...computedCalendarGridStyle,
-          padding: '0',
+          padding: 0,
           overflow: 'hidden',
           display: 'flex',
           flexDirection: 'column',
@@ -280,12 +158,7 @@ export function CalendarPreview({
             <div
               key={day}
               className="py-2 text-center"
-              style={{
-                color: calendarGridMutedColor,
-                fontSize: calendarGridFontSize || '0.75rem',
-                fontWeight: calendarGridFontWeight || 600,
-                fontFamily: calendarGridFontFamily,
-              }}
+              style={{ color: 'var(--color-muted-foreground)', fontSize: '0.75rem', fontWeight: 600 }}
             >
               {day}
             </div>
@@ -329,10 +202,9 @@ export function CalendarPreview({
                     className="w-5 h-5 flex items-center justify-center rounded-full"
                     style={{
                       backgroundColor: isToday ? colors.primary : 'transparent',
-                      color: isToday ? colors.primaryForeground : calendarGridTextColor,
-                      fontWeight: isToday ? 700 : (calendarGridFontWeight || 400),
-                      fontSize: calendarGridFontSize || '0.75rem',
-                      fontFamily: calendarGridFontFamily,
+                      color: isToday ? colors.primaryForeground : undefined,
+                      fontWeight: isToday ? 700 : 400,
+                      fontSize: '0.75rem',
                     }}
                   >
                     {day}
@@ -356,7 +228,7 @@ export function CalendarPreview({
                       className="text-[8px] px-1 py-0.5 rounded truncate flex items-center gap-0.5"
                       style={{
                         backgroundColor: chore.status === 'completed' ? `${colors.primary}15` : `${colors.muted}`,
-                        color: chore.status === 'completed' ? colors.primary : calendarGridMutedColor,
+                        color: chore.status === 'completed' ? colors.primary : 'var(--color-muted-foreground)',
                         textDecoration: chore.status === 'completed' ? 'line-through' : 'none',
                       }}
                     >
@@ -365,7 +237,7 @@ export function CalendarPreview({
                     </div>
                   ))}
                   {totalItems > 2 && (
-                    <div className="text-[8px] px-1" style={{ color: calendarGridMutedColor }}>
+                    <div className="text-[8px] px-1" style={{ color: 'var(--color-muted-foreground)' }}>
                       +{totalItems - 2} more
                     </div>
                   )}
@@ -383,21 +255,11 @@ export function CalendarPreview({
           element="calendar-meal-widget"
           isSelected={selectedElement === 'calendar-meal-widget'}
           onClick={() => onSelectElement('calendar-meal-widget')}
-          style={{
-            ...computedMealWidgetStyle,
-            padding: mealWidgetStyle.padding || '12px',
-          }}
+          className="themed-calendar-meal"
         >
           <div className="flex items-center gap-2 mb-2">
             <Utensils size={14} style={{ color: colors.primary }} />
-            <h3
-              style={{
-                color: mealWidgetTextColor,
-                fontSize: mealWidgetFontSize || '0.875rem',
-                fontWeight: mealWidgetFontWeight || 600,
-                fontFamily: mealWidgetFontFamily,
-              }}
-            >
+            <h3 className="text-sm font-semibold">
               Weekly Meal Plan
             </h3>
           </div>
@@ -409,36 +271,30 @@ export function CalendarPreview({
                 style={{
                   backgroundColor: meal.isToday ? `${colors.primary}15` : 'transparent',
                   border: meal.isToday ? `1px solid ${colors.primary}` : 'none',
-                  fontFamily: mealWidgetFontFamily,
                 }}
               >
                 <span
                   className="block"
-                  style={{
-                    color: mealWidgetMutedColor,
-                    fontSize: mealWidgetFontSize ? `calc(${mealWidgetFontSize} * 0.6)` : '9px',
-                    fontWeight: mealWidgetFontWeight,
-                  }}
+                  style={{ color: 'var(--color-muted-foreground)', fontSize: '9px' }}
                 >
                   {meal.day}
                 </span>
                 <span
                   className="block"
                   style={{
-                    color: meal.isToday ? colors.primary : mealWidgetTextColor,
-                    fontSize: mealWidgetFontSize ? `calc(${mealWidgetFontSize} * 0.7)` : '10px',
-                    fontWeight: mealWidgetFontWeight || 500,
+                    color: meal.isToday ? colors.primary : undefined,
+                    fontSize: '10px',
+                    fontWeight: 500,
                   }}
                 >
                   {meal.date}
                 </span>
-                <span style={{ fontSize: mealWidgetFontSize || '0.875rem' }}>{meal.icon}</span>
+                <span style={{ fontSize: '0.875rem' }}>{meal.icon}</span>
                 <p
                   className="truncate"
                   style={{
-                    color: meal.meal ? mealWidgetTextColor : mealWidgetMutedColor,
-                    fontSize: mealWidgetFontSize ? `calc(${mealWidgetFontSize} * 0.5)` : '8px',
-                    fontWeight: mealWidgetFontWeight,
+                    color: meal.meal ? undefined : 'var(--color-muted-foreground)',
+                    fontSize: '8px',
                   }}
                 >
                   {meal.meal || 'Not set'}
@@ -452,14 +308,7 @@ export function CalendarPreview({
         <div>
           <div className="flex items-center gap-1.5 mb-2">
             <User size={12} style={{ color: colors.primary }} />
-            <h3
-              style={{
-                color: userCardTextColor,
-                fontSize: userCardFontSize || '0.75rem',
-                fontWeight: userCardFontWeight || 600,
-                fontFamily: userCardFontFamily,
-              }}
-            >
+            <h3 className="text-xs font-semibold">
               Today's Schedule by Member
             </h3>
           </div>
@@ -469,64 +318,38 @@ export function CalendarPreview({
               element="calendar-user-card"
               isSelected={selectedElement === 'calendar-user-card'}
               onClick={() => onSelectElement('calendar-user-card')}
-              style={{
-                ...computedUserCardStyle,
-                padding: userCardStyle.padding || '8px',
-              }}
+              className="themed-calendar-user"
             >
               <div className="flex items-center gap-2 mb-1.5">
                 <div
                   className="w-5 h-5 rounded-full flex items-center justify-center text-white"
-                  style={{
-                    backgroundColor: '#8b5cf6',
-                    fontSize: userCardFontSize ? `calc(${userCardFontSize} * 0.6)` : '9px',
-                    fontWeight: userCardFontWeight || 500,
-                  }}
+                  style={{ backgroundColor: '#8b5cf6', fontSize: '9px', fontWeight: 500 }}
                 >
                   E
                 </div>
-                <div style={{ fontFamily: userCardFontFamily }}>
-                  <p
-                    style={{
-                      color: userCardTextColor,
-                      fontSize: userCardFontSize ? `calc(${userCardFontSize} * 0.7)` : '10px',
-                      fontWeight: userCardFontWeight || 500,
-                    }}
-                  >
-                    Emma <span style={{ color: colors.primary, fontSize: userCardFontSize ? `calc(${userCardFontSize} * 0.5)` : '8px' }}>(You)</span>
+                <div>
+                  <p style={{ fontSize: '10px', fontWeight: 500 }}>
+                    Emma <span style={{ color: colors.primary, fontSize: '8px' }}>(You)</span>
                   </p>
-                  <p
-                    style={{
-                      color: userCardMutedColor,
-                      fontSize: userCardFontSize ? `calc(${userCardFontSize} * 0.5)` : '8px',
-                    }}
-                  >
+                  <p style={{ color: 'var(--color-muted-foreground)', fontSize: '8px' }}>
                     child
                   </p>
                 </div>
               </div>
-              <div className="space-y-1" style={{ fontFamily: userCardFontFamily }}>
+              <div className="space-y-1">
                 <div
                   className="flex items-center gap-1 p-1 rounded"
-                  style={{
-                    backgroundColor: `${colors.muted}50`,
-                    fontSize: userCardFontSize ? `calc(${userCardFontSize} * 0.5)` : '8px',
-                    fontWeight: userCardFontWeight,
-                  }}
+                  style={{ backgroundColor: `${colors.muted}50`, fontSize: '8px' }}
                 >
                   <div className="w-1.5 h-1.5 rounded-full" style={{ backgroundColor: '#22c55e' }} />
-                  <span style={{ color: userCardTextColor }}>Soccer Practice</span>
+                  <span>Soccer Practice</span>
                 </div>
                 <div
                   className="flex items-center gap-1 p-1 rounded"
-                  style={{
-                    backgroundColor: `${colors.primary}10`,
-                    fontSize: userCardFontSize ? `calc(${userCardFontSize} * 0.5)` : '8px',
-                    fontWeight: userCardFontWeight,
-                  }}
+                  style={{ backgroundColor: `${colors.primary}10`, fontSize: '8px' }}
                 >
                   <div className="w-1.5 h-1.5 rounded-full" style={{ backgroundColor: '#3cb371' }} />
-                  <span style={{ color: userCardMutedColor, textDecoration: 'line-through' }}>
+                  <span style={{ color: 'var(--color-muted-foreground)', textDecoration: 'line-through' }}>
                     Take Out Trash
                   </span>
                 </div>
@@ -534,66 +357,37 @@ export function CalendarPreview({
             </ClickableElement>
 
             {/* User card 2 - Shows same style as card 1 */}
-            <div
-              className="rounded-lg"
-              style={{
-                ...computedUserCardStyle,
-                padding: userCardStyle.padding || '8px',
-              }}
-            >
+            <div className="themed-calendar-user rounded-lg">
               <div className="flex items-center gap-2 mb-1.5">
                 <div
                   className="w-5 h-5 rounded-full flex items-center justify-center text-white"
-                  style={{
-                    backgroundColor: '#3b82f6',
-                    fontSize: userCardFontSize ? `calc(${userCardFontSize} * 0.6)` : '9px',
-                    fontWeight: userCardFontWeight || 500,
-                  }}
+                  style={{ backgroundColor: '#3b82f6', fontSize: '9px', fontWeight: 500 }}
                 >
                   J
                 </div>
-                <div style={{ fontFamily: userCardFontFamily }}>
-                  <p
-                    style={{
-                      color: userCardTextColor,
-                      fontSize: userCardFontSize ? `calc(${userCardFontSize} * 0.7)` : '10px',
-                      fontWeight: userCardFontWeight || 500,
-                    }}
-                  >
+                <div>
+                  <p style={{ fontSize: '10px', fontWeight: 500 }}>
                     Jake
                   </p>
-                  <p
-                    style={{
-                      color: userCardMutedColor,
-                      fontSize: userCardFontSize ? `calc(${userCardFontSize} * 0.5)` : '8px',
-                    }}
-                  >
+                  <p style={{ color: 'var(--color-muted-foreground)', fontSize: '8px' }}>
                     child
                   </p>
                 </div>
               </div>
-              <div className="space-y-1" style={{ fontFamily: userCardFontFamily }}>
+              <div className="space-y-1">
                 <div
                   className="flex items-center gap-1 p-1 rounded"
-                  style={{
-                    backgroundColor: `${colors.muted}50`,
-                    fontSize: userCardFontSize ? `calc(${userCardFontSize} * 0.5)` : '8px',
-                    fontWeight: userCardFontWeight,
-                  }}
+                  style={{ backgroundColor: `${colors.muted}50`, fontSize: '8px' }}
                 >
                   <div className="w-1.5 h-1.5 rounded-full" style={{ backgroundColor: '#3b82f6' }} />
-                  <span style={{ color: userCardTextColor }}>Piano Lesson</span>
+                  <span>Piano Lesson</span>
                 </div>
                 <div
                   className="flex items-center gap-1 p-1 rounded"
-                  style={{
-                    backgroundColor: `${colors.muted}50`,
-                    fontSize: userCardFontSize ? `calc(${userCardFontSize} * 0.5)` : '8px',
-                    fontWeight: userCardFontWeight,
-                  }}
+                  style={{ backgroundColor: `${colors.muted}50`, fontSize: '8px' }}
                 >
                   <div className="w-1.5 h-1.5 rounded-full" style={{ backgroundColor: '#8b5cf6' }} />
-                  <span style={{ color: userCardTextColor }}>Clean Room</span>
+                  <span>Clean Room</span>
                 </div>
               </div>
             </div>

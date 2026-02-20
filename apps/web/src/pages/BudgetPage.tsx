@@ -17,6 +17,7 @@ import {
   ShieldAlert,
 } from 'lucide-react';
 import { Navigate } from 'react-router-dom';
+import { PageHeader } from '../components/common/PageHeader';
 import { useAuth } from '../context/AuthContext';
 import { useTheme } from '../context/ThemeContext';
 import { budgetsApi } from '../api/budgets';
@@ -401,32 +402,28 @@ export function BudgetPage() {
     <div className={`min-h-screen themed-budget-bg ${animationClasses}`}>
       <div className="space-y-6 p-3 sm:p-4 md:p-6 lg:p-8">
       {/* Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 sm:gap-4">
-        <div>
-          <h1 className="text-xl sm:text-2xl font-bold text-[var(--color-foreground)]">
-            Budget Management
-          </h1>
-          <p className="text-sm text-[var(--color-muted-foreground)]">
-            Track household expenses and manage your budget
-          </p>
-        </div>
-        <div className="flex gap-2">
-          <button
-            onClick={() => setShowAddEntryModal(true)}
-            className="inline-flex items-center px-4 py-2 bg-[var(--color-success)] text-white rounded-lg hover:opacity-90 transition-opacity"
-          >
-            <Receipt className="w-4 h-4 mr-2" />
-            Record Payment
-          </button>
-          <button
-            onClick={() => setShowAddBudgetModal(true)}
-            className="inline-flex items-center px-4 py-2 bg-[var(--color-primary)] text-white rounded-lg hover:opacity-90 transition-opacity"
-          >
-            <Plus className="w-4 h-4 mr-2" />
-            New Budget
-          </button>
-        </div>
-      </div>
+      <PageHeader
+        title="Budget Management"
+        subtitle="Track household expenses and manage your budget"
+        actions={
+          <>
+            <button
+              onClick={() => setShowAddEntryModal(true)}
+              className="inline-flex items-center px-4 py-2 bg-[var(--color-success)] text-[var(--color-success-foreground)] rounded-lg hover:opacity-90 transition-opacity"
+            >
+              <Receipt className="w-4 h-4 mr-2" />
+              Record Payment
+            </button>
+            <button
+              onClick={() => setShowAddBudgetModal(true)}
+              className="inline-flex items-center px-4 py-2 bg-[var(--color-primary)] text-[var(--color-primary-foreground)] rounded-lg hover:opacity-90 transition-opacity"
+            >
+              <Plus className="w-4 h-4 mr-2" />
+              New Budget
+            </button>
+          </>
+        }
+      />
 
       {/* Success/Error Messages */}
       {success && (
@@ -473,7 +470,7 @@ export function BudgetPage() {
               <button
                 key={tab.id}
                 onClick={() => setActiveTab(tab.id)}
-                className="flex items-center gap-2 px-4 py-3 border-b-2 transition-colors whitespace-nowrap"
+                className="flex items-center gap-2 px-4 py-3 border-b-2 transition-colors whitespace-nowrap text-sm font-medium"
                 style={{
                   borderColor: isActive ? 'var(--color-primary)' : 'transparent',
                   color: isActive ? 'var(--color-primary)' : 'var(--color-muted-foreground)',

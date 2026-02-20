@@ -178,7 +178,7 @@ export function TopHeaderLayout({
           {hasUnread ? (
             <>
               <item.icon size={18} className="bell-shake" style={{ color: '#f97316' }} />
-              <span className="absolute -top-1 -right-1 min-w-[14px] h-[14px] px-0.5 bg-red-500 text-white text-[9px] font-bold rounded-full flex items-center justify-center">
+              <span className="absolute -top-1 -right-1 min-w-[14px] h-[14px] px-0.5 bg-[var(--color-destructive)] text-[var(--color-destructive-foreground)] text-[9px] font-bold rounded-full flex items-center justify-center">
                 {unreadCount > 99 ? '99+' : unreadCount}
               </span>
             </>
@@ -187,7 +187,7 @@ export function TopHeaderLayout({
           )}
         </div>
         {navStyle !== 'icons-only' && (
-          <span className={`text-sm font-medium ${hasUnread ? 'text-orange-500' : ''}`}>
+          <span className={`text-sm font-medium ${hasUnread ? 'text-[var(--color-primary)]' : ''}`}>
             {item.label}
           </span>
         )}
@@ -199,7 +199,7 @@ export function TopHeaderLayout({
     <div className="min-h-screen flex flex-col">
       {/* Impersonation Banner */}
       {impersonation.active && (
-        <div className="bg-amber-500 text-white px-4 py-2 flex items-center justify-center gap-4 z-50">
+        <div className="bg-[var(--color-warning)] text-[var(--color-warning-foreground)] px-4 py-2 flex items-center justify-center gap-4 z-50">
           <UserCheck size={18} />
           <span>
             Viewing as <strong>{user?.displayName}</strong> ({user?.role})
@@ -211,7 +211,8 @@ export function TopHeaderLayout({
           </span>
           <button
             onClick={onStopImpersonating}
-            className="ml-4 bg-amber-600 hover:bg-amber-700 px-3 py-1 rounded-lg text-sm font-medium flex items-center gap-1"
+            className="ml-4 px-3 py-1 rounded-lg text-sm font-medium flex items-center gap-1 hover:opacity-80 transition-opacity"
+            style={{ backgroundColor: 'color-mix(in srgb, var(--color-warning) 80%, black)', color: 'var(--color-warning-foreground)' }}
           >
             <X size={14} />
             Exit

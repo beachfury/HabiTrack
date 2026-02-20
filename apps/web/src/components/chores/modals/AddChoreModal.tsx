@@ -20,6 +20,7 @@ import type {
   ChoreRecurrenceType,
 } from '../../../types';
 import { ModalPortal, ModalBody } from '../../common/ModalPortal';
+import { ModalFooterButtons } from '../../common/ModalFooterButtons';
 import { getDifficultyStyle } from '../../../utils';
 
 interface AddChoreModalProps {
@@ -214,21 +215,12 @@ export function AddChoreModal({
   const showIntervalInput = ['daily', 'weekly', 'monthly', 'custom'].includes(form.recurrenceType);
 
   const footer = mode === 'custom' ? (
-    <div className="flex gap-2">
-      <button
-        onClick={onClose}
-        className="flex-1 py-2 bg-[var(--color-muted)] text-[var(--color-muted-foreground)] rounded-xl font-medium hover:opacity-80 transition-opacity"
-      >
-        Cancel
-      </button>
-      <button
-        onClick={handleSubmit}
-        disabled={saving}
-        className="flex-1 py-2 bg-[var(--color-primary)] text-[var(--color-primary-foreground)] rounded-xl font-medium hover:opacity-90 disabled:opacity-50"
-      >
-        {saving ? 'Creating...' : 'Create'}
-      </button>
-    </div>
+    <ModalFooterButtons
+      onCancel={onClose}
+      onSubmit={handleSubmit}
+      submitText="Create"
+      submitting={saving}
+    />
   ) : undefined;
 
   return (

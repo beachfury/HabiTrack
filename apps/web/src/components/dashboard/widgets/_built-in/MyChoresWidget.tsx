@@ -1,18 +1,10 @@
 // apps/web/src/components/dashboard/widgets/MyChoresWidget.tsx
 import { ListChecks, Check } from 'lucide-react';
 import { Link } from 'react-router-dom';
-
-interface Chore {
-  id: number;
-  choreId: number;
-  title: string;
-  status: string;
-  dueDate: string;
-  completedAt: string | null;
-}
+import type { WidgetMyChore } from './types';
 
 interface MyChoresWidgetProps {
-  chores: Chore[];
+  chores: WidgetMyChore[];
 }
 
 export function MyChoresWidget({ chores = [] }: MyChoresWidgetProps) {

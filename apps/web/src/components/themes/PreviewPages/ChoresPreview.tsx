@@ -4,7 +4,6 @@
 import { Check, Plus, Clock, DollarSign, User, CheckSquare, Users, Trophy, Settings, Star, Flame, Target } from 'lucide-react';
 import type { ExtendedTheme, ThemeableElement } from '../../../types/theme';
 import { ClickableElement } from '../InteractivePreview';
-import { buildElementStyle, buildButtonStyle, buildPageBackgroundStyle, RADIUS_MAP, SHADOW_MAP } from './styleUtils';
 
 interface ChoresPreviewProps {
   theme: ExtendedTheme;
@@ -45,83 +44,24 @@ export function ChoresPreview({
 }: ChoresPreviewProps) {
   const colors = colorMode === 'light' ? theme.colorsLight : theme.colorsDark;
 
-  // Default fallbacks
-  const defaultRadius = RADIUS_MAP[theme.ui.borderRadius] || '8px';
-  const defaultShadow = SHADOW_MAP[theme.ui.shadowIntensity] || 'none';
-
-  // Page-specific background - check early for card fallback logic
-  const choresBgStyle = theme.elementStyles?.['chores-background'] || {};
-  const globalPageBgStyle = theme.elementStyles?.['page-background'] || {};
-
-  // Check if chores background has custom styling
-  const hasCustomChoresBg = choresBgStyle.backgroundColor || choresBgStyle.backgroundGradient || choresBgStyle.backgroundImage || choresBgStyle.customCSS;
-
-  // When chores has custom background, use semi-transparent card backgrounds by default
-  const cardBgFallback = hasCustomChoresBg ? 'rgba(255,255,255,0.08)' : colors.card;
-  const cardBorderFallback = hasCustomChoresBg ? 'rgba(255,255,255,0.15)' : colors.border;
-
-  const cardStyle = theme.elementStyles?.card || {};
-  const widgetStyle = theme.elementStyles?.widget || {};
-  const buttonPrimaryStyle = theme.elementStyles?.['button-primary'] || {};
-
-  // Build computed styles with semi-transparent fallbacks
-  const computedCardStyle = buildElementStyle(cardStyle, cardBgFallback, cardBorderFallback, defaultRadius, defaultShadow, colors.cardForeground);
-  const computedWidgetStyle = buildElementStyle(widgetStyle, hasCustomChoresBg ? 'rgba(255,255,255,0.06)' : colors.muted, cardBorderFallback, defaultRadius, 'none', colors.foreground);
-  const computedButtonPrimaryStyle = buildButtonStyle(buttonPrimaryStyle, colors.primary, colors.primaryForeground, 'transparent', '8px');
-  const { style: pageBgStyle, backgroundImageUrl, customCSS } = buildPageBackgroundStyle(
-    choresBgStyle,
-    globalPageBgStyle,
-    colors.background
-  );
-
-  // Detect animated background effect classes from customCSS
-  const getAnimatedBgClasses = (css?: string): string => {
-    if (!css) return '';
-    const classes: string[] = [];
-    if (css.includes('matrix-rain: true') || css.includes('matrix-rain:true')) {
-      classes.push('matrix-rain-bg');
-      const speedMatch = css.match(/matrix-rain-speed:\s*(slow|normal|fast|veryfast)/i);
-      if (speedMatch) classes.push(`matrix-rain-${speedMatch[1].toLowerCase()}`);
-    }
-    if (css.includes('snowfall: true') || css.includes('snowfall:true')) classes.push('snowfall-bg');
-    if (css.includes('sparkle: true') || css.includes('sparkle:true')) classes.push('sparkle-bg');
-    if (css.includes('bubbles: true') || css.includes('bubbles:true')) classes.push('bubbles-bg');
-    if (css.includes('embers: true') || css.includes('embers:true')) classes.push('embers-bg');
-    return classes.join(' ');
-  };
-
-  const animatedBgClasses = getAnimatedBgClasses(customCSS);
-
   return (
     <ClickableElement
       element="chores-background"
       isSelected={selectedElement === 'chores-background'}
       onClick={() => onSelectElement('chores-background')}
-      className={`flex-1 overflow-auto ${animatedBgClasses}`}
-      style={pageBgStyle}
+      className="themed-chores-bg flex-1 overflow-auto"
     >
-      {backgroundImageUrl && (
-        <div
-          className="absolute inset-0 pointer-events-none"
-          style={{
-            backgroundImage: `url(${backgroundImageUrl})`,
-            backgroundSize: 'cover',
-            backgroundPosition: 'center',
-            opacity: choresBgStyle.backgroundOpacity ?? globalPageBgStyle.backgroundOpacity ?? 1,
-          }}
-        />
-      )}
-      <div className="relative z-10 p-4">
+      <div className="relative z-10 p-4 space-y-4">
         {/* Page header - matches real ChoresPage */}
-        <div className="flex items-center justify-between mb-4">
-          <div>
-            <h1 className="text-xl font-bold flex items-center gap-2" style={{ color: colors.foreground }}>
-              <CheckSquare size={20} style={{ color: colors.primary }} />
-              Chores
-            </h1>
-            <p className="text-xs mt-1" style={{ color: colors.mutedForeground }}>
-              Track and complete your tasks
-            </p>
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-2">
+            <CheckSquare size={20} style={{ color: colors.primary }} />
+            <div>
+              <h1 className="text-lg font-bold">Chores</h1>
+              <p className="text-[10px]" style={{ color: 'var(--color-muted-foreground)' }}>
+                Track and complete your tasks
+              </p>
+            </div>
           </div>
           <ClickableElement
             element="button-primary"
@@ -129,8 +69,7 @@ export function ChoresPreview({
             onClick={() => onSelectElement('button-primary')}
           >
             <button
-              className="flex items-center gap-1 px-3 py-1.5 text-xs font-medium"
-              style={computedButtonPrimaryStyle}
+              className="themed-btn-primary flex items-center gap-1 px-3 py-1.5 text-xs font-medium"
             >
               <Plus size={14} />
               Add Chore
@@ -139,23 +78,21 @@ export function ChoresPreview({
         </div>
 
         {/* Stats Bar - matches real StatsBar component */}
-        <div className="grid grid-cols-4 gap-2 mb-4">
+        <div className="grid grid-cols-4 gap-2">
           <ClickableElement
             element="chores-task-card"
             isSelected={selectedElement === 'chores-task-card'}
             onClick={() => onSelectElement('chores-task-card')}
-            style={{
-              ...computedCardStyle,
-              padding: '10px',
-            }}
+            className="themed-chores-task"
+            style={{ padding: '10px' }}
           >
             <div className="flex items-center gap-2">
               <div className="p-1.5 rounded-lg" style={{ backgroundColor: `${colors.warning}20` }}>
                 <Star size={14} style={{ color: colors.warning }} />
               </div>
               <div>
-                <p className="text-lg font-bold" style={{ color: colors.foreground }}>{MOCK_STATS.totalPoints}</p>
-                <p className="text-[10px]" style={{ color: colors.mutedForeground }}>Total Points</p>
+                <p className="text-lg font-bold">{MOCK_STATS.totalPoints}</p>
+                <p className="text-[10px]" style={{ color: 'var(--color-muted-foreground)' }}>Total Points</p>
               </div>
             </div>
           </ClickableElement>
@@ -164,18 +101,16 @@ export function ChoresPreview({
             element="chores-task-card"
             isSelected={selectedElement === 'chores-task-card'}
             onClick={() => onSelectElement('chores-task-card')}
-            style={{
-              ...computedCardStyle,
-              padding: '10px',
-            }}
+            className="themed-chores-task"
+            style={{ padding: '10px' }}
           >
             <div className="flex items-center gap-2">
               <div className="p-1.5 rounded-lg" style={{ backgroundColor: `${colors.destructive}20` }}>
                 <Flame size={14} style={{ color: colors.destructive }} />
               </div>
               <div>
-                <p className="text-lg font-bold" style={{ color: colors.foreground }}>{MOCK_STATS.currentStreak}</p>
-                <p className="text-[10px]" style={{ color: colors.mutedForeground }}>Day Streak</p>
+                <p className="text-lg font-bold">{MOCK_STATS.currentStreak}</p>
+                <p className="text-[10px]" style={{ color: 'var(--color-muted-foreground)' }}>Day Streak</p>
               </div>
             </div>
           </ClickableElement>
@@ -184,18 +119,16 @@ export function ChoresPreview({
             element="chores-task-card"
             isSelected={selectedElement === 'chores-task-card'}
             onClick={() => onSelectElement('chores-task-card')}
-            style={{
-              ...computedCardStyle,
-              padding: '10px',
-            }}
+            className="themed-chores-task"
+            style={{ padding: '10px' }}
           >
             <div className="flex items-center gap-2">
               <div className="p-1.5 rounded-lg" style={{ backgroundColor: `${colors.success}20` }}>
                 <CheckSquare size={14} style={{ color: colors.success }} />
               </div>
               <div>
-                <p className="text-lg font-bold" style={{ color: colors.foreground }}>{MOCK_STATS.thisWeek}</p>
-                <p className="text-[10px]" style={{ color: colors.mutedForeground }}>This Week</p>
+                <p className="text-lg font-bold">{MOCK_STATS.thisWeek}</p>
+                <p className="text-[10px]" style={{ color: 'var(--color-muted-foreground)' }}>This Week</p>
               </div>
             </div>
           </ClickableElement>
@@ -204,32 +137,30 @@ export function ChoresPreview({
             element="chores-task-card"
             isSelected={selectedElement === 'chores-task-card'}
             onClick={() => onSelectElement('chores-task-card')}
-            style={{
-              ...computedCardStyle,
-              padding: '10px',
-            }}
+            className="themed-chores-task"
+            style={{ padding: '10px' }}
           >
             <div className="flex items-center gap-2">
               <div className="p-1.5 rounded-lg" style={{ backgroundColor: `${colors.primary}20` }}>
                 <Target size={14} style={{ color: colors.primary }} />
               </div>
               <div>
-                <p className="text-lg font-bold" style={{ color: colors.foreground }}>{MOCK_STATS.completionRate}%</p>
-                <p className="text-[10px]" style={{ color: colors.mutedForeground }}>Completion</p>
+                <p className="text-lg font-bold">{MOCK_STATS.completionRate}%</p>
+                <p className="text-[10px]" style={{ color: 'var(--color-muted-foreground)' }}>Completion</p>
               </div>
             </div>
           </ClickableElement>
         </div>
 
         {/* View Tabs - matches real page */}
-        <div className="flex gap-1 mb-4 overflow-x-auto">
-          {TABS.map((tab, idx) => (
+        <div className="flex gap-2" style={{ borderBottom: '1px solid var(--color-border)' }}>
+          {TABS.map((tab, i) => (
             <button
               key={tab.id}
-              className="flex items-center gap-1 px-3 py-1.5 rounded-lg text-xs font-medium whitespace-nowrap"
+              className="flex items-center gap-1 px-3 py-2 text-xs font-medium"
               style={{
-                backgroundColor: idx === 0 ? colors.primary : colors.muted,
-                color: idx === 0 ? colors.primaryForeground : colors.mutedForeground,
+                color: i === 0 ? colors.primary : 'var(--color-muted-foreground)',
+                borderBottom: i === 0 ? `2px solid ${colors.primary}` : '2px solid transparent',
               }}
             >
               <tab.icon size={12} />
@@ -243,12 +174,9 @@ export function ChoresPreview({
           element="chores-task-card"
           isSelected={selectedElement === 'chores-task-card'}
           onClick={() => onSelectElement('chores-task-card')}
-          style={{
-            ...computedCardStyle,
-            padding: cardStyle.padding || '12px',
-          }}
+          className="themed-chores-task"
         >
-          <h3 className="text-sm font-semibold mb-3" style={{ color: colors.foreground }}>
+          <h3 className="text-sm font-semibold mb-3">
             Today
           </h3>
           <div className="space-y-2">
@@ -273,16 +201,15 @@ export function ChoresPreview({
                 <div className="flex-1 min-w-0">
                   <p
                     className={`text-xs font-medium ${chore.done ? 'line-through opacity-60' : ''}`}
-                    style={{ color: colors.foreground }}
                   >
                     {chore.name}
                   </p>
                   <div className="flex items-center gap-2 mt-0.5">
-                    <span className="flex items-center gap-0.5 text-[10px]" style={{ color: colors.mutedForeground }}>
+                    <span className="flex items-center gap-0.5 text-[10px]" style={{ color: 'var(--color-muted-foreground)' }}>
                       <User size={10} />
                       {chore.assignee}
                     </span>
-                    <span className="flex items-center gap-0.5 text-[10px]" style={{ color: colors.mutedForeground }}>
+                    <span className="flex items-center gap-0.5 text-[10px]" style={{ color: 'var(--color-muted-foreground)' }}>
                       <Clock size={10} />
                       {chore.dueTime}
                     </span>
@@ -298,15 +225,11 @@ export function ChoresPreview({
           element="chores-paid-card"
           isSelected={selectedElement === 'chores-paid-card'}
           onClick={() => onSelectElement('chores-paid-card')}
-          className="mt-3"
-          style={{
-            ...computedCardStyle,
-            padding: cardStyle.padding || '12px',
-          }}
+          className="themed-chores-paid"
         >
           <div className="flex items-center gap-2 mb-3">
             <DollarSign size={16} style={{ color: colors.success }} />
-            <h3 className="text-sm font-semibold" style={{ color: colors.foreground }}>
+            <h3 className="text-sm font-semibold">
               Available Paid Chores
             </h3>
           </div>
@@ -321,8 +244,8 @@ export function ChoresPreview({
                 }}
               >
                 <div className="flex-1 min-w-0">
-                  <p className="text-xs font-medium" style={{ color: colors.foreground }}>{chore.name}</p>
-                  <p className="text-[10px]" style={{ color: colors.mutedForeground }}>Claim to earn</p>
+                  <p className="text-xs font-medium">{chore.name}</p>
+                  <p className="text-[10px]" style={{ color: 'var(--color-muted-foreground)' }}>Claim to earn</p>
                 </div>
                 <div
                   className="px-2 py-0.5 rounded-full text-[10px] font-semibold"

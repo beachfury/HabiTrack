@@ -182,7 +182,7 @@ export function EntriesTab({
 
         <button
           onClick={onAddEntry}
-          className="inline-flex items-center px-4 py-2 bg-[var(--color-success)] text-white rounded-lg hover:opacity-90 transition-opacity"
+          className="inline-flex items-center px-4 py-2 bg-[var(--color-success)] text-[var(--color-success-foreground)] rounded-lg hover:opacity-90 transition-opacity"
         >
           <Plus className="w-4 h-4 mr-2" />
           Add Entry
@@ -330,7 +330,7 @@ export function EntriesTab({
           </p>
           <button
             onClick={onAddEntry}
-            className="inline-flex items-center px-4 py-2 bg-[var(--color-success)] text-white rounded-lg hover:opacity-90 transition-opacity"
+            className="inline-flex items-center px-4 py-2 bg-[var(--color-success)] text-[var(--color-success-foreground)] rounded-lg hover:opacity-90 transition-opacity"
           >
             <Plus className="w-4 h-4 mr-2" />
             Add Entry

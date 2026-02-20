@@ -21,6 +21,7 @@ interface Widget {
   maxW: number | null;
   maxH: number | null;
   defaultConfig: any;
+  configSchema?: any;
   roles: string | null;
   active: boolean;
 }
@@ -41,15 +42,20 @@ interface UserWidgetLayout {
 
 // Default widgets when table doesn't exist
 const defaultWidgetsList: Widget[] = [
-  { id: 'welcome', name: 'Welcome', description: 'Personalized greeting', icon: 'hand-wave', category: 'general', defaultW: 4, defaultH: 1, minW: 2, minH: 1, maxW: null, maxH: null, defaultConfig: null, roles: null, active: true },
-  { id: 'quick-stats', name: 'Quick Stats', description: 'Overview of events, chores, shopping', icon: 'bar-chart', category: 'general', defaultW: 4, defaultH: 1, minW: 2, minH: 1, maxW: null, maxH: null, defaultConfig: null, roles: null, active: true },
+  { id: 'welcome', name: 'Welcome', description: 'Personalized greeting', icon: 'sparkles', category: 'general', defaultW: 4, defaultH: 1, minW: 2, minH: 1, maxW: null, maxH: null, defaultConfig: null, roles: null, active: true },
+  { id: 'quick-stats', name: 'Quick Stats', description: 'Overview of events, chores, shopping', icon: 'bar-chart-3', category: 'general', defaultW: 4, defaultH: 1, minW: 2, minH: 1, maxW: null, maxH: null, defaultConfig: null, roles: null, active: true },
   { id: 'todays-events', name: "Today's Events", description: 'Calendar events for today', icon: 'calendar', category: 'calendar', defaultW: 2, defaultH: 2, minW: 1, minH: 2, maxW: null, maxH: null, defaultConfig: null, roles: null, active: true },
+  { id: 'upcoming-events', name: 'Upcoming Events', description: 'Events for the next 7 days', icon: 'calendar', category: 'calendar', defaultW: 2, defaultH: 3, minW: 2, minH: 2, maxW: null, maxH: null, defaultConfig: null, roles: null, active: true },
   { id: 'todays-chores', name: "Today's Chores", description: 'Chores due today', icon: 'check-square', category: 'chores', defaultW: 2, defaultH: 2, minW: 1, minH: 2, maxW: null, maxH: null, defaultConfig: null, roles: null, active: true },
   { id: 'my-chores', name: 'My Chores', description: 'Your assigned chores', icon: 'list-checks', category: 'chores', defaultW: 2, defaultH: 2, minW: 1, minH: 2, maxW: null, maxH: null, defaultConfig: null, roles: null, active: true },
+  { id: 'chore-leaderboard', name: 'Chore Leaderboard', description: 'Top performers this week', icon: 'trophy', category: 'chores', defaultW: 2, defaultH: 2, minW: 1, minH: 2, maxW: null, maxH: null, defaultConfig: null, roles: null, active: true },
   { id: 'shopping-list', name: 'Shopping List', description: 'Quick view of shopping items', icon: 'shopping-cart', category: 'shopping', defaultW: 2, defaultH: 2, minW: 1, minH: 2, maxW: null, maxH: null, defaultConfig: null, roles: null, active: true },
+  { id: 'paid-chores', name: 'Paid Chores', description: 'Available paid chores to claim', icon: 'dollar-sign', category: 'finance', defaultW: 2, defaultH: 2, minW: 1, minH: 2, maxW: null, maxH: null, defaultConfig: null, roles: null, active: true },
+  { id: 'earnings', name: 'My Earnings', description: 'Your paid chore earnings', icon: 'wallet', category: 'finance', defaultW: 2, defaultH: 1, minW: 1, minH: 1, maxW: null, maxH: null, defaultConfig: null, roles: null, active: true },
   { id: 'family-members', name: 'Family', description: 'Quick family member overview', icon: 'users', category: 'family', defaultW: 2, defaultH: 2, minW: 1, minH: 2, maxW: null, maxH: null, defaultConfig: null, roles: null, active: true },
   { id: 'announcements', name: 'Announcements', description: 'Recent announcements', icon: 'megaphone', category: 'messages', defaultW: 2, defaultH: 2, minW: 1, minH: 2, maxW: null, maxH: null, defaultConfig: null, roles: null, active: true },
-  { id: 'upcoming-meals', name: 'Upcoming Meals', description: "This week's dinner plans", icon: 'utensils', category: 'meals', defaultW: 2, defaultH: 2, minW: 1, minH: 2, maxW: null, maxH: null, defaultConfig: null, roles: null, active: true },
+  { id: 'weather', name: 'Weather', description: 'Local weather forecast', icon: 'cloud-sun', category: 'general', defaultW: 2, defaultH: 1, minW: 1, minH: 1, maxW: null, maxH: null, defaultConfig: null, roles: null, active: true },
+  { id: 'upcoming-meals', name: 'Upcoming Meals', description: "This week's dinner plans", icon: 'utensils-crossed', category: 'meals', defaultW: 2, defaultH: 2, minW: 1, minH: 2, maxW: null, maxH: null, defaultConfig: null, roles: null, active: true },
 ];
 
 // ============================================
@@ -104,7 +110,7 @@ export async function getDashboardLayout(req: Request, res: Response) {
     try {
       layouts = await q<any[]>(`
         SELECT ul.widgetId, ul.x, ul.y, ul.w, ul.h, ul.minW, ul.minH, ul.maxW, ul.maxH, ul.visible, ul.config,
-               dw.name, dw.description, dw.icon, dw.category, dw.defaultConfig
+               dw.name, dw.description, dw.icon, dw.category, dw.defaultConfig, dw.configSchema
         FROM user_dashboard_layouts ul
         JOIN dashboard_widgets dw ON ul.widgetId = dw.id
         WHERE ul.userId = ? AND dw.active = 1
@@ -119,7 +125,7 @@ export async function getDashboardLayout(req: Request, res: Response) {
       let defaultWidgets: Widget[];
       try {
         defaultWidgets = await q<Widget[]>(`
-          SELECT id, name, description, icon, category, defaultW, defaultH, minW, minH, maxW, maxH, defaultConfig, roles
+          SELECT id, name, description, icon, category, defaultW, defaultH, minW, minH, maxW, maxH, defaultConfig, configSchema, roles
           FROM dashboard_widgets
           WHERE active = 1
           ORDER BY sortOrder ASC
@@ -156,7 +162,8 @@ export async function getDashboardLayout(req: Request, res: Response) {
       maxW: l.maxW,
       maxH: l.maxH,
       visible: Boolean(l.visible),
-      config: safeParseConfig(l.config) || safeParseConfig(l.defaultConfig),
+      config: safeParseConfig(l.config) ?? safeParseConfig(l.defaultConfig) ?? {},
+      configSchema: safeParseConfig(l.configSchema),
     }));
 
     res.json({
@@ -169,14 +176,14 @@ export async function getDashboardLayout(req: Request, res: Response) {
   }
 }
 
-// Helper to safely parse JSON config
+// Helper to safely parse JSON config — returns null for falsy/invalid input
 function safeParseConfig(config: any): any {
-  if (!config) return {};
+  if (!config) return null;
   if (typeof config === 'object') return config;
   try {
     return JSON.parse(config);
   } catch {
-    return {};
+    return null;
   }
 }
 
@@ -209,7 +216,8 @@ function createDefaultLayout(widgets: Widget[], userRole: string): any[] {
       maxW: w.maxW,
       maxH: w.maxH,
       visible: true,
-      config: safeParseConfig(w.defaultConfig),
+      config: safeParseConfig(w.defaultConfig) ?? {},
+      configSchema: safeParseConfig(w.configSchema),
     };
 
     // Move to next position

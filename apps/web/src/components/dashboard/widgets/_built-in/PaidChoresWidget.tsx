@@ -1,7 +1,7 @@
 // apps/web/src/components/dashboard/widgets/PaidChoresWidget.tsx
 import { DollarSign, Zap } from 'lucide-react';
 import { Link } from 'react-router-dom';
-import { getDifficultyStyle } from '../../../utils';
+import { getDifficultyStyle } from '../../../../utils';
 
 interface PaidChore {
   id: string;

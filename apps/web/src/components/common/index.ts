@@ -1,7 +1,6 @@
 // apps/web/src/components/common/index.ts
 // Central export for all common components
 
-export { Modal, ModalBody, ModalFooter } from './Modal';
 export { ModalPortal, ModalBody as ModalPortalBody, ModalFooter as ModalPortalFooter } from './ModalPortal';
 export { Button, IconButton } from './Button';
 export { Avatar, AvatarWithStatus, AvatarGroup } from './Avatar';
@@ -14,3 +13,5 @@ export { Input, Textarea, Select } from './Input';
 export { ColorPicker } from './ColorPicker';
 export { ColorPickerModal } from './ColorPickerModal';
 export { ModalForm, FormField, FormInput, FormTextarea, FormSelect, FormRow } from './ModalForm';
+export { ModalFooterButtons } from './ModalFooterButtons';
+export { PageHeader } from './PageHeader';

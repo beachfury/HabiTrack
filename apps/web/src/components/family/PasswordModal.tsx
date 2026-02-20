@@ -3,6 +3,7 @@ import { useState } from 'react';
 import { Eye, EyeOff } from 'lucide-react';
 import type { FamilyMember } from '../../types';
 import { ModalPortal, ModalBody } from '../common/ModalPortal';
+import { ModalFooterButtons } from '../common/ModalFooterButtons';
 
 interface PasswordModalProps {
   member: FamilyMember;
@@ -35,23 +36,11 @@ export function PasswordModal({ member, error, onClose, onSubmit }: PasswordModa
   };
 
   const footer = (
-    <div className="flex gap-2">
-      <button
-        type="button"
-        onClick={onClose}
-        className="flex-1 py-2 bg-[var(--color-muted)] text-[var(--color-muted-foreground)] rounded-xl font-medium hover:opacity-80 transition-opacity"
-      >
-        Cancel
-      </button>
-      <button
-        type="submit"
-        form="password-form"
-        onClick={handleSubmit}
-        className="flex-1 py-2 bg-[var(--color-primary)] text-[var(--color-primary-foreground)] rounded-xl font-medium hover:opacity-90 transition-opacity"
-      >
-        Set Password
-      </button>
-    </div>
+    <ModalFooterButtons
+      onCancel={onClose}
+      formId="password-form"
+      submitText="Set Password"
+    />
   );
 
   return (

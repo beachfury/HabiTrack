@@ -178,7 +178,7 @@ export function BudgetsTab({
 
         <button
           onClick={onAddBudget}
-          className="inline-flex items-center px-4 py-2 bg-[var(--color-primary)] text-white rounded-lg hover:opacity-90 transition-opacity"
+          className="inline-flex items-center px-4 py-2 bg-[var(--color-primary)] text-[var(--color-primary-foreground)] rounded-lg hover:opacity-90 transition-opacity"
         >
           <Plus className="w-4 h-4 mr-2" />
           Add Budget
@@ -348,7 +348,7 @@ export function BudgetsTab({
                         {budget.budgetType === 'spending' ? (
                           <button
                             onClick={() => onAddEntry(budget.id)}
-                            className="inline-flex items-center gap-1.5 px-3 py-1.5 text-sm bg-[var(--color-info)] text-white rounded-lg hover:opacity-90 transition-opacity"
+                            className="inline-flex items-center gap-1.5 px-3 py-1.5 text-sm bg-[var(--color-info)] text-[var(--color-primary-foreground)] rounded-lg hover:opacity-90 transition-opacity"
                           >
                             <Receipt className="w-4 h-4" />
                             Add Expense
@@ -356,7 +356,7 @@ export function BudgetsTab({
                         ) : !budget.isPaidThisPeriod ? (
                           <button
                             onClick={() => onAddEntry(budget.id)}
-                            className="inline-flex items-center gap-1.5 px-3 py-1.5 text-sm bg-[var(--color-success)] text-white rounded-lg hover:opacity-90 transition-opacity"
+                            className="inline-flex items-center gap-1.5 px-3 py-1.5 text-sm bg-[var(--color-success)] text-[var(--color-success-foreground)] rounded-lg hover:opacity-90 transition-opacity"
                           >
                             <CheckCircle className="w-4 h-4" />
                             Mark Paid
@@ -391,7 +391,7 @@ export function BudgetsTab({
           </p>
           <button
             onClick={onAddBudget}
-            className="inline-flex items-center px-4 py-2 bg-[var(--color-primary)] text-white rounded-lg hover:opacity-90 transition-opacity"
+            className="inline-flex items-center px-4 py-2 bg-[var(--color-primary)] text-[var(--color-primary-foreground)] rounded-lg hover:opacity-90 transition-opacity"
           >
             <Plus className="w-4 h-4 mr-2" />
             Create Budget

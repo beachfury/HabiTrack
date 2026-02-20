@@ -2,8 +2,9 @@
 // Modal for first-time login password change
 
 import { useState } from 'react';
-import { Eye, EyeOff, KeyRound, Shield } from 'lucide-react';
+import { Eye, EyeOff, KeyRound } from 'lucide-react';
 import { ModalPortal, ModalBody } from '../common/ModalPortal';
+import { ModalFooterButtons } from '../common/ModalFooterButtons';
 
 const API_BASE = (import.meta.env.VITE_API_BASE_URL as string) || '';
 
@@ -65,34 +66,13 @@ export function FirstLoginModal({ token, onSuccess, onCancel }: FirstLoginModalP
   };
 
   const footer = (
-    <div className="flex gap-2">
-      <button
-        type="button"
-        onClick={onCancel}
-        disabled={loading}
-        className="flex-1 py-2.5 bg-[var(--color-muted)] text-[var(--color-muted-foreground)] rounded-xl font-medium hover:opacity-80 transition-opacity disabled:opacity-50"
-      >
-        Cancel
-      </button>
-      <button
-        type="submit"
-        form="first-login-form"
-        disabled={loading}
-        className="flex-1 py-2.5 bg-[var(--color-primary)] text-[var(--color-primary-foreground)] rounded-xl font-medium hover:opacity-90 transition-opacity disabled:opacity-50 flex items-center justify-center gap-2"
-      >
-        {loading ? (
-          <>
-            <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
-            Setting...
-          </>
-        ) : (
-          <>
-            <Shield size={18} />
-            Set Password
-          </>
-        )}
-      </button>
-    </div>
+    <ModalFooterButtons
+      onCancel={onCancel}
+      formId="first-login-form"
+      submitText="Set Password"
+      submittingText="Setting..."
+      submitting={loading}
+    />
   );
 
   return (

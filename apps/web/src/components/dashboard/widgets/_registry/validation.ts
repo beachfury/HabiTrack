@@ -1,7 +1,8 @@
-// apps/web/src/utils/widgetValidation.ts
-// Widget manifest validation and code scanning utilities
+// _registry/validation.ts
+// Widget manifest validation and code scanning utilities.
+// Used by registerCommunityWidget() and future widget import flows.
 
-import type { WidgetManifest, WidgetCategory } from '../types/widget';
+import type { WidgetManifest, WidgetCategory } from '../../../../types/widget';
 
 const VALID_CATEGORIES: WidgetCategory[] = [
   'general', 'calendar', 'chores', 'shopping', 'meals',
