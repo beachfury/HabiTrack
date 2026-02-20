@@ -1,42 +1,47 @@
-// apps/web/src/hooks/useKioskIdleTimeout.ts
-// Auto-logout for kiosk sessions after inactivity
-// SECURITY: Prevents unauthorized access if kiosk is left unattended
+// apps/web/src/hooks/useIdleTimeout.ts
+// Auto-logout for sessions after inactivity
+// Used for both kiosk sessions (15 min) and regular sessions (30 min)
+// SECURITY: Prevents unauthorized access if device is left unattended
 
 import { useEffect, useRef, useCallback } from 'react';
 import { useAuth } from '../context/AuthContext';
 
-// Default idle timeout for kiosk sessions: 15 minutes
-const KIOSK_IDLE_TIMEOUT_MS = 15 * 60 * 1000;
+// Default idle timeout: 15 minutes
+const DEFAULT_IDLE_TIMEOUT_MS = 15 * 60 * 1000;
 
-// Warning shown 1 minute before auto-logout
-const WARNING_BEFORE_LOGOUT_MS = 60 * 1000;
+// Default warning shown before auto-logout: 1 minute
+const DEFAULT_WARNING_BEFORE_MS = 60 * 1000;
 
-interface UseKioskIdleTimeoutOptions {
+interface UseIdleTimeoutOptions {
   /** Timeout in milliseconds before auto-logout (default: 15 minutes) */
   timeoutMs?: number;
+  /** Warning period in milliseconds before logout (default: 60 seconds) */
+  warningMs?: number;
   /** Callback when warning should be shown */
   onWarning?: (secondsRemaining: number) => void;
   /** Callback when auto-logout occurs */
   onLogout?: () => void;
-  /** Whether the feature is enabled (e.g., only for kiosk sessions) */
+  /** Whether the feature is enabled */
   enabled?: boolean;
 }
 
 /**
- * Hook that monitors user activity and auto-logs out kiosk sessions after inactivity.
+ * Hook that monitors user activity and auto-logs out after inactivity.
  *
  * Usage:
  * ```tsx
- * useKioskIdleTimeout({
- *   enabled: isKioskSession,
+ * useIdleTimeout({
+ *   enabled: true,
+ *   timeoutMs: 30 * 60 * 1000, // 30 minutes
  *   onWarning: (seconds) => setShowWarning(true),
- *   onLogout: () => navigate('/kiosk'),
+ *   onLogout: () => navigate('/login'),
  * });
  * ```
  */
-export function useKioskIdleTimeout(options: UseKioskIdleTimeoutOptions = {}) {
+export function useIdleTimeout(options: UseIdleTimeoutOptions = {}) {
   const {
-    timeoutMs = KIOSK_IDLE_TIMEOUT_MS,
+    timeoutMs = DEFAULT_IDLE_TIMEOUT_MS,
+    warningMs = DEFAULT_WARNING_BEFORE_MS,
     onWarning,
     onLogout,
     enabled = true,
@@ -61,27 +66,27 @@ export function useKioskIdleTimeout(options: UseKioskIdleTimeoutOptions = {}) {
 
     if (!enabled) return;
 
-    // Set warning timer (1 minute before logout)
-    const warningDelay = timeoutMs - WARNING_BEFORE_LOGOUT_MS;
+    // Set warning timer
+    const warningDelay = timeoutMs - warningMs;
     if (warningDelay > 0 && onWarning) {
       warningRef.current = setTimeout(() => {
-        onWarning(WARNING_BEFORE_LOGOUT_MS / 1000);
+        onWarning(warningMs / 1000);
       }, warningDelay);
     }
 
     // Set logout timer
     timeoutRef.current = setTimeout(async () => {
-      console.log('[kiosk-idle] Auto-logout due to inactivity');
+      console.log('[idle-timeout] Auto-logout due to inactivity');
       try {
         await logout();
         onLogout?.();
       } catch (err) {
-        console.error('[kiosk-idle] Logout failed:', err);
+        console.error('[idle-timeout] Logout failed:', err);
         // Force redirect anyway for security
         onLogout?.();
       }
     }, timeoutMs);
-  }, [enabled, timeoutMs, onWarning, onLogout, logout]);
+  }, [enabled, timeoutMs, warningMs, onWarning, onLogout, logout]);
 
   useEffect(() => {
     if (!enabled) return;
@@ -139,4 +144,7 @@ export function useKioskIdleTimeout(options: UseKioskIdleTimeoutOptions = {}) {
   };
 }
 
-export default useKioskIdleTimeout;
+/** @deprecated Use useIdleTimeout instead */
+export const useKioskIdleTimeout = useIdleTimeout;
+
+export default useIdleTimeout;

@@ -26,6 +26,12 @@ import { startReminderService } from './services/calendarReminders';
 // Import and start chore reminder service
 import { startChoreReminderService } from './services/choreReminders';
 
+// Import and start chore deadline reminder service
+import { startChoreDeadlineService } from './services/choreDeadlineReminders';
+
+// Import session janitor (cleans expired sessions)
+import { startJanitor } from './janitor';
+
 // Import logger service
 import { configureLogger, createLogger } from './services/logger';
 import { getVersionInfo } from './utils/version';
@@ -198,6 +204,12 @@ startReminderService();
 
 // Start chore reminder service
 startChoreReminderService();
+
+// Start chore deadline reminder service (checks every minute for configured times)
+startChoreDeadlineService();
+
+// Start session janitor (cleans expired sessions every 10 minutes)
+startJanitor();
 
 // Initialize logger from database settings
 async function initializeLogger() {

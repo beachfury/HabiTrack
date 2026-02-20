@@ -34,6 +34,7 @@
 - Recurring schedules (daily, weekly, monthly, custom)
 - Per-member assignments with rotation support
 - Completion tracking with points and streaks
+- Configurable deadline reminders — email + in-app notifications sent to assignee and admins when chores aren't completed by set times
 - Family leaderboard with gamification
 - Stats dashboard (completion rate, streaks, weekly progress)
 
@@ -118,7 +119,7 @@ HabiTrack features a powerful theming system that allows deep customization:
 ### ⚙️ Settings
 - **Profile**: Nickname, email, avatar, profile color
 - **Themes**: Full theme editor with live preview
-- **Notifications**: Configure notification preferences
+- **Notifications**: Configure notification preferences and chore deadline reminders (up to 4 daily check times)
 - **Security**: Password management
 - **Household** (Admin): Household name, timezone, national holiday country selection
 - **Email** (Admin): SMTP configuration for notifications
@@ -137,6 +138,13 @@ HabiTrack features a powerful theming system that allows deep customization:
 - PIN-based quick login for shared household screens
 - Simplified display-focused interface
 - Perfect for wall-mounted tablets or kitchen displays
+- Automatic idle timeout (15 min) with countdown warning before returning to PIN screen
+
+### ⏰ Session & Idle Management
+- Automatic idle timeout with "Are you still there?" countdown warning
+- Configurable durations: 30 min for regular sessions, 15 min for kiosk
+- Automatic page refresh at midnight to keep daily data current
+- Session janitor cleans up expired sessions from the database
 
 ### 📱 Mobile Responsive
 - Fully usable on phones, tablets, and desktops

@@ -1,9 +1,11 @@
 // apps/web/src/components/settings/NotificationsTab.tsx
 // User notification preferences configuration
+// Includes admin-only section for household chore deadline reminders
 
 import { useState, useEffect } from 'react';
-import { Bell, Clock, Moon, Mail } from 'lucide-react';
+import { Bell, Clock, Moon, Mail, AlertTriangle } from 'lucide-react';
 import { apiClient } from '../../api/client';
+import { useAuth } from '../../context/AuthContext';
 
 interface NotificationPreferences {
   emailEnabled: boolean;
@@ -23,6 +25,28 @@ interface NotificationPreferences {
   quietHoursEnd: string;
 }
 
+interface DeadlineReminderSettings {
+  choreDeadlineReminder1Enabled: boolean;
+  choreDeadlineReminder1Time: string;
+  choreDeadlineReminder2Enabled: boolean;
+  choreDeadlineReminder2Time: string;
+  choreDeadlineReminder3Enabled: boolean;
+  choreDeadlineReminder3Time: string;
+  choreDeadlineReminder4Enabled: boolean;
+  choreDeadlineReminder4Time: string;
+}
+
+const DEFAULT_DEADLINE_SETTINGS: DeadlineReminderSettings = {
+  choreDeadlineReminder1Enabled: false,
+  choreDeadlineReminder1Time: '12:00:00',
+  choreDeadlineReminder2Enabled: false,
+  choreDeadlineReminder2Time: '19:00:00',
+  choreDeadlineReminder3Enabled: false,
+  choreDeadlineReminder3Time: '15:00:00',
+  choreDeadlineReminder4Enabled: false,
+  choreDeadlineReminder4Time: '21:00:00',
+};
+
 const DAYS_OF_WEEK = [
   { value: 1, label: 'Monday' },
   { value: 2, label: 'Tuesday' },
@@ -33,9 +57,15 @@ const DAYS_OF_WEEK = [
   { value: 7, label: 'Sunday' },
 ];
 
+const API_BASE = (import.meta.env.VITE_API_BASE_URL as string) || '';
+
 export function NotificationsTab() {
+  const { user } = useAuth();
+  const isAdmin = user?.role === 'admin';
+
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
+  const [savingDeadline, setSavingDeadline] = useState(false);
   const [prefs, setPrefs] = useState<NotificationPreferences>({
     emailEnabled: true,
     choreReminders: true,
@@ -54,6 +84,9 @@ export function NotificationsTab() {
     quietHoursEnd: '07:00:00',
   });
 
+  // Admin-only: chore deadline reminder settings (household-wide)
+  const [deadlineSettings, setDeadlineSettings] = useState<DeadlineReminderSettings>(DEFAULT_DEADLINE_SETTINGS);
+
   useEffect(() => {
     loadPreferences();
   }, []);
@@ -65,6 +98,31 @@ export function NotificationsTab() {
         { params: undefined },
       );
       setPrefs(res.preferences);
+
+      // Admin: also load household deadline settings
+      if (isAdmin) {
+        try {
+          const householdRes = await fetch(API_BASE + '/api/settings/household', {
+            credentials: 'include',
+          });
+          if (householdRes.ok) {
+            const data = await householdRes.json();
+            const h = data.data?.household || data.household || {};
+            setDeadlineSettings({
+              choreDeadlineReminder1Enabled: !!h.choreDeadlineReminder1Enabled,
+              choreDeadlineReminder1Time: h.choreDeadlineReminder1Time || '12:00:00',
+              choreDeadlineReminder2Enabled: !!h.choreDeadlineReminder2Enabled,
+              choreDeadlineReminder2Time: h.choreDeadlineReminder2Time || '19:00:00',
+              choreDeadlineReminder3Enabled: !!h.choreDeadlineReminder3Enabled,
+              choreDeadlineReminder3Time: h.choreDeadlineReminder3Time || '15:00:00',
+              choreDeadlineReminder4Enabled: !!h.choreDeadlineReminder4Enabled,
+              choreDeadlineReminder4Time: h.choreDeadlineReminder4Time || '21:00:00',
+            });
+          }
+        } catch (err) {
+          console.error('Failed to load household deadline settings:', err);
+        }
+      }
     } catch (err) {
       console.error('Failed to load notification preferences:', err);
     } finally {
@@ -83,8 +141,40 @@ export function NotificationsTab() {
     }
   }
 
+  async function handleSaveDeadlineSettings() {
+    setSavingDeadline(true);
+    try {
+      const csrfRes = await fetch(API_BASE + '/api/csrf', { credentials: 'include' });
+      const csrfData = await csrfRes.json();
+
+      await fetch(API_BASE + '/api/settings/household', {
+        method: 'PUT',
+        credentials: 'include',
+        headers: {
+          'Content-Type': 'application/json',
+          'X-HabiTrack-CSRF': csrfData.token || csrfData.data?.token || '',
+        },
+        body: JSON.stringify(deadlineSettings),
+      });
+    } catch (err) {
+      console.error('Failed to save deadline reminder settings:', err);
+    } finally {
+      setSavingDeadline(false);
+    }
+  }
+
   function handleToggle(key: keyof NotificationPreferences) {
     setPrefs(prev => ({ ...prev, [key]: !prev[key] }));
+  }
+
+  function handleDeadlineToggle(slot: 1 | 2 | 3 | 4) {
+    const key = `choreDeadlineReminder${slot}Enabled` as keyof DeadlineReminderSettings;
+    setDeadlineSettings(prev => ({ ...prev, [key]: !prev[key] }));
+  }
+
+  function handleDeadlineTimeChange(slot: 1 | 2 | 3 | 4, time: string) {
+    const key = `choreDeadlineReminder${slot}Time` as keyof DeadlineReminderSettings;
+    setDeadlineSettings(prev => ({ ...prev, [key]: time + ':00' }));
   }
 
   if (loading) {
@@ -376,7 +466,7 @@ export function NotificationsTab() {
         </div>
       )}
 
-      {/* Save Button */}
+      {/* Save Button for user preferences */}
       <button
         type="button"
         onClick={handleSave}
@@ -385,6 +475,81 @@ export function NotificationsTab() {
       >
         {saving ? 'Saving...' : 'Save Notification Preferences'}
       </button>
+
+      {/* ============================================ */}
+      {/* Admin-Only: Chore Deadline Reminders */}
+      {/* Household-wide setting for timed reminders */}
+      {/* ============================================ */}
+      {isAdmin && (
+        <>
+          <div className="p-4 bg-[var(--color-muted)] rounded-xl mt-8">
+            <h3 className="font-medium text-[var(--color-foreground)] mb-1 flex items-center gap-2">
+              <AlertTriangle size={18} />
+              Chore Deadline Reminders
+              <span className="text-xs px-2 py-0.5 bg-[var(--color-primary)]/20 text-[var(--color-primary)] rounded-full">
+                Admin
+              </span>
+            </h3>
+            <p className="text-sm text-[var(--color-muted-foreground)]">
+              Send email reminders when chores due today aren't completed by these times.
+              Reminders go to the assigned user and all admins. Applies to all household members.
+            </p>
+          </div>
+
+          <div className="p-4 border border-[var(--color-border)] rounded-xl space-y-4">
+            <h4 className="font-medium text-[var(--color-foreground)] flex items-center gap-2">
+              <Clock size={16} />
+              Reminder Check Times
+            </h4>
+            <p className="text-sm text-[var(--color-muted-foreground)]">
+              Enable up to 4 check times. At each time, any pending chores for today will trigger a reminder.
+            </p>
+
+            <div className="space-y-3">
+              {([1, 2, 3, 4] as const).map((slot) => {
+                const enabledKey = `choreDeadlineReminder${slot}Enabled` as keyof DeadlineReminderSettings;
+                const timeKey = `choreDeadlineReminder${slot}Time` as keyof DeadlineReminderSettings;
+                const isEnabled = !!deadlineSettings[enabledKey];
+                const timeValue = String(deadlineSettings[timeKey] || '12:00:00').slice(0, 5);
+
+                return (
+                  <div key={slot} className="flex items-center gap-4 py-2">
+                    <label className="flex items-center gap-3 cursor-pointer min-w-[140px]">
+                      <input
+                        type="checkbox"
+                        checked={isEnabled}
+                        onChange={() => handleDeadlineToggle(slot)}
+                        className="w-4 h-4 rounded border-[var(--color-border)] text-[var(--color-primary)]"
+                      />
+                      <span className={`font-medium ${isEnabled ? 'text-[var(--color-foreground)]' : 'text-[var(--color-muted-foreground)]'}`}>
+                        Reminder {slot}
+                      </span>
+                    </label>
+                    <input
+                      type="time"
+                      value={timeValue}
+                      onChange={(e) => handleDeadlineTimeChange(slot, e.target.value)}
+                      disabled={!isEnabled}
+                      className={`px-3 py-1.5 border border-[var(--color-border)] rounded-lg bg-[var(--color-background)] text-[var(--color-foreground)] ${
+                        !isEnabled ? 'opacity-40 cursor-not-allowed' : ''
+                      }`}
+                    />
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+
+          <button
+            type="button"
+            onClick={handleSaveDeadlineSettings}
+            disabled={savingDeadline}
+            className="w-full py-2 bg-[var(--color-primary)] text-[var(--color-primary-foreground)] rounded-xl font-medium hover:opacity-90 disabled:opacity-50"
+          >
+            {savingDeadline ? 'Saving...' : 'Save Deadline Reminder Settings'}
+          </button>
+        </>
+      )}
     </div>
   );
 }
