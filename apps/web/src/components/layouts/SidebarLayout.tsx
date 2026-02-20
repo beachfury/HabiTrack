@@ -21,7 +21,7 @@ import {
   Store,
 } from 'lucide-react';
 import { useState, useEffect } from 'react';
-import type { Theme, ExtendedTheme } from '../../types/theme';
+import type { Theme, ExtendedTheme, ThemeableElement } from '../../types/theme';
 import type { HouseholdSettings } from '../../api';
 
 // Helper to resolve image URLs - converts relative API paths to full URLs
@@ -188,7 +188,7 @@ export function SidebarLayout({
   const sidebarElementStyle = extTheme?.elementStyles?.sidebar;
 
   // Get page-specific background style based on current route
-  const getPageBackgroundElement = (): 'page-background' | 'home-background' | 'calendar-background' | 'chores-background' | 'shopping-background' | 'messages-background' | 'settings-background' | 'budget-background' | 'meals-background' | 'recipes-background' => {
+  const getPageBackgroundElement = (): string => {
     const path = location.pathname;
     if (path === '/' || path === '/home') return 'home-background';
     if (path === '/calendar') return 'calendar-background';
@@ -199,10 +199,13 @@ export function SidebarLayout({
     if (path === '/budgets') return 'budget-background';
     if (path === '/meals') return 'meals-background';
     if (path === '/recipes') return 'recipes-background';
+    if (path === '/store') return 'store-background';
+    if (path === '/family') return 'family-background';
+    if (path === '/paidchores') return 'paidchores-background';
     return 'page-background';
   };
 
-  const pageBackgroundElement = getPageBackgroundElement();
+  const pageBackgroundElement = getPageBackgroundElement() as ThemeableElement;
   const pageSpecificStyle = extTheme?.elementStyles?.[pageBackgroundElement];
   const globalPageStyle = extTheme?.elementStyles?.['page-background'];
   // Use page-specific style if it has any background customization, otherwise fall back to global
@@ -421,7 +424,7 @@ export function SidebarLayout({
           {hasUnread ? (
             <>
               <item.icon size={20} className="bell-shake" style={{ color: '#f97316' }} />
-              <span className="absolute -top-1.5 -right-1.5 min-w-[18px] h-[18px] px-1 bg-red-500 text-white text-[10px] font-bold rounded-full flex items-center justify-center">
+              <span className="absolute -top-1.5 -right-1.5 min-w-[18px] h-[18px] px-1 bg-[var(--color-destructive)] text-[var(--color-destructive-foreground)] text-[10px] font-bold rounded-full flex items-center justify-center">
                 {unreadCount > 99 ? '99+' : unreadCount}
               </span>
             </>
@@ -430,12 +433,12 @@ export function SidebarLayout({
           )}
         </div>
         {navStyle !== 'icons-only' && (
-          <span className={`font-medium ${hasUnread ? 'text-orange-500' : ''}`}>
+          <span className={`font-medium ${hasUnread ? 'text-[var(--color-primary)]' : ''}`}>
             {item.label}
           </span>
         )}
         {hasUnread && !active && navStyle !== 'icons-only' && (
-          <span className="ml-auto px-2 py-0.5 text-[10px] font-bold bg-orange-500 text-white rounded-full uppercase tracking-wide animate-pulse">
+          <span className="ml-auto px-2 py-0.5 text-[10px] font-bold bg-[var(--color-primary)] text-[var(--color-primary-foreground)] rounded-full uppercase tracking-wide animate-pulse">
             New
           </span>
         )}
@@ -587,7 +590,7 @@ export function SidebarLayout({
     <div className="min-h-screen flex flex-col">
       {/* Impersonation Banner */}
       {impersonation.active && (
-        <div className="bg-amber-500 text-white px-4 py-2 flex items-center justify-center gap-4 z-50">
+        <div className="bg-[var(--color-warning)] text-[var(--color-warning-foreground)] px-4 py-2 flex items-center justify-center gap-4 z-50">
           <UserCheck size={18} />
           <span>
             Viewing as <strong>{user?.displayName}</strong> ({user?.role})
@@ -599,7 +602,8 @@ export function SidebarLayout({
           </span>
           <button
             onClick={onStopImpersonating}
-            className="ml-4 bg-amber-600 hover:bg-amber-700 px-3 py-1 rounded-lg text-sm font-medium flex items-center gap-1"
+            className="ml-4 px-3 py-1 rounded-lg text-sm font-medium flex items-center gap-1 hover:opacity-80 transition-opacity"
+            style={{ backgroundColor: 'color-mix(in srgb, var(--color-warning) 80%, black)', color: 'var(--color-warning-foreground)' }}
           >
             <X size={14} />
             Exit
@@ -612,7 +616,7 @@ export function SidebarLayout({
         <div className="fixed top-4 left-4 z-50">
           <button
             onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-            className="p-2 rounded-lg bg-white dark:bg-gray-800 shadow-lg"
+            className="p-2 rounded-lg bg-[var(--color-card)] shadow-lg"
             style={{ color: accentColor }}
           >
             {mobileMenuOpen ? <X size={24} /> : <Menu size={24} />}
@@ -635,7 +639,7 @@ export function SidebarLayout({
         {isDesktop && (
           <aside
             className={`flex flex-col relative overflow-hidden ${
-              !sidebarElementStyle?.customCSS ? (side === 'right' ? 'border-l border-gray-200 dark:border-gray-700' : 'border-r border-gray-200 dark:border-gray-700') : ''
+              !sidebarElementStyle?.customCSS ? (side === 'right' ? 'border-l border-[var(--color-border)]' : 'border-r border-[var(--color-border)]') : ''
             } ${getAnimatedBackgroundClasses(sidebarElementStyle?.customCSS)}`}
             style={{ ...sidebarStyle, position: 'relative' }}
           >

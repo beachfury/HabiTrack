@@ -4,7 +4,6 @@
 import { Bell, Megaphone, MessageCircle, CheckSquare, Calendar, ShoppingCart, Users, Info, Check, RefreshCw } from 'lucide-react';
 import type { ExtendedTheme, ThemeableElement } from '../../../types/theme';
 import { ClickableElement } from '../InteractivePreview';
-import { buildElementStyle, buildButtonStyle, buildPageBackgroundStyle, RADIUS_MAP, SHADOW_MAP } from './styleUtils';
 
 interface MessagesPreviewProps {
   theme: ExtendedTheme;
@@ -42,7 +41,7 @@ function getTypeIcon(type: string, colors: any) {
     case 'family':
       return <Users size={14} style={{ color: colors.accent }} />;
     default:
-      return <Info size={14} style={{ color: colors.mutedForeground }} />;
+      return <Info size={14} style={{ color: 'var(--color-muted-foreground)' }} />;
   }
 }
 
@@ -54,127 +53,66 @@ export function MessagesPreview({
 }: MessagesPreviewProps) {
   const colors = colorMode === 'light' ? theme.colorsLight : theme.colorsDark;
 
-  // Default fallbacks
-  const defaultRadius = RADIUS_MAP[theme.ui.borderRadius] || '8px';
-  const defaultShadow = SHADOW_MAP[theme.ui.shadowIntensity] || 'none';
-
-  // Page-specific background - check early for card fallback logic
-  const messagesBgStyle = theme.elementStyles?.['messages-background'] || {};
-  const globalPageBgStyle = theme.elementStyles?.['page-background'] || {};
-
-  // Check if messages background has custom styling
-  const hasCustomMessagesBg = messagesBgStyle.backgroundColor || messagesBgStyle.backgroundGradient || messagesBgStyle.backgroundImage || messagesBgStyle.customCSS;
-
-  // When messages has custom background, use semi-transparent card backgrounds by default
-  const cardBgFallback = hasCustomMessagesBg ? 'rgba(255,255,255,0.08)' : colors.card;
-  const cardBorderFallback = hasCustomMessagesBg ? 'rgba(255,255,255,0.15)' : colors.border;
-
-  const cardStyle = theme.elementStyles?.card || {};
-  const widgetStyle = theme.elementStyles?.widget || {};
-  const buttonPrimaryStyle = theme.elementStyles?.['button-primary'] || {};
-
-  // Build computed styles with semi-transparent fallbacks
-  const computedCardStyle = buildElementStyle(cardStyle, cardBgFallback, cardBorderFallback, defaultRadius, defaultShadow, colors.cardForeground);
-  const computedWidgetStyle = buildElementStyle(widgetStyle, hasCustomMessagesBg ? 'rgba(255,255,255,0.06)' : colors.muted, cardBorderFallback, defaultRadius, 'none', colors.foreground);
-  const computedButtonPrimaryStyle = buildButtonStyle(buttonPrimaryStyle, colors.primary, colors.primaryForeground, 'transparent', '8px');
-  const { style: pageBgStyle, backgroundImageUrl, customCSS } = buildPageBackgroundStyle(
-    messagesBgStyle,
-    globalPageBgStyle,
-    colors.background
-  );
-
-  // Detect animated background effect classes from customCSS
-  const getAnimatedBgClasses = (css?: string): string => {
-    if (!css) return '';
-    const classes: string[] = [];
-    if (css.includes('matrix-rain: true') || css.includes('matrix-rain:true')) {
-      classes.push('matrix-rain-bg');
-      const speedMatch = css.match(/matrix-rain-speed:\s*(slow|normal|fast|veryfast)/i);
-      if (speedMatch) classes.push(`matrix-rain-${speedMatch[1].toLowerCase()}`);
-    }
-    if (css.includes('snowfall: true') || css.includes('snowfall:true')) classes.push('snowfall-bg');
-    if (css.includes('sparkle: true') || css.includes('sparkle:true')) classes.push('sparkle-bg');
-    if (css.includes('bubbles: true') || css.includes('bubbles:true')) classes.push('bubbles-bg');
-    if (css.includes('embers: true') || css.includes('embers:true')) classes.push('embers-bg');
-    return classes.join(' ');
-  };
-
-  const animatedBgClasses = getAnimatedBgClasses(customCSS);
-
   return (
     <ClickableElement
       element="messages-background"
       isSelected={selectedElement === 'messages-background'}
       onClick={() => onSelectElement('messages-background')}
-      className={`flex-1 overflow-auto ${animatedBgClasses}`}
-      style={pageBgStyle}
+      className="themed-messages-bg flex-1 overflow-auto"
     >
-      {backgroundImageUrl && (
-        <div
-          className="absolute inset-0 pointer-events-none"
-          style={{
-            backgroundImage: `url(${backgroundImageUrl})`,
-            backgroundSize: 'cover',
-            backgroundPosition: 'center',
-            opacity: messagesBgStyle.backgroundOpacity ?? globalPageBgStyle.backgroundOpacity ?? 1,
-          }}
-        />
-      )}
-      <div className="relative z-10 p-4">
+      <div className="relative z-10 p-4 space-y-4">
         {/* Page header - matches real MessagesPage */}
-        <div className="flex items-center justify-between mb-4">
+        <div className="flex items-center justify-between">
           <div className="flex items-center gap-2">
             <Bell size={20} style={{ color: colors.primary }} />
             <div>
-              <h1 className="text-lg font-bold" style={{ color: colors.foreground }}>Messages</h1>
-              <p className="text-[10px]" style={{ color: colors.mutedForeground }}>6 unread</p>
+              <h1 className="text-lg font-bold">Messages</h1>
+              <p className="text-[10px]" style={{ color: 'var(--color-muted-foreground)' }}>6 unread</p>
             </div>
           </div>
           <button className="p-1.5 rounded-lg" style={{ backgroundColor: colors.muted }}>
-            <RefreshCw size={14} style={{ color: colors.mutedForeground }} />
+            <RefreshCw size={14} style={{ color: 'var(--color-muted-foreground)' }} />
           </button>
         </div>
 
-        {/* Tab bar - matches real page segmented control style */}
+        {/* Tab bar - underline style */}
         <ClickableElement
           element="messages-announcements-card"
           isSelected={selectedElement === 'messages-announcements-card'}
           onClick={() => onSelectElement('messages-announcements-card')}
-          className="mb-4 p-1 flex gap-1"
-          style={{
-            backgroundColor: colors.muted,
-            borderRadius: defaultRadius,
-          }}
+          className="themed-messages-announcements"
+          style={{ padding: '0' }}
         >
-          {TABS.map((tab, idx) => (
-            <button
-              key={tab.id}
-              className="flex-1 flex items-center justify-center gap-1 px-2 py-1.5 rounded-md text-[10px] font-medium"
-              style={{
-                backgroundColor: idx === 0 ? colors.card : 'transparent',
-                color: idx === 0 ? colors.primary : colors.mutedForeground,
-                boxShadow: idx === 0 ? '0 1px 2px rgba(0,0,0,0.1)' : 'none',
-              }}
-            >
-              <tab.icon size={12} />
-              <span className="hidden sm:inline">{tab.label}</span>
-              {tab.badge > 0 && (
-                <span
-                  className="px-1 py-0.5 text-[8px] rounded-full"
-                  style={{
-                    backgroundColor: tab.id === 'notifications' ? colors.primary : tab.id === 'announcements' ? colors.warning : colors.accent,
-                    color: 'white',
-                  }}
-                >
-                  {tab.badge}
-                </span>
-              )}
-            </button>
-          ))}
+          <div className="flex gap-2" style={{ borderBottom: '1px solid var(--color-border)' }}>
+            {TABS.map((tab, i) => (
+              <button
+                key={tab.id}
+                className="flex items-center gap-1 px-3 py-2 text-xs font-medium"
+                style={{
+                  color: i === 0 ? colors.primary : 'var(--color-muted-foreground)',
+                  borderBottom: i === 0 ? `2px solid ${colors.primary}` : '2px solid transparent',
+                }}
+              >
+                <tab.icon size={12} />
+                {tab.label}
+                {tab.badge > 0 && (
+                  <span
+                    className="px-1 py-0.5 text-[8px] rounded-full"
+                    style={{
+                      backgroundColor: tab.id === 'notifications' ? colors.primary : tab.id === 'announcements' ? colors.warning : colors.accent,
+                      color: 'white',
+                    }}
+                  >
+                    {tab.badge}
+                  </span>
+                )}
+              </button>
+            ))}
+          </div>
         </ClickableElement>
 
         {/* Filter pills - matches real page */}
-        <div className="flex gap-1 mb-4 overflow-x-auto">
+        <div className="flex gap-1 overflow-x-auto">
           {FILTERS.slice(0, 5).map((filter, idx) => (
             <button
               key={filter}
@@ -194,14 +132,13 @@ export function MessagesPreview({
           element="messages-chat-card"
           isSelected={selectedElement === 'messages-chat-card'}
           onClick={() => onSelectElement('messages-chat-card')}
-          className="space-y-2"
+          className="themed-messages-chat space-y-2"
         >
           {MOCK_NOTIFICATIONS.map((notif) => (
             <div
               key={notif.id}
-              className="p-3 rounded-lg"
+              className="themed-card p-3 rounded-lg"
               style={{
-                ...computedCardStyle,
                 borderLeft: !notif.isRead ? `3px solid ${colors.primary}` : undefined,
               }}
             >
@@ -213,7 +150,7 @@ export function MessagesPreview({
                   <div className="flex items-center gap-1">
                     <h3
                       className="text-xs font-medium"
-                      style={{ color: !notif.isRead ? colors.foreground : colors.mutedForeground }}
+                      style={{ color: !notif.isRead ? undefined : 'var(--color-muted-foreground)' }}
                     >
                       {notif.title}
                     </h3>
@@ -221,10 +158,10 @@ export function MessagesPreview({
                       <span className="w-1.5 h-1.5 rounded-full" style={{ backgroundColor: colors.primary }} />
                     )}
                   </div>
-                  <p className="text-[10px] mt-0.5" style={{ color: colors.mutedForeground }}>
+                  <p className="text-[10px] mt-0.5" style={{ color: 'var(--color-muted-foreground)' }}>
                     {notif.body}
                   </p>
-                  <p className="text-[9px] mt-1" style={{ color: colors.mutedForeground }}>
+                  <p className="text-[9px] mt-1" style={{ color: 'var(--color-muted-foreground)' }}>
                     {notif.time}
                   </p>
                 </div>
@@ -245,12 +182,10 @@ export function MessagesPreview({
           element="button-primary"
           isSelected={selectedElement === 'button-primary'}
           onClick={() => onSelectElement('button-primary')}
-          className="mt-4"
         >
           <button
-            className="w-full flex items-center justify-center gap-1 px-3 py-2 text-xs font-medium"
+            className="themed-btn-primary w-full flex items-center justify-center gap-1 px-3 py-1.5 text-xs font-medium"
             style={{
-              ...computedButtonPrimaryStyle,
               backgroundColor: `${colors.primary}20`,
               color: colors.primary,
             }}

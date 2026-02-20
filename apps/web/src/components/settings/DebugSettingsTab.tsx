@@ -210,20 +210,20 @@ export function DebugSettingsTab() {
 
   const getLevelColor = (level: string): string => {
     switch (level) {
-      case 'error': return 'text-red-500';
-      case 'warn': return 'text-yellow-500';
-      case 'info': return 'text-blue-500';
-      case 'debug': return 'text-gray-400';
+      case 'error': return 'text-[var(--color-destructive)]';
+      case 'warn': return 'text-[var(--color-warning)]';
+      case 'info': return 'text-[var(--color-info)]';
+      case 'debug': return 'text-[var(--color-muted-foreground)]';
       default: return 'text-[var(--color-foreground)]';
     }
   };
 
   const getLevelBgColor = (level: string): string => {
     switch (level) {
-      case 'error': return 'bg-red-500/10';
-      case 'warn': return 'bg-yellow-500/10';
-      case 'info': return 'bg-blue-500/10';
-      case 'debug': return 'bg-gray-500/10';
+      case 'error': return 'bg-[var(--color-destructive)]/10';
+      case 'warn': return 'bg-[var(--color-warning)]/10';
+      case 'info': return 'bg-[var(--color-info)]/10';
+      case 'debug': return 'bg-[var(--color-muted)]/10';
       default: return '';
     }
   };
@@ -283,7 +283,7 @@ export function DebugSettingsTab() {
               Enable verbose logging for troubleshooting
             </p>
             {settings.debugMode && settings.debugModeExpiresAt && (
-              <p className="text-xs text-amber-500 mt-1 flex items-center gap-1">
+              <p className="text-xs text-[var(--color-warning)] mt-1 flex items-center gap-1">
                 <Clock size={12} />
                 Auto-disables at {new Date(settings.debugModeExpiresAt).toLocaleTimeString()}
               </p>
@@ -296,13 +296,13 @@ export function DebugSettingsTab() {
               onChange={(e) => setSettings({ ...settings, debugMode: e.target.checked })}
               className="sr-only peer"
             />
-            <div className="w-11 h-6 bg-gray-300 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-[var(--color-primary)]"></div>
+            <div className="w-11 h-6 bg-[var(--color-muted)] peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-[var(--color-primary)]"></div>
           </label>
         </div>
 
         {/* Security notice when debug is on */}
         {settings.debugMode && (
-          <div className="p-3 bg-amber-500/10 border border-amber-500/30 rounded-lg text-amber-600 dark:text-amber-400 flex items-start gap-2 text-sm">
+          <div className="p-3 rounded-lg flex items-start gap-2 text-sm" style={{ backgroundColor: 'color-mix(in srgb, var(--color-warning) 10%, transparent)', border: '1px solid color-mix(in srgb, var(--color-warning) 30%, transparent)', color: 'var(--color-warning)' }}>
             <AlertTriangle size={16} className="shrink-0 mt-0.5" />
             <div>
               <p className="font-medium">Debug mode is enabled</p>
@@ -364,7 +364,7 @@ export function DebugSettingsTab() {
               onChange={(e) => setSettings({ ...settings, logToFile: e.target.checked })}
               className="sr-only peer"
             />
-            <div className="w-11 h-6 bg-gray-300 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-[var(--color-primary)]"></div>
+            <div className="w-11 h-6 bg-[var(--color-muted)] peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-[var(--color-primary)]"></div>
           </label>
         </div>
 
@@ -428,7 +428,7 @@ export function DebugSettingsTab() {
             }}
             className={`text-sm flex items-center gap-2 px-3 py-1.5 rounded-lg border transition-colors ${
               liveView
-                ? 'bg-green-500/20 border-green-500/50 text-green-600 dark:text-green-400'
+                ? 'bg-[var(--color-success)]/20 border-[var(--color-success)]/50 text-[var(--color-success)]'
                 : 'themed-btn-secondary'
             }`}
           >
@@ -548,7 +548,7 @@ export function DebugSettingsTab() {
           <div className="flex items-center justify-between mb-3">
             <div className="flex items-center gap-3">
               <h3 className="font-medium text-gray-100 flex items-center gap-2">
-                {liveView && <span className="w-2 h-2 bg-green-500 rounded-full animate-pulse" />}
+                {liveView && <span className="w-2 h-2 bg-[var(--color-success)] rounded-full animate-pulse" />}
                 Console
               </h3>
               <span className="text-xs text-gray-500">

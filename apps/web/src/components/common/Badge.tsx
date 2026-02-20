@@ -1,5 +1,6 @@
 // apps/web/src/components/common/Badge.tsx
-import { ReactNode } from 'react';
+// Uses CSS color variables with color-mix() for themed badge colors
+import { ReactNode, CSSProperties } from 'react';
 
 type BadgeVariant = 'default' | 'success' | 'warning' | 'error' | 'info' | 'purple';
 type BadgeSize = 'sm' | 'md';
@@ -12,14 +13,34 @@ interface BadgeProps {
   className?: string;
 }
 
-const variantClasses: Record<BadgeVariant, string> = {
-  default: 'bg-gray-100 text-gray-700 dark:bg-gray-700 dark:text-gray-300',
-  success: 'bg-green-100 text-green-700 dark:bg-green-800 dark:text-green-300',
-  warning: 'bg-yellow-100 text-yellow-700 dark:bg-yellow-800 dark:text-yellow-300',
-  error: 'bg-red-100 text-red-700 dark:bg-red-800 dark:text-red-300',
-  info: 'bg-blue-100 text-blue-700 dark:bg-blue-800 dark:text-blue-300',
-  purple: 'bg-purple-100 text-purple-700 dark:bg-purple-800 dark:text-purple-300',
+// CSS variable mapping for each variant
+const variantColorVar: Record<BadgeVariant, string> = {
+  default: '--color-muted-foreground',
+  success: '--color-success',
+  warning: '--color-warning',
+  error: '--color-destructive',
+  info: '--color-primary',
+  purple: '--color-accent',
 };
+
+function getVariantStyle(variant: BadgeVariant): CSSProperties {
+  if (variant === 'default') {
+    return {
+      backgroundColor: 'var(--color-muted)',
+      color: 'var(--color-muted-foreground)',
+    };
+  }
+  const colorVar = variantColorVar[variant];
+  return {
+    backgroundColor: `color-mix(in srgb, var(${colorVar}) 15%, transparent)`,
+    color: `var(${colorVar})`,
+  };
+}
+
+function getDotColor(variant: BadgeVariant): string {
+  const colorVar = variantColorVar[variant];
+  return `var(${colorVar})`;
+}
 
 const sizeClasses: Record<BadgeSize, string> = {
   sm: 'px-1.5 py-0.5 text-xs',
@@ -37,26 +58,15 @@ export function Badge({
     <span
       className={`
         inline-flex items-center gap-1 rounded-full font-medium
-        ${variantClasses[variant]}
         ${sizeClasses[size]}
         ${className}
       `}
+      style={getVariantStyle(variant)}
     >
       {dot && (
         <span
-          className={`w-1.5 h-1.5 rounded-full ${
-            variant === 'success'
-              ? 'bg-green-500'
-              : variant === 'warning'
-              ? 'bg-yellow-500'
-              : variant === 'error'
-              ? 'bg-red-500'
-              : variant === 'info'
-              ? 'bg-blue-500'
-              : variant === 'purple'
-              ? 'bg-purple-500'
-              : 'bg-gray-500'
-          }`}
+          className="w-1.5 h-1.5 rounded-full"
+          style={{ backgroundColor: getDotColor(variant) }}
         />
       )}
       {children}
@@ -81,11 +91,11 @@ export function CountBadge({
   return (
     <span
       className={`
-        inline-flex items-center justify-center min-w-[1.25rem] h-5 px-1 
+        inline-flex items-center justify-center min-w-[1.25rem] h-5 px-1
         rounded-full text-xs font-bold
-        ${variantClasses[variant]}
         ${className}
       `}
+      style={getVariantStyle(variant)}
     >
       {count > max ? `${max}+` : count}
     </span>

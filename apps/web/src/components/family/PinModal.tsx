@@ -3,6 +3,7 @@ import { useState } from 'react';
 import { Hash } from 'lucide-react';
 import type { FamilyMember } from '../../types';
 import { ModalPortal, ModalBody } from '../common/ModalPortal';
+import { ModalFooterButtons } from '../common/ModalFooterButtons';
 
 interface PinModalProps {
   member: FamilyMember;
@@ -29,24 +30,13 @@ export function PinModal({ member, error, onClose, onSubmit, onRemove }: PinModa
   };
 
   const footer = (
-    <div className="flex gap-2">
-      <button
-        type="button"
-        onClick={onClose}
-        className="flex-1 py-2 bg-[var(--color-muted)] text-[var(--color-muted-foreground)] rounded-xl font-medium hover:opacity-80 transition-opacity"
-      >
-        Cancel
-      </button>
-      <button
-        type="submit"
-        form="pin-form"
-        onClick={handleSubmit}
-        disabled={pin.length < 4}
-        className="flex-1 py-2 bg-[var(--color-warning)] text-white rounded-xl font-medium hover:opacity-90 disabled:opacity-50 transition-opacity"
-      >
-        Set PIN
-      </button>
-    </div>
+    <ModalFooterButtons
+      onCancel={onClose}
+      formId="pin-form"
+      submitText="Set PIN"
+      submitDisabled={pin.length < 4}
+      submitVariant="warning"
+    />
   );
 
   return (

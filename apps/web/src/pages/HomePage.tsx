@@ -7,7 +7,9 @@ import { useTheme } from '../context/ThemeContext';
 import { dashboardApi, WidgetLayout, DashboardWidget, DashboardData } from '../api/dashboard';
 import { widgetRegistry, getWidgetData, getWidgetThemedClass } from '../components/dashboard/widgets';
 import { WidgetSandbox } from '../components/dashboard/WidgetSandbox';
+import { WidgetConfigModal } from '../components/dashboard/WidgetConfigModal';
 import { ModalPortal, ModalBody } from '../components/common/ModalPortal';
+import { PageHeader } from '../components/common/PageHeader';
 
 import 'react-grid-layout/css/styles.css';
 
@@ -24,6 +26,12 @@ export function HomePage() {
   const [loading, setLoading] = useState(true);
   const [isEditing, setIsEditing] = useState(false);
   const [showWidgetPicker, setShowWidgetPicker] = useState(false);
+  const [configModal, setConfigModal] = useState<{
+    widgetId: string;
+    widgetName: string;
+    configSchema: Record<string, unknown>;
+    currentConfig: Record<string, unknown>;
+  } | null>(null);
 
   // Load dashboard data
   const loadDashboard = useCallback(async () => {
@@ -155,6 +163,32 @@ export function HomePage() {
     }
   };
 
+  // Open config modal for a widget
+  const openConfigModal = (layout: WidgetLayout) => {
+    setConfigModal({
+      widgetId: layout.widgetId,
+      widgetName: layout.name || 'Widget',
+      configSchema: layout.configSchema!,
+      currentConfig: layout.config || {},
+    });
+  };
+
+  // Save widget config
+  const handleSaveConfig = async (config: Record<string, unknown>) => {
+    if (!configModal) return;
+    try {
+      await dashboardApi.updateWidgetConfig(configModal.widgetId, config);
+      setLayouts((prev) =>
+        prev.map((l) =>
+          l.widgetId === configModal.widgetId ? { ...l, config } : l
+        )
+      );
+      setConfigModal(null);
+    } catch (error) {
+      console.error('Failed to save widget config:', error);
+    }
+  };
+
   // Get widgets not currently visible
   const hiddenWidgets = availableWidgets.filter(
     (widget) => !layouts.find((l) => l.widgetId === widget.id && l.visible)
@@ -171,54 +205,55 @@ export function HomePage() {
   return (
     <div className={`p-4 min-h-screen themed-home-bg ${animationClasses}`} ref={containerRef}>
       {/* Header */}
-      <div className="flex items-center justify-between mb-4">
-        <h1 className="themed-home-title">
-          Home
-        </h1>
-        <div className="flex items-center gap-2">
-          {isEditing ? (
-            <>
+      <PageHeader
+        title="Home"
+        titleClassName="themed-home-title"
+        actions={
+          <div className="flex items-center gap-2">
+            {isEditing ? (
+              <>
+                <button
+                  onClick={() => setShowWidgetPicker(true)}
+                  className="flex items-center gap-1 px-3 py-1.5 text-sm bg-[var(--color-success)] text-[var(--color-success-foreground)] rounded-[var(--radius-md)] hover:brightness-110 transition-all"
+                >
+                  <Plus size={16} />
+                  Add Widget
+                </button>
+                <button
+                  onClick={handleReset}
+                  className="themed-btn-secondary flex items-center gap-1 text-sm transition-colors"
+                >
+                  <RotateCcw size={16} />
+                  Reset
+                </button>
+                <button
+                  onClick={handleSaveLayout}
+                  className="themed-btn-primary flex items-center gap-1 text-sm transition-colors"
+                >
+                  Save
+                </button>
+                <button
+                  onClick={() => {
+                    setIsEditing(false);
+                    loadDashboard(); // Reload to discard changes
+                  }}
+                  className="themed-btn-secondary flex items-center gap-1 text-sm transition-colors"
+                >
+                  Cancel
+                </button>
+              </>
+            ) : (
               <button
-                onClick={() => setShowWidgetPicker(true)}
-                className="flex items-center gap-1 px-3 py-1.5 text-sm bg-[var(--color-success)] text-[var(--color-success-foreground)] rounded-[var(--radius-md)] hover:brightness-110 transition-all"
-              >
-                <Plus size={16} />
-                Add Widget
-              </button>
-              <button
-                onClick={handleReset}
+                onClick={() => setIsEditing(true)}
                 className="themed-btn-secondary flex items-center gap-1 text-sm transition-colors"
               >
-                <RotateCcw size={16} />
-                Reset
+                <Settings size={16} />
+                Customize
               </button>
-              <button
-                onClick={handleSaveLayout}
-                className="themed-btn-primary flex items-center gap-1 text-sm transition-colors"
-              >
-                Save
-              </button>
-              <button
-                onClick={() => {
-                  setIsEditing(false);
-                  loadDashboard(); // Reload to discard changes
-                }}
-                className="themed-btn-secondary flex items-center gap-1 text-sm transition-colors"
-              >
-                Cancel
-              </button>
-            </>
-          ) : (
-            <button
-              onClick={() => setIsEditing(true)}
-              className="themed-btn-secondary flex items-center gap-1 text-sm transition-colors"
-            >
-              <Settings size={16} />
-              Customize
-            </button>
-          )}
-        </div>
-      </div>
+            )}
+          </div>
+        }
+      />
 
       {/* Widget Grid */}
       {mounted && width > 0 && (
@@ -247,6 +282,8 @@ export function HomePage() {
               const registryEntry = widgetRegistry.get(layout.widgetId);
               const widgetInfo = availableWidgets.find((w) => w.id === layout.widgetId);
               const themedClass = getWidgetThemedClass(layout.widgetId);
+              // Use DB configSchema with fallback to registry manifest
+              const effectiveConfigSchema = layout.configSchema ?? registryEntry?.manifest.configSchema ?? null;
 
               if (!registryEntry) {
                 return (
@@ -260,7 +297,7 @@ export function HomePage() {
               }
 
               const WidgetComponent = registryEntry.component;
-              const props = getWidgetData(layout.widgetId, dashboardData as Record<string, unknown>, user?.id);
+              const props = getWidgetData(layout.widgetId, dashboardData as Record<string, unknown>, user?.id, layout.config);
 
               return (
                 <div
@@ -274,12 +311,23 @@ export function HomePage() {
                         <GripVertical size={14} />
                         <span className="text-xs font-medium">{widgetInfo?.name || registryEntry.manifest.name}</span>
                       </div>
-                      <button
-                        onClick={() => handleRemoveWidget(layout.widgetId)}
-                        className="p-1 text-[var(--color-muted-foreground)] hover:text-[var(--color-destructive)] transition-colors"
-                      >
-                        <X size={14} />
-                      </button>
+                      <div className="flex items-center gap-0.5">
+                        {effectiveConfigSchema && typeof effectiveConfigSchema === 'object' && Object.keys(effectiveConfigSchema).length > 0 && (
+                          <button
+                            onClick={() => openConfigModal({ ...layout, configSchema: effectiveConfigSchema as Record<string, unknown> })}
+                            className="p-1 text-[var(--color-muted-foreground)] hover:text-[var(--color-primary)] transition-colors"
+                            title="Widget settings"
+                          >
+                            <Settings size={14} />
+                          </button>
+                        )}
+                        <button
+                          onClick={() => handleRemoveWidget(layout.widgetId)}
+                          className="p-1 text-[var(--color-muted-foreground)] hover:text-[var(--color-destructive)] transition-colors"
+                        >
+                          <X size={14} />
+                        </button>
+                      </div>
                     </div>
                   )}
                   <div className={`p-[var(--card-padding)] h-full ${isEditing ? 'pt-2' : ''}`}>
@@ -350,6 +398,18 @@ export function HomePage() {
             )}
           </ModalBody>
         </ModalPortal>
+      )}
+
+      {/* Widget Config Modal */}
+      {configModal && (
+        <WidgetConfigModal
+          isOpen={true}
+          onClose={() => setConfigModal(null)}
+          widgetName={configModal.widgetName}
+          configSchema={configModal.configSchema}
+          currentConfig={configModal.currentConfig}
+          onSave={handleSaveConfig}
+        />
       )}
     </div>
   );

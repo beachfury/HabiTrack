@@ -103,13 +103,13 @@ HabiTrack features a powerful theming system that allows deep customization:
 - **Mode-aware colors** — separate color palettes for light and dark modes
 - **Global color palette** customization (primary, accent, background, card, muted, border, destructive, success, warning)
 - **Per-element styling** — customize cards, widgets, buttons, inputs, modals individually
-- **Per-page backgrounds** — different backgrounds for each section of the app (14 pages supported)
+- **Per-page backgrounds** — different backgrounds for each section of the app (15 pages supported)
 - **Page-specific element overrides** — style the calendar grid differently than the chores card
 - **Background images** with opacity control and media library
 - **Animated CSS effects** — Matrix rain, snowfall, sparkle, bubbles, embers (combinable!)
 - **Typography control** — custom fonts, sizes, line heights
 - **Border radius and shadow** presets
-- **Live preview** in the theme editor with 14 page previews
+- **Live preview** in the theme editor with 15 page previews
 - **"Apply to All"** — quickly copy background settings across multiple pages
 - **Theme library** — save, duplicate, and share themes
 - **Kid-safe themes** — admins can approve themes for kids to use
@@ -668,6 +668,17 @@ The Store page (`/store`) lets users browse all available widgets and themes in 
 - **Admins** can import `.habi-theme` files and export existing themes directly from the store.
 - **Members & Kids** can browse the catalog and submit install requests. Admins review and approve/dismiss these from the Pending Requests section.
 
+### Store Previews
+
+Both widget and theme cards include visual previews:
+
+- **Widget cards** display abstract mockups (stat bars, list lines, rankings, etc.) reflecting the widget type
+- **Theme cards** show miniature UI layout mockups using the theme's actual colors (sidebar, header, cards, color palette)
+- **Click "Preview"** on any card to open a full live preview modal:
+  - Widget previews render the actual component with realistic sample data in a sandboxed container
+  - Theme previews use the full `InteractivePreview` with light/dark toggle and all 15 page tabs
+- **Apply directly** from the preview modal — "Add to Dashboard" for widgets, "Apply Theme" for themes
+
 ### Permission Model
 
 | Role | Browse | Import/Export | Install | Request |
@@ -817,22 +828,34 @@ When the adapter receives `DashboardData`, these keys are available:
 
 ```
 apps/web/src/components/dashboard/widgets/
-├── index.ts                  # Central registry — manifests, adapters, Map
-├── WelcomeWidget.tsx         # Simple stateless widget (receives props)
-├── WeatherWidget.tsx         # Self-managed data widget (fetches own API)
-├── QuickStatsWidget.tsx
-├── TodaysEventsWidget.tsx
-├── UpcomingEventsWidget.tsx
-├── TodaysChoresWidget.tsx
-├── MyChoresWidget.tsx
-├── ChoreLeaderboardWidget.tsx
-├── ShoppingListWidget.tsx
-├── PaidChoresWidget.tsx
-├── EarningsWidget.tsx
-├── FamilyMembersWidget.tsx
-├── AnnouncementsWidget.tsx
-├── UpcomingMealsWidget.tsx
-└── MyCustomWidget.tsx        # <-- Your new widget
+├── index.ts                      # Barrel re-export from _registry/
+├── _built-in/                    # All 14 built-in widget components
+│   ├── index.ts                  # Barrel exports
+│   ├── types.ts                  # Shared widget types
+│   ├── WelcomeWidget.tsx         # Simple stateless widget (receives props)
+│   ├── WeatherWidget.tsx         # Self-managed data widget (fetches own API)
+│   ├── QuickStatsWidget.tsx
+│   ├── TodaysEventsWidget.tsx
+│   ├── UpcomingEventsWidget.tsx
+│   ├── TodaysChoresWidget.tsx
+│   ├── MyChoresWidget.tsx
+│   ├── ChoreLeaderboardWidget.tsx
+│   ├── ShoppingListWidget.tsx
+│   ├── PaidChoresWidget.tsx
+│   ├── EarningsWidget.tsx
+│   ├── FamilyWidget.tsx
+│   ├── AnnouncementsWidget.tsx
+│   └── UpcomingMealsWidget.tsx
+├── _registry/                    # Widget registry infrastructure
+│   ├── index.ts                  # Public API exports
+│   ├── registry.ts               # widgetRegistry Map, getWidgetData()
+│   ├── manifests.ts              # All widget manifest definitions
+│   ├── adapters.ts               # DashboardData → widget props adapters
+│   ├── previewData.ts            # Sample data for Store previews
+│   ├── WidgetPreviewModal.tsx    # Live preview modal + card mockups
+│   ├── StaticWeatherPreview.tsx  # Static weather preview (no API)
+│   └── validation.ts            # Community widget validation
+└── MyCustomWidget.tsx            # <-- Your new widget
 ```
 
 ---
@@ -1077,7 +1100,7 @@ The `elementStyles` object lets you style 40+ individual UI elements. Each key i
 | **Shopping** | `shopping-background`, `shopping-filter-widget`, `shopping-list-card` |
 | **Messages** | `messages-background`, `messages-announcements-card`, `messages-chat-card` |
 | **Settings** | `settings-background`, `settings-nav-card`, `settings-content-card` |
-| **Other Pages** | `budget-background`, `meals-background`, `recipes-background`, `paidchores-background`, `family-background` |
+| **Other Pages** | `budget-background`, `meals-background`, `recipes-background`, `paidchores-background`, `family-background`, `store-background` |
 
 **All available ElementStyle properties:**
 
@@ -1285,9 +1308,9 @@ HabiTrack includes a powerful theming system that goes beyond simple color chang
 - **Typography**: Choose font family, base size, and line height
 - **UI Presets**: Border radius (none, small, medium, large) and shadow intensity (none, subtle, medium, strong)
 - **Element Styles**: Per-element customization for cards, widgets, buttons, inputs, modals, sidebar
-- **Page Backgrounds**: Set different backgrounds (solid, gradient, or image) for each of 14 pages
+- **Page Backgrounds**: Set different backgrounds (solid, gradient, or image) for each of 15 pages
 - **Animated Effects**: Add Matrix rain, snowfall, sparkle, bubbles, or embers to any page background
-- **Live Preview**: See changes in real-time across 14 preview pages (Home, Chores, Calendar, Shopping, Messages, Settings, Budget, Meals, Recipes, Paid Chores, Family, Modal, Login, Kiosk)
+- **Live Preview**: See changes in real-time across 15 preview pages (Home, Chores, Calendar, Shopping, Messages, Settings, Budget, Meals, Recipes, Paid Chores, Family, Store, Modal, Login, Kiosk)
 - **Apply to All**: Quickly copy background settings from one page to multiple others
 - **Media Library**: Upload and manage background images with category organization
 - **Reset to Defaults**: Easily reset elements to theme defaults while preserving mode-awareness
@@ -1378,6 +1401,7 @@ The theme system uses CSS custom properties (variables) for all colors, making i
 --recipes-page-bg
 --paidchores-page-bg
 --family-page-bg
+--store-page-bg
 ```
 
 ### Advanced Theme Features
@@ -1484,6 +1508,7 @@ The theme editor includes live previews for all pages:
 | **Recipes** | Recipe cards, ratings, cook time |
 | **Paid Chores** | Reward amounts, claim buttons |
 | **Family** | Member list, avatars, roles |
+| **Store** | Widget/theme cards, preview mockups |
 | **Modal** | Example modal dialogs |
 | **Login** | Login form styling (admin only) |
 | **Kiosk** | Kiosk PIN entry screen (admin only) |

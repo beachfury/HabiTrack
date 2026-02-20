@@ -1,5 +1,7 @@
 // apps/web/src/components/common/Button.tsx
-import { ReactNode, ButtonHTMLAttributes } from 'react';
+// Uses themed CSS classes for primary/secondary (customizable via theme editor)
+// and CSS variables for outline/ghost/danger variants
+import { ReactNode, ButtonHTMLAttributes, CSSProperties } from 'react';
 import { Loader2 } from 'lucide-react';
 
 type ButtonVariant = 'primary' | 'secondary' | 'outline' | 'ghost' | 'danger';
@@ -15,18 +17,53 @@ interface ButtonProps extends ButtonHTMLAttributes<HTMLButtonElement> {
   children?: ReactNode;
 }
 
-const variantClasses: Record<ButtonVariant, string> = {
-  primary: 'bg-orange-500 text-white hover:bg-orange-600 disabled:bg-orange-300',
-  secondary: 'bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600',
-  outline: 'border border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700',
-  ghost: 'text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700',
-  danger: 'bg-red-500 text-white hover:bg-red-600 disabled:bg-red-300',
+// Themed variants use .themed-btn-* CSS classes (customizable in theme editor)
+// Non-themed variants use CSS variable inline styles
+const themedVariants: Partial<Record<ButtonVariant, string>> = {
+  primary: 'themed-btn-primary',
+  secondary: 'themed-btn-secondary',
 };
 
-const sizeClasses: Record<ButtonSize, string> = {
-  sm: 'px-3 py-1.5 text-sm',
-  md: 'px-4 py-2',
-  lg: 'px-6 py-3 text-lg',
+// Inline styles for variants without themed CSS classes
+const variantStyles: Partial<Record<ButtonVariant, CSSProperties>> = {
+  outline: {
+    background: 'transparent',
+    color: 'var(--color-foreground)',
+    border: '1px solid var(--color-border)',
+    borderRadius: 'var(--btn-secondary-radius)',
+  },
+  ghost: {
+    background: 'transparent',
+    color: 'var(--color-foreground)',
+    border: '1px solid transparent',
+    borderRadius: 'var(--btn-secondary-radius)',
+  },
+  danger: {
+    background: 'var(--color-destructive)',
+    color: 'var(--color-destructive-foreground)',
+    border: '1px solid transparent',
+    borderRadius: 'var(--btn-primary-radius)',
+  },
+};
+
+// Hover classes for non-themed variants (CSS vars don't support :hover in inline styles)
+const variantHoverClasses: Partial<Record<ButtonVariant, string>> = {
+  outline: 'hover:bg-[var(--color-muted)]',
+  ghost: 'hover:bg-[var(--color-muted)]',
+  danger: 'hover:brightness-110',
+};
+
+// Size padding overrides (themed classes set default padding via CSS vars)
+const sizePadding: Record<ButtonSize, string> = {
+  sm: '6px 12px',
+  md: '8px 16px',
+  lg: '12px 24px',
+};
+
+const sizeFontClass: Record<ButtonSize, string> = {
+  sm: 'text-sm',
+  md: '',
+  lg: 'text-lg',
 };
 
 export function Button({
@@ -39,19 +76,33 @@ export function Button({
   children,
   className = '',
   disabled,
+  style,
   ...props
 }: ButtonProps) {
+  const themedClass = themedVariants[variant] || '';
+  const inlineVarStyle = variantStyles[variant] || {};
+  const hoverClass = variantHoverClasses[variant] || '';
+
+  // Merge padding override + variant inline styles + any passed style
+  const mergedStyle: CSSProperties = {
+    ...inlineVarStyle,
+    padding: sizePadding[size],
+    ...style,
+  };
+
   return (
     <button
       className={`
-        inline-flex items-center justify-center gap-2 
-        font-medium rounded-xl transition-colors
+        inline-flex items-center justify-center gap-2
+        font-medium transition-all
         disabled:opacity-50 disabled:cursor-not-allowed
-        ${variantClasses[variant]}
-        ${sizeClasses[size]}
+        ${themedClass}
+        ${hoverClass}
+        ${sizeFontClass[size]}
         ${fullWidth ? 'w-full' : ''}
         ${className}
       `}
+      style={mergedStyle}
       disabled={disabled || loading}
       {...props}
     >
@@ -73,24 +124,36 @@ export function IconButton({
   loading = false,
   icon,
   className = '',
+  style,
   ...props
 }: Omit<ButtonProps, 'children' | 'iconPosition' | 'fullWidth'> & { icon: ReactNode }) {
-  const iconSizeClasses: Record<ButtonSize, string> = {
-    sm: 'p-1.5',
-    md: 'p-2',
-    lg: 'p-3',
+  const themedClass = themedVariants[variant] || '';
+  const inlineVarStyle = variantStyles[variant] || {};
+  const hoverClass = variantHoverClasses[variant] || '';
+
+  const iconPadding: Record<ButtonSize, string> = {
+    sm: '6px',
+    md: '8px',
+    lg: '12px',
+  };
+
+  const mergedStyle: CSSProperties = {
+    ...inlineVarStyle,
+    padding: iconPadding[size],
+    ...style,
   };
 
   return (
     <button
       className={`
-        inline-flex items-center justify-center 
-        rounded-lg transition-colors
+        inline-flex items-center justify-center
+        transition-all
         disabled:opacity-50 disabled:cursor-not-allowed
-        ${variantClasses[variant]}
-        ${iconSizeClasses[size]}
+        ${themedClass}
+        ${hoverClass}
         ${className}
       `}
+      style={mergedStyle}
       disabled={props.disabled || loading}
       {...props}
     >

@@ -1,4 +1,5 @@
 // apps/web/src/components/common/EmptyState.tsx
+// Uses CSS color variables for themed empty state colors
 import { ReactNode } from 'react';
 import { LucideIcon } from 'lucide-react';
 
@@ -21,14 +22,21 @@ export function EmptyState({
     <div className={`flex flex-col items-center justify-center py-12 px-4 text-center ${className}`}>
       <Icon
         size={48}
-        className="text-gray-300 dark:text-gray-600 mb-4"
+        className="mb-4"
         strokeWidth={1.5}
+        style={{ color: 'var(--color-muted-foreground)', opacity: 0.5 }}
       />
-      <h3 className="text-lg font-medium text-gray-900 dark:text-white mb-2">
+      <h3
+        className="text-lg font-medium mb-2"
+        style={{ color: 'var(--color-foreground)' }}
+      >
         {title}
       </h3>
       {description && (
-        <p className="text-gray-500 dark:text-gray-400 mb-4 max-w-sm">
+        <p
+          className="mb-4 max-w-sm"
+          style={{ color: 'var(--color-muted-foreground)' }}
+        >
           {description}
         </p>
       )}
@@ -48,7 +56,10 @@ export function EmptyStateInline({
   action?: ReactNode;
 }) {
   return (
-    <div className="flex items-center justify-center gap-3 py-8 text-gray-500 dark:text-gray-400">
+    <div
+      className="flex items-center justify-center gap-3 py-8"
+      style={{ color: 'var(--color-muted-foreground)' }}
+    >
       <Icon size={20} />
       <span>{message}</span>
       {action}

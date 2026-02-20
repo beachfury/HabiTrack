@@ -4,7 +4,6 @@
 import { UtensilsCrossed, Calendar, ChevronLeft, ChevronRight, ThumbsUp } from 'lucide-react';
 import type { ExtendedTheme, ThemeableElement } from '../../../types/theme';
 import { ClickableElement } from '../InteractivePreview';
-import { buildElementStyle, buildPageBackgroundStyle, RADIUS_MAP, SHADOW_MAP } from './styleUtils';
 
 interface MealsPreviewProps {
   theme: ExtendedTheme;
@@ -32,81 +31,28 @@ export function MealsPreview({
 }: MealsPreviewProps) {
   const colors = colorMode === 'light' ? theme.colorsLight : theme.colorsDark;
 
-  const defaultRadius = RADIUS_MAP[theme.ui.borderRadius] || '8px';
-  const defaultShadow = SHADOW_MAP[theme.ui.shadowIntensity] || 'none';
-
-  const mealsBgStyle = theme.elementStyles?.['meals-background'] || {};
-  const globalPageBgStyle = theme.elementStyles?.['page-background'] || {};
-
-  const hasCustomMealsBg = mealsBgStyle.backgroundColor || mealsBgStyle.backgroundGradient || mealsBgStyle.backgroundImage || mealsBgStyle.customCSS;
-
-  const cardBgFallback = hasCustomMealsBg ? 'rgba(255,255,255,0.08)' : colors.card;
-  const cardBorderFallback = hasCustomMealsBg ? 'rgba(255,255,255,0.15)' : colors.border;
-
-  const cardStyle = theme.elementStyles?.card || {};
-  const computedCardStyle = buildElementStyle(cardStyle, cardBgFallback, cardBorderFallback, defaultRadius, defaultShadow, colors.cardForeground);
-
-  const { style: pageBgStyle, backgroundImageUrl, customCSS } = buildPageBackgroundStyle(
-    mealsBgStyle,
-    globalPageBgStyle,
-    colors.background
-  );
-
-  const getAnimatedBgClasses = (css?: string): string => {
-    if (!css) return '';
-    const classes: string[] = [];
-    if (css.includes('matrix-rain: true') || css.includes('matrix-rain:true')) {
-      classes.push('matrix-rain-bg');
-      const speedMatch = css.match(/matrix-rain-speed:\s*(slow|normal|fast|veryfast)/i);
-      if (speedMatch) classes.push(`matrix-rain-${speedMatch[1].toLowerCase()}`);
-    }
-    if (css.includes('snowfall: true') || css.includes('snowfall:true')) classes.push('snowfall-bg');
-    if (css.includes('sparkle: true') || css.includes('sparkle:true')) classes.push('sparkle-bg');
-    if (css.includes('bubbles: true') || css.includes('bubbles:true')) classes.push('bubbles-bg');
-    if (css.includes('embers: true') || css.includes('embers:true')) classes.push('embers-bg');
-    return classes.join(' ');
-  };
-
-  const animatedBgClasses = getAnimatedBgClasses(customCSS);
-
   return (
     <ClickableElement
       element="meals-background"
       isSelected={selectedElement === 'meals-background'}
       onClick={() => onSelectElement('meals-background')}
-      className={`flex-1 overflow-auto ${animatedBgClasses}`}
-      style={{
-        ...pageBgStyle,
-        position: 'relative',
-      }}
+      className="themed-meals-bg flex-1 overflow-auto"
     >
-      {backgroundImageUrl && (
-        <div
-          className="absolute inset-0 pointer-events-none"
-          style={{
-            backgroundImage: `url(${backgroundImageUrl})`,
-            backgroundSize: 'cover',
-            backgroundPosition: 'center',
-            opacity: mealsBgStyle.backgroundOpacity ?? 1,
-          }}
-        />
-      )}
-
       <div className="relative z-10 p-4 space-y-4">
         {/* Header */}
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-2">
             <UtensilsCrossed size={20} style={{ color: colors.primary }} />
-            <h1 className="text-lg font-bold" style={{ color: colors.foreground }}>
+            <h1 className="text-lg font-bold">
               Dinner Planner
             </h1>
           </div>
           <div className="flex items-center gap-1">
-            <button className="p-1 rounded" style={{ color: colors.mutedForeground }}>
+            <button className="p-1 rounded" style={{ color: 'var(--color-muted-foreground)' }}>
               <ChevronLeft size={16} />
             </button>
-            <span className="text-xs font-medium" style={{ color: colors.foreground }}>This Week</span>
-            <button className="p-1 rounded" style={{ color: colors.mutedForeground }}>
+            <span className="text-xs font-medium">This Week</span>
+            <button className="p-1 rounded" style={{ color: 'var(--color-muted-foreground)' }}>
               <ChevronRight size={16} />
             </button>
           </div>
@@ -117,26 +63,25 @@ export function MealsPreview({
           {MOCK_WEEK.map((day) => (
             <div
               key={day.day}
-              className="p-2 rounded-lg text-center"
-              style={computedCardStyle}
+              className="themed-card p-2 rounded-lg text-center"
             >
               <p className="text-xs font-semibold mb-1" style={{ color: colors.primary }}>
                 {day.day}
               </p>
               {day.meal ? (
                 <>
-                  <p className="text-[10px] leading-tight mb-1" style={{ color: colors.foreground }}>
+                  <p className="text-[10px] leading-tight mb-1">
                     {day.meal}
                   </p>
                   <div className="flex items-center justify-center gap-0.5">
                     <ThumbsUp size={10} style={{ color: colors.success }} />
-                    <span className="text-[9px]" style={{ color: colors.mutedForeground }}>
+                    <span className="text-[9px]" style={{ color: 'var(--color-muted-foreground)' }}>
                       {day.votes}
                     </span>
                   </div>
                 </>
               ) : (
-                <p className="text-[10px]" style={{ color: colors.mutedForeground }}>
+                <p className="text-[10px]" style={{ color: 'var(--color-muted-foreground)' }}>
                   No meal
                 </p>
               )}
@@ -145,8 +90,8 @@ export function MealsPreview({
         </div>
 
         {/* Upcoming Meals */}
-        <div className="p-4 rounded-lg" style={computedCardStyle}>
-          <h2 className="text-sm font-semibold mb-3" style={{ color: colors.foreground }}>
+        <div className="themed-card p-4 rounded-lg">
+          <h2 className="text-sm font-semibold mb-3">
             Upcoming Dinners
           </h2>
           <div className="space-y-2">
@@ -157,16 +102,16 @@ export function MealsPreview({
                 style={{ backgroundColor: colors.muted }}
               >
                 <div>
-                  <p className="text-xs font-medium" style={{ color: colors.foreground }}>
+                  <p className="text-xs font-medium">
                     {day.meal}
                   </p>
-                  <p className="text-[10px]" style={{ color: colors.mutedForeground }}>
+                  <p className="text-[10px]" style={{ color: 'var(--color-muted-foreground)' }}>
                     {day.day}
                   </p>
                 </div>
                 <div className="flex items-center gap-1">
                   <ThumbsUp size={12} style={{ color: colors.success }} />
-                  <span className="text-xs" style={{ color: colors.mutedForeground }}>
+                  <span className="text-xs" style={{ color: 'var(--color-muted-foreground)' }}>
                     {day.votes}
                   </span>
                 </div>

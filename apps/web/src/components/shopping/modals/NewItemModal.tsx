@@ -4,6 +4,7 @@ import { X, Camera, RefreshCw, DollarSign, Trash2 } from 'lucide-react';
 import { shoppingApi } from '../../../api';
 import type { ShoppingCategory, ShoppingStore, CatalogItem } from '../../../types';
 import { ModalPortal, ModalBody } from '../../common/ModalPortal';
+import { ModalFooterButtons } from '../../common/ModalFooterButtons';
 
 interface NewItemModalProps {
   categories: ShoppingCategory[];
@@ -145,13 +146,14 @@ export function NewItemModal({
   };
 
   const footer = (
-    <button
-      onClick={handleSubmit}
-      disabled={!name.trim() || submitting}
-      className="w-full py-3 bg-[var(--color-primary)] text-[var(--color-primary-foreground)] rounded-xl font-medium hover:opacity-90 transition-opacity disabled:opacity-50"
-    >
-      {getButtonText()}
-    </button>
+    <ModalFooterButtons
+      onCancel={onClose}
+      onSubmit={handleSubmit}
+      submitText={isEditMode ? 'Save Changes' : isAdmin ? 'Create Item' : 'Submit Request'}
+      submitting={submitting}
+      submitDisabled={!name.trim()}
+      hideCancel
+    />
   );
 
   return (

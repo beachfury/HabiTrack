@@ -1,4 +1,5 @@
 // apps/web/src/components/common/Spinner.tsx
+// Uses CSS color variables for themed spinner colors
 import { Loader2, RefreshCw } from 'lucide-react';
 
 type SpinnerSize = 'sm' | 'md' | 'lg' | 'xl';
@@ -30,7 +31,8 @@ export function Spinner({ size = 'md', className = '', variant = 'default' }: Sp
   return (
     <Loader2
       size={sizeMap[size]}
-      className={`animate-spin text-orange-500 ${className}`}
+      className={`animate-spin ${className}`}
+      style={{ color: 'var(--color-primary)' }}
     />
   );
 }
@@ -39,8 +41,14 @@ export function Spinner({ size = 'md', className = '', variant = 'default' }: Sp
 export function PageLoader({ message }: { message?: string }) {
   return (
     <div className="flex flex-col items-center justify-center min-h-[50vh] gap-4">
-      <RefreshCw size={32} className="animate-spin text-orange-500" />
-      {message && <p className="text-gray-500 dark:text-gray-400">{message}</p>}
+      <RefreshCw
+        size={32}
+        className="animate-spin"
+        style={{ color: 'var(--color-primary)' }}
+      />
+      {message && (
+        <p style={{ color: 'var(--color-muted-foreground)' }}>{message}</p>
+      )}
     </div>
   );
 }
@@ -52,8 +60,11 @@ export function LoadingPlaceholder({ lines = 3 }: { lines?: number }) {
       {Array.from({ length: lines }).map((_, i) => (
         <div
           key={i}
-          className="h-4 bg-gray-200 dark:bg-gray-700 rounded"
-          style={{ width: `${Math.random() * 40 + 60}%` }}
+          className="h-4 rounded"
+          style={{
+            width: `${Math.random() * 40 + 60}%`,
+            backgroundColor: 'var(--color-muted)',
+          }}
         />
       ))}
     </div>

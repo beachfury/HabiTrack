@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react';
 import { FolderOpen, Palette, Check } from 'lucide-react';
 import type { BudgetCategory, CreateCategoryData } from '../../../types/budget';
 import { ModalPortal, ModalBody } from '../../common/ModalPortal';
+import { ModalFooterButtons } from '../../common/ModalFooterButtons';
 
 // Color palette
 const COLOR_OPTIONS = [
@@ -100,23 +101,12 @@ export function CategoryModal({
   };
 
   const footer = (
-    <div className="flex gap-3">
-      <button
-        type="button"
-        onClick={onClose}
-        className="flex-1 px-4 py-2 bg-[var(--color-muted)] text-[var(--color-muted-foreground)] rounded-lg hover:opacity-80 transition-opacity"
-      >
-        Cancel
-      </button>
-      <button
-        type="submit"
-        form="category-form"
-        disabled={submitting}
-        className="flex-1 px-4 py-2 bg-[var(--color-primary)] text-white rounded-lg hover:opacity-90 transition-opacity disabled:opacity-50 disabled:cursor-not-allowed"
-      >
-        {submitting ? 'Saving...' : category ? 'Update' : 'Create'}
-      </button>
-    </div>
+    <ModalFooterButtons
+      onCancel={onClose}
+      formId="category-form"
+      submitText={category ? 'Update' : 'Create'}
+      submitting={submitting}
+    />
   );
 
   return (
@@ -177,7 +167,7 @@ export function CategoryModal({
                   }}
                 >
                   {formData.color === color && (
-                    <Check className="w-4 h-4 text-white" />
+                    <Check className="w-4 h-4" style={{ color: 'white' }} />
                   )}
                 </button>
               ))}

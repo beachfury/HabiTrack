@@ -1,5 +1,7 @@
 // apps/web/src/components/common/Card.tsx
-import { ReactNode } from 'react';
+// Uses .themed-card CSS class (customizable via theme editor)
+// Card padding can be overridden via the `padding` prop
+import { ReactNode, CSSProperties } from 'react';
 
 interface CardProps {
   children: ReactNode;
@@ -7,13 +9,14 @@ interface CardProps {
   padding?: 'none' | 'sm' | 'md' | 'lg';
   hover?: boolean;
   onClick?: () => void;
+  style?: CSSProperties;
 }
 
-const paddingClasses = {
-  none: '',
-  sm: 'p-3',
-  md: 'p-4',
-  lg: 'p-6',
+const paddingValues: Record<string, string> = {
+  none: '0',
+  sm: '12px',
+  md: '16px',
+  lg: '24px',
 };
 
 export function Card({
@@ -22,6 +25,7 @@ export function Card({
   padding = 'md',
   hover = false,
   onClick,
+  style,
 }: CardProps) {
   const Component = onClick ? 'button' : 'div';
 
@@ -29,13 +33,15 @@ export function Card({
     <Component
       onClick={onClick}
       className={`
-        bg-white dark:bg-gray-800 rounded-xl 
-        border border-gray-100 dark:border-gray-700
-        ${paddingClasses[padding]}
-        ${hover ? 'hover:shadow-md hover:border-gray-200 dark:hover:border-gray-600 transition-all cursor-pointer' : ''}
+        themed-card
+        ${hover ? 'hover:shadow-md transition-all cursor-pointer' : ''}
         ${onClick ? 'text-left w-full' : ''}
         ${className}
       `}
+      style={{
+        padding: paddingValues[padding],
+        ...style,
+      }}
     >
       {children}
     </Component>
@@ -52,7 +58,8 @@ export function CardHeader({
 }) {
   return (
     <div
-      className={`flex items-center justify-between pb-3 mb-3 border-b border-gray-100 dark:border-gray-700 ${className}`}
+      className={`flex items-center justify-between pb-3 mb-3 ${className}`}
+      style={{ borderBottom: '1px solid var(--color-border)' }}
     >
       {children}
     </div>
@@ -68,7 +75,10 @@ export function CardTitle({
   className?: string;
 }) {
   return (
-    <h3 className={`font-semibold text-gray-900 dark:text-white ${className}`}>
+    <h3
+      className={`font-semibold ${className}`}
+      style={{ color: 'var(--color-foreground)' }}
+    >
       {children}
     </h3>
   );
@@ -95,7 +105,8 @@ export function CardFooter({
 }) {
   return (
     <div
-      className={`flex items-center justify-end gap-2 pt-3 mt-3 border-t border-gray-100 dark:border-gray-700 ${className}`}
+      className={`flex items-center justify-end gap-2 pt-3 mt-3 ${className}`}
+      style={{ borderTop: '1px solid var(--color-border)' }}
     >
       {children}
     </div>

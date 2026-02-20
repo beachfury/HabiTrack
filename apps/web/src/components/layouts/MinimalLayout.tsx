@@ -141,7 +141,7 @@ export function MinimalLayout({
           {hasUnread ? (
             <>
               <item.icon size={22} className="bell-shake" style={{ color: '#f97316' }} />
-              <span className="absolute -top-1 -right-1 min-w-[16px] h-[16px] px-0.5 bg-red-500 text-white text-[10px] font-bold rounded-full flex items-center justify-center">
+              <span className="absolute -top-1 -right-1 min-w-[16px] h-[16px] px-0.5 bg-[var(--color-destructive)] text-[var(--color-destructive-foreground)] text-[10px] font-bold rounded-full flex items-center justify-center">
                 {unreadCount > 99 ? '99+' : unreadCount}
               </span>
             </>
@@ -149,11 +149,11 @@ export function MinimalLayout({
             <item.icon size={22} />
           )}
         </div>
-        <span className={`text-base font-medium ${hasUnread ? 'text-orange-500' : ''}`}>
+        <span className={`text-base font-medium ${hasUnread ? 'text-[var(--color-primary)]' : ''}`}>
           {item.label}
         </span>
         {hasUnread && !active && (
-          <span className="ml-auto px-2 py-0.5 text-[10px] font-bold bg-orange-500 text-white rounded-full uppercase tracking-wide">
+          <span className="ml-auto px-2 py-0.5 text-[10px] font-bold bg-[var(--color-primary)] text-[var(--color-primary-foreground)] rounded-full uppercase tracking-wide">
             New
           </span>
         )}
@@ -185,14 +185,15 @@ export function MinimalLayout({
       )}
       {/* Impersonation Banner */}
       {impersonation.active && (
-        <div className="bg-amber-500 text-white px-4 py-2 flex items-center justify-center gap-4 z-50">
+        <div className="bg-[var(--color-warning)] text-[var(--color-warning-foreground)] px-4 py-2 flex items-center justify-center gap-4 z-50">
           <UserCheck size={18} />
           <span className="text-sm">
             Viewing as <strong>{user?.displayName}</strong>
           </span>
           <button
             onClick={onStopImpersonating}
-            className="ml-2 bg-amber-600 hover:bg-amber-700 px-2 py-0.5 rounded text-xs font-medium"
+            className="ml-2 px-2 py-0.5 rounded text-xs font-medium hover:opacity-80 transition-opacity"
+            style={{ backgroundColor: 'color-mix(in srgb, var(--color-warning) 80%, black)', color: 'var(--color-warning-foreground)' }}
           >
             Exit
           </button>
@@ -211,7 +212,7 @@ export function MinimalLayout({
       >
         {menuOpen ? <X size={24} /> : <Menu size={24} />}
         {unreadCount > 0 && !menuOpen && (
-          <span className="absolute -top-1 -right-1 min-w-[18px] h-[18px] px-0.5 bg-red-500 text-white text-[10px] font-bold rounded-full flex items-center justify-center">
+          <span className="absolute -top-1 -right-1 min-w-[18px] h-[18px] px-0.5 bg-[var(--color-destructive)] text-[var(--color-destructive-foreground)] text-[10px] font-bold rounded-full flex items-center justify-center">
             {unreadCount > 99 ? '99+' : unreadCount}
           </span>
         )}
