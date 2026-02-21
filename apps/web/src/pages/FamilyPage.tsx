@@ -285,12 +285,12 @@ export function FamilyPage() {
 
   const [resetLoading, setResetLoading] = useState(false);
 
-  const handleForcePasswordReset = async () => {
-    if (
-      !confirm(
-        'Force all family members (except you) to change their passwords on next login?\n\nThis will log everyone out and send email notifications to users with email addresses.',
-      )
-    ) {
+  const handleForcePasswordReset = async (targetMember?: FamilyMember) => {
+    const confirmMsg = targetMember
+      ? `Force ${targetMember.displayName} to change their password on next login?\n\nThey will be logged out and notified via email if they have one.`
+      : 'Force all family members (except you) to change their passwords on next login?\n\nThis will log everyone out and send email notifications to users with email addresses.';
+
+    if (!confirm(confirmMsg)) {
       return;
     }
 
@@ -299,6 +299,8 @@ export function FamilyPage() {
       const csrfRes = await fetch(`${import.meta.env.VITE_API_URL || '/api'}/csrf`, { credentials: 'include' });
       const csrfData = await csrfRes.json();
 
+      const body = targetMember ? { userIds: [targetMember.id] } : {};
+
       const res = await fetch(`${import.meta.env.VITE_API_URL || '/api'}/family/members/force-password-reset`, {
         method: 'POST',
         headers: {
@@ -306,7 +308,7 @@ export function FamilyPage() {
           'X-HabiTrack-CSRF': csrfData.token,
         },
         credentials: 'include',
-        body: JSON.stringify({}),
+        body: JSON.stringify(body),
       });
 
       if (!res.ok) {
@@ -344,7 +346,7 @@ export function FamilyPage() {
         actions={
           <div className="flex items-center gap-2">
             <button
-              onClick={handleForcePasswordReset}
+              onClick={() => handleForcePasswordReset()}
               disabled={resetLoading}
               className="flex items-center gap-2 bg-[var(--color-warning)] hover:opacity-90 text-[var(--color-warning-foreground)] px-4 py-2 rounded-xl transition-opacity disabled:opacity-50"
               title="Force all members to reset their passwords"
@@ -476,6 +478,16 @@ export function FamilyPage() {
                   >
                     <Hash size={18} />
                   </button>
+                  {member.id !== user?.id && (
+                    <button
+                      onClick={() => handleForcePasswordReset(member)}
+                      disabled={resetLoading}
+                      className="p-2 text-[var(--color-muted-foreground)] hover:text-[var(--color-warning)] hover:bg-[var(--color-warning)]/10 rounded-lg transition-colors disabled:opacity-50"
+                      title={`Force ${member.displayName} to reset password`}
+                    >
+                      <ShieldAlert size={18} />
+                    </button>
+                  )}
                   {member.id !== user?.id && (
                     <button
                       onClick={() => handleDeleteMember(member)}

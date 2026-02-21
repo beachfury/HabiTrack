@@ -15,10 +15,13 @@ interface Branding {
   loginBackgroundValue: string | null;
 }
 
+type LoginView = 'login' | 'forgot' | 'reset-code';
+
 export function LoginPage() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
+  const [successMsg, setSuccessMsg] = useState('');
   const [loading, setLoading] = useState(false);
   const [branding, setBranding] = useState<Branding | null>(null);
   const [isDarkMode, setIsDarkMode] = useState(false);
@@ -26,6 +29,12 @@ export function LoginPage() {
   const [showFirstLoginModal, setShowFirstLoginModal] = useState(false);
   const [onboardToken, setOnboardToken] = useState<string | null>(null);
   const [appVersion, setAppVersion] = useState<string | null>(null);
+  // Forgot password flow
+  const [view, setView] = useState<LoginView>('login');
+  const [forgotEmail, setForgotEmail] = useState('');
+  const [resetCode, setResetCode] = useState('');
+  const [newPassword, setNewPassword] = useState('');
+  const [confirmNewPassword, setConfirmNewPassword] = useState('');
   const { login, refresh } = useAuth();
   const navigate = useNavigate();
 
@@ -121,6 +130,88 @@ export function LoginPage() {
     setShowFirstLoginModal(false);
     setOnboardToken(null);
     setError('You must set a new password to continue.');
+  };
+
+  // Forgot password: send reset code
+  const handleForgotSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setError('');
+    setSuccessMsg('');
+    setLoading(true);
+
+    try {
+      const res = await fetch(`${API_BASE}/api/auth/creds/forgot`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
+        body: JSON.stringify({ email: forgotEmail }),
+      });
+
+      if (!res.ok) {
+        const data = await res.json().catch(() => ({}));
+        throw new Error(data.error?.message || 'Failed to send reset code');
+      }
+
+      setSuccessMsg('If that email exists, a reset code has been sent. Check your inbox.');
+      setView('reset-code');
+    } catch (err: any) {
+      setError(err.message || 'Failed to send reset code');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // Reset password with code
+  const handleResetSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setError('');
+    setLoading(true);
+
+    if (newPassword !== confirmNewPassword) {
+      setError('Passwords do not match');
+      setLoading(false);
+      return;
+    }
+
+    if (newPassword.length < 8) {
+      setError('Password must be at least 8 characters');
+      setLoading(false);
+      return;
+    }
+
+    try {
+      const res = await fetch(`${API_BASE}/api/auth/creds/reset`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
+        body: JSON.stringify({ email: forgotEmail, code: resetCode, newSecret: newPassword }),
+      });
+
+      if (!res.ok) {
+        const data = await res.json().catch(() => ({}));
+        throw new Error(data.error?.code === 'INVALID_OR_EXPIRED_CODE'
+          ? 'Invalid or expired code. Please try again.'
+          : data.error?.message || 'Failed to reset password');
+      }
+
+      // Success — session cookie set by backend, refresh and navigate
+      await refresh();
+      navigate('/');
+    } catch (err: any) {
+      setError(err.message || 'Failed to reset password');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const backToLogin = () => {
+    setView('login');
+    setError('');
+    setSuccessMsg('');
+    setForgotEmail('');
+    setResetCode('');
+    setNewPassword('');
+    setConfirmNewPassword('');
   };
 
   // Determine background style
@@ -252,7 +343,11 @@ export function LoginPage() {
               >
                 {branding?.name || 'HabiTrack'}
               </h1>
-              <p style={{ color: subtitleColor }} className="mt-1">Welcome back! Sign in to continue.</p>
+              <p style={{ color: subtitleColor }} className="mt-1">
+                {view === 'login' && 'Welcome back! Sign in to continue.'}
+                {view === 'forgot' && 'Forgot your password?'}
+                {view === 'reset-code' && 'Reset your password'}
+              </p>
             </div>
 
             {/* Error message */}
@@ -270,87 +365,284 @@ export function LoginPage() {
               </div>
             )}
 
-            {/* Login form */}
-            <form onSubmit={handleSubmit} className="space-y-4">
-              <div>
-                <label className="block text-sm font-medium mb-1" style={{ color: labelColor }}>Email</label>
-                <input
-                  type="email"
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                  className="w-full px-4 py-3 rounded-xl outline-none transition-all"
-                  style={{
-                    backgroundColor: inputBg,
-                    borderWidth: 1,
-                    borderStyle: 'solid',
-                    borderColor: inputBorder,
-                    color: inputText,
-                  }}
-                  onFocus={(e) => {
-                    e.target.style.borderColor = brandColor;
-                    e.target.style.boxShadow = `0 0 0 3px ${brandColor}20`;
-                  }}
-                  onBlur={(e) => {
-                    e.target.style.borderColor = inputBorder;
-                    e.target.style.boxShadow = 'none';
-                  }}
-                  placeholder="Enter your email"
-                  required
-                />
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium mb-1" style={{ color: labelColor }}>Password</label>
-                <input
-                  type="password"
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                  className="w-full px-4 py-3 rounded-xl outline-none transition-all"
-                  style={{
-                    backgroundColor: inputBg,
-                    borderWidth: 1,
-                    borderStyle: 'solid',
-                    borderColor: inputBorder,
-                    color: inputText,
-                  }}
-                  onFocus={(e) => {
-                    e.target.style.borderColor = brandColor;
-                    e.target.style.boxShadow = `0 0 0 3px ${brandColor}20`;
-                  }}
-                  onBlur={(e) => {
-                    e.target.style.borderColor = inputBorder;
-                    e.target.style.boxShadow = 'none';
-                  }}
-                  placeholder="Enter your password"
-                  required
-                />
-              </div>
-
-              <button
-                type="submit"
-                disabled={loading}
-                className="w-full py-3 text-white rounded-xl font-medium transition-all disabled:opacity-50 hover:shadow-lg hover:scale-[1.02]"
-                style={{ backgroundColor: brandColor }}
+            {/* Success message */}
+            {successMsg && (
+              <div
+                className="mb-6 p-3 rounded-xl text-sm"
+                style={{
+                  backgroundColor: isDarkMode ? 'rgba(34, 197, 94, 0.15)' : '#f0fdf4',
+                  borderColor: isDarkMode ? '#166534' : '#bbf7d0',
+                  borderWidth: 1,
+                  color: isDarkMode ? '#86efac' : '#16a34a',
+                }}
               >
-                {loading ? 'Signing in...' : 'Sign In'}
-              </button>
-            </form>
+                {successMsg}
+              </div>
+            )}
 
-            {/* Kiosk link */}
-            <div
-              className="mt-6 pt-6 text-center"
-              style={{ borderTopWidth: 1, borderTopStyle: 'solid', borderTopColor: cardBorder }}
-            >
-              <p className="text-sm" style={{ color: subtitleColor }}>
-                Using the family kiosk?{' '}
-                <button
-                  className="font-medium hover:underline"
-                  style={{ color: brandColor }}
+            {/* ============ LOGIN VIEW ============ */}
+            {view === 'login' && (
+              <>
+                <form onSubmit={handleSubmit} className="space-y-4">
+                  <div>
+                    <label className="block text-sm font-medium mb-1" style={{ color: labelColor }}>Email</label>
+                    <input
+                      type="email"
+                      value={email}
+                      onChange={(e) => setEmail(e.target.value)}
+                      className="w-full px-4 py-3 rounded-xl outline-none transition-all"
+                      style={{
+                        backgroundColor: inputBg,
+                        borderWidth: 1,
+                        borderStyle: 'solid',
+                        borderColor: inputBorder,
+                        color: inputText,
+                      }}
+                      onFocus={(e) => {
+                        e.target.style.borderColor = brandColor;
+                        e.target.style.boxShadow = `0 0 0 3px ${brandColor}20`;
+                      }}
+                      onBlur={(e) => {
+                        e.target.style.borderColor = inputBorder;
+                        e.target.style.boxShadow = 'none';
+                      }}
+                      placeholder="Enter your email"
+                      required
+                    />
+                  </div>
+
+                  <div>
+                    <div className="flex items-center justify-between mb-1">
+                      <label className="block text-sm font-medium" style={{ color: labelColor }}>Password</label>
+                      <button
+                        type="button"
+                        onClick={() => { setView('forgot'); setError(''); setSuccessMsg(''); setForgotEmail(email); }}
+                        className="text-xs font-medium hover:underline"
+                        style={{ color: brandColor }}
+                      >
+                        Forgot Password?
+                      </button>
+                    </div>
+                    <input
+                      type="password"
+                      value={password}
+                      onChange={(e) => setPassword(e.target.value)}
+                      className="w-full px-4 py-3 rounded-xl outline-none transition-all"
+                      style={{
+                        backgroundColor: inputBg,
+                        borderWidth: 1,
+                        borderStyle: 'solid',
+                        borderColor: inputBorder,
+                        color: inputText,
+                      }}
+                      onFocus={(e) => {
+                        e.target.style.borderColor = brandColor;
+                        e.target.style.boxShadow = `0 0 0 3px ${brandColor}20`;
+                      }}
+                      onBlur={(e) => {
+                        e.target.style.borderColor = inputBorder;
+                        e.target.style.boxShadow = 'none';
+                      }}
+                      placeholder="Enter your password"
+                      required
+                    />
+                  </div>
+
+                  <button
+                    type="submit"
+                    disabled={loading}
+                    className="w-full py-3 text-white rounded-xl font-medium transition-all disabled:opacity-50 hover:shadow-lg hover:scale-[1.02]"
+                    style={{ backgroundColor: brandColor }}
+                  >
+                    {loading ? 'Signing in...' : 'Sign In'}
+                  </button>
+                </form>
+
+                {/* Kiosk link */}
+                <div
+                  className="mt-6 pt-6 text-center"
+                  style={{ borderTopWidth: 1, borderTopStyle: 'solid', borderTopColor: cardBorder }}
                 >
-                  Switch User with PIN
-                </button>
-              </p>
-            </div>
+                  <p className="text-sm" style={{ color: subtitleColor }}>
+                    Using the family kiosk?{' '}
+                    <button
+                      className="font-medium hover:underline"
+                      style={{ color: brandColor }}
+                    >
+                      Switch User with PIN
+                    </button>
+                  </p>
+                </div>
+              </>
+            )}
+
+            {/* ============ FORGOT PASSWORD VIEW ============ */}
+            {view === 'forgot' && (
+              <>
+                <p className="text-sm mb-4" style={{ color: subtitleColor }}>
+                  Enter your email address and we'll send you a 6-digit code to reset your password.
+                </p>
+                <form onSubmit={handleForgotSubmit} className="space-y-4">
+                  <div>
+                    <label className="block text-sm font-medium mb-1" style={{ color: labelColor }}>Email</label>
+                    <input
+                      type="email"
+                      value={forgotEmail}
+                      onChange={(e) => setForgotEmail(e.target.value)}
+                      className="w-full px-4 py-3 rounded-xl outline-none transition-all"
+                      style={{
+                        backgroundColor: inputBg,
+                        borderWidth: 1,
+                        borderStyle: 'solid',
+                        borderColor: inputBorder,
+                        color: inputText,
+                      }}
+                      onFocus={(e) => {
+                        e.target.style.borderColor = brandColor;
+                        e.target.style.boxShadow = `0 0 0 3px ${brandColor}20`;
+                      }}
+                      onBlur={(e) => {
+                        e.target.style.borderColor = inputBorder;
+                        e.target.style.boxShadow = 'none';
+                      }}
+                      placeholder="Enter your email"
+                      required
+                    />
+                  </div>
+
+                  <button
+                    type="submit"
+                    disabled={loading}
+                    className="w-full py-3 text-white rounded-xl font-medium transition-all disabled:opacity-50 hover:shadow-lg hover:scale-[1.02]"
+                    style={{ backgroundColor: brandColor }}
+                  >
+                    {loading ? 'Sending...' : 'Send Reset Code'}
+                  </button>
+                </form>
+
+                <div className="mt-4 text-center">
+                  <button
+                    onClick={backToLogin}
+                    className="text-sm font-medium hover:underline"
+                    style={{ color: brandColor }}
+                  >
+                    Back to Sign In
+                  </button>
+                </div>
+              </>
+            )}
+
+            {/* ============ RESET CODE VIEW ============ */}
+            {view === 'reset-code' && (
+              <>
+                <p className="text-sm mb-4" style={{ color: subtitleColor }}>
+                  Enter the 6-digit code sent to <strong>{forgotEmail}</strong> and your new password.
+                </p>
+                <form onSubmit={handleResetSubmit} className="space-y-4">
+                  <div>
+                    <label className="block text-sm font-medium mb-1" style={{ color: labelColor }}>Reset Code</label>
+                    <input
+                      type="text"
+                      value={resetCode}
+                      onChange={(e) => setResetCode(e.target.value.replace(/\D/g, '').slice(0, 6))}
+                      className="w-full px-4 py-3 rounded-xl outline-none transition-all text-center text-2xl tracking-widest font-mono"
+                      style={{
+                        backgroundColor: inputBg,
+                        borderWidth: 1,
+                        borderStyle: 'solid',
+                        borderColor: inputBorder,
+                        color: inputText,
+                      }}
+                      onFocus={(e) => {
+                        e.target.style.borderColor = brandColor;
+                        e.target.style.boxShadow = `0 0 0 3px ${brandColor}20`;
+                      }}
+                      onBlur={(e) => {
+                        e.target.style.borderColor = inputBorder;
+                        e.target.style.boxShadow = 'none';
+                      }}
+                      placeholder="000000"
+                      maxLength={6}
+                      required
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium mb-1" style={{ color: labelColor }}>New Password</label>
+                    <input
+                      type="password"
+                      value={newPassword}
+                      onChange={(e) => setNewPassword(e.target.value)}
+                      className="w-full px-4 py-3 rounded-xl outline-none transition-all"
+                      style={{
+                        backgroundColor: inputBg,
+                        borderWidth: 1,
+                        borderStyle: 'solid',
+                        borderColor: inputBorder,
+                        color: inputText,
+                      }}
+                      onFocus={(e) => {
+                        e.target.style.borderColor = brandColor;
+                        e.target.style.boxShadow = `0 0 0 3px ${brandColor}20`;
+                      }}
+                      onBlur={(e) => {
+                        e.target.style.borderColor = inputBorder;
+                        e.target.style.boxShadow = 'none';
+                      }}
+                      placeholder="At least 8 characters"
+                      minLength={8}
+                      required
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium mb-1" style={{ color: labelColor }}>Confirm Password</label>
+                    <input
+                      type="password"
+                      value={confirmNewPassword}
+                      onChange={(e) => setConfirmNewPassword(e.target.value)}
+                      className="w-full px-4 py-3 rounded-xl outline-none transition-all"
+                      style={{
+                        backgroundColor: inputBg,
+                        borderWidth: 1,
+                        borderStyle: 'solid',
+                        borderColor: inputBorder,
+                        color: inputText,
+                      }}
+                      onFocus={(e) => {
+                        e.target.style.borderColor = brandColor;
+                        e.target.style.boxShadow = `0 0 0 3px ${brandColor}20`;
+                      }}
+                      onBlur={(e) => {
+                        e.target.style.borderColor = inputBorder;
+                        e.target.style.boxShadow = 'none';
+                      }}
+                      placeholder="Confirm new password"
+                      required
+                    />
+                  </div>
+
+                  <button
+                    type="submit"
+                    disabled={loading}
+                    className="w-full py-3 text-white rounded-xl font-medium transition-all disabled:opacity-50 hover:shadow-lg hover:scale-[1.02]"
+                    style={{ backgroundColor: brandColor }}
+                  >
+                    {loading ? 'Resetting...' : 'Reset Password'}
+                  </button>
+                </form>
+
+                <div className="mt-4 text-center">
+                  <button
+                    onClick={backToLogin}
+                    className="text-sm font-medium hover:underline"
+                    style={{ color: brandColor }}
+                  >
+                    Back to Sign In
+                  </button>
+                </div>
+              </>
+            )}
           </div>
         </div>
 
