@@ -165,6 +165,7 @@ async function checkUserPreferences(
       STORE_REQUEST: 'shoppingUpdates',
       NEW_FAMILY_MEMBER: 'messageNotifications',
       WELCOME_MEMBER: null, // Always send welcome emails
+      PASSWORD_RESET_REQUIRED: null, // Always send password reset emails
       PAID_CHORE_AVAILABLE: 'choreAssignments',
       PAID_CHORE_UPDATE: 'choreCompletions',
       TEST_EMAIL: null, // Always send test emails

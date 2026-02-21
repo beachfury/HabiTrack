@@ -363,6 +363,7 @@ router.put('/family/members/:id', requireAuth('admin'), writeRateLimiter, family
 router.delete('/family/members/:id', requireAuth('admin'), family.deleteMember);
 router.post('/family/members/:id/reactivate', requireAuth('admin'), writeRateLimiter, family.reactivateMember);
 router.delete('/family/members/:id/permanent', requireAuth('admin'), family.hardDeleteMember);
+router.post('/family/members/force-password-reset', requireAuth('admin'), writeRateLimiter, family.forcePasswordReset);
 router.post(
   '/family/members/:id/password',
   requireAuth('admin'),

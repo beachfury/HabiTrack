@@ -1,6 +1,6 @@
 {
   "name": "habitrack",
-  "version": "1.4.1",
+  "version": "1.4.2",
   "description": "HabiTrack monorepo (apps + packages)",
   "main": "index.js",
   "scripts": {

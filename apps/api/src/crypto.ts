@@ -56,6 +56,7 @@ export type CredentialProvider = 'password' | 'kiosk_pin';
 
 /**
  * Update or insert a user's credential (password or kiosk PIN)
+ * Uses explicit check-then-update to avoid reliance on UNIQUE constraint alone.
  */
 export async function updateUserCredential(
   userId: number,
@@ -63,16 +64,28 @@ export async function updateUserCredential(
   secret: string
 ): Promise<void> {
   const { salt, hash } = await hashSecret(secret);
-  await q(
-    `INSERT INTO credentials (userId, provider, algo, salt, hash, updatedAt)
-       VALUES (?, ?, 'argon2id', ?, ?, NOW(3))
-     ON DUPLICATE KEY UPDATE
-       algo = VALUES(algo),
-       salt = VALUES(salt),
-       hash = VALUES(hash),
-       updatedAt = VALUES(updatedAt)`,
-    [userId, provider, salt, hash]
+
+  // Check if credentials already exist for this user+provider
+  const [existing] = await q<Array<{ id: number }>>(
+    `SELECT id FROM credentials WHERE userId = ? AND provider = ? LIMIT 1`,
+    [userId, provider]
   );
+
+  if (existing) {
+    // Update existing credential
+    await q(
+      `UPDATE credentials SET algo = 'argon2id', salt = ?, hash = ?, updatedAt = NOW(3)
+       WHERE userId = ? AND provider = ?`,
+      [salt, hash, userId, provider]
+    );
+  } else {
+    // Insert new credential
+    await q(
+      `INSERT INTO credentials (userId, provider, algo, salt, hash, updatedAt)
+       VALUES (?, ?, 'argon2id', ?, ?, NOW(3))`,
+      [userId, provider, salt, hash]
+    );
+  }
 }
 
 /**

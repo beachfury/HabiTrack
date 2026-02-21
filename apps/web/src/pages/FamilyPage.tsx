@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Users, Plus, Edit2, Key, Hash, Trash2, X, Check, AlertCircle, UserCheck, UserX, Cake } from 'lucide-react';
+import { Users, Plus, Edit2, Key, Hash, Trash2, X, Check, AlertCircle, UserCheck, UserX, Cake, ShieldAlert } from 'lucide-react';
 import { ModalPortal, ModalBody } from '../components/common/ModalPortal';
 import { PageHeader } from '../components/common/PageHeader';
 import { api, type FamilyMember } from '../api';
@@ -283,6 +283,48 @@ export function FamilyPage() {
     }
   };
 
+  const [resetLoading, setResetLoading] = useState(false);
+
+  const handleForcePasswordReset = async () => {
+    if (
+      !confirm(
+        'Force all family members (except you) to change their passwords on next login?\n\nThis will log everyone out and send email notifications to users with email addresses.',
+      )
+    ) {
+      return;
+    }
+
+    setResetLoading(true);
+    try {
+      const csrfRes = await fetch(`${import.meta.env.VITE_API_URL || '/api'}/csrf`, { credentials: 'include' });
+      const csrfData = await csrfRes.json();
+
+      const res = await fetch(`${import.meta.env.VITE_API_URL || '/api'}/family/members/force-password-reset`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'X-HabiTrack-CSRF': csrfData.token,
+        },
+        credentials: 'include',
+        body: JSON.stringify({}),
+      });
+
+      if (!res.ok) {
+        const err = await res.json();
+        throw new Error(err.error?.message || 'Failed to force password reset');
+      }
+
+      const data = await res.json();
+      setSuccess(data.data?.message || `Password reset forced for ${data.data?.reset} user(s).`);
+      setTimeout(() => setSuccess(''), 5000);
+    } catch (err: any) {
+      setError(err.message || 'Failed to force password reset');
+      setTimeout(() => setError(''), 5000);
+    } finally {
+      setResetLoading(false);
+    }
+  };
+
   if (loading) {
     return (
       <div className="p-8 flex items-center justify-center">
@@ -300,13 +342,24 @@ export function FamilyPage() {
         title="Family Members"
         subtitle="Manage your household members and their access"
         actions={
-          <button
-            onClick={openAddModal}
-            className="flex items-center gap-2 bg-[var(--color-primary)] hover:opacity-90 text-[var(--color-primary-foreground)] px-4 py-2 rounded-xl transition-opacity"
-          >
-            <Plus size={20} />
-            Add Member
-          </button>
+          <div className="flex items-center gap-2">
+            <button
+              onClick={handleForcePasswordReset}
+              disabled={resetLoading}
+              className="flex items-center gap-2 bg-[var(--color-warning)] hover:opacity-90 text-[var(--color-warning-foreground)] px-4 py-2 rounded-xl transition-opacity disabled:opacity-50"
+              title="Force all members to reset their passwords"
+            >
+              <ShieldAlert size={20} />
+              <span className="hidden sm:inline">{resetLoading ? 'Sending...' : 'Force Password Reset'}</span>
+            </button>
+            <button
+              onClick={openAddModal}
+              className="flex items-center gap-2 bg-[var(--color-primary)] hover:opacity-90 text-[var(--color-primary-foreground)] px-4 py-2 rounded-xl transition-opacity"
+            >
+              <Plus size={20} />
+              Add Member
+            </button>
+          </div>
         }
       />
 

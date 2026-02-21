@@ -94,6 +94,7 @@
 - Role-based permissions (Admin, Member, Kid, Kiosk)
 - Custom avatars with image upload or color selection
 - Password and PIN management
+- Force password reset for all family members (admin)
 - Activity tracking
 - Birthday tracking with automatic calendar display
 

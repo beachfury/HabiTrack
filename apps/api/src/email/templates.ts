@@ -488,6 +488,36 @@ IMPORTANT: You will be asked to change your password on first login.
 };
 
 // =============================================================================
+// PASSWORD RESET TEMPLATES
+// =============================================================================
+
+export const PASSWORD_RESET_REQUIRED: EmailTemplate = {
+  subject: 'Action Required: Please Update Your {{householdName}} Password',
+  html: wrapHtml(`
+    <h2>Password Update Required</h2>
+    <p>Hi <strong>{{memberName}}</strong>,</p>
+    <p>Your household administrator has requested that all family members update their passwords for security purposes.</p>
+    <p>You will be prompted to set a new password on your next login.</p>
+    <div style="background: #f0f0f0; padding: 15px; border-radius: 8px; margin: 15px 0;">
+      <p style="margin: 5px 0;"><strong>Login URL:</strong> {{loginUrl}}</p>
+    </div>
+    <p style="color: #e74c3c;"><strong>Important:</strong> Please log in and set a new, strong password as soon as possible.</p>
+    <a href="{{loginUrl}}" class="button">Log In Now</a>
+  `),
+  text: `Hi {{memberName}},
+
+Your household administrator has requested that all family members update their passwords for security purposes.
+
+You will be prompted to set a new password on your next login.
+
+Login URL: {{loginUrl}}
+
+IMPORTANT: Please log in and set a new, strong password as soon as possible.
+
+- HabiTrack`,
+};
+
+// =============================================================================
 // PAID CHORES TEMPLATES
 // =============================================================================
 
@@ -551,6 +581,7 @@ export const EMAIL_TEMPLATES = {
   STORE_REQUEST,
   NEW_FAMILY_MEMBER,
   WELCOME_MEMBER,
+  PASSWORD_RESET_REQUIRED,
   PAID_CHORE_AVAILABLE,
   PAID_CHORE_UPDATE,
   TEST_EMAIL,

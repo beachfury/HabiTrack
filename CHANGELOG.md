@@ -6,6 +6,25 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ---
 
+## [1.4.2] - 2026-02-20
+
+### Security
+
+#### Critical: First-Login Password Change Fix
+- **Fixed password not being saved on first login** — The `credentials` table was missing a UNIQUE constraint on `(userId, provider)`, causing `ON DUPLICATE KEY UPDATE` to silently insert duplicate rows instead of updating the existing password. Users who changed their password via the first-login flow were still authenticating with their temporary password.
+- **Database migration** — `019_fix_credentials_unique_constraint.sql` removes duplicate credential rows (keeping the latest) and adds the missing UNIQUE constraint
+- **Belt-and-suspenders code fix** — `updateUserCredential()` in `crypto.ts` and credential upserts in `family/credentials.ts` now use explicit check-then-update logic instead of relying solely on `ON DUPLICATE KEY UPDATE`
+
+### Added
+
+#### Force Password Reset
+- **Admin bulk password reset** — New "Force Password Reset" button on the Family page forces all non-admin users to change their passwords on next login
+- **Email notifications** — Users with email addresses receive a "Password Update Required" email with login URL
+- **Session invalidation** — All affected users are immediately logged out and must set a new password on re-login
+- **API endpoint** — `POST /api/family/members/force-password-reset` (admin only) supports targeting all users or specific user IDs
+
+---
+
 ## [1.4.1] - 2026-02-19
 
 ### Added
