@@ -6,6 +6,19 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ---
 
+## [1.4.4] - 2026-02-21
+
+### Fixed
+
+#### Do Not Disturb (Quiet Hours) Not Working
+- **Fixed quiet hours being ignored** — The `checkUserPreferences()` function in the email queue was not reading or checking the `quietHoursEnabled`, `quietHoursStart`, and `quietHoursEnd` fields from the database, causing emails to be sent at any time regardless of DND settings
+- **Quiet hours now respected** — Email notifications are suppressed during the user's configured quiet hours window (e.g., 22:00-07:00)
+- **Handles midnight wrap-around** — Correctly handles quiet hour ranges that cross midnight (e.g., 22:00 to 07:00)
+- **Critical emails bypass DND** — Welcome emails, password reset emails, and test emails are always delivered regardless of quiet hours
+- **Uses configured timezone** — Quiet hours comparison uses the household's configured timezone
+
+---
+
 ## [1.4.3] - 2026-02-21
 
 ### Added
