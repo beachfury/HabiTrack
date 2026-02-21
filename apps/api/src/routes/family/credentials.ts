@@ -56,13 +56,23 @@ export async function setPassword(req: Request, res: Response) {
 
     const { salt, hash } = await hashSecret(password);
 
-    // Upsert credential
-    await q(
-      `INSERT INTO credentials (userId, provider, algo, salt, hash)
-       VALUES (?, 'password', 'argon2id', ?, ?)
-       ON DUPLICATE KEY UPDATE algo = 'argon2id', salt = VALUES(salt), hash = VALUES(hash)`,
-      [memberId, salt, hash]
+    // Check if credential already exists
+    const [existingCred] = await q<Array<{ id: number }>>(
+      `SELECT id FROM credentials WHERE userId = ? AND provider = 'password' LIMIT 1`,
+      [memberId]
     );
+
+    if (existingCred) {
+      await q(
+        `UPDATE credentials SET algo = 'argon2id', salt = ?, hash = ? WHERE userId = ? AND provider = 'password'`,
+        [salt, hash, memberId]
+      );
+    } else {
+      await q(
+        `INSERT INTO credentials (userId, provider, algo, salt, hash) VALUES (?, 'password', 'argon2id', ?, ?)`,
+        [memberId, salt, hash]
+      );
+    }
 
     await logAudit({
       action: 'family.member.password.set',
@@ -134,13 +144,23 @@ export async function setPin(req: Request, res: Response) {
 
     const { salt, hash } = await hashSecret(pin);
 
-    // Upsert credential
-    await q(
-      `INSERT INTO credentials (userId, provider, algo, salt, hash)
-       VALUES (?, 'kiosk_pin', 'argon2id', ?, ?)
-       ON DUPLICATE KEY UPDATE algo = 'argon2id', salt = VALUES(salt), hash = VALUES(hash)`,
-      [memberId, salt, hash]
+    // Check if credential already exists
+    const [existingCred] = await q<Array<{ id: number }>>(
+      `SELECT id FROM credentials WHERE userId = ? AND provider = 'kiosk_pin' LIMIT 1`,
+      [memberId]
     );
+
+    if (existingCred) {
+      await q(
+        `UPDATE credentials SET algo = 'argon2id', salt = ?, hash = ? WHERE userId = ? AND provider = 'kiosk_pin'`,
+        [salt, hash, memberId]
+      );
+    } else {
+      await q(
+        `INSERT INTO credentials (userId, provider, algo, salt, hash) VALUES (?, 'kiosk_pin', 'argon2id', ?, ?)`,
+        [memberId, salt, hash]
+      );
+    }
 
     await logAudit({
       action: 'family.member.pin.set',

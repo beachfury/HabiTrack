@@ -9,6 +9,7 @@ export {
   deleteMember,
   reactivateMember,
   hardDeleteMember,
+  forcePasswordReset,
 } from './members';
 
 export {

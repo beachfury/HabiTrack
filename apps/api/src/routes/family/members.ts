@@ -520,3 +520,117 @@ export async function hardDeleteMember(req: Request, res: Response) {
     return serverError(res, err as Error);
   }
 }
+
+/**
+ * POST /api/family/members/force-password-reset
+ * Force all non-admin users (or specific users) to change passwords on next login.
+ * Sets firstLoginRequired = 1 and sends notification emails.
+ * Admin only.
+ */
+export async function forcePasswordReset(req: Request, res: Response) {
+  const admin = getUser(req);
+  if (!admin) return res.status(401).json({ error: { code: 'AUTH_REQUIRED' } });
+
+  const { userIds } = req.body as { userIds?: number[] };
+
+  try {
+    // Get household name for the email
+    const [household] = await q<Array<{ householdName: string }>>(
+      `SELECT householdName FROM settings WHERE id = 1`
+    );
+    const householdName = household?.householdName || 'HabiTrack';
+
+    // Build the login URL
+    const origin = req.headers.origin || req.headers.referer?.replace(/\/$/, '') || 'http://localhost:3000';
+    const loginUrl = `${origin}/login`;
+
+    // Get users to reset — either specific IDs or all non-admin active users with passwords
+    let targetUsers: Array<{ id: number; displayName: string; email: string | null }>;
+
+    if (userIds && userIds.length > 0) {
+      targetUsers = await q<Array<{ id: number; displayName: string; email: string | null }>>(
+        `SELECT u.id, u.displayName, u.email
+         FROM users u
+         INNER JOIN credentials c ON c.userId = u.id AND c.provider = 'password'
+         WHERE u.id IN (${userIds.map(() => '?').join(',')})
+           AND u.active = 1
+           AND u.kioskOnly = 0
+           AND u.id != ?`,
+        [...userIds, admin.id]
+      );
+    } else {
+      // All active non-admin users with passwords (exclude the requesting admin)
+      targetUsers = await q<Array<{ id: number; displayName: string; email: string | null }>>(
+        `SELECT u.id, u.displayName, u.email
+         FROM users u
+         INNER JOIN credentials c ON c.userId = u.id AND c.provider = 'password'
+         WHERE u.active = 1
+           AND u.kioskOnly = 0
+           AND u.id != ?`,
+        [admin.id]
+      );
+    }
+
+    if (targetUsers.length === 0) {
+      return success(res, { reset: 0, emailed: 0, message: 'No users to reset' });
+    }
+
+    // Set firstLoginRequired = 1 for all target users
+    const targetIds = targetUsers.map(u => u.id);
+    await q(
+      `UPDATE users SET firstLoginRequired = 1 WHERE id IN (${targetIds.map(() => '?').join(',')})`,
+      targetIds
+    );
+
+    // Kill their sessions so they're forced to re-login
+    await q(
+      `DELETE FROM sessions WHERE user_id IN (${targetIds.map(() => '?').join(',')})`,
+      targetIds
+    );
+
+    // Send email notifications to users with email addresses
+    let emailed = 0;
+    for (const user of targetUsers) {
+      if (user.email) {
+        try {
+          await queueEmail({
+            userId: user.id,
+            toEmail: user.email,
+            template: 'PASSWORD_RESET_REQUIRED',
+            variables: {
+              memberName: user.displayName,
+              householdName,
+              loginUrl,
+            },
+          });
+          emailed++;
+        } catch (emailErr) {
+          log.warn('Failed to queue password reset email', { userId: user.id, error: (emailErr as Error).message });
+        }
+      }
+    }
+
+    log.info('Forced password reset for users', {
+      triggeredBy: admin.id,
+      userCount: targetUsers.length,
+      emailed,
+      userIds: targetIds,
+    });
+
+    await logAudit({
+      action: 'family.password.force_reset',
+      result: 'ok',
+      actorId: admin.id,
+      details: { userCount: targetUsers.length, emailed, userIds: targetIds },
+    });
+
+    return success(res, {
+      reset: targetUsers.length,
+      emailed,
+      message: `Password reset forced for ${targetUsers.length} user(s). ${emailed} email(s) sent.`,
+    });
+  } catch (err) {
+    log.error('Failed to force password reset', { error: String(err) });
+    return serverError(res, err as Error);
+  }
+}
