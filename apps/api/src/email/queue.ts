@@ -3,6 +3,7 @@
 
 import { q } from '../db';
 import { renderTemplate, EmailTemplate, EMAIL_TEMPLATES, EmailTemplateType } from './templates';
+import { getCurrentTime } from '../utils/date';
 
 interface QueueEmailOptions {
   userId: number;
@@ -132,6 +133,9 @@ async function checkUserPreferences(
         shoppingUpdates: boolean;
         messageNotifications: boolean;
         achievementNotifications: boolean;
+        quietHoursEnabled: number;
+        quietHoursStart: string;
+        quietHoursEnd: string;
       }>
     >('SELECT * FROM notification_preferences WHERE userId = ?', [userId]);
 
@@ -145,8 +149,16 @@ async function checkUserPreferences(
       return { enabled: false, reason: 'User disabled email notifications' };
     }
 
+    // Check quiet hours (Do Not Disturb) — skip for critical emails
+    const bypassQuietHours = ['WELCOME_MEMBER', 'PASSWORD_RESET_REQUIRED', 'TEST_EMAIL'];
+    if (prefs.quietHoursEnabled && !bypassQuietHours.includes(template)) {
+      if (isInQuietHours(prefs.quietHoursStart, prefs.quietHoursEnd)) {
+        return { enabled: false, reason: 'Quiet hours active (Do Not Disturb)' };
+      }
+    }
+
     // Map templates to preference fields
-    const templateToPreference: Record<EmailTemplateType, keyof typeof prefs | null> = {
+    const templateToPreference: Record<EmailTemplateType, string | null> = {
       CHORE_REMINDER: 'choreReminders',
       CHORE_ASSIGNED: 'choreAssignments',
       CHORE_COMPLETED: 'choreCompletions',
@@ -172,7 +184,7 @@ async function checkUserPreferences(
     };
 
     const prefField = templateToPreference[template];
-    if (prefField && !prefs[prefField]) {
+    if (prefField && !(prefs as any)[prefField]) {
       return { enabled: false, reason: `User disabled ${prefField} notifications` };
     }
 
@@ -181,6 +193,26 @@ async function checkUserPreferences(
     // If preferences table doesn't exist, default to enabled
     console.warn('[email-queue] Failed to check user preferences:', err);
     return { enabled: true };
+  }
+}
+
+/**
+ * Check if the current time falls within quiet hours (Do Not Disturb)
+ * Handles wrap-around times (e.g., 22:00 to 07:00 crossing midnight)
+ */
+function isInQuietHours(startTime: string, endTime: string): boolean {
+  const now = getCurrentTime(); // HH:MM in configured timezone
+
+  // Normalize to HH:MM format (database may store as HH:MM:SS)
+  const start = startTime.slice(0, 5);
+  const end = endTime.slice(0, 5);
+
+  if (start <= end) {
+    // Same-day range (e.g., 09:00 to 17:00)
+    return now >= start && now < end;
+  } else {
+    // Wrap-around range (e.g., 22:00 to 07:00)
+    return now >= start || now < end;
   }
 }
 

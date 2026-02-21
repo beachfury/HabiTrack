@@ -88,6 +88,7 @@
 - Direct messages between family members
 - Read/unread tracking
 - Notification badges
+- Do Not Disturb / Quiet Hours (suppresses emails during configured times)
 
 ### 👨‍👩‍👧‍👦 Family Management
 - Add and manage family members
