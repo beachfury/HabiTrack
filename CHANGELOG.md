@@ -6,6 +6,25 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ---
 
+## [1.4.3] - 2026-02-21
+
+### Added
+
+#### Forgot Password Flow
+- **"Forgot Password?" link on login page** — Users can now reset their password directly from the login screen without admin help
+- **Email-based reset** — Enter email, receive a 6-digit code (expires in 10 minutes), set a new password
+- **Anti-enumeration** — Always returns success even for unknown emails to prevent email discovery
+- **Auto-login** — After resetting, user is automatically logged in with a new session
+
+#### Per-User Force Password Reset
+- **Individual user reset** — Admins can now force a specific user to change their password via the shield icon on each member row in the Family page
+- **Bulk reset retained** — The header "Force Password Reset" button still resets all non-admin users at once
+
+### Changed
+- Backend `POST /api/auth/creds/forgot` and `POST /api/auth/creds/reset` now accept `email` in addition to `userId`
+
+---
+
 ## [1.4.2] - 2026-02-20
 
 ### Security
