@@ -6,6 +6,31 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ---
 
+## [1.5.4] - 2026-02-25
+
+### Added
+
+#### Store-First Catalog Redesign
+- **Store pills navigation** — The Catalog tab now features a horizontal row of store pills at the top. Tap a store to browse only items available there with store-specific images, brands, and prices. "All Stores" shows everything with the lowest price across stores
+- **Per-store brand & image variants** — Each catalog item can now have different brand names and product images per store (e.g., "Great Value" at Walmart vs "Sprouts Brand" at Sprouts). Set these in the item editor's store price rows
+- **Smart image selection in All Stores view** — When browsing "All Stores", the catalog shows the image/brand from the most frequently purchased store variant for each item. Falls back to lowest-price store if no purchase history, then to the base item
+- **Click-to-expand product images** — Tapping a product thumbnail on the shopping list opens a full-screen lightbox with the high-resolution image. Tap the backdrop or X to close
+
+### Improved
+
+#### Shopping List Store-Aware Display
+- **Store-specific images and brands on shopping list** — List items now show the correct brand name and product image for whichever store they're assigned to, instead of always showing the base catalog item data
+- **Larger product image in Add to List modal** — The item preview image in the Store Select modal is now significantly larger (80×80px vs 48×48px) for better product identification
+
+### Changed
+- **Categories collapsed by default** — Catalog categories now start collapsed instead of auto-expanding, reducing visual clutter when browsing large catalogs
+- **Store filter dropdown replaced** — The old store filter dropdown has been replaced by the new store pills UI for faster, more visible store switching
+
+### Database
+- **Migration `020_catalog_store_variants.sql`** — Adds `imageUrl` (VARCHAR 500) and `brand` (VARCHAR 100) nullable columns to `item_prices` table for per-store overrides
+
+---
+
 ## [1.5.3] - 2026-02-24
 
 ### Fixed

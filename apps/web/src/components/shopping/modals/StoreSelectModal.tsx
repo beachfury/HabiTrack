@@ -59,6 +59,10 @@ export function StoreSelectModal({ item, stores, onClose, onAdd, isAdmin }: Stor
   const selectedPrice = selectedStoreId ? getPriceForStore(selectedStoreId) : null;
   const totalPrice = selectedPrice ? Number(selectedPrice.price) * quantity : 0;
 
+  // Show store-specific image/brand if available, otherwise fall back to base item
+  const displayImageUrl = (selectedPrice?.imageUrl) || item.imageUrl;
+  const displayBrand = (selectedPrice?.brand) || item.brand;
+
   const footer = (
     <ModalFooterButtons
       onCancel={onClose}
@@ -85,12 +89,12 @@ export function StoreSelectModal({ item, stores, onClose, onAdd, isAdmin }: Stor
     >
       <ModalBody>
         <div className="space-y-4">
-          {/* Item Info */}
+          {/* Item Info — shows store-specific image/brand when a store is selected */}
           <div className="flex items-center gap-3 p-3 bg-[var(--color-muted)] rounded-xl">
-            <ItemImage url={item.imageUrl} fit="contain" />
+            <ItemImage url={displayImageUrl} size="xl" fit="contain" />
             <div className="flex-1 min-w-0">
               <p className="font-medium text-[var(--color-foreground)] truncate">{item.name}</p>
-              {item.brand && <p className="text-sm text-[var(--color-muted-foreground)] truncate">{item.brand}</p>}
+              {displayBrand && <p className="text-sm text-[var(--color-muted-foreground)] truncate">{displayBrand}</p>}
             </div>
           </div>
 

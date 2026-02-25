@@ -48,7 +48,8 @@
 - Shared shopping lists with categories
 - Multi-store support with store-specific lists
 - Price tracking and history
-- Product catalog with image uploads and store filtering
+- Store-first product catalog with per-store brand names, images, and prices
+- Click-to-expand product image lightbox on shopping list thumbnails
 - Member request system with admin approval
 - Smart predictions based on purchase history (weighted intervals, variance-adjusted confidence, co-purchase boosting, shopping day detection, trending items)
 - Inline item editing (tap to edit name, quantity, notes)

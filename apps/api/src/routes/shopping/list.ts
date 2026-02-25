@@ -67,8 +67,10 @@ export async function getShoppingList(req: Request, res: Response) {
 
     const items = await q<ShoppingListItem[]>(
       `SELECT
-        sl.id, sl.catalogItemId, ci.name as itemName, ci.brand, ci.sizeText,
-        ci.categoryId, sc.name as categoryName, ci.imageUrl,
+        sl.id, sl.catalogItemId, ci.name as itemName,
+        COALESCE(ip.brand, ci.brand) as brand,
+        ci.sizeText, ci.categoryId, sc.name as categoryName,
+        COALESCE(ip.imageUrl, ci.imageUrl) as imageUrl,
         sl.listType, sl.quantity, sl.storeId, s.name as storeName,
         ip.price as storePrice,
         (SELECT MIN(price) FROM item_prices WHERE catalogItemId = ci.id) as lowestPrice,

@@ -1,10 +1,17 @@
 // apps/web/src/components/shopping/modals/NewItemModal.tsx
 import { useState, useRef, useEffect } from 'react';
-import { X, Camera, RefreshCw, DollarSign, Trash2 } from 'lucide-react';
+import { X, Camera, RefreshCw, DollarSign, Trash2, ImagePlus } from 'lucide-react';
 import { shoppingApi } from '../../../api';
 import type { ShoppingCategory, ShoppingStore, CatalogItem } from '../../../types';
 import { ModalPortal, ModalBody } from '../../common/ModalPortal';
 import { ModalFooterButtons } from '../../common/ModalFooterButtons';
+
+interface StorePriceEntry {
+  storeId: number;
+  price: string;
+  brand: string;
+  imageUrl: string;
+}
 
 interface NewItemModalProps {
   categories: ShoppingCategory[];
@@ -16,10 +23,10 @@ interface NewItemModalProps {
     sizeText?: string;
     categoryId?: number;
     imageUrl?: string;
-    prices?: Array<{ storeId: number; price: number }>;
+    prices?: Array<{ storeId: number; price: number; imageUrl?: string; brand?: string }>;
   }) => void;
   isAdmin: boolean;
-  // NEW: Optional editItem prop for edit mode
+  // Optional editItem prop for edit mode
   editItem?: CatalogItem | null;
 }
 
@@ -40,10 +47,12 @@ export function NewItemModal({
   const [sizeText, setSizeText] = useState(editItem?.sizeText || '');
   const [categoryId, setCategoryId] = useState<number | null>(editItem?.categoryId || null);
   const [imageUrl, setImageUrl] = useState(editItem?.imageUrl || '');
-  const [prices, setPrices] = useState<Array<{ storeId: number; price: string }>>([]);
+  const [prices, setPrices] = useState<StorePriceEntry[]>([]);
   const [uploading, setUploading] = useState(false);
+  const [uploadingStoreIndex, setUploadingStoreIndex] = useState<number | null>(null);
   const [submitting, setSubmitting] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const storeFileInputRef = useRef<HTMLInputElement>(null);
 
   // Load existing prices when editing
   useEffect(() => {
@@ -60,6 +69,8 @@ export function NewItemModal({
           data.prices.map((p) => ({
             storeId: p.storeId,
             price: p.price?.toString() || '',
+            brand: p.brand || '',
+            imageUrl: p.imageUrl || '',
           })),
         );
       }
@@ -89,16 +100,43 @@ export function NewItemModal({
     reader.readAsDataURL(file);
   };
 
+  const handleStoreImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file || uploadingStoreIndex === null) return;
+    if (file.size > 2 * 1024 * 1024) {
+      alert('Image must be under 2MB');
+      return;
+    }
+    const idx = uploadingStoreIndex;
+    const reader = new FileReader();
+    reader.onload = async () => {
+      try {
+        const result = await shoppingApi.uploadImage(reader.result as string, file.type);
+        updatePrice(idx, 'imageUrl', result.imageKey);
+      } catch (err) {
+        alert('Failed to upload image');
+      }
+      setUploadingStoreIndex(null);
+    };
+    reader.readAsDataURL(file);
+  };
+
+  const triggerStoreImageUpload = (index: number) => {
+    setUploadingStoreIndex(index);
+    // Small delay to ensure state is set before triggering click
+    setTimeout(() => storeFileInputRef.current?.click(), 0);
+  };
+
   const addPriceEntry = () => {
     if (stores.length === 0) return;
     const usedStores = new Set(prices.map((p) => p.storeId));
     const availableStore = stores.find((s) => !usedStores.has(s.id));
     if (availableStore) {
-      setPrices([...prices, { storeId: availableStore.id, price: '' }]);
+      setPrices([...prices, { storeId: availableStore.id, price: '', brand: '', imageUrl: '' }]);
     }
   };
 
-  const updatePrice = (index: number, field: 'storeId' | 'price', value: any) => {
+  const updatePrice = (index: number, field: keyof StorePriceEntry, value: any) => {
     const newPrices = [...prices];
     newPrices[index] = { ...newPrices[index], [field]: value };
     setPrices(newPrices);
@@ -123,7 +161,12 @@ export function NewItemModal({
         imageUrl: imageUrl || undefined,
         prices: prices
           .filter((p) => p.price && parseFloat(p.price) > 0)
-          .map((p) => ({ storeId: p.storeId, price: parseFloat(p.price) })),
+          .map((p) => ({
+            storeId: p.storeId,
+            price: parseFloat(p.price),
+            imageUrl: p.imageUrl || undefined,
+            brand: p.brand || undefined,
+          })),
       });
     } finally {
       setSubmitting(false);
@@ -135,14 +178,6 @@ export function NewItemModal({
     if (isEditMode) return 'Edit Item';
     if (isAdmin) return 'Add New Item';
     return 'Request New Item';
-  };
-
-  // Dynamic button text based on mode
-  const getButtonText = () => {
-    if (submitting) return 'Saving...';
-    if (isEditMode) return 'Save Changes';
-    if (isAdmin) return 'Create Item';
-    return 'Submit Request';
   };
 
   const footer = (
@@ -172,10 +207,10 @@ export function NewItemModal({
             </div>
           )}
 
-          {/* Image */}
+          {/* Default Image */}
           <div>
             <label className="block text-sm font-medium text-[var(--color-foreground)] mb-1">
-              Photo
+              Default Photo
             </label>
             <input
               ref={fileInputRef}
@@ -221,16 +256,16 @@ export function NewItemModal({
               type="text"
               value={name}
               onChange={(e) => setName(e.target.value)}
-              placeholder="e.g., Cheerios"
+              placeholder="e.g., 2% Milk"
               className="w-full px-3 py-2 border border-[var(--color-border)] rounded-xl bg-[var(--color-card)] text-[var(--color-foreground)]"
               required
             />
           </div>
 
-          {/* Brand */}
+          {/* Default Brand */}
           <div>
             <label className="block text-sm font-medium text-[var(--color-foreground)] mb-1">
-              Brand
+              Default Brand
             </label>
             <input
               type="text"
@@ -250,7 +285,7 @@ export function NewItemModal({
               type="text"
               value={sizeText}
               onChange={(e) => setSizeText(e.target.value)}
-              placeholder="e.g., 18 oz"
+              placeholder="e.g., 1 gallon"
               className="w-full px-3 py-2 border border-[var(--color-border)] rounded-xl bg-[var(--color-card)] text-[var(--color-foreground)]"
             />
           </div>
@@ -274,12 +309,21 @@ export function NewItemModal({
             </select>
           </div>
 
-          {/* Prices (Admin only) */}
+          {/* Store Prices with per-store brand & image (Admin only) */}
           {isAdmin && (
             <div>
+              {/* Hidden file input for store-specific image uploads */}
+              <input
+                ref={storeFileInputRef}
+                type="file"
+                accept="image/*"
+                onChange={handleStoreImageUpload}
+                className="hidden"
+              />
+
               <div className="flex items-center justify-between mb-2">
                 <label className="block text-sm font-medium text-[var(--color-foreground)]">
-                  Store Prices
+                  Store Prices & Brands
                 </label>
                 <button
                   onClick={addPriceEntry}
@@ -290,44 +334,85 @@ export function NewItemModal({
                 </button>
               </div>
               {prices.map((p, i) => (
-                <div key={i} className="flex gap-2 mb-2">
-                  <select
-                    value={p.storeId}
-                    onChange={(e) => updatePrice(i, 'storeId', Number(e.target.value))}
-                    className="flex-1 px-3 py-2 border border-[var(--color-border)] rounded-xl bg-[var(--color-card)] text-[var(--color-foreground)] text-sm"
-                  >
-                    {stores.map((s) => (
-                      <option key={s.id} value={s.id}>
-                        {s.name}
-                      </option>
-                    ))}
-                  </select>
-                  <div className="relative w-20 sm:w-24">
-                    <DollarSign
-                      size={16}
-                      className="absolute left-2 top-1/2 -translate-y-1/2 text-[var(--color-muted-foreground)]"
-                    />
-                    <input
-                      type="number"
-                      step="0.01"
-                      min="0"
-                      value={p.price}
-                      onChange={(e) => updatePrice(i, 'price', e.target.value)}
-                      placeholder="0.00"
-                      className="w-full pl-7 pr-2 py-2 border border-[var(--color-border)] rounded-xl text-sm bg-[var(--color-card)] text-[var(--color-foreground)]"
-                    />
+                <div key={i} className="mb-3 p-3 bg-[var(--color-muted)] rounded-xl space-y-2">
+                  {/* Row 1: Store select + Price + Delete */}
+                  <div className="flex gap-2 items-center">
+                    <select
+                      value={p.storeId}
+                      onChange={(e) => updatePrice(i, 'storeId', Number(e.target.value))}
+                      className="flex-1 px-3 py-2 border border-[var(--color-border)] rounded-xl bg-[var(--color-card)] text-[var(--color-foreground)] text-sm"
+                    >
+                      {stores.map((s) => (
+                        <option key={s.id} value={s.id}>
+                          {s.name}
+                        </option>
+                      ))}
+                    </select>
+                    <div className="relative w-20 sm:w-24">
+                      <DollarSign
+                        size={16}
+                        className="absolute left-2 top-1/2 -translate-y-1/2 text-[var(--color-muted-foreground)]"
+                      />
+                      <input
+                        type="number"
+                        step="0.01"
+                        min="0"
+                        value={p.price}
+                        onChange={(e) => updatePrice(i, 'price', e.target.value)}
+                        placeholder="0.00"
+                        className="w-full pl-7 pr-2 py-2 border border-[var(--color-border)] rounded-xl text-sm bg-[var(--color-card)] text-[var(--color-foreground)]"
+                      />
+                    </div>
+                    <button
+                      onClick={() => removePrice(i)}
+                      className="p-2 text-[var(--color-destructive)] hover:bg-[var(--color-destructive)]/10 rounded-lg flex-shrink-0"
+                    >
+                      <Trash2 size={16} />
+                    </button>
                   </div>
-                  <button
-                    onClick={() => removePrice(i)}
-                    className="p-2 text-[var(--color-destructive)] hover:bg-[var(--color-destructive)]/10 rounded-lg"
-                  >
-                    <Trash2 size={16} />
-                  </button>
+                  {/* Row 2: Store-specific brand + image */}
+                  <div className="flex gap-2 items-center">
+                    <input
+                      type="text"
+                      value={p.brand}
+                      onChange={(e) => updatePrice(i, 'brand', e.target.value)}
+                      placeholder="Store brand (optional)"
+                      className="flex-1 px-3 py-1.5 border border-[var(--color-border)] rounded-lg bg-[var(--color-card)] text-[var(--color-foreground)] text-sm"
+                    />
+                    {p.imageUrl ? (
+                      <div className="relative flex-shrink-0">
+                        <img
+                          src={p.imageUrl}
+                          alt=""
+                          className="w-9 h-9 rounded-lg object-cover border border-[var(--color-border)]"
+                        />
+                        <button
+                          onClick={() => updatePrice(i, 'imageUrl', '')}
+                          className="absolute -top-1 -right-1 w-4 h-4 bg-[var(--color-destructive)] text-[var(--color-destructive-foreground)] rounded-full flex items-center justify-center"
+                        >
+                          <X size={10} />
+                        </button>
+                      </div>
+                    ) : (
+                      <button
+                        onClick={() => triggerStoreImageUpload(i)}
+                        disabled={uploadingStoreIndex === i}
+                        className="p-2 text-[var(--color-muted-foreground)] hover:text-[var(--color-primary)] hover:bg-[var(--color-primary)]/10 rounded-lg flex-shrink-0"
+                        title="Upload store-specific image"
+                      >
+                        {uploadingStoreIndex === i ? (
+                          <RefreshCw size={16} className="animate-spin" />
+                        ) : (
+                          <ImagePlus size={16} />
+                        )}
+                      </button>
+                    )}
+                  </div>
                 </div>
               ))}
               {prices.length === 0 && (
                 <p className="text-sm text-[var(--color-muted-foreground)] italic">
-                  No prices yet. Click "+ Add Store" to add.
+                  No store prices yet. Click "+ Add Store" to add pricing and store-specific brands.
                 </p>
               )}
             </div>

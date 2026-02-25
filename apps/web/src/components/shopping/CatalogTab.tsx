@@ -1,5 +1,5 @@
 // apps/web/src/components/shopping/CatalogTab.tsx
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import {
   Plus,
   Search,
@@ -11,8 +11,9 @@ import {
   Check,
   X,
   Send,
+  Store,
 } from 'lucide-react';
-import { ItemImage, CardImage } from './ItemImage';
+import { CardImage } from './ItemImage';
 import { NewItemModal } from './modals/NewItemModal';
 import { shoppingApi } from '../../api';
 import type { CatalogItem, ShoppingCategory, ShoppingStore, ShoppingRequest } from '../../types';
@@ -58,28 +59,11 @@ export function CatalogTab({
   onCreateRequest,
 }: CatalogTabProps) {
   const [selectedCategory, setSelectedCategory] = useState<number | null>(null);
+  // Categories collapsed by default — start with empty set
   const [expandedCategories, setExpandedCategories] = useState<Set<number | 'uncategorized'>>(
     new Set(),
   );
 
-  // Auto-expand all categories that have items
-  useEffect(() => {
-    if (items.length > 0) {
-      const catIds = new Set<number | 'uncategorized'>();
-      items.forEach((item) => {
-        if (item.categoryId) {
-          catIds.add(item.categoryId);
-        } else {
-          catIds.add('uncategorized');
-        }
-      });
-      setExpandedCategories((prev) => {
-        const merged = new Set(prev);
-        catIds.forEach((id) => merged.add(id));
-        return merged;
-      });
-    }
-  }, [items]);
   const [editingItem, setEditingItem] = useState<CatalogItem | null>(null);
   const [showQuickRequest, setShowQuickRequest] = useState(false);
   const [quickRequestName, setQuickRequestName] = useState('');
@@ -153,14 +137,14 @@ export function CatalogTab({
     setShowQuickRequest(true);
   };
 
-  // Handle saving edited item - uses same format as NewItemModal
+  // Handle saving edited item — includes per-store brand/image
   const handleSaveItem = async (data: {
     name: string;
     brand?: string;
     sizeText?: string;
     categoryId?: number;
     imageUrl?: string;
-    prices?: Array<{ storeId: number; price: number }>;
+    prices?: Array<{ storeId: number; price: number; imageUrl?: string; brand?: string }>;
   }) => {
     if (!editingItem) return;
 
@@ -174,10 +158,17 @@ export function CatalogTab({
         imageUrl: data.imageUrl,
       });
 
-      // Update prices if provided
+      // Update prices with per-store image/brand if provided
       if (data.prices && data.prices.length > 0) {
         for (const price of data.prices) {
-          await shoppingApi.setCatalogItemPrice(editingItem.id, price.storeId, price.price);
+          await shoppingApi.setCatalogItemPrice(
+            editingItem.id,
+            price.storeId,
+            price.price,
+            undefined,
+            price.imageUrl,
+            price.brand,
+          );
         }
       }
 
@@ -187,6 +178,9 @@ export function CatalogTab({
       console.error('Failed to update item:', err);
     }
   };
+
+  // Is a specific store selected (not "All Stores")?
+  const hasStoreFilter = selectedStoreFilter != null;
 
   return (
     <div className="space-y-3">
@@ -289,7 +283,37 @@ export function CatalogTab({
         <Plus size={20} /> {isAdmin ? 'Add New Item' : 'Request New Item'}
       </button>
 
-      {/* Search & Filter */}
+      {/* Store Pills */}
+      {onStoreFilterChange && stores.length > 0 && (
+        <div className="flex gap-2 overflow-x-auto pb-1 -mx-1 px-1">
+          <button
+            onClick={() => onStoreFilterChange(null)}
+            className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full text-sm font-medium whitespace-nowrap transition-colors flex-shrink-0 ${
+              !hasStoreFilter
+                ? 'bg-[var(--color-primary)] text-[var(--color-primary-foreground)]'
+                : 'bg-[var(--color-muted)] text-[var(--color-muted-foreground)] hover:bg-[var(--color-muted)]/80'
+            }`}
+          >
+            <Store size={14} />
+            All Stores
+          </button>
+          {stores.map((store) => (
+            <button
+              key={store.id}
+              onClick={() => onStoreFilterChange(store.id)}
+              className={`px-3 py-1.5 rounded-full text-sm font-medium whitespace-nowrap transition-colors flex-shrink-0 ${
+                selectedStoreFilter === store.id
+                  ? 'bg-[var(--color-primary)] text-[var(--color-primary-foreground)]'
+                  : 'bg-[var(--color-muted)] text-[var(--color-muted-foreground)] hover:bg-[var(--color-muted)]/80'
+              }`}
+            >
+              {store.name}
+            </button>
+          ))}
+        </div>
+      )}
+
+      {/* Search & Category Filter */}
       <div className="flex flex-col sm:flex-row gap-2">
         <div className="flex-1 relative">
           <Search
@@ -316,20 +340,6 @@ export function CatalogTab({
             </option>
           ))}
         </select>
-        {onStoreFilterChange && (
-          <select
-            value={selectedStoreFilter || ''}
-            onChange={(e) => onStoreFilterChange(e.target.value ? Number(e.target.value) : null)}
-            className="px-3 py-2 border border-[var(--color-border)] rounded-xl bg-[var(--color-card)] text-[var(--color-foreground)] text-sm"
-          >
-            <option value="">All Stores</option>
-            {stores.map((store) => (
-              <option key={store.id} value={store.id}>
-                {store.name}
-              </option>
-            ))}
-          </select>
-        )}
       </div>
 
       {/* Items - Collapsible by Category */}
@@ -340,7 +350,11 @@ export function CatalogTab({
             className="mx-auto mb-3 text-[var(--color-muted-foreground)] opacity-50"
           />
           <p className="text-[var(--color-muted-foreground)] mb-4">
-            {searchTerm ? `No items found for "${searchTerm}"` : 'No items found'}
+            {searchTerm
+              ? `No items found for "${searchTerm}"`
+              : hasStoreFilter
+                ? 'No items at this store'
+                : 'No items found'}
           </p>
 
           {/* Quick Request Form (non-admin users) */}
@@ -478,9 +492,13 @@ export function CatalogTab({
                           </p>
                         )}
                         <div className="flex items-center justify-between mt-2">
-                          {item.lowestPrice ? (
+                          {hasStoreFilter && item.storePrice != null ? (
                             <span className="text-sm text-[var(--color-success)] font-medium">
-                              ${Number(item.lowestPrice).toFixed(2)}
+                              ${Number(item.storePrice).toFixed(2)}
+                            </span>
+                          ) : item.lowestPrice ? (
+                            <span className="text-sm text-[var(--color-success)] font-medium">
+                              from ${Number(item.lowestPrice).toFixed(2)}
                             </span>
                           ) : (
                             <span className="text-xs text-[var(--color-muted-foreground)]">
