@@ -82,7 +82,20 @@ export function ShoppingPage() {
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
   const [searchTerm, setSearchTerm] = useState('');
+  const [catalogStoreFilter, setCatalogStoreFilter] = useState<number | null>(null);
   const [expandedStores, setExpandedStores] = useState<Set<string>>(new Set());
+
+  // Auto-expand store groups that have items
+  useEffect(() => {
+    if (listItems.length > 0) {
+      const storeNames = new Set(listItems.map(item => item.storeName || 'Any Store'));
+      setExpandedStores(prev => {
+        const merged = new Set(prev);
+        storeNames.forEach(name => merged.add(name));
+        return merged;
+      });
+    }
+  }, [listItems]);
 
   // Modal state
   const [showAddItemModal, setShowAddItemModal] = useState(false);
@@ -153,8 +166,12 @@ export function ShoppingPage() {
     setRequests(data.requests);
   }
 
-  async function fetchCatalog(search?: string) {
-    const data = await shoppingApi.getCatalogItems(search || searchTerm);
+  async function fetchCatalog(search?: string, storeId?: number | null) {
+    const effectiveStoreId = storeId !== undefined ? storeId : catalogStoreFilter;
+    const data = await shoppingApi.getCatalogItems(
+      search || searchTerm,
+      effectiveStoreId || undefined,
+    );
     setCatalogItems(data.items);
   }
 
@@ -565,6 +582,11 @@ export function ShoppingPage() {
                 onSearch={(term) => {
                   setSearchTerm(term);
                   fetchCatalog(term);
+                }}
+                selectedStoreFilter={catalogStoreFilter}
+                onStoreFilterChange={(storeId) => {
+                  setCatalogStoreFilter(storeId);
+                  fetchCatalog(searchTerm, storeId);
                 }}
                 onAddToList={handleAddToListClick}
                 onAddNewItem={() => setShowNewCatalogItemModal(true)}

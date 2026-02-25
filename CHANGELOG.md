@@ -6,6 +6,43 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ---
 
+## [1.4.5] - 2026-02-22
+
+### Fixed
+
+#### Shopping List Items Not Visible After Adding
+- **Fixed store groups starting collapsed** — All store groups in the shopping list were initialized as collapsed, so newly added items appeared to be missing even though they were successfully added to the database
+- **Auto-expand store groups** — Store groups that contain items now automatically expand when the list loads or refreshes
+
+#### Prediction Algorithm Suggesting Wrong Items
+- **Fixed suggestions based on adds instead of purchases** — The popular items suggestion source was tracking list additions (`item_add_events`), not actual purchases (`shopping_purchase_events`). Items that were added to the list then removed without buying would still appear as suggestions
+- **Fixed recently purchased items appearing as suggestions** — Added a 7-day exclusion window so items purchased within the last week won't be suggested again as "popular"
+- **Fixed pattern-based predictions for same-day purchases** — Items purchased today or yesterday are now skipped by the pattern-based prediction engine to prevent immediate re-suggestion
+
+#### Catalog Image Upload Not Working
+- **Added missing upload endpoint** — The frontend was calling `POST /shopping/upload-image` but no such API route existed. Added the `uploadShoppingImage` handler following the same base64 pattern as recipe image uploads
+- **Auto-creates upload directory** — The `uploads/shopping/` directory is created automatically on server startup
+
+### Improved
+
+#### Advanced Prediction Algorithm (8 Enhancements)
+- **Weighted recent intervals** — Purchase interval predictions now use exponential decay weighting on the last 5 intervals, so recent purchasing behavior matters more than old patterns
+- **Variance-adjusted confidence** — Items with highly variable purchase intervals (coefficient of variation > 0.6) get downgraded confidence; very consistent items (CV < 0.15) get boosted to high confidence
+- **Single-purchase item suggestions** — Items bought exactly once 14-45 days ago now appear as low-confidence suggestions ("might need again?")
+- **Dynamic exclusion window** — Popular items source now uses each item's own average interval (40% of interval) to determine the exclusion window instead of a hardcoded 7 days
+- **Weighted recent quantities** — Suggested quantities now weight recent purchases more heavily using exponential decay, so if you recently started buying 2 instead of 1, the suggestion reflects that
+- **Shopping day detection** — Analyzes 90-day purchase history to detect preferred shopping days; scores get a 30% boost on your shopping day and 15% the day before
+- **Co-purchase boosting** — New suggestion source that identifies items frequently bought together on the same day; if items on your current list are often purchased alongside other items, those companions are suggested
+- **Trending items** — New suggestion source for items added by 2+ household members in the last 14 days that have never been purchased (new items the family wants to try)
+
+### Added
+
+#### Store Filter on Catalog
+- **Filter catalog items by store** — New store dropdown filter on the Catalog tab allows filtering items to only show products available at a specific store (based on price entries)
+- **Works alongside category filter** — Store and category filters can be combined for precise browsing
+
+---
+
 ## [1.4.4] - 2026-02-21
 
 ### Fixed

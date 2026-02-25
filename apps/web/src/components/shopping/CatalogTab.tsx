@@ -23,6 +23,8 @@ interface CatalogTabProps {
   stores: ShoppingStore[];
   searchTerm: string;
   onSearch: (term: string) => void;
+  selectedStoreFilter?: number | null;
+  onStoreFilterChange?: (storeId: number | null) => void;
   onAddToList: (item: CatalogItem) => void;
   onAddNewItem: () => void;
   onRequestItem: () => void;
@@ -42,6 +44,8 @@ export function CatalogTab({
   stores,
   searchTerm,
   onSearch,
+  selectedStoreFilter,
+  onStoreFilterChange,
   onAddToList,
   onAddNewItem,
   onRequestItem,
@@ -286,13 +290,27 @@ export function CatalogTab({
           onChange={(e) => setSelectedCategory(e.target.value ? Number(e.target.value) : null)}
           className="px-3 py-2 border border-[var(--color-border)] rounded-xl bg-[var(--color-card)] text-[var(--color-foreground)] text-sm"
         >
-          <option value="">All</option>
+          <option value="">All Categories</option>
           {categories.map((cat) => (
             <option key={cat.id} value={cat.id}>
               {cat.name}
             </option>
           ))}
         </select>
+        {onStoreFilterChange && (
+          <select
+            value={selectedStoreFilter || ''}
+            onChange={(e) => onStoreFilterChange(e.target.value ? Number(e.target.value) : null)}
+            className="px-3 py-2 border border-[var(--color-border)] rounded-xl bg-[var(--color-card)] text-[var(--color-foreground)] text-sm"
+          >
+            <option value="">All Stores</option>
+            {stores.map((store) => (
+              <option key={store.id} value={store.id}>
+                {store.name}
+              </option>
+            ))}
+          </select>
+        )}
       </div>
 
       {/* Items - Collapsible by Category */}

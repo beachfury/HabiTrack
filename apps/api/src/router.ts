@@ -289,6 +289,9 @@ router.post(
   shopping.setCatalogItemPrice,
 );
 
+// Shopping Image Upload
+router.post('/shopping/upload-image', requireAuth(), writeRateLimiter, upload.uploadShoppingImage);
+
 // Shopping List
 router.get('/shopping/list', requireAuth(), shopping.getShoppingList);
 router.post('/shopping/list', requireAuth(), writeRateLimiter, shopping.addToList);

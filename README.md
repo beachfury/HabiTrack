@@ -48,9 +48,9 @@
 - Shared shopping lists with categories
 - Multi-store support with store-specific lists
 - Price tracking and history
-- Product catalog with favorites
+- Product catalog with image uploads and store filtering
 - Member request system with admin approval
-- Smart predictions based on purchase history
+- Smart predictions based on purchase history (weighted intervals, variance-adjusted confidence, co-purchase boosting, shopping day detection, trending items)
 - Inline item editing (tap to edit name, quantity, notes)
 - Barcode scanning support (planned)
 

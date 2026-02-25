@@ -10,6 +10,8 @@ import {
   Calendar,
   DollarSign,
   Utensils,
+  ShoppingBag,
+  Users,
 } from 'lucide-react';
 import { ItemImage } from './ItemImage';
 import { ConfidenceBadge } from './ConfidenceBadge';
@@ -29,6 +31,8 @@ interface PredictionsTabProps {
       dueSoon: number;
       mealIngredients: number;
       popular: number;
+      coPurchase: number;
+      trending: number;
     };
   } | null;
   onAdd: (catalogItemId: number, quantity?: number, storeId?: number | null) => void;
@@ -37,7 +41,7 @@ interface PredictionsTabProps {
   isAdmin: boolean;
 }
 
-type FilterType = 'all' | 'high' | 'due_this_week' | 'overdue' | 'meals' | 'popular';
+type FilterType = 'all' | 'high' | 'due_this_week' | 'overdue' | 'meals' | 'popular' | 'co_purchase' | 'trending';
 
 export function PredictionsTab({
   suggestions,
@@ -71,6 +75,10 @@ export function PredictionsTab({
     filteredSuggestions = filteredSuggestions.filter((s) => s.suggestionType === 'meal_ingredient');
   } else if (filter === 'popular') {
     filteredSuggestions = filteredSuggestions.filter((s) => s.suggestionType === 'popular');
+  } else if (filter === 'co_purchase') {
+    filteredSuggestions = filteredSuggestions.filter((s) => s.suggestionType === 'co_purchase');
+  } else if (filter === 'trending') {
+    filteredSuggestions = filteredSuggestions.filter((s) => s.suggestionType === 'trending');
   }
 
   // Calculate visible counts (excluding dismissed)
@@ -86,6 +94,8 @@ export function PredictionsTab({
     (s) => s.suggestionType === 'meal_ingredient',
   ).length;
   const visiblePopular = visibleSuggestions.filter((s) => s.suggestionType === 'popular').length;
+  const visibleCoPurchase = visibleSuggestions.filter((s) => s.suggestionType === 'co_purchase').length;
+  const visibleTrending = visibleSuggestions.filter((s) => s.suggestionType === 'trending').length;
 
   if (suggestions.length === 0) {
     return (
@@ -177,6 +187,24 @@ export function PredictionsTab({
             label: 'Popular',
             count: visiblePopular,
           },
+          ...(visibleCoPurchase > 0
+            ? [
+                {
+                  id: 'co_purchase',
+                  label: 'Together',
+                  count: visibleCoPurchase,
+                },
+              ]
+            : []),
+          ...(visibleTrending > 0
+            ? [
+                {
+                  id: 'trending',
+                  label: 'Trending',
+                  count: visibleTrending,
+                },
+              ]
+            : []),
         ].map((tab) => (
           <button
             key={tab.id}
@@ -267,6 +295,18 @@ export function PredictionsTab({
                       <span className="px-1.5 py-0.5 text-xs rounded-full bg-[var(--color-success)]/20 text-[var(--color-success)]">
                         <TrendingUp size={10} className="inline mr-1" />
                         Popular
+                      </span>
+                    )}
+                    {s.suggestionType === 'co_purchase' && (
+                      <span className="px-1.5 py-0.5 text-xs rounded-full bg-[var(--color-warning)]/20 text-[var(--color-warning)]">
+                        <ShoppingBag size={10} className="inline mr-1" />
+                        Bought Together
+                      </span>
+                    )}
+                    {s.suggestionType === 'trending' && (
+                      <span className="px-1.5 py-0.5 text-xs rounded-full bg-[var(--color-primary)]/20 text-[var(--color-primary)]">
+                        <Users size={10} className="inline mr-1" />
+                        Trending
                       </span>
                     )}
                   </div>
