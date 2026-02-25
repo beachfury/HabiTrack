@@ -22,6 +22,7 @@ export interface WidgetChoreAssignment {
   completedAt: string | null;
   assigneeName: string;
   assigneeColor: string;
+  assigneeAvatarUrl?: string | null;
 }
 
 /** Personal chore used by MyChoresWidget (no assignee info) */

@@ -457,7 +457,7 @@ export async function getDashboardData(req: Request, res: Response) {
       // Today's chores (all)
       safeQuery<any>(`
         SELECT ci.id, ci.choreId, c.title, ci.status, ci.dueDate, ci.completedAt,
-               u.displayName as assigneeName, u.color as assigneeColor
+               u.displayName as assigneeName, u.color as assigneeColor, u.avatarUrl as assigneeAvatarUrl
         FROM chore_instances ci
         JOIN chores c ON ci.choreId = c.id
         LEFT JOIN users u ON ci.assignedTo = u.id

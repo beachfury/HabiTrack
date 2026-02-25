@@ -51,13 +51,17 @@ export function TodaysChoresWidget({ chores = [] }: TodaysChoresWidgetProps) {
                   {chore.title}
                 </p>
               </div>
-              <div
-                className="w-6 h-6 rounded-full flex items-center justify-center text-white text-xs font-medium"
-                style={{ backgroundColor: chore.assigneeColor || 'var(--color-primary)' }}
-                title={chore.assigneeName}
-              >
-                {chore.assigneeName?.charAt(0).toUpperCase()}
-              </div>
+              {chore.assigneeAvatarUrl ? (
+                <img src={chore.assigneeAvatarUrl} alt="" className="w-6 h-6 rounded-full object-cover flex-shrink-0" title={chore.assigneeName} />
+              ) : (
+                <div
+                  className="w-6 h-6 rounded-full flex items-center justify-center text-white text-xs font-medium"
+                  style={{ backgroundColor: chore.assigneeColor || 'var(--color-primary)' }}
+                  title={chore.assigneeName}
+                >
+                  {chore.assigneeName?.charAt(0).toUpperCase()}
+                </div>
+              )}
             </div>
           ))
         )}

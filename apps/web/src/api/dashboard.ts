@@ -115,6 +115,7 @@ export interface DashboardData {
     completedAt: string | null;
     assigneeName: string;
     assigneeColor: string;
+    assigneeAvatarUrl: string | null;
   }>;
   myChores?: Array<{
     id: number;
