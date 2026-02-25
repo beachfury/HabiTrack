@@ -6,6 +6,15 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ---
 
+## [1.4.8] - 2026-02-24
+
+### Fixed
+
+#### Uploaded Images Not Loading (404)
+- **Added `/uploads` proxy to nginx** — Uploaded files (catalog images, profile pictures, recipe photos, etc.) are served by the Express API via `express.static`, but nginx was only proxying `/api` requests to the backend. Requests to `/uploads/...` fell through to the SPA fallback and returned 404. Added a dedicated `/uploads` location block that proxies to the API server with 7-day caching.
+
+---
+
 ## [1.4.7] - 2026-02-24
 
 ### Fixed
