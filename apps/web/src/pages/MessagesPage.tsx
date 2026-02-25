@@ -988,7 +988,7 @@ function NewConversationModal({
   currentUserId: number;
 }) {
   const [users, setUsers] = useState<
-    Array<{ id: number; displayName: string; color: string | null; active: boolean }>
+    Array<{ id: number; displayName: string; color: string | null; avatarUrl: string | null; active: boolean }>
   >([]);
   const [loading, setLoading] = useState(true);
 
@@ -1026,12 +1026,16 @@ function NewConversationModal({
                 onClick={() => onSelect(u.id)}
                 className="w-full p-3 flex items-center gap-3 hover:bg-[var(--color-muted)]/50 rounded-lg"
               >
-                <div
-                  className="w-10 h-10 rounded-full flex items-center justify-center text-white font-medium"
-                  style={{ backgroundColor: u.color || '#6366f1' }}
-                >
-                  {u.displayName.charAt(0).toUpperCase()}
-                </div>
+                {u.avatarUrl ? (
+                  <img src={u.avatarUrl} alt="" className="w-10 h-10 rounded-full object-cover flex-shrink-0" />
+                ) : (
+                  <div
+                    className="w-10 h-10 rounded-full flex items-center justify-center text-white font-medium"
+                    style={{ backgroundColor: u.color || '#6366f1' }}
+                  >
+                    {u.displayName.charAt(0).toUpperCase()}
+                  </div>
+                )}
                 <span className="font-medium text-[var(--color-foreground)]">
                   {u.displayName}
                 </span>

@@ -600,12 +600,16 @@ function LeaderboardView({ leaderboard, currentUserId }: LeaderboardViewProps) {
             </div>
 
             {/* Avatar */}
-            <div
-              className="w-10 h-10 rounded-full flex items-center justify-center text-white font-bold"
-              style={{ backgroundColor: entry.color || 'var(--color-primary)' }}
-            >
-              {(entry.nickname || entry.displayName).charAt(0).toUpperCase()}
-            </div>
+            {entry.avatarUrl ? (
+              <img src={entry.avatarUrl} alt="" className="w-10 h-10 rounded-full object-cover flex-shrink-0" />
+            ) : (
+              <div
+                className="w-10 h-10 rounded-full flex items-center justify-center text-white font-bold"
+                style={{ backgroundColor: entry.color || 'var(--color-primary)' }}
+              >
+                {(entry.nickname || entry.displayName).charAt(0).toUpperCase()}
+              </div>
+            )}
 
             {/* Name */}
             <div className="flex-1">

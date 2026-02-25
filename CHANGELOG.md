@@ -6,6 +6,19 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ---
 
+## [1.5.2] - 2026-02-24
+
+### Fixed
+
+#### More Missing Avatar Displays
+- **Paid Chores leaderboard** — Earnings leaderboard was still showing colored circles with initials instead of avatar images
+- **Calendar user day cards (with items)** — The second render path for users with events/chores was missed in v1.5.1 and still showed initials only
+- **New Conversation modal** — User selection list in direct messages was missing avatar images
+- **Today's Chores widget** — Assignee avatars on dashboard chore items were always colored circles
+- **Backend dashboard query** — Added `avatarUrl` to the today's chores SQL query so assignee avatars are returned to the frontend
+
+---
+
 ## [1.5.1] - 2026-02-24
 
 ### Fixed
