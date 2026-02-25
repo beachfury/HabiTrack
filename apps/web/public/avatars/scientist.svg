@@ -1,0 +1,35 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 400" width="400" height="400">
+  <circle cx="200" cy="200" r="200" fill="#16A085"/>
+  <!-- Hair -->
+  <circle cx="200" cy="170" r="85" fill="#F5F5F5"/>
+  <circle cx="130" cy="180" r="25" fill="#F5F5F5"/>
+  <circle cx="270" cy="180" r="25" fill="#F5F5F5"/>
+  <!-- Face -->
+  <circle cx="200" cy="210" r="70" fill="#F5D0A9"/>
+  <!-- Goggles strap -->
+  <path d="M110,185 Q200,165 290,185" stroke="#555" stroke-width="6" fill="none"/>
+  <!-- Goggle left -->
+  <circle cx="165" cy="195" r="28" fill="#555"/>
+  <circle cx="165" cy="195" r="22" fill="#87CEEB"/>
+  <circle cx="165" cy="195" r="16" fill="#B0E0E6"/>
+  <!-- Goggle right -->
+  <circle cx="235" cy="195" r="28" fill="#555"/>
+  <circle cx="235" cy="195" r="22" fill="#87CEEB"/>
+  <circle cx="235" cy="195" r="16" fill="#B0E0E6"/>
+  <!-- Eyes behind goggles -->
+  <circle cx="165" cy="197" r="6" fill="#2C3E50"/>
+  <circle cx="235" cy="197" r="6" fill="#2C3E50"/>
+  <!-- Goggle bridge -->
+  <rect x="183" y="190" width="34" height="10" rx="5" fill="#555"/>
+  <!-- Nose -->
+  <circle cx="200" cy="225" r="5" fill="#E8B88A"/>
+  <!-- Smile -->
+  <path d="M182 245 Q200 258 218 245" stroke="#C0392B" stroke-width="3" fill="none" stroke-linecap="round"/>
+  <!-- Lab coat -->
+  <rect x="140" y="275" width="120" height="80" rx="10" fill="#FFF"/>
+  <line x1="200" y1="275" x2="200" y2="345" stroke="#DDD" stroke-width="2"/>
+  <!-- Pocket -->
+  <rect x="210" y="290" width="30" height="25" rx="3" fill="#EEE" stroke="#DDD" stroke-width="1"/>
+  <!-- Pen in pocket -->
+  <rect x="220" y="285" width="4" height="15" rx="2" fill="#E74C3C"/>
+</svg>

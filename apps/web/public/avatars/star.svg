@@ -1,0 +1,20 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 400" width="400" height="400">
+  <circle cx="200" cy="200" r="200" fill="#F1C40F"/>
+  <!-- Star shape -->
+  <polygon points="200,55 230,145 325,145 248,200 275,290 200,240 125,290 152,200 75,145 170,145"
+    fill="#F5D76E"/>
+  <!-- Face -->
+  <!-- Eyes -->
+  <circle cx="178" cy="175" r="12" fill="#2C3E50"/>
+  <circle cx="222" cy="175" r="12" fill="#2C3E50"/>
+  <circle cx="182" cy="172" r="5" fill="#FFF"/>
+  <circle cx="226" cy="172" r="5" fill="#FFF"/>
+  <!-- Happy eyebrows -->
+  <path d="M162 160 Q178 150 194 160" stroke="#D4940C" stroke-width="3" fill="none"/>
+  <path d="M206 160 Q222 150 238 160" stroke="#D4940C" stroke-width="3" fill="none"/>
+  <!-- Big smile -->
+  <path d="M170 200 Q200 230 230 200" stroke="#D4940C" stroke-width="4" fill="none" stroke-linecap="round"/>
+  <!-- Rosy cheeks -->
+  <circle cx="158" cy="198" r="12" fill="#F5B041" opacity="0.5"/>
+  <circle cx="242" cy="198" r="12" fill="#F5B041" opacity="0.5"/>
+</svg>

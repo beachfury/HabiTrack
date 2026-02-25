@@ -1,0 +1,32 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 400" width="400" height="400">
+  <circle cx="200" cy="200" r="200" fill="#1A5276"/>
+  <!-- Sky gradient area -->
+  <rect x="0" y="0" width="400" height="180" fill="#2E86C1" opacity="0.5"/>
+  <!-- Sun -->
+  <circle cx="200" cy="120" r="40" fill="#F39C12"/>
+  <!-- Sun reflection -->
+  <ellipse cx="200" cy="250" rx="15" ry="80" fill="#F39C12" opacity="0.2"/>
+  <!-- Wave 1 (back) -->
+  <path d="M0,220 Q50,200 100,220 Q150,240 200,220 Q250,200 300,220 Q350,240 400,220 L400,280 Q350,260 300,280 Q250,300 200,280 Q150,260 100,280 Q50,300 0,280 Z" fill="#2471A3"/>
+  <!-- Wave 2 (middle) -->
+  <path d="M0,250 Q50,230 100,250 Q150,270 200,250 Q250,230 300,250 Q350,270 400,250 L400,310 Q350,290 300,310 Q250,330 200,310 Q150,290 100,310 Q50,330 0,310 Z" fill="#1F618D"/>
+  <!-- Wave 3 (front) -->
+  <path d="M0,285 Q50,265 100,285 Q150,305 200,285 Q250,265 300,285 Q350,305 400,285 L400,400 L0,400 Z" fill="#1A5276"/>
+  <!-- Foam on waves -->
+  <path d="M30,250 Q60,242 90,250" stroke="#FFF" stroke-width="2" fill="none" opacity="0.5"/>
+  <path d="M160,248 Q190,240 220,248" stroke="#FFF" stroke-width="2" fill="none" opacity="0.5"/>
+  <path d="M290,250 Q320,242 350,250" stroke="#FFF" stroke-width="2" fill="none" opacity="0.5"/>
+  <path d="M80,282 Q110,274 140,282" stroke="#FFF" stroke-width="2" fill="none" opacity="0.5"/>
+  <path d="M230,280 Q260,272 290,280" stroke="#FFF" stroke-width="2" fill="none" opacity="0.5"/>
+  <!-- Birds -->
+  <path d="M100,90 Q108,82 116,90" stroke="#2C3E50" stroke-width="2.5" fill="none"/>
+  <path d="M140,75 Q148,67 156,75" stroke="#2C3E50" stroke-width="2.5" fill="none"/>
+  <path d="M280,85 Q288,77 296,85" stroke="#2C3E50" stroke-width="2.5" fill="none"/>
+  <!-- Clouds -->
+  <circle cx="70" cy="60" r="15" fill="#FFF" opacity="0.6"/>
+  <circle cx="90" cy="55" r="20" fill="#FFF" opacity="0.6"/>
+  <circle cx="110" cy="62" r="14" fill="#FFF" opacity="0.6"/>
+  <circle cx="310" cy="50" r="14" fill="#FFF" opacity="0.6"/>
+  <circle cx="330" cy="45" r="18" fill="#FFF" opacity="0.6"/>
+  <circle cx="350" cy="52" r="13" fill="#FFF" opacity="0.6"/>
+</svg>

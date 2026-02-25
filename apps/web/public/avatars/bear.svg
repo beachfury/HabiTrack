@@ -1,0 +1,26 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 400" width="400" height="400">
+  <circle cx="200" cy="200" r="200" fill="#8B5E3C"/>
+  <!-- Ears -->
+  <circle cx="130" cy="115" r="40" fill="#6B4226"/>
+  <circle cx="270" cy="115" r="40" fill="#6B4226"/>
+  <circle cx="130" cy="115" r="22" fill="#D4956A"/>
+  <circle cx="270" cy="115" r="22" fill="#D4956A"/>
+  <!-- Head -->
+  <circle cx="200" cy="210" r="100" fill="#A0673C"/>
+  <!-- Muzzle -->
+  <ellipse cx="200" cy="245" rx="50" ry="38" fill="#D4A574"/>
+  <!-- Eyes -->
+  <circle cx="165" cy="195" r="14" fill="#2C2C2C"/>
+  <circle cx="235" cy="195" r="14" fill="#2C2C2C"/>
+  <circle cx="169" cy="191" r="5" fill="#FFF"/>
+  <circle cx="239" cy="191" r="5" fill="#FFF"/>
+  <!-- Nose -->
+  <ellipse cx="200" cy="233" rx="15" ry="11" fill="#2C2C2C"/>
+  <ellipse cx="200" cy="231" rx="5" ry="3" fill="#555"/>
+  <!-- Mouth -->
+  <line x1="200" y1="244" x2="200" y2="255" stroke="#2C2C2C" stroke-width="3"/>
+  <path d="M188,255 Q200,268 212,255" stroke="#2C2C2C" stroke-width="3" fill="none" stroke-linecap="round"/>
+  <!-- Rosy cheeks -->
+  <circle cx="148" cy="228" r="14" fill="#D4956A" opacity="0.6"/>
+  <circle cx="252" cy="228" r="14" fill="#D4956A" opacity="0.6"/>
+</svg>

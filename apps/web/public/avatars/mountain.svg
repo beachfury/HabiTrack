@@ -1,0 +1,32 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 400" width="400" height="400">
+  <circle cx="200" cy="200" r="200" fill="#2980B9"/>
+  <!-- Background mountain -->
+  <polygon points="280,320 350,180 390,320" fill="#5D8A5E"/>
+  <!-- Main mountain -->
+  <polygon points="50,320 200,80 350,320" fill="#27AE60"/>
+  <!-- Snow cap -->
+  <polygon points="200,80 170,140 190,135 200,155 210,135 230,140" fill="#FFF"/>
+  <!-- Small mountain left -->
+  <polygon points="10,320 100,180 190,320" fill="#3D9B3F"/>
+  <!-- Snow on small mountain -->
+  <polygon points="100,180 80,220 95,215 100,230 105,215 120,220" fill="#FFF"/>
+  <!-- Ground -->
+  <rect x="0" y="310" width="400" height="90" fill="#2ECC71"/>
+  <!-- Sun -->
+  <circle cx="320" cy="90" r="35" fill="#F1C40F"/>
+  <!-- Sun rays -->
+  <line x1="320" y1="45" x2="320" y2="25" stroke="#F1C40F" stroke-width="4" stroke-linecap="round"/>
+  <line x1="355" y1="60" x2="368" y2="48" stroke="#F1C40F" stroke-width="4" stroke-linecap="round"/>
+  <line x1="365" y1="90" x2="385" y2="90" stroke="#F1C40F" stroke-width="4" stroke-linecap="round"/>
+  <line x1="355" y1="120" x2="368" y2="132" stroke="#F1C40F" stroke-width="4" stroke-linecap="round"/>
+  <line x1="285" y1="60" x2="272" y2="48" stroke="#F1C40F" stroke-width="4" stroke-linecap="round"/>
+  <!-- Clouds -->
+  <circle cx="90" cy="100" r="20" fill="#FFF" opacity="0.8"/>
+  <circle cx="115" cy="95" r="25" fill="#FFF" opacity="0.8"/>
+  <circle cx="140" cy="102" r="18" fill="#FFF" opacity="0.8"/>
+  <!-- Trees -->
+  <polygon points="60,295 70,265 80,295" fill="#1A7A1A"/>
+  <rect x="67" y="295" width="6" height="15" fill="#6B4226"/>
+  <polygon points="155,295 165,265 175,295" fill="#1A7A1A"/>
+  <rect x="162" y="295" width="6" height="15" fill="#6B4226"/>
+</svg>

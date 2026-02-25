@@ -1,0 +1,37 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 400" width="400" height="400">
+  <circle cx="200" cy="200" r="200" fill="#FF69B4"/>
+  <!-- Horn -->
+  <polygon points="200,40 185,130 215,130" fill="#F1C40F"/>
+  <line x1="192" y1="70" x2="208" y2="90" stroke="#F5D76E" stroke-width="3"/>
+  <line x1="190" y1="90" x2="210" y2="110" stroke="#F5D76E" stroke-width="3"/>
+  <!-- Ear -->
+  <polygon points="145,115 130,70 170,105" fill="#FFB6C1"/>
+  <polygon points="255,115 270,70 230,105" fill="#FFB6C1"/>
+  <!-- Head -->
+  <circle cx="200" cy="210" r="95" fill="#FFF"/>
+  <!-- Mane -->
+  <circle cx="115" cy="160" r="22" fill="#FF6B6B"/>
+  <circle cx="108" cy="190" r="20" fill="#F39C12"/>
+  <circle cx="110" cy="220" r="22" fill="#F1C40F"/>
+  <circle cx="118" cy="250" r="20" fill="#2ECC71"/>
+  <circle cx="130" cy="275" r="18" fill="#3498DB"/>
+  <circle cx="148" cy="295" r="16" fill="#9B59B6"/>
+  <!-- Eyes -->
+  <circle cx="170" cy="200" r="14" fill="#2C3E50"/>
+  <circle cx="230" cy="200" r="14" fill="#2C3E50"/>
+  <circle cx="174" cy="196" r="5" fill="#FFF"/>
+  <circle cx="234" cy="196" r="5" fill="#FFF"/>
+  <!-- Eyelashes -->
+  <line x1="158" y1="190" x2="152" y2="182" stroke="#2C3E50" stroke-width="2"/>
+  <line x1="162" y1="188" x2="158" y2="178" stroke="#2C3E50" stroke-width="2"/>
+  <line x1="242" y1="190" x2="248" y2="182" stroke="#2C3E50" stroke-width="2"/>
+  <line x1="238" y1="188" x2="242" y2="178" stroke="#2C3E50" stroke-width="2"/>
+  <!-- Nostrils -->
+  <circle cx="190" cy="240" r="4" fill="#FFB6C1"/>
+  <circle cx="210" cy="240" r="4" fill="#FFB6C1"/>
+  <!-- Smile -->
+  <path d="M180 255 Q200 272 220 255" stroke="#FF69B4" stroke-width="3" fill="none" stroke-linecap="round"/>
+  <!-- Blush -->
+  <circle cx="148" cy="228" r="12" fill="#FFB6C1" opacity="0.5"/>
+  <circle cx="252" cy="228" r="12" fill="#FFB6C1" opacity="0.5"/>
+</svg>

@@ -1,0 +1,27 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 400" width="400" height="400">
+  <circle cx="200" cy="200" r="200" fill="#E8601C"/>
+  <!-- Ears -->
+  <polygon points="115,145 140,60 175,140" fill="#D4520C"/>
+  <polygon points="285,145 260,60 225,140" fill="#D4520C"/>
+  <polygon points="125,140 145,80 168,135" fill="#FFF"/>
+  <polygon points="275,140 255,80 232,135" fill="#FFF"/>
+  <!-- Head -->
+  <circle cx="200" cy="215" r="95" fill="#E8751C"/>
+  <!-- White face patch -->
+  <ellipse cx="200" cy="245" rx="60" ry="55" fill="#FFF"/>
+  <!-- Eyes -->
+  <ellipse cx="165" cy="200" rx="14" ry="16" fill="#FFF"/>
+  <ellipse cx="235" cy="200" rx="14" ry="16" fill="#FFF"/>
+  <ellipse cx="168" cy="202" rx="8" ry="10" fill="#D4740C"/>
+  <ellipse cx="238" cy="202" rx="8" ry="10" fill="#D4740C"/>
+  <ellipse cx="168" cy="202" rx="4" ry="8" fill="#2C2C2C"/>
+  <ellipse cx="238" cy="202" rx="4" ry="8" fill="#2C2C2C"/>
+  <!-- Nose -->
+  <ellipse cx="200" cy="232" rx="12" ry="9" fill="#2C2C2C"/>
+  <!-- Mouth -->
+  <path d="M192,241 Q185,252 178,248" stroke="#2C2C2C" stroke-width="2.5" fill="none" stroke-linecap="round"/>
+  <path d="M208,241 Q215,252 222,248" stroke="#2C2C2C" stroke-width="2.5" fill="none" stroke-linecap="round"/>
+  <!-- Cheek marks -->
+  <path d="M130 215 L155 210" stroke="#D4520C" stroke-width="3" stroke-linecap="round"/>
+  <path d="M270 215 L245 210" stroke="#D4520C" stroke-width="3" stroke-linecap="round"/>
+</svg>

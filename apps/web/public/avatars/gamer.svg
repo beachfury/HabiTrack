@@ -1,0 +1,33 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 400" width="400" height="400">
+  <circle cx="200" cy="200" r="200" fill="#8E44AD"/>
+  <!-- Controller body -->
+  <rect x="95" y="155" width="210" height="120" rx="55" fill="#2C3E50"/>
+  <!-- Grips -->
+  <rect x="80" y="210" width="60" height="80" rx="28" fill="#2C3E50"/>
+  <rect x="260" y="210" width="60" height="80" rx="28" fill="#2C3E50"/>
+  <!-- D-pad -->
+  <rect x="135" y="192" width="40" height="14" rx="3" fill="#444"/>
+  <rect x="148" y="179" width="14" height="40" rx="3" fill="#444"/>
+  <!-- Buttons -->
+  <circle cx="275" cy="190" r="10" fill="#E74C3C"/>
+  <circle cx="300" cy="205" r="10" fill="#3498DB"/>
+  <circle cx="275" cy="220" r="10" fill="#2ECC71"/>
+  <circle cx="250" cy="205" r="10" fill="#F1C40F"/>
+  <!-- Analog sticks -->
+  <circle cx="170" cy="240" r="16" fill="#444"/>
+  <circle cx="170" cy="240" r="10" fill="#555"/>
+  <circle cx="240" cy="240" r="16" fill="#444"/>
+  <circle cx="240" cy="240" r="10" fill="#555"/>
+  <!-- Center buttons -->
+  <rect x="185" y="195" width="12" height="8" rx="4" fill="#444"/>
+  <rect x="203" y="195" width="12" height="8" rx="4" fill="#444"/>
+  <!-- Face on screen area -->
+  <ellipse cx="200" cy="125" rx="30" ry="25" fill="#F1C40F"/>
+  <circle cx="192" cy="120" r="4" fill="#2C2C2C"/>
+  <circle cx="208" cy="120" r="4" fill="#2C2C2C"/>
+  <path d="M190 132 Q200 140 210 132" stroke="#2C2C2C" stroke-width="2.5" fill="none" stroke-linecap="round"/>
+  <!-- Headset -->
+  <path d="M170,110 Q170,90 200,90 Q230,90 230,110" stroke="#555" stroke-width="6" fill="none"/>
+  <circle cx="170" cy="115" r="8" fill="#555"/>
+  <circle cx="230" cy="115" r="8" fill="#555"/>
+</svg>

@@ -1,0 +1,31 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 400" width="400" height="400">
+  <circle cx="200" cy="200" r="200" fill="#C0392B"/>
+  <!-- Horns -->
+  <polygon points="140,110 120,45 165,95" fill="#F39C12"/>
+  <polygon points="260,110 280,45 235,95" fill="#F39C12"/>
+  <!-- Head -->
+  <ellipse cx="200" cy="210" rx="100" ry="90" fill="#E74C3C"/>
+  <!-- Snout -->
+  <ellipse cx="200" cy="255" rx="60" ry="35" fill="#F15B4B"/>
+  <!-- Nostrils -->
+  <circle cx="182" cy="250" r="8" fill="#C0392B"/>
+  <circle cx="218" cy="250" r="8" fill="#C0392B"/>
+  <!-- Smoke from nostrils -->
+  <circle cx="175" cy="238" r="5" fill="#DDD" opacity="0.5"/>
+  <circle cx="168" cy="228" r="4" fill="#DDD" opacity="0.3"/>
+  <!-- Eyes -->
+  <ellipse cx="160" cy="190" rx="22" ry="18" fill="#F1C40F"/>
+  <ellipse cx="240" cy="190" rx="22" ry="18" fill="#F1C40F"/>
+  <ellipse cx="162" cy="192" rx="10" ry="14" fill="#2C2C2C"/>
+  <ellipse cx="242" cy="192" rx="10" ry="14" fill="#2C2C2C"/>
+  <!-- Eyebrow ridges -->
+  <path d="M135 172 Q160 158 185 172" stroke="#C0392B" stroke-width="6" fill="none" stroke-linecap="round"/>
+  <path d="M215 172 Q240 158 265 172" stroke="#C0392B" stroke-width="6" fill="none" stroke-linecap="round"/>
+  <!-- Mouth -->
+  <path d="M165 275 Q200 295 235 275" stroke="#C0392B" stroke-width="3" fill="none" stroke-linecap="round"/>
+  <!-- Teeth -->
+  <polygon points="175,275 180,290 185,275" fill="#FFF"/>
+  <polygon points="215,275 220,290 225,275" fill="#FFF"/>
+  <!-- Spikes on top -->
+  <polygon points="185,120 200,85 215,120" fill="#F39C12"/>
+</svg>

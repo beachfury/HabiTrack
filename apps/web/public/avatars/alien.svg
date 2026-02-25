@@ -1,0 +1,23 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 400" width="400" height="400">
+  <circle cx="200" cy="200" r="200" fill="#2ECC71"/>
+  <!-- Head -->
+  <ellipse cx="200" cy="195" rx="110" ry="125" fill="#7DCEA0"/>
+  <!-- Eyes -->
+  <ellipse cx="155" cy="190" rx="35" ry="25" fill="#2C2C2C"/>
+  <ellipse cx="245" cy="190" rx="35" ry="25" fill="#2C2C2C"/>
+  <ellipse cx="155" cy="190" rx="28" ry="20" fill="#1ABC9C"/>
+  <ellipse cx="245" cy="190" rx="28" ry="20" fill="#1ABC9C"/>
+  <ellipse cx="160" cy="188" rx="10" ry="12" fill="#FFF"/>
+  <ellipse cx="250" cy="188" rx="10" ry="12" fill="#FFF"/>
+  <!-- Nostrils -->
+  <circle cx="192" cy="240" r="4" fill="#5B9E7A"/>
+  <circle cx="208" cy="240" r="4" fill="#5B9E7A"/>
+  <!-- Mouth -->
+  <path d="M175 260 Q200 278 225 260" stroke="#3D7A56" stroke-width="3" fill="none" stroke-linecap="round"/>
+  <!-- Antenna left -->
+  <line x1="155" y1="80" x2="145" y2="45" stroke="#7DCEA0" stroke-width="5" stroke-linecap="round"/>
+  <circle cx="145" cy="40" r="10" fill="#1ABC9C"/>
+  <!-- Antenna right -->
+  <line x1="245" y1="80" x2="255" y2="45" stroke="#7DCEA0" stroke-width="5" stroke-linecap="round"/>
+  <circle cx="255" cy="40" r="10" fill="#1ABC9C"/>
+</svg>

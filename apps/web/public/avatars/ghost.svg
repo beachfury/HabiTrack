@@ -1,0 +1,17 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 400" width="400" height="400">
+  <circle cx="200" cy="200" r="200" fill="#9B59B6"/>
+  <!-- Ghost body -->
+  <path d="M120,200 Q120,100 200,100 Q280,100 280,200 L280,310
+    Q265,290 250,310 Q235,330 220,310 Q205,290 190,310
+    Q175,330 160,310 Q145,290 130,310 L120,310 Z" fill="#ECF0F1"/>
+  <!-- Eyes -->
+  <circle cx="170" cy="195" r="20" fill="#2C3E50"/>
+  <circle cx="230" cy="195" r="20" fill="#2C3E50"/>
+  <circle cx="175" cy="190" r="7" fill="#FFF"/>
+  <circle cx="235" cy="190" r="7" fill="#FFF"/>
+  <!-- Mouth -->
+  <ellipse cx="200" cy="245" rx="15" ry="12" fill="#2C3E50"/>
+  <!-- Blush -->
+  <circle cx="148" cy="225" r="12" fill="#D5A6E6" opacity="0.5"/>
+  <circle cx="252" cy="225" r="12" fill="#D5A6E6" opacity="0.5"/>
+</svg>

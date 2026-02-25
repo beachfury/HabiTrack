@@ -1,0 +1,26 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 400" width="400" height="400">
+  <circle cx="200" cy="200" r="200" fill="#8B1A1A"/>
+  <!-- Hat -->
+  <ellipse cx="200" cy="140" rx="100" ry="50" fill="#2C2C2C"/>
+  <rect x="110" y="130" width="180" height="40" rx="5" fill="#2C2C2C"/>
+  <!-- Skull on hat -->
+  <circle cx="200" cy="120" r="15" fill="#FFF"/>
+  <rect x="194" y="132" width="12" height="10" rx="2" fill="#FFF"/>
+  <circle cx="195" cy="118" r="3" fill="#2C2C2C"/>
+  <circle cx="205" cy="118" r="3" fill="#2C2C2C"/>
+  <!-- Face -->
+  <circle cx="200" cy="230" r="70" fill="#F5D0A9"/>
+  <!-- Eye patch -->
+  <circle cx="230" cy="218" r="18" fill="#2C2C2C"/>
+  <line x1="230" y1="200" x2="260" y2="160" stroke="#2C2C2C" stroke-width="4"/>
+  <line x1="230" y1="200" x2="170" y2="160" stroke="#2C2C2C" stroke-width="4"/>
+  <!-- Good eye -->
+  <circle cx="170" cy="218" r="10" fill="#FFF"/>
+  <circle cx="173" cy="218" r="6" fill="#2C3E50"/>
+  <!-- Smile -->
+  <path d="M178 255 Q200 275 222 255" stroke="#2C2C2C" stroke-width="3" fill="none" stroke-linecap="round"/>
+  <!-- Gold tooth -->
+  <rect x="196" y="255" width="8" height="8" fill="#F1C40F"/>
+  <!-- Earring -->
+  <circle cx="268" cy="240" r="8" fill="none" stroke="#F1C40F" stroke-width="3"/>
+</svg>
