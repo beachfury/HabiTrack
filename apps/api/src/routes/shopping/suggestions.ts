@@ -1,8 +1,12 @@
 // apps/api/src/routes/shopping/suggestions.ts
 // Smart shopping suggestions based on:
-// 1. Purchase patterns (items you buy regularly)
-// 2. Popularity (items frequently added to lists)
-// 3. Meal planning (ingredients for upcoming meals)
+// 1. Purchase patterns (items you buy regularly) — weighted intervals, variance-adjusted confidence
+// 2. Meal planning (ingredients for upcoming meals)
+// 3. Popular items (frequently purchased, dynamic exclusion window)
+// 4. Co-purchase boosting (frequently bought together)
+// 5. Trending items (added by multiple users, never purchased)
+// + Shopping day detection for score boosting
+// + Single-purchase items as low-confidence suggestions
 
 import type { Request, Response } from 'express';
 import { q } from '../../db';
@@ -22,16 +26,165 @@ interface Suggestion {
   suggestedStoreId: number | null;
   suggestedStoreName: string | null;
   bestPrice: number | null;
-  suggestionType: 'overdue' | 'due_soon' | 'popular' | 'meal_ingredient';
+  suggestionType: 'overdue' | 'due_soon' | 'popular' | 'meal_ingredient' | 'co_purchase' | 'trending';
   score: number; // Internal ranking score
   // For meal suggestions
   mealDate?: string;
   mealName?: string;
 }
 
-/**
- * Core suggestion algorithm - combines multiple data sources
- */
+// =============================================================================
+// HELPER: Get best price info for a catalog item
+// =============================================================================
+async function getBestPrice(
+  catalogItemId: number,
+): Promise<{ price: number; storeId: number; storeName: string } | null> {
+  const [info] = await q<Array<{ price: number; storeId: number; storeName: string }>>(
+    `SELECT ip.price, ip.storeId, s.name as storeName
+     FROM item_prices ip
+     JOIN stores s ON ip.storeId = s.id
+     WHERE ip.catalogItemId = ?
+     ORDER BY ip.price ASC
+     LIMIT 1`,
+    [catalogItemId],
+  );
+  return info || null;
+}
+
+// =============================================================================
+// HELPER: Calculate weighted average interval using exponential decay
+// More recent intervals get higher weight. Uses last 5 intervals max.
+// =============================================================================
+function calcWeightedInterval(purchaseDates: string[]): {
+  weightedAvg: number;
+  stddev: number;
+  intervalCount: number;
+} {
+  if (purchaseDates.length < 2) {
+    return { weightedAvg: 0, stddev: 0, intervalCount: 0 };
+  }
+
+  // Sort dates ascending (oldest first)
+  const sorted = purchaseDates
+    .map((d) => new Date(d).getTime())
+    .sort((a, b) => a - b);
+
+  // Calculate intervals between consecutive purchases
+  const intervals: number[] = [];
+  for (let i = 1; i < sorted.length; i++) {
+    const days = (sorted[i] - sorted[i - 1]) / (1000 * 60 * 60 * 24);
+    if (days > 0) intervals.push(days);
+  }
+
+  if (intervals.length === 0) {
+    return { weightedAvg: 0, stddev: 0, intervalCount: 0 };
+  }
+
+  // Use last 5 intervals max (most recent patterns)
+  const recentIntervals = intervals.slice(-5);
+
+  // Exponential decay weights: most recent interval gets highest weight
+  // Weights: [0.1, 0.15, 0.2, 0.25, 0.3] for 5 intervals (newest = 0.3)
+  const decayFactor = 0.6; // Each older interval gets 60% the weight of the next newer one
+  const n = recentIntervals.length;
+  const rawWeights: number[] = [];
+  for (let i = 0; i < n; i++) {
+    rawWeights.push(Math.pow(decayFactor, n - 1 - i));
+  }
+  const weightSum = rawWeights.reduce((s, w) => s + w, 0);
+  const weights = rawWeights.map((w) => w / weightSum);
+
+  // Weighted average
+  let weightedAvg = 0;
+  for (let i = 0; i < n; i++) {
+    weightedAvg += recentIntervals[i] * weights[i];
+  }
+
+  // Standard deviation (unweighted, for variance assessment)
+  const mean = recentIntervals.reduce((s, v) => s + v, 0) / n;
+  const variance = recentIntervals.reduce((s, v) => s + Math.pow(v - mean, 2), 0) / n;
+  const stddev = Math.sqrt(variance);
+
+  return { weightedAvg, stddev, intervalCount: intervals.length };
+}
+
+// =============================================================================
+// HELPER: Calculate weighted average quantity (recent purchases weighted more)
+// =============================================================================
+function calcWeightedQuantity(quantities: number[]): number {
+  if (quantities.length === 0) return 1;
+  if (quantities.length === 1) return quantities[0];
+
+  // Last 5 quantities, most recent gets highest weight
+  const recent = quantities.slice(-5);
+  const decayFactor = 0.6;
+  const n = recent.length;
+  const rawWeights: number[] = [];
+  for (let i = 0; i < n; i++) {
+    rawWeights.push(Math.pow(decayFactor, n - 1 - i));
+  }
+  const weightSum = rawWeights.reduce((s, w) => s + w, 0);
+
+  let weightedQty = 0;
+  for (let i = 0; i < n; i++) {
+    weightedQty += recent[i] * (rawWeights[i] / weightSum);
+  }
+
+  return Math.max(1, Math.round(weightedQty));
+}
+
+// =============================================================================
+// HELPER: Detect preferred shopping day(s) from purchase history
+// Returns a score multiplier (1.0 = no boost, up to 1.3 = shopping day)
+// =============================================================================
+async function getShoppingDayBoost(): Promise<number> {
+  try {
+    // Count purchases by day of week over the last 90 days
+    const dayStats = await q<Array<{ dayOfWeek: number; purchaseCount: number }>>(
+      `SELECT
+        DAYOFWEEK(purchasedAt) as dayOfWeek,
+        COUNT(*) as purchaseCount
+       FROM shopping_purchase_events
+       WHERE purchasedAt >= DATE_SUB(NOW(), INTERVAL 90 DAY)
+       GROUP BY DAYOFWEEK(purchasedAt)
+       ORDER BY purchaseCount DESC`,
+    );
+
+    if (dayStats.length === 0) return 1.0;
+
+    const totalPurchases = dayStats.reduce((s, d) => s + d.purchaseCount, 0);
+    if (totalPurchases < 5) return 1.0; // Not enough data
+
+    // Find the top shopping day(s) — days with significantly above-average purchases
+    const avgPerDay = totalPurchases / 7;
+    const topDays = dayStats.filter((d) => d.purchaseCount >= avgPerDay * 1.5);
+
+    if (topDays.length === 0) return 1.0; // No clear pattern
+
+    // Get today's day of week (MySQL DAYOFWEEK: 1=Sunday, 2=Monday, ..., 7=Saturday)
+    const today = new Date();
+    const todayDow = today.getDay() + 1; // JS: 0=Sunday → MySQL: 1=Sunday
+
+    // Check if today IS a preferred shopping day
+    if (topDays.some((d) => d.dayOfWeek === todayDow)) {
+      return 1.3; // 30% boost on shopping day
+    }
+
+    // Check if tomorrow is a preferred shopping day (prep day boost)
+    const tomorrowDow = (todayDow % 7) + 1;
+    if (topDays.some((d) => d.dayOfWeek === tomorrowDow)) {
+      return 1.15; // 15% boost the day before shopping day
+    }
+
+    return 1.0;
+  } catch {
+    return 1.0; // Fail silently
+  }
+}
+
+// =============================================================================
+// Core suggestion algorithm - combines multiple data sources
+// =============================================================================
 async function calculateSuggestions(): Promise<Suggestion[]> {
   const suggestions: Suggestion[] = [];
 
@@ -42,11 +195,14 @@ async function calculateSuggestions(): Promise<Suggestion[]> {
   );
   const onListIds = new Set(onList.map((i) => i.catalogItemId));
 
+  // Get shopping day boost multiplier
+  const shoppingDayBoost = await getShoppingDayBoost();
+
   // ==========================================================================
   // SOURCE 1: Pattern-based predictions (items purchased 2+ times)
-  // Score = (daysSinceLast / avgInterval) - higher means more overdue
+  // Uses weighted intervals, variance-adjusted confidence, and exponential decay
   // ==========================================================================
-  const patternItems = await q<
+  const patternItemRows = await q<
     Array<{
       catalogItemId: number;
       itemName: string;
@@ -54,72 +210,105 @@ async function calculateSuggestions(): Promise<Suggestion[]> {
       imageUrl: string | null;
       categoryName: string | null;
       purchaseCount: number;
-      avgInterval: number;
       daysSinceLast: number;
-      avgQuantity: number;
     }>
   >(
-    `SELECT * FROM (
-      SELECT
-        ci.id as catalogItemId,
-        ci.name as itemName,
-        ci.brand,
-        ci.imageUrl,
-        sc.name as categoryName,
-        COUNT(spe.id) as purchaseCount,
-        AVG(DATEDIFF(
-          spe.purchasedAt,
-          (SELECT MAX(spe2.purchasedAt)
-           FROM shopping_purchase_events spe2
-           WHERE spe2.catalogItemId = ci.id AND spe2.purchasedAt < spe.purchasedAt)
-        )) as avgInterval,
-        DATEDIFF(NOW(), MAX(spe.purchasedAt)) as daysSinceLast,
-        ROUND(AVG(spe.quantity)) as avgQuantity
-       FROM catalog_items ci
-       JOIN shopping_purchase_events spe ON ci.id = spe.catalogItemId
-       LEFT JOIN shopping_categories sc ON ci.categoryId = sc.id
-       WHERE ci.active = 1
-       GROUP BY ci.id
-       HAVING purchaseCount >= 2 AND avgInterval IS NOT NULL AND avgInterval > 0
-     ) AS sub
-     ORDER BY (sub.daysSinceLast / sub.avgInterval) DESC
-     LIMIT 20`,
+    `SELECT
+      ci.id as catalogItemId,
+      ci.name as itemName,
+      ci.brand,
+      ci.imageUrl,
+      sc.name as categoryName,
+      COUNT(spe.id) as purchaseCount,
+      DATEDIFF(NOW(), MAX(spe.purchasedAt)) as daysSinceLast
+     FROM catalog_items ci
+     JOIN shopping_purchase_events spe ON ci.id = spe.catalogItemId
+     LEFT JOIN shopping_categories sc ON ci.categoryId = sc.id
+     WHERE ci.active = 1
+     GROUP BY ci.id
+     HAVING purchaseCount >= 2
+     ORDER BY daysSinceLast DESC
+     LIMIT 50`,
   );
 
-  for (const item of patternItems) {
+  for (const item of patternItemRows) {
     if (onListIds.has(item.catalogItemId)) continue;
 
-    const ratio = item.daysSinceLast / item.avgInterval;
-    let confidence: 'high' | 'medium' | 'low';
+    // Skip items purchased very recently (today or yesterday)
+    if (item.daysSinceLast <= 1) continue;
+
+    // Fetch raw purchase dates and quantities for this item
+    const purchaseHistory = await q<Array<{ purchasedAt: string; quantity: number }>>(
+      `SELECT purchasedAt, quantity
+       FROM shopping_purchase_events
+       WHERE catalogItemId = ?
+       ORDER BY purchasedAt ASC`,
+      [item.catalogItemId],
+    );
+
+    const dates = purchaseHistory.map((p) => p.purchasedAt);
+    const quantities = purchaseHistory.map((p) => p.quantity || 1);
+
+    // Calculate weighted interval and variance
+    const { weightedAvg, stddev, intervalCount } = calcWeightedInterval(dates);
+
+    if (weightedAvg <= 0 || intervalCount === 0) continue;
+
+    // Variance-adjusted confidence: high stddev = less predictable = lower confidence
+    const coeffOfVariation = stddev / weightedAvg; // 0 = perfectly regular, >1 = very erratic
+
+    const ratio = item.daysSinceLast / weightedAvg;
+    let baseConfidence: 'high' | 'medium' | 'low';
     let suggestionType: 'overdue' | 'due_soon';
     let reason: string;
 
     if (ratio >= 1.2) {
-      confidence = 'high';
+      baseConfidence = 'high';
       suggestionType = 'overdue';
-      reason = `Overdue! Usually buy every ${Math.round(item.avgInterval)} days, last purchased ${item.daysSinceLast} days ago`;
+      reason = `Overdue! Usually buy every ~${Math.round(weightedAvg)} days, last purchased ${item.daysSinceLast} days ago`;
     } else if (ratio >= 0.8) {
-      confidence = 'medium';
+      baseConfidence = 'medium';
       suggestionType = 'due_soon';
-      reason = `Due soon - usually buy every ${Math.round(item.avgInterval)} days`;
+      reason = `Due soon — usually buy every ~${Math.round(weightedAvg)} days`;
     } else if (ratio >= 0.5) {
-      confidence = 'low';
+      baseConfidence = 'low';
       suggestionType = 'due_soon';
-      reason = `Coming up - bought ${item.purchaseCount} times, avg every ${Math.round(item.avgInterval)} days`;
+      reason = `Coming up — bought ${item.purchaseCount} times, avg every ~${Math.round(weightedAvg)} days`;
     } else {
-      continue; // Not due yet, skip
+      continue; // Not due yet
     }
 
+    // Downgrade confidence for highly variable items
+    let confidence = baseConfidence;
+    if (coeffOfVariation > 0.6) {
+      // Very irregular purchasing pattern — drop confidence one level
+      if (confidence === 'high') confidence = 'medium';
+      else if (confidence === 'medium') confidence = 'low';
+      reason += ` (variable pattern)`;
+    } else if (coeffOfVariation > 0.3 && confidence === 'high') {
+      // Moderately variable — don't allow high confidence
+      confidence = 'medium';
+    }
+
+    // Boost confidence for very consistent items with many data points
+    if (coeffOfVariation < 0.15 && intervalCount >= 4 && confidence === 'medium') {
+      confidence = 'high';
+      reason += ` (very consistent)`;
+    }
+
+    // Calculate weighted quantity
+    const suggestedQuantity = calcWeightedQuantity(quantities);
+
     // Get best price for this item
-    const [priceInfo] = await q<Array<{ price: number; storeId: number; storeName: string }>>(
-      `SELECT ip.price, ip.storeId, s.name as storeName
-       FROM item_prices ip
-       JOIN stores s ON ip.storeId = s.id
-       WHERE ip.catalogItemId = ?
-       ORDER BY ip.price ASC
-       LIMIT 1`,
-      [item.catalogItemId],
-    );
+    const priceInfo = await getBestPrice(item.catalogItemId);
+
+    // Score: ratio * 100, boosted by shopping day and purchase count consistency
+    let score = ratio * 100;
+    score *= shoppingDayBoost;
+
+    // Bonus for more data points (more confident predictions)
+    if (intervalCount >= 5) score *= 1.1;
+    else if (intervalCount >= 3) score *= 1.05;
 
     suggestions.push({
       catalogItemId: item.catalogItemId,
@@ -130,13 +319,72 @@ async function calculateSuggestions(): Promise<Suggestion[]> {
       confidence,
       reason,
       daysSinceLast: item.daysSinceLast,
-      avgInterval: Math.round(item.avgInterval),
-      suggestedQuantity: item.avgQuantity || 1,
+      avgInterval: Math.round(weightedAvg),
+      suggestedQuantity,
       suggestedStoreId: priceInfo?.storeId || null,
       suggestedStoreName: priceInfo?.storeName || null,
       bestPrice: priceInfo?.price || null,
       suggestionType,
-      score: ratio * 100, // Higher score = more urgent
+      score,
+    });
+  }
+
+  // ==========================================================================
+  // SOURCE 1b: Single-purchase items (bought exactly once, 14-45 days ago)
+  // Low confidence suggestions — "you bought this once, might need it again"
+  // ==========================================================================
+  const singlePurchaseItems = await q<
+    Array<{
+      catalogItemId: number;
+      itemName: string;
+      brand: string | null;
+      imageUrl: string | null;
+      categoryName: string | null;
+      daysSinceLast: number;
+      quantity: number;
+    }>
+  >(
+    `SELECT
+      ci.id as catalogItemId,
+      ci.name as itemName,
+      ci.brand,
+      ci.imageUrl,
+      sc.name as categoryName,
+      DATEDIFF(NOW(), MAX(spe.purchasedAt)) as daysSinceLast,
+      MAX(spe.quantity) as quantity
+     FROM catalog_items ci
+     JOIN shopping_purchase_events spe ON ci.id = spe.catalogItemId
+     LEFT JOIN shopping_categories sc ON ci.categoryId = sc.id
+     WHERE ci.active = 1
+     GROUP BY ci.id
+     HAVING COUNT(spe.id) = 1
+       AND daysSinceLast BETWEEN 14 AND 45
+     ORDER BY daysSinceLast ASC
+     LIMIT 10`,
+  );
+
+  for (const item of singlePurchaseItems) {
+    if (onListIds.has(item.catalogItemId)) continue;
+    if (suggestions.some((s) => s.catalogItemId === item.catalogItemId)) continue;
+
+    const priceInfo = await getBestPrice(item.catalogItemId);
+
+    suggestions.push({
+      catalogItemId: item.catalogItemId,
+      itemName: item.itemName,
+      brand: item.brand,
+      imageUrl: item.imageUrl,
+      categoryName: item.categoryName,
+      confidence: 'low',
+      reason: `Bought once ${item.daysSinceLast} days ago — might need again?`,
+      daysSinceLast: item.daysSinceLast,
+      avgInterval: null,
+      suggestedQuantity: item.quantity || 1,
+      suggestedStoreId: priceInfo?.storeId || null,
+      suggestedStoreName: priceInfo?.storeName || null,
+      bestPrice: priceInfo?.price || null,
+      suggestionType: 'due_soon',
+      score: 15 * shoppingDayBoost, // Low base score
     });
   }
 
@@ -184,15 +432,7 @@ async function calculateSuggestions(): Promise<Suggestion[]> {
       if (suggestions.some((s) => s.catalogItemId === item.catalogItemId)) continue;
 
       // Get best price
-      const [priceInfo] = await q<Array<{ price: number; storeId: number; storeName: string }>>(
-        `SELECT ip.price, ip.storeId, s.name as storeName
-         FROM item_prices ip
-         JOIN stores s ON ip.storeId = s.id
-         WHERE ip.catalogItemId = ?
-         ORDER BY ip.price ASC
-         LIMIT 1`,
-        [item.catalogItemId],
-      );
+      const priceInfo = await getBestPrice(item.catalogItemId);
 
       // Calculate days until meal for scoring
       const mealDateObj = new Date(item.mealDate);
@@ -217,7 +457,7 @@ async function calculateSuggestions(): Promise<Suggestion[]> {
         suggestedStoreName: priceInfo?.storeName || null,
         bestPrice: priceInfo?.price || null,
         suggestionType: 'meal_ingredient',
-        score: 80 - daysUntilMeal * 10, // Closer meals score higher
+        score: (80 - daysUntilMeal * 10) * shoppingDayBoost, // Closer meals score higher
         mealDate: item.mealDate,
         mealName: item.mealName,
       });
@@ -227,19 +467,21 @@ async function calculateSuggestions(): Promise<Suggestion[]> {
   }
 
   // ==========================================================================
-  // SOURCE 3: Popular items (frequently added to lists)
-  // Only add if we have fewer than 10 suggestions from patterns + meals
-  // Uses actual tracked popularity, not random category guessing
+  // SOURCE 3: Popular items (frequently purchased, dynamic exclusion window)
+  // Uses each item's own average interval for exclusion instead of hardcoded 7 days
+  // Uses weighted quantities from recent purchases
+  // Only adds if we have fewer than 15 suggestions from patterns + meals
   // ==========================================================================
   const patternAndMealCount = suggestions.length;
 
-  if (patternAndMealCount < 10) {
-    const limit = 10 - patternAndMealCount;
+  if (patternAndMealCount < 15) {
+    const limit = 15 - patternAndMealCount;
 
     // Get already suggested item IDs
-    const suggestedIds = suggestions.map((s) => s.catalogItemId);
+    const suggestedIds = new Set(suggestions.map((s) => s.catalogItemId));
 
     try {
+      // Fetch popular items with their own purchase interval data
       const popularItems = await q<
         Array<{
           catalogItemId: number;
@@ -247,8 +489,10 @@ async function calculateSuggestions(): Promise<Suggestion[]> {
           brand: string | null;
           imageUrl: string | null;
           categoryName: string | null;
-          addCount30Days: number;
-          addCountAllTime: number;
+          purchaseCount30Days: number;
+          purchaseCountAllTime: number;
+          daysSinceLast: number;
+          avgInterval: number | null;
           lowestPrice: number | null;
           storeName: string | null;
           storeId: number | null;
@@ -260,8 +504,19 @@ async function calculateSuggestions(): Promise<Suggestion[]> {
           ci.brand,
           ci.imageUrl,
           sc.name as categoryName,
-          COALESCE(ip2.addCount30Days, 0) as addCount30Days,
-          COALESCE(ip2.addCountAllTime, 0) as addCountAllTime,
+          COUNT(spe.id) as purchaseCount30Days,
+          (SELECT COUNT(*) FROM shopping_purchase_events WHERE catalogItemId = ci.id) as purchaseCountAllTime,
+          DATEDIFF(NOW(), MAX(spe.purchasedAt)) as daysSinceLast,
+          (SELECT AVG(sub.interval_days) FROM (
+            SELECT DATEDIFF(
+              spe3.purchasedAt,
+              (SELECT MAX(spe4.purchasedAt) FROM shopping_purchase_events spe4
+               WHERE spe4.catalogItemId = ci.id AND spe4.purchasedAt < spe3.purchasedAt)
+            ) as interval_days
+            FROM shopping_purchase_events spe3
+            WHERE spe3.catalogItemId = ci.id
+            HAVING interval_days IS NOT NULL
+          ) AS sub) as avgInterval,
           (SELECT MIN(ip.price) FROM item_prices ip WHERE ip.catalogItemId = ci.id) as lowestPrice,
           (SELECT s.name FROM item_prices ip3
            JOIN stores s ON ip3.storeId = s.id
@@ -271,20 +526,40 @@ async function calculateSuggestions(): Promise<Suggestion[]> {
            WHERE ip4.catalogItemId = ci.id
            ORDER BY ip4.price ASC LIMIT 1) as storeId
          FROM catalog_items ci
+         JOIN shopping_purchase_events spe ON ci.id = spe.catalogItemId
+           AND spe.purchasedAt >= DATE_SUB(NOW(), INTERVAL 30 DAY)
          LEFT JOIN shopping_categories sc ON ci.categoryId = sc.id
-         LEFT JOIN item_popularity ip2 ON ci.id = ip2.catalogItemId
          WHERE ci.active = 1
-           AND COALESCE(ip2.addCount30Days, 0) > 0
-         ORDER BY ip2.addCount30Days DESC, ip2.addCountAllTime DESC
+         GROUP BY ci.id
+         ORDER BY purchaseCount30Days DESC, purchaseCountAllTime DESC
          LIMIT ?`,
-        [limit + suggestedIds.length], // Get extra in case some are already suggested
+        [limit + suggestedIds.size + 10], // Get extra in case some are filtered out
       );
 
       let addedCount = 0;
       for (const item of popularItems) {
         if (addedCount >= limit) break;
         if (onListIds.has(item.catalogItemId)) continue;
-        if (suggestedIds.includes(item.catalogItemId)) continue;
+        if (suggestedIds.has(item.catalogItemId)) continue;
+
+        // Dynamic exclusion window: use the item's own avgInterval
+        // If avgInterval is 14 days, exclude if purchased within last ~40% of interval (5.6 days)
+        // If no interval data (single purchase), use 7-day default
+        const exclusionWindow = item.avgInterval
+          ? Math.max(2, Math.round(item.avgInterval * 0.4))
+          : 7;
+
+        if (item.daysSinceLast < exclusionWindow) continue; // Recently purchased
+
+        // Get weighted quantity from recent purchases
+        const recentQtys = await q<Array<{ quantity: number }>>(
+          `SELECT quantity FROM shopping_purchase_events
+           WHERE catalogItemId = ?
+           ORDER BY purchasedAt DESC
+           LIMIT 5`,
+          [item.catalogItemId],
+        );
+        const weightedQty = calcWeightedQuantity(recentQtys.map((r) => r.quantity || 1));
 
         suggestions.push({
           catalogItemId: item.catalogItemId,
@@ -292,22 +567,182 @@ async function calculateSuggestions(): Promise<Suggestion[]> {
           brand: item.brand,
           imageUrl: item.imageUrl,
           categoryName: item.categoryName,
-          confidence: item.addCount30Days >= 3 ? 'medium' : 'low',
-          reason: `Added ${item.addCount30Days} times recently`,
-          daysSinceLast: null,
-          avgInterval: null,
-          suggestedQuantity: 1,
+          confidence: item.purchaseCount30Days >= 3 ? 'medium' : 'low',
+          reason: `Purchased ${item.purchaseCount30Days} times in the last 30 days`,
+          daysSinceLast: item.daysSinceLast,
+          avgInterval: item.avgInterval ? Math.round(item.avgInterval) : null,
+          suggestedQuantity: weightedQty,
           suggestedStoreId: item.storeId,
           suggestedStoreName: item.storeName,
           bestPrice: item.lowestPrice,
           suggestionType: 'popular',
-          score: 20 + item.addCount30Days * 5, // Base score + popularity bonus
+          score: (20 + item.purchaseCount30Days * 5) * shoppingDayBoost,
         });
         addedCount++;
       }
     } catch {
-      // Popularity tables may not exist yet - that's ok
+      // Purchase events table may not have data yet - that's ok
     }
+  }
+
+  // ==========================================================================
+  // SOURCE 4: Co-purchase boosting (frequently bought together)
+  // If items on the current shopping list are often purchased alongside
+  // other items, suggest those companion items
+  // ==========================================================================
+  try {
+    if (onListIds.size > 0) {
+      const suggestedIds = new Set(suggestions.map((s) => s.catalogItemId));
+      const onListArray = Array.from(onListIds);
+      const placeholders = onListArray.map(() => '?').join(',');
+
+      // Find items frequently bought on the same day by the same user
+      // as items currently on the shopping list
+      const coPurchaseItems = await q<
+        Array<{
+          catalogItemId: number;
+          itemName: string;
+          brand: string | null;
+          imageUrl: string | null;
+          categoryName: string | null;
+          coPurchaseCount: number;
+          companionItem: string;
+        }>
+      >(
+        `SELECT
+          ci.id as catalogItemId,
+          ci.name as itemName,
+          ci.brand,
+          ci.imageUrl,
+          sc.name as categoryName,
+          COUNT(DISTINCT DATE(spe2.purchasedAt)) as coPurchaseCount,
+          (SELECT ci2.name FROM catalog_items ci2
+           WHERE ci2.id = spe1.catalogItemId LIMIT 1) as companionItem
+         FROM shopping_purchase_events spe1
+         JOIN shopping_purchase_events spe2
+           ON DATE(spe1.purchasedAt) = DATE(spe2.purchasedAt)
+           AND spe1.purchasedBy = spe2.purchasedBy
+           AND spe1.catalogItemId != spe2.catalogItemId
+         JOIN catalog_items ci ON spe2.catalogItemId = ci.id
+         LEFT JOIN shopping_categories sc ON ci.categoryId = sc.id
+         WHERE spe1.catalogItemId IN (${placeholders})
+           AND ci.active = 1
+           AND spe1.purchasedAt >= DATE_SUB(NOW(), INTERVAL 90 DAY)
+         GROUP BY ci.id, spe1.catalogItemId
+         HAVING coPurchaseCount >= 2
+         ORDER BY coPurchaseCount DESC
+         LIMIT 10`,
+        onListArray,
+      );
+
+      for (const item of coPurchaseItems) {
+        if (onListIds.has(item.catalogItemId)) continue;
+        if (suggestedIds.has(item.catalogItemId)) continue;
+
+        // Check if already in suggestions list
+        if (suggestions.some((s) => s.catalogItemId === item.catalogItemId)) {
+          // Boost existing suggestion score instead of adding duplicate
+          const existing = suggestions.find((s) => s.catalogItemId === item.catalogItemId);
+          if (existing) {
+            existing.score *= 1.2; // 20% co-purchase boost
+            existing.reason += ` (often bought with ${item.companionItem})`;
+          }
+          continue;
+        }
+
+        const priceInfo = await getBestPrice(item.catalogItemId);
+
+        suggestions.push({
+          catalogItemId: item.catalogItemId,
+          itemName: item.itemName,
+          brand: item.brand,
+          imageUrl: item.imageUrl,
+          categoryName: item.categoryName,
+          confidence: item.coPurchaseCount >= 4 ? 'medium' : 'low',
+          reason: `Often bought with ${item.companionItem} (${item.coPurchaseCount} times together)`,
+          daysSinceLast: null,
+          avgInterval: null,
+          suggestedQuantity: 1,
+          suggestedStoreId: priceInfo?.storeId || null,
+          suggestedStoreName: priceInfo?.storeName || null,
+          bestPrice: priceInfo?.price || null,
+          suggestionType: 'co_purchase',
+          score: (25 + item.coPurchaseCount * 3) * shoppingDayBoost,
+        });
+        suggestedIds.add(item.catalogItemId);
+      }
+    }
+  } catch {
+    // Co-purchase analysis is non-fatal
+  }
+
+  // ==========================================================================
+  // SOURCE 5: Trending items (added by 2+ different users in last 14 days,
+  // but never purchased — might be new items the household wants to try)
+  // ==========================================================================
+  try {
+    const suggestedIds = new Set(suggestions.map((s) => s.catalogItemId));
+
+    const trendingItems = await q<
+      Array<{
+        catalogItemId: number;
+        itemName: string;
+        brand: string | null;
+        imageUrl: string | null;
+        categoryName: string | null;
+        addedByUsers: number;
+        addCount: number;
+      }>
+    >(
+      `SELECT
+        ci.id as catalogItemId,
+        ci.name as itemName,
+        ci.brand,
+        ci.imageUrl,
+        sc.name as categoryName,
+        COUNT(DISTINCT iae.addedBy) as addedByUsers,
+        COUNT(iae.id) as addCount
+       FROM catalog_items ci
+       JOIN item_add_events iae ON ci.id = iae.catalogItemId
+         AND iae.addedAt >= DATE_SUB(NOW(), INTERVAL 14 DAY)
+       LEFT JOIN shopping_categories sc ON ci.categoryId = sc.id
+       WHERE ci.active = 1
+         AND ci.id NOT IN (
+           SELECT DISTINCT catalogItemId FROM shopping_purchase_events
+         )
+       GROUP BY ci.id
+       HAVING addedByUsers >= 2
+       ORDER BY addedByUsers DESC, addCount DESC
+       LIMIT 5`,
+    );
+
+    for (const item of trendingItems) {
+      if (onListIds.has(item.catalogItemId)) continue;
+      if (suggestedIds.has(item.catalogItemId)) continue;
+
+      const priceInfo = await getBestPrice(item.catalogItemId);
+
+      suggestions.push({
+        catalogItemId: item.catalogItemId,
+        itemName: item.itemName,
+        brand: item.brand,
+        imageUrl: item.imageUrl,
+        categoryName: item.categoryName,
+        confidence: 'low',
+        reason: `Trending — added by ${item.addedByUsers} members (${item.addCount} times) recently`,
+        daysSinceLast: null,
+        avgInterval: null,
+        suggestedQuantity: 1,
+        suggestedStoreId: priceInfo?.storeId || null,
+        suggestedStoreName: priceInfo?.storeName || null,
+        bestPrice: priceInfo?.price || null,
+        suggestionType: 'trending',
+        score: 10 + item.addedByUsers * 5 + item.addCount * 2,
+      });
+      suggestedIds.add(item.catalogItemId);
+    }
+  } catch {
+    // Trending analysis is non-fatal
   }
 
   // ==========================================================================
@@ -347,6 +782,8 @@ export async function getSuggestions(req: Request, res: Response) {
       dueSoon: suggestions.filter((s) => s.suggestionType === 'due_soon').length,
       mealIngredients: suggestions.filter((s) => s.suggestionType === 'meal_ingredient').length,
       popular: suggestions.filter((s) => s.suggestionType === 'popular').length,
+      coPurchase: suggestions.filter((s) => s.suggestionType === 'co_purchase').length,
+      trending: suggestions.filter((s) => s.suggestionType === 'trending').length,
     };
 
     // Remove internal score before sending to client

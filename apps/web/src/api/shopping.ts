@@ -73,9 +73,12 @@ export const shoppingApi = {
   // =============================================================================
   // Catalog Items
   // =============================================================================
-  getCatalogItems(search?: string): Promise<{ items: CatalogItem[] }> {
-    const params = search ? `?search=${encodeURIComponent(search)}` : '';
-    return apiClient['get'](`/shopping/catalog${params}`, { params: undefined });
+  getCatalogItems(search?: string, storeId?: number): Promise<{ items: CatalogItem[] }> {
+    const queryParams = new URLSearchParams();
+    if (search) queryParams.set('search', search);
+    if (storeId) queryParams.set('storeId', String(storeId));
+    const qs = queryParams.toString();
+    return apiClient['get'](`/shopping/catalog${qs ? '?' + qs : ''}`, { params: undefined });
   },
 
   getCatalogItem(id: number): Promise<{ item: CatalogItem }> {

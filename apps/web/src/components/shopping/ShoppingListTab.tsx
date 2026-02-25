@@ -10,6 +10,8 @@ import {
   Sparkles,
   Utensils,
   TrendingUp,
+  ShoppingBag,
+  Users,
 } from 'lucide-react';
 import { ItemImage } from './ItemImage';
 import { ListItemRow } from './ListItemRow';
@@ -51,6 +53,8 @@ export function ShoppingListTab({
   const getSuggestionIcon = (type?: string) => {
     if (type === 'meal_ingredient') return <Utensils size={12} className="inline" />;
     if (type === 'popular') return <TrendingUp size={12} className="inline" />;
+    if (type === 'co_purchase') return <ShoppingBag size={12} className="inline" />;
+    if (type === 'trending') return <Users size={12} className="inline" />;
     return null;
   };
 
