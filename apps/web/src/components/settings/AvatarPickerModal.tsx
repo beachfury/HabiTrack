@@ -70,6 +70,7 @@ export function AvatarPickerModal({
   const [crop, setCrop] = useState({ x: 0, y: 0 });
   const [zoom, setZoom] = useState(1);
   const [croppedAreaPixels, setCroppedAreaPixels] = useState<Area | null>(null);
+  const [cropBgColor, setCropBgColor] = useState(userColor || '#e5e7eb');
 
   const onCropComplete = useCallback((_: Area, croppedPixels: Area) => {
     setCroppedAreaPixels(croppedPixels);
@@ -122,7 +123,7 @@ export function AvatarPickerModal({
       } else if (activeTab === 'illustrations' && selectedIllustration) {
         result = await renderSvgToImage(selectedIllustration);
       } else if (activeTab === 'upload' && uploadImageUrl && croppedAreaPixels) {
-        result = await getCroppedImg(uploadImageUrl, croppedAreaPixels);
+        result = await getCroppedImg(uploadImageUrl, croppedAreaPixels, 400, cropBgColor);
       } else {
         return;
       }
@@ -379,7 +380,7 @@ export function AvatarPickerModal({
                       onZoomChange={setZoom}
                       onCropComplete={onCropComplete}
                       style={{
-                        containerStyle: { backgroundColor: 'var(--color-muted)' },
+                        containerStyle: { backgroundColor: cropBgColor },
                       }}
                     />
                   </div>
@@ -398,6 +399,27 @@ export function AvatarPickerModal({
                       style={{ accentColor: 'var(--color-primary)' }}
                     />
                     <ZoomIn size={18} className="text-[var(--color-muted-foreground)] flex-shrink-0" />
+                  </div>
+
+                  {/* Background color picker */}
+                  <div className="flex items-center gap-2 px-2">
+                    <span className="text-sm text-[var(--color-muted-foreground)]">Background:</span>
+                    <div className="flex gap-1.5">
+                      {ICON_BG_COLORS.map((color) => (
+                        <button
+                          key={color}
+                          type="button"
+                          onClick={() => setCropBgColor(color)}
+                          className={`w-6 h-6 rounded-full transition-transform ${
+                            cropBgColor === color ? 'ring-2 ring-offset-1 scale-110' : ''
+                          }`}
+                          style={{
+                            backgroundColor: color,
+                            ['--tw-ring-color' as string]: 'var(--color-primary)',
+                          }}
+                        />
+                      ))}
+                    </div>
                   </div>
 
                   {/* Reset / Choose different */}

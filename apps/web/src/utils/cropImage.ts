@@ -12,6 +12,7 @@ function createImage(url: string): Promise<HTMLImageElement> {
     const image = new Image();
     image.onload = () => resolve(image);
     image.onerror = (error) => reject(error);
+    image.crossOrigin = 'anonymous';
     image.src = url;
   });
 }
@@ -20,6 +21,7 @@ export async function getCroppedImg(
   imageSrc: string,
   pixelCrop: PixelCrop,
   outputSize = 400,
+  bgColor = '#e5e7eb',
 ): Promise<{ dataUrl: string; mimeType: string }> {
   const image = await createImage(imageSrc);
   const canvas = document.createElement('canvas');
@@ -28,7 +30,7 @@ export async function getCroppedImg(
   const ctx = canvas.getContext('2d')!;
 
   // Fill background (visible when image is zoomed out / doesn't fill crop)
-  ctx.fillStyle = '#e5e7eb';
+  ctx.fillStyle = bgColor;
   ctx.fillRect(0, 0, outputSize, outputSize);
 
   // Calculate source and destination coordinates

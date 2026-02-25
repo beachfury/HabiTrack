@@ -6,6 +6,22 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ---
 
+## [1.5.3] - 2026-02-24
+
+### Fixed
+
+#### Family Page Avatars
+- **Family members API response** — The backend `getMembers` endpoint was selecting `avatarUrl` from the database but the response mapper was not including it in the returned JSON. Family page always showed colored circles with initials instead of avatar images
+
+#### Upload Tab Improvements
+- **Background color picker** — Added a color palette to the Upload tab's crop interface so users can choose the background color visible when the image is zoomed out or doesn't fill the crop circle
+- **Blank uploaded avatar fix** — Added `crossOrigin` attribute to image loading to prevent canvas tainting issues that could result in a blank/empty avatar after cropping
+
+#### Version Display
+- **About page now shows correct version** — The root `package.json` version was not being updated alongside git tags, causing the About page to display an outdated version number
+
+---
+
 ## [1.5.2] - 2026-02-24
 
 ### Fixed
