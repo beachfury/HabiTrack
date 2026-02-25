@@ -88,6 +88,7 @@ export async function getMembers(req: Request, res: Response) {
         email: m.email,
         role: m.roleId,
         color: m.color,
+        avatarUrl: m.avatarUrl,
         active: Boolean(m.active),
         hasPassword: Boolean(m.hasPassword),
         hasPin: Boolean(m.hasPin),
