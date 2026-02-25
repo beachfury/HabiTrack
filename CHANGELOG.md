@@ -6,6 +6,15 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ---
 
+## [1.4.10] - 2026-02-24
+
+### Fixed
+
+#### Uploaded Images Still 404ing Despite /uploads Proxy
+- **Added `^~` modifier to nginx `/uploads` location** — A regex location block for static file caching (`*.png`, `*.jpg`, etc.) was taking priority over the `/uploads` prefix location, causing nginx to serve upload requests from the SPA directory instead of proxying them to the API server. The `^~` modifier ensures the `/uploads` proxy block always wins over regex matches.
+
+---
+
 ## [1.4.9] - 2026-02-24
 
 ### Fixed
