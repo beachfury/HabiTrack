@@ -6,6 +6,15 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ---
 
+## [1.4.7] - 2026-02-24
+
+### Fixed
+
+#### Image Uploads Failing (413 Request Entity Too Large)
+- **Added `client_max_body_size` to nginx config** — Nginx's default 1MB body limit was rejecting image uploads (profile pictures, catalog images, etc.) before they reached the Express API. Set to 10MB to accommodate base64-encoded images with overhead.
+
+---
+
 ## [1.4.6] - 2026-02-22
 
 ### Fixed
