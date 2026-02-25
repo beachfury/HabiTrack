@@ -27,6 +27,7 @@ interface CatalogItem {
   imageUrl: string | null;
   lowestPrice: number | null;
   lowestPriceStore: string | null;
+  storePrice: number | null;
 }
 
 interface ItemPrice {
@@ -34,6 +35,8 @@ interface ItemPrice {
   storeName: string;
   price: number;
   unit: string | null;
+  imageUrl: string | null;
+  brand: string | null;
   observedAt: string;
 }
 
@@ -45,8 +48,50 @@ export async function getCatalogItems(req: Request, res: Response) {
   const { search, categoryId, storeId, limit = '10000' } = req.query;
 
   try {
-    let whereClause = 'WHERE ci.active = 1';
     const params: any[] = [];
+
+    if (storeId) {
+      // Store-specific query: join item_prices, use COALESCE for per-store overrides
+      let whereClause = 'WHERE ci.active = 1';
+
+      if (search && typeof search === 'string' && search.trim()) {
+        whereClause += ` AND (ci.name LIKE ? OR COALESCE(ip.brand, ci.brand) LIKE ?)`;
+        const searchTerm = `%${search.trim()}%`;
+        params.push(searchTerm, searchTerm);
+      }
+
+      if (categoryId) {
+        whereClause += ` AND ci.categoryId = ?`;
+        params.push(categoryId);
+      }
+
+      params.push(storeId);
+      params.push(parseInt(limit as string));
+
+      const items = await q<CatalogItem[]>(
+        `SELECT
+          ci.id, ci.name,
+          COALESCE(ip.brand, ci.brand) as brand,
+          ci.sizeText, ci.categoryId,
+          sc.name as categoryName,
+          COALESCE(ip.imageUrl, ci.imageUrl) as imageUrl,
+          NULL as lowestPrice,
+          NULL as lowestPriceStore,
+          ip.price as storePrice
+         FROM catalog_items ci
+         LEFT JOIN shopping_categories sc ON ci.categoryId = sc.id
+         INNER JOIN item_prices ip ON ip.catalogItemId = ci.id AND ip.storeId = ?
+         ${whereClause}
+         ORDER BY ci.name
+         LIMIT ?`,
+        params,
+      );
+
+      return success(res, { items });
+    }
+
+    // All Stores query: base item data with lowest price
+    let whereClause = 'WHERE ci.active = 1';
 
     if (search && typeof search === 'string' && search.trim()) {
       whereClause += ` AND (ci.name LIKE ? OR ci.brand LIKE ?)`;
@@ -59,24 +104,39 @@ export async function getCatalogItems(req: Request, res: Response) {
       params.push(categoryId);
     }
 
-    if (storeId) {
-      whereClause += ` AND ci.id IN (SELECT catalogItemId FROM item_prices WHERE storeId = ?)`;
-      params.push(storeId);
-    }
-
     params.push(parseInt(limit as string));
 
+    // For "All Stores", show the image/brand of the most-purchased store variant.
+    // Falls back to lowest-price store, then to the base catalog item.
     const items = await q<CatalogItem[]>(
       `SELECT
-        ci.id, ci.name, ci.brand, ci.sizeText, ci.categoryId,
-        sc.name as categoryName, ci.imageUrl,
+        ci.id, ci.name,
+        COALESCE(pref_ip.brand, ci.brand) as brand,
+        ci.sizeText, ci.categoryId,
+        sc.name as categoryName,
+        COALESCE(pref_ip.imageUrl, ci.imageUrl) as imageUrl,
         (SELECT MIN(price) FROM item_prices WHERE catalogItemId = ci.id) as lowestPrice,
         (SELECT s.name FROM item_prices ip
          JOIN stores s ON ip.storeId = s.id
          WHERE ip.catalogItemId = ci.id
-         ORDER BY ip.price ASC LIMIT 1) as lowestPriceStore
+         ORDER BY ip.price ASC LIMIT 1) as lowestPriceStore,
+        NULL as storePrice
        FROM catalog_items ci
        LEFT JOIN shopping_categories sc ON ci.categoryId = sc.id
+       LEFT JOIN (
+         SELECT ip2.catalogItemId, ip2.storeId, ip2.imageUrl, ip2.brand,
+                ROW_NUMBER() OVER (
+                  PARTITION BY ip2.catalogItemId
+                  ORDER BY COALESCE(pe.cnt, 0) DESC, ip2.price ASC
+                ) as rn
+         FROM item_prices ip2
+         LEFT JOIN (
+           SELECT catalogItemId, storeId, COUNT(*) as cnt
+           FROM shopping_purchase_events
+           WHERE storeId IS NOT NULL
+           GROUP BY catalogItemId, storeId
+         ) pe ON ip2.catalogItemId = pe.catalogItemId AND ip2.storeId = pe.storeId
+       ) pref_ip ON ci.id = pref_ip.catalogItemId AND pref_ip.rn = 1
        ${whereClause}
        ORDER BY ci.name
        LIMIT ?`,
@@ -131,7 +191,8 @@ export async function getCatalogItemPrices(req: Request, res: Response) {
 
   try {
     const prices = await q<ItemPrice[]>(
-      `SELECT ip.storeId, s.name as storeName, ip.price, ip.unit, ip.observedAt
+      `SELECT ip.storeId, s.name as storeName, ip.price, ip.unit,
+              ip.imageUrl, ip.brand, ip.observedAt
        FROM item_prices ip
        JOIN stores s ON ip.storeId = s.id
        WHERE ip.catalogItemId = ?
@@ -285,19 +346,22 @@ export async function setCatalogItemPrice(req: Request, res: Response) {
   if (!user) return res.status(401).json({ error: { code: 'AUTH_REQUIRED' } });
 
   const itemId = parseInt(req.params.id);
-  const { storeId, price, unit } = req.body;
+  const { storeId, price, unit, imageUrl, brand } = req.body;
 
   if (!storeId || price === undefined) {
     return validationError(res, 'storeId and price are required');
   }
 
   try {
-    // Upsert the price
+    // Upsert the price with optional per-store image/brand overrides
     await q(
-      `INSERT INTO item_prices (catalogItemId, storeId, price, unit, observedAt)
-       VALUES (?, ?, ?, ?, NOW())
-       ON DUPLICATE KEY UPDATE price = ?, unit = ?, observedAt = NOW()`,
-      [itemId, storeId, price, unit || null, price, unit || null],
+      `INSERT INTO item_prices (catalogItemId, storeId, price, unit, imageUrl, brand, observedAt)
+       VALUES (?, ?, ?, ?, ?, ?, NOW())
+       ON DUPLICATE KEY UPDATE price = ?, unit = ?, imageUrl = ?, brand = ?, observedAt = NOW()`,
+      [
+        itemId, storeId, price, unit || null, imageUrl || null, brand || null,
+        price, unit || null, imageUrl || null, brand || null,
+      ],
     );
 
     return success(res, { success: true });

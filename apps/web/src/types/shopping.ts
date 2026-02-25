@@ -40,6 +40,7 @@ export interface CatalogItem {
   categoryName: string | null;
   imageUrl: string | null;
   lowestPrice: number | null;
+  storePrice: number | null;
   active: boolean;
 }
 
@@ -48,6 +49,8 @@ export interface CatalogItemPrice {
   storeName: string;
   price: number;
   unit: string | null;
+  imageUrl: string | null;
+  brand: string | null;
   observedAt: string;
 }
 
@@ -170,7 +173,7 @@ export interface CreateCatalogItemData {
   sizeText?: string;
   categoryId?: number;
   imageUrl?: string;
-  prices?: Array<{ storeId: number; price: number }>;
+  prices?: Array<{ storeId: number; price: number; imageUrl?: string; brand?: string }>;
 }
 
 export interface CreateShoppingRequestData {

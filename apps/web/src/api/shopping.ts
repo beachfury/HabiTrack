@@ -90,17 +90,21 @@ export const shoppingApi = {
     return apiClient['get'](`/shopping/catalog/${itemId}/prices`, { params: undefined });
   },
 
-  // NEW: Set price for a catalog item at a specific store
+  // Set price (and optional per-store image/brand) for a catalog item at a specific store
   setCatalogItemPrice(
     itemId: number,
     storeId: number,
     price: number,
     unit?: string,
+    imageUrl?: string,
+    brand?: string,
   ): Promise<{ success: boolean }> {
     return apiClient['post'](`/shopping/catalog/${itemId}/prices`, {
       storeId,
       price,
       unit,
+      imageUrl,
+      brand,
     });
   },
 
