@@ -436,7 +436,7 @@ export function SettingsPage() {
                 <div className="relative">
                   {userSettings?.avatarUrl ? (
                     <img
-                      src={`${import.meta.env.VITE_API_BASE_URL || 'http://localhost:3000'}${userSettings.avatarUrl}`}
+                      src={userSettings.avatarUrl}
                       alt="Avatar"
                       className="w-24 h-24 rounded-full object-cover"
                     />

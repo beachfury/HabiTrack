@@ -349,11 +349,6 @@ export function ThemeEditorAdvanced({ theme, onSave, onClose }: ThemeEditorAdvan
   // Helper to get full URL for uploaded assets
   const getAssetUrl = (path: string | undefined): string | undefined => {
     if (!path) return undefined;
-    if (path.startsWith('http://') || path.startsWith('https://')) return path;
-    if (path.startsWith('/')) {
-      const apiBase = import.meta.env.VITE_API_BASE_URL || 'http://localhost:3000';
-      return `${apiBase}${path}`;
-    }
     return path;
   };
 

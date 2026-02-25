@@ -222,7 +222,7 @@ export function LoginPage() {
 
     if (branding.loginBackground === 'image' && branding.loginBackgroundValue) {
       return {
-        backgroundImage: `url(${import.meta.env.VITE_API_BASE_URL || 'http://localhost:3000'}${branding.loginBackgroundValue})`,
+        backgroundImage: `url(${branding.loginBackgroundValue})`,
         backgroundSize: 'cover',
         backgroundPosition: 'center',
       };
@@ -330,7 +330,7 @@ export function LoginPage() {
               >
                 <img
                   src={branding?.logoUrl
-                    ? `${import.meta.env.VITE_API_BASE_URL || 'http://localhost:3000'}${branding.logoUrl}`
+                    ? branding.logoUrl
                     : '/assets/HabiTrack_logo.png'
                   }
                   alt="HabiTrack Logo"

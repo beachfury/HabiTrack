@@ -24,13 +24,9 @@ import { useState, useRef, useEffect } from 'react';
 import type { Theme, ExtendedTheme } from '../../types/theme';
 import type { HouseholdSettings } from '../../api';
 
-// Helper to resolve image URLs - converts relative API paths to full URLs
-const API_BASE = import.meta.env.VITE_API_BASE_URL || 'http://localhost:3000';
+// Helper to resolve image URLs - uploads are served at same origin via nginx proxy
 function resolveImageUrl(url: string | undefined): string | undefined {
   if (!url) return undefined;
-  if (url.startsWith('/')) {
-    return `${API_BASE}${url}`;
-  }
   return url;
 }
 
@@ -234,7 +230,7 @@ export function TopHeaderLayout({
         <Link to="/" className="flex items-center gap-3">
           <img
             src={householdSettings?.logoUrl
-              ? `${import.meta.env.VITE_API_BASE_URL || 'http://localhost:3000'}${householdSettings.logoUrl}`
+              ? householdSettings.logoUrl
               : '/assets/HabiTrack_logo.png'
             }
             alt="HabiTrack Logo"
@@ -269,7 +265,7 @@ export function TopHeaderLayout({
             >
               {user?.avatarUrl ? (
                 <img
-                  src={`${import.meta.env.VITE_API_BASE_URL || 'http://localhost:3000'}${user.avatarUrl}`}
+                  src={user.avatarUrl}
                   alt="Avatar"
                   className="w-8 h-8 rounded-full object-cover"
                 />

@@ -3,13 +3,9 @@
 
 import type { ThemeColors, SimpleTheme, ThemeRoundness, ThemeFontSize } from '../types/theme';
 
-// Helper to resolve image URLs - converts relative API paths to full URLs
-const API_BASE = import.meta.env.VITE_API_BASE_URL || 'http://localhost:3000';
+// Helper to resolve image URLs - uploads are served at same origin via nginx proxy
 function resolveImageUrl(url: string | undefined): string | undefined {
   if (!url) return undefined;
-  if (url.startsWith('/')) {
-    return `${API_BASE}${url}`;
-  }
   return url;
 }
 

@@ -17,15 +17,10 @@ import { TextTab } from './editors/TextTab';
 import { BorderTab } from './editors/BorderTab';
 import { EffectsTab } from './editors/EffectsTab';
 
-// Helper to resolve image URLs - converts relative API paths to full URLs
-export const API_BASE = import.meta.env.VITE_API_BASE_URL || 'http://localhost:3000';
+// Helper to resolve image URLs - uploads are served at same origin via nginx proxy
+export const API_BASE = '';
 export function resolveImageUrl(url: string | undefined): string | undefined {
   if (!url) return undefined;
-  // If it starts with /, it's a relative API path - prepend the API base
-  if (url.startsWith('/')) {
-    return `${API_BASE}${url}`;
-  }
-  // Already an absolute URL
   return url;
 }
 
