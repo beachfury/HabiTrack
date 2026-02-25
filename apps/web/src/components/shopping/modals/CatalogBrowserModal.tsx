@@ -111,7 +111,7 @@ export function CatalogBrowserModal({
                 onClick={() => onSelectItem(item)}
                 className="bg-[var(--color-muted)] rounded-xl p-3 text-left hover:ring-2 hover:ring-[var(--color-primary)] transition-all"
               >
-                <ItemImage url={item.imageUrl} />
+                <ItemImage url={item.imageUrl} fit="contain" />
                 <p className="font-medium text-[var(--color-foreground)] mt-2 truncate text-sm">
                   {item.name}
                 </p>

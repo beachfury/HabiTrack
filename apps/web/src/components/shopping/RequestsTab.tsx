@@ -164,7 +164,7 @@ export function RequestsTab({
             onClick={() => onAddToList(item)}
             className="themed-shopping-list p-3 text-left hover:ring-2 hover:ring-[var(--color-primary)] transition-all"
           >
-            <ItemImage url={item.imageUrl} size="lg" />
+            <ItemImage url={item.imageUrl} size="lg" fit="contain" />
             <p className="font-medium text-[var(--color-foreground)] mt-2 truncate text-sm">
               {item.name}
             </p>
