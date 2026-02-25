@@ -80,12 +80,16 @@ export function AllChoresView({
               onClick={() => onToggleUser(u.id)}
               className="w-full p-3 flex items-center gap-3 hover:bg-[var(--color-muted)] transition-colors"
             >
-              <div
-                className="w-10 h-10 rounded-full flex items-center justify-center text-white font-semibold flex-shrink-0"
-                style={{ backgroundColor: u.color || 'var(--color-primary)' }}
-              >
-                {(u.nickname || u.displayName).charAt(0).toUpperCase()}
-              </div>
+              {u.avatarUrl ? (
+                <img src={u.avatarUrl} alt="" className="w-10 h-10 rounded-full object-cover flex-shrink-0" />
+              ) : (
+                <div
+                  className="w-10 h-10 rounded-full flex items-center justify-center text-white font-semibold flex-shrink-0"
+                  style={{ backgroundColor: u.color || 'var(--color-primary)' }}
+                >
+                  {(u.nickname || u.displayName).charAt(0).toUpperCase()}
+                </div>
+              )}
               <div className="flex-1 text-left min-w-0">
                 <p className="font-semibold text-[var(--color-foreground)] truncate">
                   {u.nickname || u.displayName}

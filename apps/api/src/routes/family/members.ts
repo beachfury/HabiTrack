@@ -56,6 +56,7 @@ export async function getMembers(req: Request, res: Response) {
       email: string | null;
       roleId: string;
       color: string | null;
+      avatarUrl: string | null;
       dateOfBirth: string | null;
       active: number;
       createdAt: Date;
@@ -63,7 +64,7 @@ export async function getMembers(req: Request, res: Response) {
       hasPin: number;
     }>>(
       `SELECT
-        u.id, u.displayName, u.nickname, u.email, u.roleId, u.color,
+        u.id, u.displayName, u.nickname, u.email, u.roleId, u.color, u.avatarUrl,
         u.dateOfBirth, u.active, u.createdAt,
         (SELECT COUNT(*) FROM credentials c WHERE c.userId = u.id AND c.provider = 'password') as hasPassword,
         (SELECT COUNT(*) FROM credentials c WHERE c.userId = u.id AND c.provider = 'kiosk_pin') as hasPin

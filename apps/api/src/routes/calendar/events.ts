@@ -317,7 +317,7 @@ export async function getCalendarUsers(req: Request, res: Response) {
         color: string | null;
       }>
     >(
-      `SELECT id, displayName, nickname, roleId, color
+      `SELECT id, displayName, nickname, roleId, color, avatarUrl
        FROM users
        WHERE active = 1 AND kioskOnly = 0
        ORDER BY displayName`,

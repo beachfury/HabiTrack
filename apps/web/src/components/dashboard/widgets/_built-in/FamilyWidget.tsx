@@ -61,12 +61,16 @@ export function FamilyWidget({ members = [], currentUserId }: FamilyWidgetProps)
                   : 'bg-[var(--widget-bg)]'
               }`}
             >
-              <div
-                className="w-8 h-8 rounded-full flex items-center justify-center text-white text-sm font-medium"
-                style={{ backgroundColor: member.color || 'var(--color-primary)' }}
-              >
-                {(member.nickname || member.displayName).charAt(0).toUpperCase()}
-              </div>
+              {member.avatarUrl ? (
+                <img src={member.avatarUrl} alt="" className="w-8 h-8 rounded-full object-cover flex-shrink-0" />
+              ) : (
+                <div
+                  className="w-8 h-8 rounded-full flex items-center justify-center text-white text-sm font-medium"
+                  style={{ backgroundColor: member.color || 'var(--color-primary)' }}
+                >
+                  {(member.nickname || member.displayName).charAt(0).toUpperCase()}
+                </div>
+              )}
               <div>
                 <p className="text-sm font-medium text-[var(--color-foreground)]">
                   {member.nickname || member.displayName}

@@ -53,12 +53,16 @@ export function LeaderboardView({
             className={`flex flex-col items-center pt-8 ${isAdmin ? 'cursor-pointer hover:opacity-80 transition-opacity' : ''}`}
             onClick={() => isAdmin && setAdjustingUser(leaderboard[1])}
           >
-            <div
-              className="w-16 h-16 rounded-full flex items-center justify-center text-white text-xl font-bold mb-2"
-              style={{ backgroundColor: leaderboard[1]?.color || '#6b7280' }}
-            >
-              {(leaderboard[1]?.nickname || leaderboard[1]?.displayName || '?').charAt(0)}
-            </div>
+            {leaderboard[1]?.avatarUrl ? (
+              <img src={leaderboard[1].avatarUrl} alt="" className="w-16 h-16 rounded-full object-cover mb-2" />
+            ) : (
+              <div
+                className="w-16 h-16 rounded-full flex items-center justify-center text-white text-xl font-bold mb-2"
+                style={{ backgroundColor: leaderboard[1]?.color || '#6b7280' }}
+              >
+                {(leaderboard[1]?.nickname || leaderboard[1]?.displayName || '?').charAt(0)}
+              </div>
+            )}
             <Award className="text-[var(--color-muted-foreground)] mb-1" size={24} />
             <p className="font-semibold text-[var(--color-foreground)] text-sm truncate w-full text-center">
               {leaderboard[1]?.nickname || leaderboard[1]?.displayName}
@@ -72,12 +76,16 @@ export function LeaderboardView({
             onClick={() => isAdmin && setAdjustingUser(leaderboard[0])}
           >
             <Crown className="text-[var(--color-warning)] mb-2" size={28} />
-            <div
-              className="w-20 h-20 rounded-full flex items-center justify-center text-white text-2xl font-bold mb-2 ring-4 ring-[var(--color-warning)]"
-              style={{ backgroundColor: leaderboard[0]?.color || '#8b5cf6' }}
-            >
-              {(leaderboard[0]?.nickname || leaderboard[0]?.displayName || '?').charAt(0)}
-            </div>
+            {leaderboard[0]?.avatarUrl ? (
+              <img src={leaderboard[0].avatarUrl} alt="" className="w-20 h-20 rounded-full object-cover mb-2 ring-4 ring-[var(--color-warning)]" />
+            ) : (
+              <div
+                className="w-20 h-20 rounded-full flex items-center justify-center text-white text-2xl font-bold mb-2 ring-4 ring-[var(--color-warning)]"
+                style={{ backgroundColor: leaderboard[0]?.color || '#8b5cf6' }}
+              >
+                {(leaderboard[0]?.nickname || leaderboard[0]?.displayName || '?').charAt(0)}
+              </div>
+            )}
             <p className="font-bold text-[var(--color-foreground)] truncate w-full text-center">
               {leaderboard[0]?.nickname || leaderboard[0]?.displayName}
             </p>
@@ -89,12 +97,16 @@ export function LeaderboardView({
             className={`flex flex-col items-center pt-12 ${isAdmin ? 'cursor-pointer hover:opacity-80 transition-opacity' : ''}`}
             onClick={() => isAdmin && setAdjustingUser(leaderboard[2])}
           >
-            <div
-              className="w-14 h-14 rounded-full flex items-center justify-center text-white text-lg font-bold mb-2"
-              style={{ backgroundColor: leaderboard[2]?.color || '#6b7280' }}
-            >
-              {(leaderboard[2]?.nickname || leaderboard[2]?.displayName || '?').charAt(0)}
-            </div>
+            {leaderboard[2]?.avatarUrl ? (
+              <img src={leaderboard[2].avatarUrl} alt="" className="w-14 h-14 rounded-full object-cover mb-2" />
+            ) : (
+              <div
+                className="w-14 h-14 rounded-full flex items-center justify-center text-white text-lg font-bold mb-2"
+                style={{ backgroundColor: leaderboard[2]?.color || '#6b7280' }}
+              >
+                {(leaderboard[2]?.nickname || leaderboard[2]?.displayName || '?').charAt(0)}
+              </div>
+            )}
             <Award
               size={20}
               className="mb-1"
@@ -135,12 +147,16 @@ export function LeaderboardView({
             </div>
 
             {/* Avatar */}
-            <div
-              className="w-10 h-10 rounded-full flex items-center justify-center text-white font-semibold flex-shrink-0"
-              style={{ backgroundColor: entry.color || '#8b5cf6' }}
-            >
-              {(entry.nickname || entry.displayName).charAt(0).toUpperCase()}
-            </div>
+            {entry.avatarUrl ? (
+              <img src={entry.avatarUrl} alt="" className="w-10 h-10 rounded-full object-cover flex-shrink-0" />
+            ) : (
+              <div
+                className="w-10 h-10 rounded-full flex items-center justify-center text-white font-semibold flex-shrink-0"
+                style={{ backgroundColor: entry.color || '#8b5cf6' }}
+              >
+                {(entry.nickname || entry.displayName).charAt(0).toUpperCase()}
+              </div>
+            )}
 
             {/* Name */}
             <div className="flex-1 min-w-0">
