@@ -1,5 +1,5 @@
 // apps/web/src/components/shopping/CatalogTab.tsx
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import {
   Plus,
   Search,
@@ -61,6 +61,25 @@ export function CatalogTab({
   const [expandedCategories, setExpandedCategories] = useState<Set<number | 'uncategorized'>>(
     new Set(),
   );
+
+  // Auto-expand all categories that have items
+  useEffect(() => {
+    if (items.length > 0) {
+      const catIds = new Set<number | 'uncategorized'>();
+      items.forEach((item) => {
+        if (item.categoryId) {
+          catIds.add(item.categoryId);
+        } else {
+          catIds.add('uncategorized');
+        }
+      });
+      setExpandedCategories((prev) => {
+        const merged = new Set(prev);
+        catIds.forEach((id) => merged.add(id));
+        return merged;
+      });
+    }
+  }, [items]);
   const [editingItem, setEditingItem] = useState<CatalogItem | null>(null);
   const [showQuickRequest, setShowQuickRequest] = useState(false);
   const [quickRequestName, setQuickRequestName] = useState('');

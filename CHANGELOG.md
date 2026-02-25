@@ -6,6 +6,16 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ---
 
+## [1.4.6] - 2026-02-22
+
+### Fixed
+
+#### Catalog Items Not Showing in Default View
+- **Fixed LIMIT 100 truncating catalog results** — The catalog API defaulted to returning only 100 items sorted alphabetically. Catalogs with 100+ items would silently drop items past the cutoff, making newly added items invisible unless a store filter narrowed the result set. Raised default limit to 10,000.
+- **Auto-expand catalog categories** — Category groups in the catalog now auto-expand when they contain items, matching the shopping list behavior
+
+---
+
 ## [1.4.5] - 2026-02-22
 
 ### Fixed

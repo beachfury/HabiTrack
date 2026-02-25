@@ -42,7 +42,7 @@ interface ItemPrice {
  * Get catalog items with optional search
  */
 export async function getCatalogItems(req: Request, res: Response) {
-  const { search, categoryId, storeId, limit = '100' } = req.query;
+  const { search, categoryId, storeId, limit = '10000' } = req.query;
 
   try {
     let whereClause = 'WHERE ci.active = 1';
