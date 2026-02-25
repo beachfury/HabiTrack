@@ -2,7 +2,7 @@
 // Export all shopping components
 
 // Base components
-export { ItemImage } from './ItemImage';
+export { ItemImage, CardImage } from './ItemImage';
 export { ConfidenceBadge } from './ConfidenceBadge';
 export { ListItemRow } from './ListItemRow';
 

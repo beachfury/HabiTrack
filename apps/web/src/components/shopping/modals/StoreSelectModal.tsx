@@ -87,7 +87,7 @@ export function StoreSelectModal({ item, stores, onClose, onAdd, isAdmin }: Stor
         <div className="space-y-4">
           {/* Item Info */}
           <div className="flex items-center gap-3 p-3 bg-[var(--color-muted)] rounded-xl">
-            <ItemImage url={item.imageUrl} />
+            <ItemImage url={item.imageUrl} fit="contain" />
             <div className="flex-1 min-w-0">
               <p className="font-medium text-[var(--color-foreground)] truncate">{item.name}</p>
               {item.brand && <p className="text-sm text-[var(--color-muted-foreground)] truncate">{item.brand}</p>}

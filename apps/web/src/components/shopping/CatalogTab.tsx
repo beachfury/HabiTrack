@@ -12,7 +12,7 @@ import {
   X,
   Send,
 } from 'lucide-react';
-import { ItemImage } from './ItemImage';
+import { ItemImage, CardImage } from './ItemImage';
 import { NewItemModal } from './modals/NewItemModal';
 import { shoppingApi } from '../../api';
 import type { CatalogItem, ShoppingCategory, ShoppingStore, ShoppingRequest } from '../../types';
@@ -468,7 +468,7 @@ export function CatalogTab({
                         key={item.id}
                         className="bg-[var(--color-muted)] rounded-xl p-3 relative group"
                       >
-                        <ItemImage url={item.imageUrl} size="lg" />
+                        <CardImage url={item.imageUrl} alt={item.name} />
                         <p className="font-medium text-[var(--color-foreground)] mt-2 truncate text-sm">
                           {item.name}
                         </p>

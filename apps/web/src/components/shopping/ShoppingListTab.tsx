@@ -180,7 +180,7 @@ export function ShoppingListTab({
           >
             {purchasedToday.map((item) => (
               <div key={item.id} className="p-3 flex items-center gap-3 opacity-60">
-                <ItemImage url={item.imageUrl} size="sm" />
+                <ItemImage url={item.imageUrl} size="sm" fit="contain" />
                 <div className="flex-1 min-w-0">
                   <p className="font-medium text-[var(--color-foreground)] line-through truncate">
                     {item.itemName}
@@ -240,7 +240,7 @@ export function ShoppingListTab({
                 key={s.catalogItemId}
                 className="p-3 flex items-center gap-3 hover:bg-[var(--color-primary)]/10"
               >
-                <ItemImage url={s.imageUrl} size="sm" />
+                <ItemImage url={s.imageUrl} size="sm" fit="contain" />
                 <div className="flex-1 min-w-0">
                   <p className="font-medium text-[var(--color-foreground)] truncate">
                     {s.itemName}

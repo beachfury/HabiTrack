@@ -6,6 +6,16 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ---
 
+## [1.4.11] - 2026-02-24
+
+### Improved
+
+#### Product Image Display in Shopping Module
+- **Catalog cards now show full product images** — Replaced the small 64px cropped thumbnail with a full-width square card image using `object-contain`, so the entire product (e.g., a milk jug) is visible instead of being cropped. Added a new `CardImage` component for catalog grid cards.
+- **All shopping item images use `object-contain`** — Switched product images across shopping list, predictions, requests, catalog browser, and store select modals from `object-cover` (crops to fill) to `object-contain` (scales to fit) with a subtle background, so the full product is always visible. Avatars and logos remain unchanged.
+
+---
+
 ## [1.4.10] - 2026-02-24
 
 ### Fixed
