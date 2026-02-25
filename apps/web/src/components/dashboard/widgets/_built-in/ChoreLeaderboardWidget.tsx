@@ -52,12 +52,16 @@ export function ChoreLeaderboardWidget({ leaderboard = [], currentUserId }: Chor
                   <span className="text-sm text-[var(--color-muted-foreground)]">#{index + 1}</span>
                 )}
               </div>
-              <div
-                className="w-8 h-8 rounded-full flex items-center justify-center text-white text-sm font-medium"
-                style={{ backgroundColor: entry.color || 'var(--color-primary)' }}
-              >
-                {entry.displayName.charAt(0).toUpperCase()}
-              </div>
+              {entry.avatarUrl ? (
+                <img src={entry.avatarUrl} alt="" className="w-8 h-8 rounded-full object-cover flex-shrink-0" />
+              ) : (
+                <div
+                  className="w-8 h-8 rounded-full flex items-center justify-center text-white text-sm font-medium"
+                  style={{ backgroundColor: entry.color || 'var(--color-primary)' }}
+                >
+                  {entry.displayName.charAt(0).toUpperCase()}
+                </div>
+              )}
               <div className="flex-1 min-w-0">
                 <p className="text-sm font-medium text-[var(--color-foreground)] truncate">
                   {entry.displayName}

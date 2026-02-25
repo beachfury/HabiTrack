@@ -27,17 +27,28 @@ export async function getCroppedImg(
   canvas.height = outputSize;
   const ctx = canvas.getContext('2d')!;
 
-  ctx.drawImage(
-    image,
-    pixelCrop.x,
-    pixelCrop.y,
-    pixelCrop.width,
-    pixelCrop.height,
-    0,
-    0,
-    outputSize,
-    outputSize,
-  );
+  // Fill background (visible when image is zoomed out / doesn't fill crop)
+  ctx.fillStyle = '#e5e7eb';
+  ctx.fillRect(0, 0, outputSize, outputSize);
+
+  // Calculate source and destination coordinates
+  // When restrictPosition is false, pixelCrop can have negative x/y
+  // meaning the crop area extends beyond the image bounds
+  const scale = outputSize / pixelCrop.width;
+
+  const sx = Math.max(0, pixelCrop.x);
+  const sy = Math.max(0, pixelCrop.y);
+  const dx = Math.max(0, -pixelCrop.x) * scale;
+  const dy = Math.max(0, -pixelCrop.y) * scale;
+
+  const sw = Math.min(pixelCrop.width - Math.max(0, -pixelCrop.x), image.width - sx);
+  const sh = Math.min(pixelCrop.height - Math.max(0, -pixelCrop.y), image.height - sy);
+  const dw = sw * scale;
+  const dh = sh * scale;
+
+  if (sw > 0 && sh > 0) {
+    ctx.drawImage(image, sx, sy, sw, sh, dx, dy, dw, dh);
+  }
 
   const dataUrl = canvas.toDataURL('image/jpeg', 0.9);
   return { dataUrl, mimeType: 'image/jpeg' };

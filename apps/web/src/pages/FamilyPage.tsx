@@ -390,12 +390,16 @@ export function FamilyPage() {
               className={`p-6 flex items-center gap-4 ${!member.active ? 'opacity-50 bg-[var(--color-muted)]' : ''}`}
             >
               {/* Avatar */}
-              <div
-                className="w-12 h-12 rounded-full flex items-center justify-center text-white font-bold text-lg"
-                style={{ backgroundColor: member.color || 'var(--color-primary)' }}
-              >
-                {(member.nickname || member.displayName).charAt(0).toUpperCase()}
-              </div>
+              {member.avatarUrl ? (
+                <img src={member.avatarUrl} alt="" className="w-12 h-12 rounded-full object-cover flex-shrink-0" />
+              ) : (
+                <div
+                  className="w-12 h-12 rounded-full flex items-center justify-center text-white font-bold text-lg"
+                  style={{ backgroundColor: member.color || 'var(--color-primary)' }}
+                >
+                  {(member.nickname || member.displayName).charAt(0).toUpperCase()}
+                </div>
+              )}
 
               {/* Info */}
               <div className="flex-1">

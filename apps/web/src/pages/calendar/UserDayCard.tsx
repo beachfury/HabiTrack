@@ -10,6 +10,7 @@ interface CalendarUser {
   nickname: string | null;
   roleId: string;
   color: string | null;
+  avatarUrl?: string | null;
 }
 
 interface UserDayCardProps {
@@ -37,16 +38,20 @@ export function UserDayCard({
     return (
       <div className={`themed-calendar-user p-4 ${isCurrentUser ? 'ring-2 ring-[var(--color-primary)]' : ''}`}>
         <div className="flex items-center gap-3 mb-3">
-          <div
-            className="w-8 h-8 rounded-full flex items-center justify-center text-white"
-            style={{
-              backgroundColor: user.color || '#8b5cf6',
-              fontSize: 'calc(var(--calendar-user-font-size, 0.875rem) * 0.9)',
-              fontWeight: 'var(--calendar-user-font-weight, 500)',
-            }}
-          >
-            {(user.nickname || user.displayName).charAt(0).toUpperCase()}
-          </div>
+          {user.avatarUrl ? (
+            <img src={user.avatarUrl} alt="" className="w-8 h-8 rounded-full object-cover flex-shrink-0" />
+          ) : (
+            <div
+              className="w-8 h-8 rounded-full flex items-center justify-center text-white"
+              style={{
+                backgroundColor: user.color || '#8b5cf6',
+                fontSize: 'calc(var(--calendar-user-font-size, 0.875rem) * 0.9)',
+                fontWeight: 'var(--calendar-user-font-weight, 500)',
+              }}
+            >
+              {(user.nickname || user.displayName).charAt(0).toUpperCase()}
+            </div>
+          )}
           <div style={{ fontFamily: 'var(--calendar-user-font-family, inherit)' }}>
             <p
               style={{

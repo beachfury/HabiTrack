@@ -680,12 +680,16 @@ export function MessagesPage() {
                     }`}
                   >
                     <div className="flex items-center gap-3">
-                      <div
-                        className="w-10 h-10 rounded-full flex items-center justify-center text-white font-medium"
-                        style={{ backgroundColor: conv.otherUserColor || '#6366f1' }}
-                      >
-                        {conv.otherUserName.charAt(0).toUpperCase()}
-                      </div>
+                      {conv.otherUserAvatar ? (
+                        <img src={conv.otherUserAvatar} alt="" className="w-10 h-10 rounded-full object-cover flex-shrink-0" />
+                      ) : (
+                        <div
+                          className="w-10 h-10 rounded-full flex items-center justify-center text-white font-medium"
+                          style={{ backgroundColor: conv.otherUserColor || '#6366f1' }}
+                        >
+                          {conv.otherUserName.charAt(0).toUpperCase()}
+                        </div>
+                      )}
                       <div className="flex-1 min-w-0">
                         <div className="flex items-center justify-between gap-2">
                           <span className="font-medium text-[var(--color-foreground)] truncate">
@@ -732,12 +736,16 @@ export function MessagesPage() {
                   >
                     <ChevronLeft size={20} />
                   </button>
-                  <div
-                    className="w-8 h-8 rounded-full flex items-center justify-center text-white font-medium text-sm"
-                    style={{ backgroundColor: otherUser.color || '#6366f1' }}
-                  >
-                    {otherUser.displayName.charAt(0).toUpperCase()}
-                  </div>
+                  {otherUser.avatarUrl ? (
+                    <img src={otherUser.avatarUrl} alt="" className="w-8 h-8 rounded-full object-cover flex-shrink-0" />
+                  ) : (
+                    <div
+                      className="w-8 h-8 rounded-full flex items-center justify-center text-white font-medium text-sm"
+                      style={{ backgroundColor: otherUser.color || '#6366f1' }}
+                    >
+                      {otherUser.displayName.charAt(0).toUpperCase()}
+                    </div>
+                  )}
                   <span className="font-medium text-[var(--color-foreground)]">
                     {otherUser.displayName}
                   </span>

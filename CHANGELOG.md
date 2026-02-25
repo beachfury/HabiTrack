@@ -6,6 +6,26 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ---
 
+## [1.5.1] - 2026-02-24
+
+### Fixed
+
+#### Avatars Not Displaying Across App
+- **Avatars now show on all pages** — Custom avatars (uploaded photos, emoji, icons, characters) were only visible on the Settings profile page. Seven frontend components were rendering plain colored circles with initials instead of checking for the user's avatar image. Fixed avatar display on:
+  - Chores page (leaderboard podium + full list, all-chores user headers)
+  - Calendar page (user day cards)
+  - Family page (member list)
+  - Messages page (conversation list + conversation header)
+  - Dashboard widgets (chore leaderboard + family members)
+- **Backend queries now return `avatarUrl`** — The calendar users and family members API endpoints were missing `avatarUrl` in their SQL SELECT queries, so even if the frontend checked for it, the data was never sent
+
+#### Avatar Crop Improvements
+- **Free movement in all directions** — Previously the crop tool only allowed panning left/right (or up/down depending on image orientation) because `react-easy-crop` restricted the image to always fill the crop circle. Now uses `restrictPosition={false}` for free dragging in any direction
+- **Zoom out support** — The zoom slider now goes down to 0.5x (was 1x minimum), allowing the image to be scaled smaller than the crop circle with a neutral background fill
+- **Proper canvas rendering when zoomed out** — Updated the crop utility to correctly handle negative crop coordinates that occur when the image is smaller than the crop area
+
+---
+
 ## [1.5.0] - 2026-02-24
 
 ### Added

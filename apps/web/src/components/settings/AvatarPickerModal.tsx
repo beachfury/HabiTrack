@@ -369,12 +369,18 @@ export function AvatarPickerModal({
                       image={uploadImageUrl}
                       crop={crop}
                       zoom={zoom}
+                      minZoom={0.5}
+                      maxZoom={3}
                       aspect={1}
                       cropShape="round"
                       showGrid={false}
+                      restrictPosition={false}
                       onCropChange={setCrop}
                       onZoomChange={setZoom}
                       onCropComplete={onCropComplete}
+                      style={{
+                        containerStyle: { backgroundColor: 'var(--color-muted)' },
+                      }}
                     />
                   </div>
 
@@ -383,7 +389,7 @@ export function AvatarPickerModal({
                     <ZoomOut size={18} className="text-[var(--color-muted-foreground)] flex-shrink-0" />
                     <input
                       type="range"
-                      min={1}
+                      min={0.5}
                       max={3}
                       step={0.05}
                       value={zoom}

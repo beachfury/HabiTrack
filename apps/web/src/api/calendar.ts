@@ -71,6 +71,7 @@ export const calendarApi = {
       nickname: string | null;
       roleId: string;
       color: string | null;
+      avatarUrl: string | null;
     }>;
   }> {
     return apiClient['get']('/calendar/users', { params: undefined });
