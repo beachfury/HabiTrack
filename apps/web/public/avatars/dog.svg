@@ -1,0 +1,28 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 400" width="400" height="400">
+  <circle cx="200" cy="200" r="200" fill="#A0522D"/>
+  <!-- Ears -->
+  <ellipse cx="120" cy="170" rx="40" ry="70" fill="#7B3F00"/>
+  <ellipse cx="280" cy="170" rx="40" ry="70" fill="#7B3F00"/>
+  <!-- Head -->
+  <circle cx="200" cy="200" r="95" fill="#D2914A"/>
+  <!-- Face patch -->
+  <ellipse cx="200" cy="235" rx="55" ry="45" fill="#F5DEB3"/>
+  <!-- Eyes -->
+  <circle cx="168" cy="185" r="16" fill="#FFF"/>
+  <circle cx="232" cy="185" r="16" fill="#FFF"/>
+  <circle cx="172" cy="187" r="10" fill="#4A3728"/>
+  <circle cx="236" cy="187" r="10" fill="#4A3728"/>
+  <circle cx="174" cy="184" r="4" fill="#FFF"/>
+  <circle cx="238" cy="184" r="4" fill="#FFF"/>
+  <!-- Nose -->
+  <ellipse cx="200" cy="222" rx="18" ry="14" fill="#2C2C2C"/>
+  <ellipse cx="200" cy="220" rx="6" ry="3" fill="#555"/>
+  <!-- Mouth -->
+  <line x1="200" y1="236" x2="200" y2="250" stroke="#2C2C2C" stroke-width="3"/>
+  <path d="M185,250 Q200,265 215,250" stroke="#2C2C2C" stroke-width="3" fill="none" stroke-linecap="round"/>
+  <!-- Tongue -->
+  <ellipse cx="208" cy="262" rx="12" ry="15" fill="#E74C3C"/>
+  <!-- Eyebrows -->
+  <path d="M152 170 Q168 160 184 170" stroke="#7B3F00" stroke-width="4" fill="none"/>
+  <path d="M216 170 Q232 160 248 170" stroke="#7B3F00" stroke-width="4" fill="none"/>
+</svg>

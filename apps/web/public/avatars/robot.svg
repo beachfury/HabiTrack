@@ -1,0 +1,22 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 400" width="400" height="400">
+  <circle cx="200" cy="200" r="200" fill="#4A90D9"/>
+  <!-- Antenna -->
+  <line x1="200" y1="80" x2="200" y2="110" stroke="#C0C0C0" stroke-width="6" stroke-linecap="round"/>
+  <circle cx="200" cy="74" r="10" fill="#FF6B6B"/>
+  <!-- Head -->
+  <rect x="120" y="110" width="160" height="130" rx="20" fill="#D0D0D0"/>
+  <!-- Eyes -->
+  <circle cx="165" cy="170" r="22" fill="#2C3E50"/>
+  <circle cx="235" cy="170" r="22" fill="#2C3E50"/>
+  <circle cx="170" cy="165" r="8" fill="#5DADE2"/>
+  <circle cx="240" cy="165" r="8" fill="#5DADE2"/>
+  <!-- Mouth -->
+  <rect x="160" y="210" width="80" height="12" rx="6" fill="#2C3E50"/>
+  <!-- Ears -->
+  <rect x="100" y="150" width="20" height="40" rx="5" fill="#B0B0B0"/>
+  <rect x="280" y="150" width="20" height="40" rx="5" fill="#B0B0B0"/>
+  <!-- Body -->
+  <rect x="140" y="250" width="120" height="80" rx="15" fill="#D0D0D0"/>
+  <circle cx="175" cy="285" r="10" fill="#5DADE2"/>
+  <circle cx="225" cy="285" r="10" fill="#FF6B6B"/>
+</svg>

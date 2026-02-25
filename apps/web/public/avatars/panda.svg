@@ -1,0 +1,26 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 400" width="400" height="400">
+  <circle cx="200" cy="200" r="200" fill="#4CAF50"/>
+  <!-- Ears -->
+  <circle cx="125" cy="110" r="38" fill="#2C2C2C"/>
+  <circle cx="275" cy="110" r="38" fill="#2C2C2C"/>
+  <!-- Head -->
+  <circle cx="200" cy="210" r="100" fill="#FFF"/>
+  <!-- Eye patches -->
+  <ellipse cx="160" cy="195" rx="35" ry="30" fill="#2C2C2C" transform="rotate(-10 160 195)"/>
+  <ellipse cx="240" cy="195" rx="35" ry="30" fill="#2C2C2C" transform="rotate(10 240 195)"/>
+  <!-- Eyes -->
+  <circle cx="160" cy="195" r="14" fill="#FFF"/>
+  <circle cx="240" cy="195" r="14" fill="#FFF"/>
+  <circle cx="163" cy="197" r="8" fill="#2C2C2C"/>
+  <circle cx="243" cy="197" r="8" fill="#2C2C2C"/>
+  <circle cx="165" cy="194" r="3" fill="#FFF"/>
+  <circle cx="245" cy="194" r="3" fill="#FFF"/>
+  <!-- Nose -->
+  <ellipse cx="200" cy="235" rx="12" ry="9" fill="#2C2C2C"/>
+  <!-- Mouth -->
+  <path d="M192,244 Q186,255 180,252" stroke="#2C2C2C" stroke-width="2.5" fill="none" stroke-linecap="round"/>
+  <path d="M208,244 Q214,255 220,252" stroke="#2C2C2C" stroke-width="2.5" fill="none" stroke-linecap="round"/>
+  <!-- Blush -->
+  <circle cx="145" cy="228" r="12" fill="#FFB6C1" opacity="0.5"/>
+  <circle cx="255" cy="228" r="12" fill="#FFB6C1" opacity="0.5"/>
+</svg>

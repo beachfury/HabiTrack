@@ -1,0 +1,29 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 400" width="400" height="400">
+  <circle cx="200" cy="200" r="200" fill="#2980B9"/>
+  <!-- Cape behind -->
+  <path d="M130,250 L100,360 L200,320 L300,360 L270,250" fill="#E74C3C"/>
+  <!-- Head -->
+  <circle cx="200" cy="195" r="80" fill="#F5D0A9"/>
+  <!-- Mask -->
+  <path d="M120,185 Q140,160 175,175 L200,170 L225,175 Q260,160 280,185
+    Q260,205 225,195 L200,200 L175,195 Q140,205 120,185 Z" fill="#3498DB"/>
+  <!-- Eye holes -->
+  <ellipse cx="165" cy="188" rx="18" ry="14" fill="#F5D0A9"/>
+  <ellipse cx="235" cy="188" rx="18" ry="14" fill="#F5D0A9"/>
+  <!-- Eyes -->
+  <circle cx="165" cy="188" r="8" fill="#2C3E50"/>
+  <circle cx="235" cy="188" r="8" fill="#2C3E50"/>
+  <circle cx="168" cy="185" r="3" fill="#FFF"/>
+  <circle cx="238" cy="185" r="3" fill="#FFF"/>
+  <!-- Determined eyebrows -->
+  <path d="M148 175 L182 170" stroke="#8B6914" stroke-width="4" stroke-linecap="round"/>
+  <path d="M252 175 L218 170" stroke="#8B6914" stroke-width="4" stroke-linecap="round"/>
+  <!-- Confident smile -->
+  <path d="M180 218 Q200 232 220 218" stroke="#C0392B" stroke-width="3" fill="none" stroke-linecap="round"/>
+  <!-- Jaw -->
+  <rect x="185" y="230" width="30" height="12" rx="6" fill="#F5D0A9"/>
+  <!-- Body -->
+  <rect x="150" y="270" width="100" height="70" rx="15" fill="#3498DB"/>
+  <!-- Chest emblem -->
+  <polygon points="200,280 188,305 212,305" fill="#F1C40F"/>
+</svg>

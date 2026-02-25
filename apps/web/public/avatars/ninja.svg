@@ -1,0 +1,21 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 400" width="400" height="400">
+  <circle cx="200" cy="200" r="200" fill="#4A2D6B"/>
+  <!-- Head wrap -->
+  <circle cx="200" cy="195" r="100" fill="#2C2C2C"/>
+  <!-- Eye band opening -->
+  <rect x="110" y="165" width="180" height="50" rx="25" fill="#F5D0A9"/>
+  <!-- Eyes -->
+  <ellipse cx="165" cy="190" rx="18" ry="15" fill="#FFF"/>
+  <ellipse cx="235" cy="190" rx="18" ry="15" fill="#FFF"/>
+  <circle cx="168" cy="190" r="10" fill="#2C2C2C"/>
+  <circle cx="238" cy="190" r="10" fill="#2C2C2C"/>
+  <circle cx="170" cy="188" r="4" fill="#FFF"/>
+  <circle cx="240" cy="188" r="4" fill="#FFF"/>
+  <!-- Headband -->
+  <rect x="100" y="145" width="200" height="18" rx="9" fill="#E74C3C"/>
+  <!-- Headband tails -->
+  <path d="M300 154 L340 130 L335 155" fill="#E74C3C"/>
+  <path d="M300 154 L345 160 L330 175" fill="#C0392B"/>
+  <!-- Body -->
+  <rect x="150" y="290" width="100" height="70" rx="15" fill="#2C2C2C"/>
+</svg>

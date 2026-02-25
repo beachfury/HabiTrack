@@ -1,0 +1,27 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 400" width="400" height="400">
+  <circle cx="200" cy="200" r="200" fill="#FF69B4"/>
+  <!-- Stem -->
+  <rect x="195" y="250" width="10" height="110" rx="5" fill="#27AE60"/>
+  <!-- Leaves -->
+  <ellipse cx="170" cy="300" rx="30" ry="12" fill="#2ECC71" transform="rotate(-30 170 300)"/>
+  <ellipse cx="235" cy="320" rx="30" ry="12" fill="#2ECC71" transform="rotate(25 235 320)"/>
+  <!-- Petals -->
+  <ellipse cx="200" cy="130" rx="28" ry="45" fill="#FF85C0"/>
+  <ellipse cx="200" cy="240" rx="28" ry="45" fill="#FF85C0"/>
+  <ellipse cx="145" cy="185" rx="45" ry="28" fill="#FF85C0"/>
+  <ellipse cx="255" cy="185" rx="45" ry="28" fill="#FF85C0"/>
+  <!-- Diagonal petals -->
+  <ellipse cx="155" cy="140" rx="28" ry="42" fill="#FF9FD0" transform="rotate(45 155 140)"/>
+  <ellipse cx="245" cy="140" rx="28" ry="42" fill="#FF9FD0" transform="rotate(-45 245 140)"/>
+  <ellipse cx="155" cy="230" rx="28" ry="42" fill="#FF9FD0" transform="rotate(-45 155 230)"/>
+  <ellipse cx="245" cy="230" rx="28" ry="42" fill="#FF9FD0" transform="rotate(45 245 230)"/>
+  <!-- Center -->
+  <circle cx="200" cy="185" r="35" fill="#F1C40F"/>
+  <!-- Face -->
+  <circle cx="188" cy="180" r="5" fill="#D4940C"/>
+  <circle cx="212" cy="180" r="5" fill="#D4940C"/>
+  <path d="M190 195 Q200 204 210 195" stroke="#D4940C" stroke-width="3" fill="none" stroke-linecap="round"/>
+  <!-- Blush -->
+  <circle cx="177" cy="192" r="6" fill="#F5B041" opacity="0.5"/>
+  <circle cx="223" cy="192" r="6" fill="#F5B041" opacity="0.5"/>
+</svg>

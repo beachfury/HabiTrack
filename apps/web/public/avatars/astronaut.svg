@@ -1,0 +1,23 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 400" width="400" height="400">
+  <circle cx="200" cy="200" r="200" fill="#1B2A4A"/>
+  <!-- Stars -->
+  <circle cx="80" cy="70" r="3" fill="#FFF"/>
+  <circle cx="320" cy="90" r="2" fill="#FFF"/>
+  <circle cx="50" cy="300" r="2" fill="#FFF"/>
+  <circle cx="340" cy="280" r="3" fill="#FFF"/>
+  <circle cx="100" cy="340" r="2" fill="#FFF"/>
+  <!-- Helmet outer -->
+  <circle cx="200" cy="190" r="110" fill="#E8E8E8"/>
+  <!-- Helmet visor -->
+  <ellipse cx="200" cy="185" rx="80" ry="75" fill="#3A7BD5"/>
+  <!-- Visor shine -->
+  <ellipse cx="175" cy="165" rx="25" ry="35" fill="#5A9BF5" opacity="0.5"/>
+  <!-- Face behind visor -->
+  <circle cx="178" cy="180" r="8" fill="#2C3E50"/>
+  <circle cx="222" cy="180" r="8" fill="#2C3E50"/>
+  <path d="M185 205 Q200 218 215 205" stroke="#2C3E50" stroke-width="4" fill="none" stroke-linecap="round"/>
+  <!-- Helmet details -->
+  <rect x="155" y="100" width="90" height="15" rx="7" fill="#D0D0D0"/>
+  <!-- Body -->
+  <rect x="145" y="295" width="110" height="60" rx="20" fill="#E8E8E8"/>
+</svg>

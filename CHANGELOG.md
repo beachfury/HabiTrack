@@ -6,6 +6,20 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ---
 
+## [1.5.0] - 2026-02-24
+
+### Added
+
+#### Avatar Picker & Crop Modal
+- **New avatar picker modal** — Clicking your avatar or the camera button on the Profile settings page now opens a full avatar selection experience with 4 tabs:
+  - **Emoji** — 60 curated emoji with customizable background color, rendered to a 400×400 image
+  - **Icons** — 20 Lucide icons on colored circle backgrounds with a color picker
+  - **Characters** — 24 fun illustrated SVG avatars (robot, ninja, cat, dragon, wizard, astronaut, and more)
+  - **Upload** — Upload a custom photo with circular crop, zoom, and reposition controls powered by `react-easy-crop`
+- All avatar types are rendered client-side to a 400×400 image and uploaded through the existing API — no backend changes needed
+
+---
+
 ## [1.4.11] - 2026-02-24
 
 ### Improved

@@ -1,6 +1,6 @@
 // apps/web/src/pages/SettingsPage.tsx
 
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect } from 'react';
 import {
   Settings,
   User,
@@ -18,6 +18,7 @@ import {
 } from 'lucide-react';
 
 import { useAuth } from '../context/AuthContext';
+import { AvatarPickerModal } from '../components/settings/AvatarPickerModal';
 import { useTheme } from '../context/ThemeContext';
 import { UserSettings, HouseholdSettings } from '../types';
 import { ColorPicker } from '../components/common/ColorPicker';
@@ -160,8 +161,8 @@ export function SettingsPage() {
     timezone: 'America/Los_Angeles',
   });
 
-  // File input refs
-  const avatarInputRef = useRef<HTMLInputElement>(null);
+  // Avatar picker
+  const [showAvatarPicker, setShowAvatarPicker] = useState(false);
 
   const isAdmin = user?.role === 'admin';
 
@@ -274,9 +275,24 @@ export function SettingsPage() {
     }
   };
 
+  const handleAvatarSelect = async (data: { dataUrl: string; mimeType: string }) => {
+    setShowAvatarPicker(false);
+    setSaving(true);
+    setError('');
+    try {
+      await api.uploadAvatar(data.dataUrl, data.mimeType);
+      showSuccessMsg('Avatar updated!');
+      fetchSettings();
+    } catch (err: any) {
+      setError(err.message || 'Failed to update avatar');
+    } finally {
+      setSaving(false);
+    }
+  };
+
   const handleFileSelect = async (
     event: React.ChangeEvent<HTMLInputElement>,
-    type: 'avatar' | 'logo' | 'background',
+    type: 'logo' | 'background',
   ) => {
     const file = event.target.files?.[0];
     if (!file) return;
@@ -300,10 +316,7 @@ export function SettingsPage() {
         const base64 = reader.result as string;
 
         try {
-          if (type === 'avatar') {
-            await api.uploadAvatar(base64, file.type);
-            showSuccessMsg('Avatar uploaded!');
-          } else if (type === 'logo') {
+          if (type === 'logo') {
             await api.uploadLogo(base64, file.type);
             showSuccessMsg('Logo uploaded!');
           } else if (type === 'background') {
@@ -438,12 +451,14 @@ export function SettingsPage() {
                     <img
                       src={userSettings.avatarUrl}
                       alt="Avatar"
-                      className="w-24 h-24 rounded-full object-cover"
+                      className="w-24 h-24 rounded-full object-cover cursor-pointer hover:opacity-80 transition-opacity"
+                      onClick={() => setShowAvatarPicker(true)}
                     />
                   ) : (
                     <div
-                      className="w-24 h-24 rounded-full flex items-center justify-center text-white text-3xl font-bold"
+                      className="w-24 h-24 rounded-full flex items-center justify-center text-white text-3xl font-bold cursor-pointer hover:opacity-80 transition-opacity"
                       style={{ backgroundColor: profileForm.color }}
+                      onClick={() => setShowAvatarPicker(true)}
                     >
                       {(userSettings?.nickname || userSettings?.displayName || '?')
                         .charAt(0)
@@ -452,18 +467,11 @@ export function SettingsPage() {
                   )}
                   <button
                     type="button"
-                    onClick={() => avatarInputRef.current?.click()}
+                    onClick={() => setShowAvatarPicker(true)}
                     className="absolute bottom-0 right-0 bg-[var(--color-primary)] text-[var(--color-primary-foreground)] p-2 rounded-full hover:opacity-90 transition-colors"
                   >
                     <Camera size={16} />
                   </button>
-                  <input
-                    ref={avatarInputRef}
-                    type="file"
-                    accept="image/*"
-                    className="hidden"
-                    onChange={(e) => handleFileSelect(e, 'avatar')}
-                  />
                 </div>
                 <div>
                   <p className="font-medium text-[var(--color-foreground)]">{userSettings?.displayName}</p>
@@ -629,6 +637,15 @@ export function SettingsPage() {
         </div>
       </div>
       </div>
+
+      {/* Avatar Picker Modal */}
+      <AvatarPickerModal
+        isOpen={showAvatarPicker}
+        currentAvatarUrl={userSettings?.avatarUrl || null}
+        userColor={profileForm.color || '#3b82f6'}
+        onSelect={handleAvatarSelect}
+        onClose={() => setShowAvatarPicker(false)}
+      />
     </div>
   );
 }
