@@ -24,13 +24,9 @@ import { useState, useEffect } from 'react';
 import type { Theme, ExtendedTheme, ThemeableElement } from '../../types/theme';
 import type { HouseholdSettings } from '../../api';
 
-// Helper to resolve image URLs - converts relative API paths to full URLs
-const API_BASE = import.meta.env.VITE_API_BASE_URL || 'http://localhost:3000';
+// Helper to resolve image URLs - uploads are served at same origin via nginx proxy
 function resolveImageUrl(url: string | undefined): string | undefined {
   if (!url) return undefined;
-  if (url.startsWith('/')) {
-    return `${API_BASE}${url}`;
-  }
   return url;
 }
 
@@ -485,7 +481,7 @@ export function SidebarLayout({
           >
             <img
               src={householdSettings?.logoUrl
-                ? `${import.meta.env.VITE_API_BASE_URL || 'http://localhost:3000'}${householdSettings.logoUrl}`
+                ? householdSettings.logoUrl
                 : '/assets/HabiTrack_logo.png'
               }
               alt="HabiTrack Logo"
@@ -538,7 +534,7 @@ export function SidebarLayout({
         <div className="flex items-center gap-3 px-4 py-3">
           {user?.avatarUrl ? (
             <img
-              src={`${import.meta.env.VITE_API_BASE_URL || 'http://localhost:3000'}${user.avatarUrl}`}
+              src={user.avatarUrl}
               alt="Avatar"
               className="w-10 h-10 rounded-full object-cover"
             />

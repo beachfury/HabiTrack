@@ -7,16 +7,9 @@ import { useState, useEffect } from 'react';
 import type { ExtendedTheme, ThemeableElement } from '../../../types/theme';
 import { ClickableElement } from '../InteractivePreview';
 
-// Helper to get full URL for uploaded assets
+// Helper to get full URL for uploaded assets - served at same origin via nginx proxy
 const getAssetUrl = (path: string | undefined): string | undefined => {
   if (!path) return undefined;
-  // If already a full URL, return as-is
-  if (path.startsWith('http://') || path.startsWith('https://')) return path;
-  // If it's a relative path starting with /, prepend the API base URL
-  if (path.startsWith('/')) {
-    const apiBase = import.meta.env.VITE_API_BASE_URL || 'http://localhost:3000';
-    return `${apiBase}${path}`;
-  }
   return path;
 };
 

@@ -6,6 +6,15 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ---
 
+## [1.4.9] - 2026-02-24
+
+### Fixed
+
+#### Image URLs Using localhost:3000 in Production
+- **Removed hardcoded `localhost:3000` fallback from all image URL resolution** — Throughout the frontend, image URLs were constructed as `${VITE_API_BASE_URL || 'http://localhost:3000'}${path}`. Since `VITE_API_BASE_URL` is not set in production, avatars, logos, and background images loaded from `http://localhost:3000` instead of the current origin, causing mixed-content errors and broken images. With nginx now proxying `/uploads` (v1.4.8), relative paths work directly — removed the API base prefix from all 12 affected files across layouts, pages, and theme editors.
+
+---
+
 ## [1.4.8] - 2026-02-24
 
 ### Fixed
