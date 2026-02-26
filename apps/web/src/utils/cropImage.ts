@@ -139,3 +139,43 @@ export async function renderSvgToImage(
   const dataUrl = canvas.toDataURL('image/png');
   return { dataUrl, mimeType: 'image/png' };
 }
+
+const SHOPPING_MAX_WIDTH = 1000;
+const SHOPPING_MAX_HEIGHT = 1333;
+
+/** Resize a shopping catalog image to fit within 1000×1333, no upscale */
+export async function resizeShoppingImage(
+  file: File,
+): Promise<{ dataUrl: string; mimeType: string }> {
+  const url = URL.createObjectURL(file);
+  try {
+    const img = await createImage(url);
+    const { naturalWidth: w, naturalHeight: h } = img;
+
+    // If already within bounds, just return the original as a data URL
+    if (w <= SHOPPING_MAX_WIDTH && h <= SHOPPING_MAX_HEIGHT) {
+      return new Promise((resolve, reject) => {
+        const reader = new FileReader();
+        reader.onload = () => resolve({ dataUrl: reader.result as string, mimeType: file.type });
+        reader.onerror = reject;
+        reader.readAsDataURL(file);
+      });
+    }
+
+    // Scale to fit inside max bounds while maintaining aspect ratio
+    const scale = Math.min(SHOPPING_MAX_WIDTH / w, SHOPPING_MAX_HEIGHT / h);
+    const newW = Math.round(w * scale);
+    const newH = Math.round(h * scale);
+
+    const canvas = document.createElement('canvas');
+    canvas.width = newW;
+    canvas.height = newH;
+    const ctx = canvas.getContext('2d')!;
+    ctx.drawImage(img, 0, 0, newW, newH);
+
+    const dataUrl = canvas.toDataURL('image/jpeg', 0.9);
+    return { dataUrl, mimeType: 'image/jpeg' };
+  } finally {
+    URL.revokeObjectURL(url);
+  }
+}

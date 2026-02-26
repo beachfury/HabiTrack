@@ -44,6 +44,7 @@ export const UPLOAD = {
     sidebar: { width: 400, height: 800 },
     background: { width: 1920, height: 1080 },
     'background-pattern': { width: 200, height: 200 },
+    shopping: { width: 1000, height: 1333 },
   },
 } as const;
 
