@@ -48,7 +48,7 @@
 - Shared shopping lists with categories
 - Multi-store support with store-specific lists
 - Price tracking and history
-- Store-first product catalog with per-store brand names, images, and prices
+- Store-first product catalog with per-store brand names, images, and prices (auto-resized to 1000×1333 at 72 DPI)
 - Three-tier catalog visibility (Active / Archived / Hidden) with bulk management, restore, and "Show Archived" toggle
 - Click-to-expand product image lightbox on shopping list thumbnails
 - Member request system with admin approval

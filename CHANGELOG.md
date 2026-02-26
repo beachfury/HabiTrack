@@ -6,6 +6,18 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ---
 
+## [1.6.1] - 2026-02-25
+
+### Added
+
+#### Catalog Image Auto-Resize
+- **Client-side pre-resize** — Shopping catalog images are now automatically resized to fit within 1000×1333px before upload using the Canvas API, reducing upload time and bandwidth
+- **Server-side Sharp processing** — Backend processes all shopping images through Sharp: auto-rotates from EXIF data, resizes to fit within 1000×1333px, sets 72 DPI metadata, and converts to JPEG at 85% quality
+- **No upscale** — Small images that already fit within bounds are not upscaled on either client or server
+- **Consistent output** — All shopping images now save as `.jpg` regardless of input format (PNG, GIF, WebP all convert to JPEG)
+
+---
+
 ## [1.6.0] - 2026-02-25
 
 ### Added

@@ -7,6 +7,7 @@ import { logAudit } from '../audit';
 import * as fs from 'fs';
 import * as path from 'path';
 import * as crypto from 'crypto';
+import sharp from 'sharp';
 import { getUser } from '../utils/auth';
 import { authRequired, invalidInput, notFound, forbidden, serverError } from '../utils/errors';
 import { UPLOAD } from '../utils/constants';
@@ -595,13 +596,21 @@ export async function uploadShoppingImage(req: Request, res: Response) {
       return invalidInput(res, 'Image too large. Maximum size is 5MB');
     }
 
-    // Generate unique filename
-    const ext = contentType.split('/')[1];
-    const filename = `shopping-${crypto.randomBytes(8).toString('hex')}.${ext}`;
+    // Process image: auto-rotate, resize to fit 1000×1333, set 72 DPI, convert to JPEG
+    const { width: maxW, height: maxH } = UPLOAD.PRESETS.shopping;
+    const processed = await sharp(buffer)
+      .rotate() // auto-orient from EXIF
+      .resize(maxW, maxH, { fit: 'inside', withoutEnlargement: true })
+      .withMetadata({ density: 72 })
+      .jpeg({ quality: 85 })
+      .toBuffer();
+
+    // Always save as .jpg since we convert to JPEG
+    const filename = `shopping-${crypto.randomBytes(8).toString('hex')}.jpg`;
     const filepath = path.join(SHOPPING_DIR, filename);
 
-    // Save image
-    fs.writeFileSync(filepath, buffer);
+    // Save processed image
+    fs.writeFileSync(filepath, processed);
 
     const imageKey = `/uploads/shopping/${filename}`;
 

@@ -3,6 +3,7 @@ import { useState, useRef, useEffect } from 'react';
 import { X, Camera, RefreshCw, DollarSign, Trash2, ImagePlus } from 'lucide-react';
 import { shoppingApi } from '../../../api';
 import type { ShoppingCategory, ShoppingStore, CatalogItem } from '../../../types';
+import { resizeShoppingImage } from '../../../utils/cropImage';
 import { ModalPortal, ModalBody } from '../../common/ModalPortal';
 import { ModalFooterButtons } from '../../common/ModalFooterButtons';
 
@@ -87,17 +88,14 @@ export function NewItemModal({
       return;
     }
     setUploading(true);
-    const reader = new FileReader();
-    reader.onload = async () => {
-      try {
-        const result = await shoppingApi.uploadImage(reader.result as string, file.type);
-        setImageUrl(result.imageKey);
-      } catch (err) {
-        alert('Failed to upload image');
-      }
-      setUploading(false);
-    };
-    reader.readAsDataURL(file);
+    try {
+      const resized = await resizeShoppingImage(file);
+      const result = await shoppingApi.uploadImage(resized.dataUrl, resized.mimeType);
+      setImageUrl(result.imageKey);
+    } catch (err) {
+      alert('Failed to upload image');
+    }
+    setUploading(false);
   };
 
   const handleStoreImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -108,17 +106,14 @@ export function NewItemModal({
       return;
     }
     const idx = uploadingStoreIndex;
-    const reader = new FileReader();
-    reader.onload = async () => {
-      try {
-        const result = await shoppingApi.uploadImage(reader.result as string, file.type);
-        updatePrice(idx, 'imageUrl', result.imageKey);
-      } catch (err) {
-        alert('Failed to upload image');
-      }
-      setUploadingStoreIndex(null);
-    };
-    reader.readAsDataURL(file);
+    try {
+      const resized = await resizeShoppingImage(file);
+      const result = await shoppingApi.uploadImage(resized.dataUrl, resized.mimeType);
+      updatePrice(idx, 'imageUrl', result.imageKey);
+    } catch (err) {
+      alert('Failed to upload image');
+    }
+    setUploadingStoreIndex(null);
   };
 
   const triggerStoreImageUpload = (index: number) => {
