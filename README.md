@@ -49,6 +49,7 @@
 - Multi-store support with store-specific lists
 - Price tracking and history
 - Store-first product catalog with per-store brand names, images, and prices
+- Three-tier catalog visibility (Active / Archived / Hidden) with bulk management, restore, and "Show Archived" toggle
 - Click-to-expand product image lightbox on shopping list thumbnails
 - Member request system with admin approval
 - Smart predictions based on purchase history (weighted intervals, variance-adjusted confidence, co-purchase boosting, shopping day detection, trending items)

@@ -83,6 +83,7 @@ export function ShoppingPage() {
   const [success, setSuccess] = useState('');
   const [searchTerm, setSearchTerm] = useState('');
   const [catalogStoreFilter, setCatalogStoreFilter] = useState<number | null>(null);
+  const [showArchivedInCatalog, setShowArchivedInCatalog] = useState(false);
   const [expandedStores, setExpandedStores] = useState<Set<string>>(new Set());
 
   // Auto-expand store groups that have items
@@ -166,11 +167,14 @@ export function ShoppingPage() {
     setRequests(data.requests);
   }
 
-  async function fetchCatalog(search?: string, storeId?: number | null) {
+  async function fetchCatalog(search?: string, storeId?: number | null, includeArchived?: boolean) {
     const effectiveStoreId = storeId !== undefined ? storeId : catalogStoreFilter;
+    const showArchived = includeArchived !== undefined ? includeArchived : showArchivedInCatalog;
+    const visibility = showArchived ? 'active,archived' : 'active';
     const data = await shoppingApi.getCatalogItems(
       search || searchTerm,
       effectiveStoreId || undefined,
+      visibility,
     );
     setCatalogItems(data.items);
   }
@@ -605,6 +609,11 @@ export function ShoppingPage() {
                 onRefresh={() => fetchCatalog()}
                 isAdmin={isAdmin}
                 isKid={isKid}
+                showArchived={showArchivedInCatalog}
+                onToggleArchived={(show) => {
+                  setShowArchivedInCatalog(show);
+                  fetchCatalog(searchTerm, undefined, show);
+                }}
                 // Integrated request handling
                 pendingRequests={requests.filter((r) => r.status === 'pending')}
                 onApproveRequest={handleApproveRequestAndAdd}
@@ -667,7 +676,8 @@ export function ShoppingPage() {
           }}
           onSearch={(term) => {
             setSearchTerm(term);
-            fetchCatalog(term);
+            // Include archived items in search so seasonal items are findable
+            fetchCatalog(term, undefined, true);
           }}
           isAdmin={isAdmin}
         />

@@ -7,6 +7,7 @@ import type {
   ShoppingStore,
   CatalogItem,
   CatalogItemPrice,
+  CatalogVisibility,
   ShoppingListItem,
   ShoppingRequest,
   Suggestion,
@@ -73,10 +74,11 @@ export const shoppingApi = {
   // =============================================================================
   // Catalog Items
   // =============================================================================
-  getCatalogItems(search?: string, storeId?: number): Promise<{ items: CatalogItem[] }> {
+  getCatalogItems(search?: string, storeId?: number, visibility?: string): Promise<{ items: CatalogItem[] }> {
     const queryParams = new URLSearchParams();
     if (search) queryParams.set('search', search);
     if (storeId) queryParams.set('storeId', String(storeId));
+    if (visibility) queryParams.set('visibility', visibility);
     const qs = queryParams.toString();
     return apiClient['get'](`/shopping/catalog${qs ? '?' + qs : ''}`, { params: undefined });
   },
@@ -121,6 +123,14 @@ export const shoppingApi = {
 
   deleteCatalogItem(id: number): Promise<{ success: boolean }> {
     return apiClient['delete'](`/shopping/catalog/${id}`, undefined);
+  },
+
+  setCatalogItemVisibility(id: number, visibility: CatalogVisibility): Promise<{ success: boolean }> {
+    return apiClient['patch'](`/shopping/catalog/${id}/visibility`, { visibility });
+  },
+
+  bulkSetCatalogItemVisibility(ids: number[], visibility: CatalogVisibility): Promise<{ success: boolean; count: number }> {
+    return apiClient['patch']('/shopping/catalog/bulk-visibility', { ids, visibility });
   },
 
   // =============================================================================

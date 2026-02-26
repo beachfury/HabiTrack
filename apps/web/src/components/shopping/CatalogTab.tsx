@@ -12,6 +12,7 @@ import {
   X,
   Send,
   Store,
+  Archive,
 } from 'lucide-react';
 import { CardImage } from './ItemImage';
 import { NewItemModal } from './modals/NewItemModal';
@@ -32,6 +33,8 @@ interface CatalogTabProps {
   onRefresh: () => void;
   isAdmin: boolean;
   isKid: boolean;
+  showArchived?: boolean;
+  onToggleArchived?: (show: boolean) => void;
   // Integrated request handling
   pendingRequests?: ShoppingRequest[];
   onApproveRequest?: (request: ShoppingRequest) => void;
@@ -53,6 +56,8 @@ export function CatalogTab({
   onRefresh,
   isAdmin,
   isKid,
+  showArchived = false,
+  onToggleArchived,
   pendingRequests = [],
   onApproveRequest,
   onDenyRequest,
@@ -342,6 +347,20 @@ export function CatalogTab({
         </select>
       </div>
 
+      {/* Show Archived Toggle (admin only) */}
+      {isAdmin && onToggleArchived && (
+        <label className="flex items-center gap-2 text-sm text-[var(--color-muted-foreground)] cursor-pointer select-none">
+          <input
+            type="checkbox"
+            checked={showArchived}
+            onChange={(e) => onToggleArchived(e.target.checked)}
+            className="rounded border-[var(--color-border)]"
+          />
+          <Archive size={14} />
+          Show Archived Items
+        </label>
+      )}
+
       {/* Items - Collapsible by Category */}
       {Object.keys(itemsByCategory).length === 0 ? (
         <div className="themed-shopping-list p-6 text-center">
@@ -480,8 +499,13 @@ export function CatalogTab({
                     {catItems.map((item) => (
                       <div
                         key={item.id}
-                        className="bg-[var(--color-muted)] rounded-xl p-3 relative group"
+                        className={`bg-[var(--color-muted)] rounded-xl p-3 relative group ${item.visibility === 'archived' ? 'opacity-60' : ''}`}
                       >
+                        {item.visibility === 'archived' && (
+                          <span className="absolute top-2 right-2 text-[10px] px-1.5 py-0.5 rounded-full bg-[var(--color-warning)]/20 text-[var(--color-warning)] font-medium z-10">
+                            Archived
+                          </span>
+                        )}
                         <CardImage url={item.imageUrl} alt={item.name} />
                         <p className="font-medium text-[var(--color-foreground)] mt-2 truncate text-sm">
                           {item.name}

@@ -282,6 +282,18 @@ router.put(
   shopping.updateCatalogItem,
 );
 router.delete('/shopping/catalog/:id', requireAuth('admin'), shopping.deleteCatalogItem);
+router.patch(
+  '/shopping/catalog/bulk-visibility',
+  requireAuth('admin'),
+  writeRateLimiter,
+  shopping.bulkSetCatalogItemVisibility,
+);
+router.patch(
+  '/shopping/catalog/:id/visibility',
+  requireAuth('admin'),
+  writeRateLimiter,
+  shopping.setCatalogItemVisibility,
+);
 router.post(
   '/shopping/catalog/:id/prices',
   requireAuth(),
