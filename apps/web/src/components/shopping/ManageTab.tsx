@@ -17,10 +17,12 @@ import {
   AlertCircle,
 } from 'lucide-react';
 import { shoppingApi } from '../../api';
+import { budgetsApi } from '../../api/budgets';
 import { ColorPicker } from '../common/ColorPicker';
 import { NewItemModal } from './modals/NewItemModal';
 import { ModalPortal, ModalBody } from '../common/ModalPortal';
 import type { ShoppingCategory, ShoppingStore, StoreRequest, CatalogItem } from '../../types';
+import type { Budget } from '../../types/budget';
 
 type ManageSubTab = 'catalog' | 'categories' | 'stores';
 
@@ -179,13 +181,14 @@ export function ManageTab({
     }
   };
 
-  const handleSaveCategory = async (updates: { name?: string; color?: string }) => {
+  const handleSaveCategory = async (updates: { name?: string; color?: string; budgetId?: number | null }) => {
     if (!editingCategory) return;
 
     try {
       await shoppingApi.updateCategory(editingCategory.id, {
         name: updates.name,
         color: updates.color,
+        budgetId: updates.budgetId,
       });
       setEditingCategory(null);
       onRefresh();
@@ -455,7 +458,14 @@ export function ManageTab({
                   className="w-4 h-4 rounded-full"
                   style={{ backgroundColor: cat.color || '#f97316' }}
                 />
-                <span className="flex-1 font-medium text-[var(--color-foreground)]">{cat.name}</span>
+                <div className="flex-1 min-w-0">
+                  <span className="font-medium text-[var(--color-foreground)]">{cat.name}</span>
+                  {cat.budgetName && (
+                    <span className="ml-2 text-xs px-2 py-0.5 rounded-full" style={{ backgroundColor: 'color-mix(in srgb, var(--color-info) 15%, transparent)', color: 'var(--color-info)' }}>
+                      → {cat.budgetName}
+                    </span>
+                  )}
+                </div>
                 <button
                   onClick={() => setEditingCategory(cat)}
                   className="p-2 text-[var(--color-info)] hover:bg-[var(--color-info)]/10 rounded-lg"
@@ -599,15 +609,22 @@ export function ManageTab({
 interface EditCategoryModalProps {
   category: ShoppingCategory;
   onClose: () => void;
-  onSave: (updates: { name?: string; color?: string }) => void;
+  onSave: (updates: { name?: string; color?: string; budgetId?: number | null }) => void;
 }
 
 function EditCategoryModal({ category, onClose, onSave }: EditCategoryModalProps) {
   const [form, setForm] = useState({
     name: category.name,
     color: category.color || '#f97316',
+    budgetId: category.budgetId as number | null,
   });
   const [saving, setSaving] = useState(false);
+  const [availableBudgets, setAvailableBudgets] = useState<Budget[]>([]);
+
+  // Load available budgets for the dropdown
+  useEffect(() => {
+    budgetsApi.getBudgets({ active: true }).then((res) => setAvailableBudgets(res.budgets)).catch(() => {});
+  }, []);
 
   const handleSubmit = async () => {
     if (!form.name.trim()) return;
@@ -615,6 +632,7 @@ function EditCategoryModal({ category, onClose, onSave }: EditCategoryModalProps
     await onSave({
       name: form.name,
       color: form.color,
+      budgetId: form.budgetId,
     });
     setSaving(false);
   };
@@ -664,6 +682,27 @@ function EditCategoryModal({ category, onClose, onSave }: EditCategoryModalProps
             onChange={(color) => setForm({ ...form, color })}
             label="Color"
           />
+
+          <div>
+            <label className="block text-sm font-medium text-[var(--color-foreground)] mb-1">
+              Linked Budget (optional)
+            </label>
+            <select
+              value={form.budgetId || ''}
+              onChange={(e) => setForm({ ...form, budgetId: e.target.value ? Number(e.target.value) : null })}
+              className="themed-input w-full"
+            >
+              <option value="">None</option>
+              {availableBudgets.map((b) => (
+                <option key={b.id} value={b.id}>
+                  {b.name} ({b.categoryName})
+                </option>
+              ))}
+            </select>
+            <p className="text-xs text-[var(--color-muted-foreground)] mt-1">
+              Purchases in this category will auto-create budget entries
+            </p>
+          </div>
         </div>
       </ModalBody>
     </ModalPortal>

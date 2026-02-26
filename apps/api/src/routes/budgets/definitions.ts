@@ -72,6 +72,7 @@ export async function getBudgets(req: Request, res: Response) {
         b.endDate,
         b.isRecurring,
         b.dueDay,
+        b.defaultVendor,
         b.active,
         b.createdBy,
         u.displayName as creatorName,
@@ -164,6 +165,7 @@ export async function getBudget(req: Request, res: Response) {
         b.endDate,
         b.isRecurring,
         b.dueDay,
+        b.defaultVendor,
         b.active,
         b.createdBy,
         u.displayName as creatorName,
@@ -254,7 +256,8 @@ export async function createBudget(req: Request, res: Response) {
       startDate,
       endDate,
       isRecurring = true,
-      dueDay
+      dueDay,
+      defaultVendor
     } = req.body;
 
     // Validation
@@ -280,9 +283,9 @@ export async function createBudget(req: Request, res: Response) {
     const result = await q<any>(`
       INSERT INTO budgets (
         categoryId, name, description, budgetAmount, budgetType, periodType,
-        startDate, endDate, isRecurring, dueDay, createdBy
+        startDate, endDate, isRecurring, dueDay, defaultVendor, createdBy
       )
-      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
     `, [
       categoryId,
       name.trim(),
@@ -294,6 +297,7 @@ export async function createBudget(req: Request, res: Response) {
       endDate || null,
       isRecurring ? 1 : 0,
       dueDay || null,
+      defaultVendor?.trim() || null,
       user.id
     ]);
 
@@ -330,6 +334,7 @@ export async function updateBudget(req: Request, res: Response) {
       endDate,
       isRecurring,
       dueDay,
+      defaultVendor,
       active,
       reason // Reason for budget amount change
     } = req.body;
@@ -396,6 +401,10 @@ export async function updateBudget(req: Request, res: Response) {
     if (req.body.budgetType !== undefined) {
       updates.push('budgetType = ?');
       params.push(req.body.budgetType);
+    }
+    if (defaultVendor !== undefined) {
+      updates.push('defaultVendor = ?');
+      params.push(defaultVendor?.trim() || null);
     }
     if (active !== undefined) {
       updates.push('active = ?');

@@ -1,5 +1,6 @@
 // Budget Overview Tab - Summary cards and quick stats
 
+import { useState, useEffect } from 'react';
 import {
   TrendingUp,
   TrendingDown,
@@ -11,8 +12,11 @@ import {
   Plus,
   Edit,
   RefreshCw,
+  ShoppingCart,
+  Store,
 } from 'lucide-react';
 import type { Budget, BudgetEntry, BudgetCategory, BudgetSummary, IncomeSummary } from '../../types/budget';
+import { budgetsApi } from '../../api/budgets';
 
 interface OverviewTabProps {
   summary: BudgetSummary | null;
@@ -35,6 +39,19 @@ export function OverviewTab({
   onEditBudget,
   onRefresh,
 }: OverviewTabProps) {
+  const [shoppingSummary, setShoppingSummary] = useState<{
+    totalSpent: number;
+    purchaseCount: number;
+    topStore: { storeName: string; total: number; itemCount: number } | null;
+    storeBreakdown: Array<{ storeName: string; total: number; itemCount: number }>;
+  } | null>(null);
+
+  useEffect(() => {
+    budgetsApi.getShoppingSummary()
+      .then((res) => setShoppingSummary(res.shoppingSummary))
+      .catch(() => {});
+  }, []);
+
   const formatCurrency = (amount: number) => {
     return new Intl.NumberFormat('en-US', {
       style: 'currency',
@@ -172,30 +189,41 @@ export function OverviewTab({
       </div>
 
       {/* Income vs Expenses Summary */}
-      {incomeSummary && incomeSummary.incomeSourceCount > 0 && (
-        <div className="themed-card rounded-xl p-6 shadow-sm">
-          <h3 className="text-sm font-medium text-[var(--color-muted-foreground)] mb-3">Income vs Expenses</h3>
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-            <div>
-              <p className="text-xs text-[var(--color-muted-foreground)]">Expected Income</p>
-              <p className="text-lg font-bold text-[var(--color-success)]">{formatCurrency(incomeSummary.totalExpectedMonthly)}</p>
-            </div>
-            <div>
-              <p className="text-xs text-[var(--color-muted-foreground)]">Budgeted Expenses</p>
-              <p className="text-lg font-bold text-[var(--color-foreground)]">{formatCurrency(incomeSummary.totalBudgetedExpenses)}</p>
-            </div>
-            <div>
-              <p className="text-xs text-[var(--color-muted-foreground)]">Net Position</p>
-              <p
-                className="text-lg font-bold"
-                style={{ color: incomeSummary.netPosition >= 0 ? 'var(--color-success)' : 'var(--color-destructive)' }}
-              >
-                {incomeSummary.netPosition >= 0 ? '+' : ''}{formatCurrency(incomeSummary.netPosition)}
-              </p>
+      {incomeSummary && incomeSummary.incomeSourceCount > 0 && (() => {
+        const shoppingSpend = shoppingSummary?.totalSpent || 0;
+        const totalExpenses = incomeSummary.totalBudgetedExpenses + shoppingSpend;
+        const adjustedNet = incomeSummary.totalExpectedMonthly - totalExpenses;
+        return (
+          <div className="themed-card rounded-xl p-6 shadow-sm">
+            <h3 className="text-sm font-medium text-[var(--color-muted-foreground)] mb-3">Income vs Expenses</h3>
+            <div className={`grid grid-cols-1 gap-4 ${shoppingSpend > 0 ? 'sm:grid-cols-4' : 'sm:grid-cols-3'}`}>
+              <div>
+                <p className="text-xs text-[var(--color-muted-foreground)]">Expected Income</p>
+                <p className="text-lg font-bold text-[var(--color-success)]">{formatCurrency(incomeSummary.totalExpectedMonthly)}</p>
+              </div>
+              <div>
+                <p className="text-xs text-[var(--color-muted-foreground)]">Budgeted Expenses</p>
+                <p className="text-lg font-bold text-[var(--color-foreground)]">{formatCurrency(incomeSummary.totalBudgetedExpenses)}</p>
+              </div>
+              {shoppingSpend > 0 && (
+                <div>
+                  <p className="text-xs text-[var(--color-muted-foreground)]">Shopping Spend</p>
+                  <p className="text-lg font-bold text-[var(--color-foreground)]">{formatCurrency(shoppingSpend)}</p>
+                </div>
+              )}
+              <div>
+                <p className="text-xs text-[var(--color-muted-foreground)]">Net Position</p>
+                <p
+                  className="text-lg font-bold"
+                  style={{ color: adjustedNet >= 0 ? 'var(--color-success)' : 'var(--color-destructive)' }}
+                >
+                  {adjustedNet >= 0 ? '+' : ''}{formatCurrency(adjustedNet)}
+                </p>
+              </div>
             </div>
           </div>
-        </div>
-      )}
+        );
+      })()}
 
       {/* Alert Section - Unpaid Bills and Over-Budget Spending */}
       {(unpaidBills.length > 0 || alertBudgets.length > 0) && (
@@ -393,7 +421,7 @@ export function OverviewTab({
                     </div>
                   </div>
                   <span className="font-semibold text-[var(--color-foreground)]">
-                    -{formatCurrency(entry.amount)}
+                    -{formatCurrency(Number(entry.amount))}
                   </span>
                 </div>
               </div>
@@ -408,6 +436,56 @@ export function OverviewTab({
           </div>
         </div>
       </div>
+
+      {/* Shopping This Month */}
+      {shoppingSummary && shoppingSummary.purchaseCount > 0 && (
+        <div className="themed-card rounded-xl shadow-sm">
+          <div className="p-4 border-b border-[var(--color-border)] flex items-center gap-2">
+            <ShoppingCart className="w-5 h-5 text-[var(--color-info)]" />
+            <h3 className="font-semibold text-[var(--color-foreground)]">Shopping This Month</h3>
+          </div>
+          <div className="p-4">
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+              <div>
+                <p className="text-xs text-[var(--color-muted-foreground)]">Total Spent</p>
+                <p className="text-lg font-bold text-[var(--color-foreground)]">
+                  {formatCurrency(shoppingSummary.totalSpent)}
+                </p>
+              </div>
+              <div>
+                <p className="text-xs text-[var(--color-muted-foreground)]">Purchases</p>
+                <p className="text-lg font-bold text-[var(--color-foreground)]">
+                  {shoppingSummary.purchaseCount}
+                </p>
+              </div>
+              {shoppingSummary.topStore && (
+                <div>
+                  <p className="text-xs text-[var(--color-muted-foreground)]">Top Store</p>
+                  <p className="text-lg font-bold text-[var(--color-foreground)] flex items-center gap-1">
+                    <Store className="w-4 h-4 text-[var(--color-info)]" />
+                    {shoppingSummary.topStore.storeName}
+                  </p>
+                </div>
+              )}
+            </div>
+            {shoppingSummary.storeBreakdown.length > 1 && (
+              <div className="mt-4 pt-3 border-t border-[var(--color-border)]">
+                <p className="text-xs text-[var(--color-muted-foreground)] mb-2">Store Breakdown</p>
+                <div className="space-y-1.5">
+                  {shoppingSummary.storeBreakdown.slice(0, 5).map((store) => (
+                    <div key={store.storeName} className="flex items-center justify-between text-sm">
+                      <span className="text-[var(--color-foreground)]">{store.storeName || 'Unknown'}</span>
+                      <span className="text-[var(--color-muted-foreground)]">
+                        {formatCurrency(store.total)} ({store.itemCount} items)
+                      </span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+          </div>
+        </div>
+      )}
 
       {/* Top Category */}
       {summary?.topCategory && (

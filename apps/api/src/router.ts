@@ -513,6 +513,8 @@ router.delete('/budgets/categories/:id', requireAuth('admin'), budgets.deleteCat
 // Analytics & Summary (before :id routes)
 router.get('/budgets/analytics', requireAuth('admin'), budgets.getAnalytics);
 router.get('/budgets/summary', requireAuth('admin'), budgets.getSummary);
+router.get('/budgets/shopping-summary', requireAuth('admin'), budgets.getShoppingSummary);
+router.get('/budgets/vendors', requireAuth('admin'), budgets.getVendors);
 
 // Entries (before :id routes to avoid conflicts)
 router.get('/budgets/entries', requireAuth('admin'), budgets.getEntries);

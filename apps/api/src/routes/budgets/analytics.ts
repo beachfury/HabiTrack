@@ -321,3 +321,69 @@ export async function getSummary(req: Request, res: Response) {
     serverError(res, 'Failed to get budget summary');
   }
 }
+
+// ============================================
+// GET SHOPPING SUMMARY (for budget overview)
+// ============================================
+export async function getShoppingSummary(req: Request, res: Response) {
+  try {
+    const user = getUser(req);
+    if (!user) {
+      return authRequired(res);
+    }
+
+    const now = new Date();
+    const startDate = new Date(now.getFullYear(), now.getMonth(), 1);
+    const endDate = new Date(now.getFullYear(), now.getMonth() + 1, 0);
+
+    const startDateStr = startDate.toISOString().split('T')[0];
+    const endDateStr = endDate.toISOString().split('T')[0];
+
+    // Total shopping spend this month
+    const totalResult = await q<any[]>(`
+      SELECT
+        COALESCE(SUM(spe.price * spe.quantity), 0) as totalSpent,
+        COUNT(*) as purchaseCount
+      FROM shopping_purchase_events spe
+      WHERE spe.purchasedAt >= ?
+        AND spe.purchasedAt <= ?
+    `, [`${startDateStr} 00:00:00`, `${endDateStr} 23:59:59`]);
+
+    // Breakdown by store
+    const storeBreakdown = await q<any[]>(`
+      SELECT
+        s.name as storeName,
+        COALESCE(SUM(spe.price * spe.quantity), 0) as total,
+        COUNT(*) as itemCount
+      FROM shopping_purchase_events spe
+      LEFT JOIN stores s ON spe.storeId = s.id
+      WHERE spe.purchasedAt >= ?
+        AND spe.purchasedAt <= ?
+      GROUP BY spe.storeId, s.name
+      ORDER BY total DESC
+    `, [`${startDateStr} 00:00:00`, `${endDateStr} 23:59:59`]);
+
+    const totalSpent = parseFloat(totalResult[0]?.totalSpent || 0);
+    const purchaseCount = parseInt(totalResult[0]?.purchaseCount || 0);
+
+    res.json({
+      shoppingSummary: {
+        totalSpent,
+        purchaseCount,
+        topStore: storeBreakdown[0] || null,
+        storeBreakdown: storeBreakdown.map((s) => ({
+          ...s,
+          total: parseFloat(s.total),
+        })),
+      },
+      period: {
+        month: now.toLocaleDateString('en-US', { month: 'long', year: 'numeric' }),
+        startDate: startDateStr,
+        endDate: endDateStr,
+      },
+    });
+  } catch (err) {
+    console.error('Failed to get shopping summary:', err);
+    serverError(res, 'Failed to get shopping summary');
+  }
+}

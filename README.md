@@ -75,13 +75,15 @@
 - Admin-only budget tracking
 - Multiple budget types: monthly, yearly, one-time
 - Categories for bills, utilities, groceries, etc.
+- Default vendor per budget with vendor autocomplete across entries
 - Monthly spending overview with analytics
 - Budget vs. actual comparison charts
 - Expense history and trends
 - Entry management with filters and search
 - 💰 Income tracking with multiple sources (salary, bonus, side-income, investment)
-- Income vs. expenses net position overview
+- Income vs. expenses net position overview (includes shopping spend)
 - Flexible frequency support (monthly, bi-weekly, weekly, yearly, one-time, irregular)
+- 🛒 Shopping integration — link shopping categories to budgets for automatic entry creation on purchase
 
 ### 💬 Messaging
 - System notifications for chore completions, events, etc.

@@ -56,13 +56,13 @@ export function BudgetsTab({
           comparison = a.name.localeCompare(b.name);
           break;
         case 'amount':
-          comparison = a.budgetAmount - b.budgetAmount;
+          comparison = Number(a.budgetAmount) - Number(b.budgetAmount);
           break;
         case 'spent':
-          comparison = a.currentSpent - b.currentSpent;
+          comparison = Number(a.currentSpent) - Number(b.currentSpent);
           break;
         case 'percent':
-          comparison = a.percentUsed - b.percentUsed;
+          comparison = Number(a.percentUsed) - Number(b.percentUsed);
           break;
       }
       return sortOrder === 'asc' ? comparison : -comparison;
@@ -330,7 +330,7 @@ export function BudgetsTab({
                           {budget.isPaidThisPeriod && budget.currentSpent > 0 && (
                             <div className="text-sm text-[var(--color-muted-foreground)]">
                               Paid: {formatCurrency(budget.currentSpent)}
-                              {budget.currentSpent !== budget.budgetAmount && (
+                              {Number(budget.currentSpent) !== Number(budget.budgetAmount) && (
                                 <span className="text-xs ml-1">
                                   (expected: {formatCurrency(budget.budgetAmount)})
                                 </span>

@@ -270,7 +270,8 @@ export async function markPurchased(req: Request, res: Response) {
   if (!user) return res.status(401).json({ error: { code: 'AUTH_REQUIRED' } });
 
   const listItemId = parseInt(req.params.id);
-  const { unitPrice, storeId } = req.body;
+  // Accept both 'price' (frontend) and 'unitPrice' (legacy) field names
+  const { price: frontendPrice, unitPrice, storeId } = req.body;
 
   try {
     const [item] = await q<
@@ -288,14 +289,24 @@ export async function markPurchased(req: Request, res: Response) {
     const actualStoreId = storeId || item.storeId;
 
     // Look up stored price if not provided
-    let price = unitPrice;
+    let price = frontendPrice ?? unitPrice;
     if (price === undefined || price === null) {
-      // Try to get price from item_prices table
-      const [storedPrice] = await q<Array<{ price: number }>>(
-        `SELECT price FROM item_prices WHERE catalogItemId = ? AND storeId = ?`,
-        [item.catalogItemId, actualStoreId],
-      );
-      price = storedPrice?.price || 0;
+      if (actualStoreId) {
+        // Try store-specific price first
+        const [storedPrice] = await q<Array<{ price: number }>>(
+          `SELECT price FROM item_prices WHERE catalogItemId = ? AND storeId = ?`,
+          [item.catalogItemId, actualStoreId],
+        );
+        price = storedPrice?.price || 0;
+      }
+      // Fallback: get lowest available price for this item (any store)
+      if (!price) {
+        const [anyPrice] = await q<Array<{ price: number }>>(
+          `SELECT MIN(price) as price FROM item_prices WHERE catalogItemId = ?`,
+          [item.catalogItemId],
+        );
+        price = anyPrice?.price || 0;
+      }
     }
 
     // Mark as purchased - use NOW() for MySQL datetime
@@ -314,14 +325,54 @@ export async function markPurchased(req: Request, res: Response) {
       [item.catalogItemId, actualStoreId, item.quantity, price, user.id],
     );
 
-    // Update price if provided
-    if (unitPrice && actualStoreId) {
+    // Update stored price if explicitly provided by frontend
+    const explicitPrice = frontendPrice ?? unitPrice;
+    if (explicitPrice && actualStoreId) {
       await q(
         `INSERT INTO item_prices (catalogItemId, storeId, price, observedAt)
          VALUES (?, ?, ?, NOW())
          ON DUPLICATE KEY UPDATE price = ?, observedAt = NOW()`,
-        [item.catalogItemId, actualStoreId, unitPrice, unitPrice],
+        [item.catalogItemId, actualStoreId, explicitPrice, explicitPrice],
       );
+    }
+
+    // Auto-create budget entry if the item's shopping category is linked to a budget
+    try {
+      const [catBudget] = await q<Array<{ budgetId: number; budgetActive: number; itemName: string; brandName: string | null; storeName: string | null }>>(
+        `SELECT sc.budgetId, b.active as budgetActive, ci.name as itemName, ci.brand as brandName, s.name as storeName
+         FROM catalog_items ci
+         LEFT JOIN shopping_categories sc ON ci.categoryId = sc.id
+         LEFT JOIN budgets b ON sc.budgetId = b.id
+         LEFT JOIN stores s ON s.id = ?
+         WHERE ci.id = ? AND sc.budgetId IS NOT NULL`,
+        [actualStoreId, item.catalogItemId],
+      );
+
+      if (catBudget?.budgetId && catBudget.budgetActive) {
+        const entryAmount = Number(price) * item.quantity;
+        if (entryAmount <= 0) {
+          log.warn('Skipping $0 budget entry from shopping purchase', { catalogItemId: item.catalogItemId, price, quantity: item.quantity });
+        } else {
+          const description = catBudget.brandName
+            ? `${catBudget.itemName} - ${catBudget.brandName}`
+            : catBudget.itemName;
+          const today = new Date().toISOString().split('T')[0];
+
+          await q(
+            `INSERT INTO budget_entries (budgetId, amount, description, transactionDate, vendor, notes, createdBy)
+             VALUES (?, ?, ?, ?, ?, 'Auto-created from shopping purchase', ?)`,
+            [catBudget.budgetId, entryAmount, description, today, catBudget.storeName || null, user.id],
+          );
+          log.info('Auto-created budget entry from shopping purchase', {
+            budgetId: catBudget.budgetId,
+            amount: entryAmount,
+            catalogItemId: item.catalogItemId,
+          });
+        }
+      }
+    } catch (budgetErr) {
+      // Non-fatal - don't fail purchase if budget entry fails
+      log.warn('Failed to auto-create budget entry from shopping purchase', { error: String(budgetErr) });
     }
 
     log.info('Item purchased', { listItemId, catalogItemId: item.catalogItemId, purchasedBy: user.id, price });
@@ -330,7 +381,7 @@ export async function markPurchased(req: Request, res: Response) {
       action: 'shopping.list.purchase',
       result: 'ok',
       actorId: user.id,
-      details: { listItemId, storeId: actualStoreId, unitPrice },
+      details: { listItemId, storeId: actualStoreId, price },
     });
 
     return success(res, { success: true });

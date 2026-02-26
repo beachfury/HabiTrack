@@ -214,7 +214,18 @@ export function ShoppingPage() {
   // Handlers
   const handleMarkPurchased = async (id: number) => {
     try {
-      await shoppingApi.markAsPurchased(id);
+      // Look up item from loaded list to send price & store to backend
+      const item = listItems.find((i) => i.id === id) || purchasedToday.find((i) => i.id === id);
+      const purchaseData: { price?: number; storeId?: number } = {};
+      if (item) {
+        // Use store-specific price if a store is assigned, otherwise lowest price
+        const itemPrice = item.storeId
+          ? Number(item.storePrice || 0)
+          : Number(item.storePrice || item.lowestPrice || 0);
+        if (itemPrice > 0) purchaseData.price = itemPrice;
+        if (item.storeId) purchaseData.storeId = item.storeId;
+      }
+      await shoppingApi.markAsPurchased(id, Object.keys(purchaseData).length > 0 ? purchaseData : undefined);
       showSuccessMessage('Marked as purchased!');
       fetchShoppingList();
     } catch (err) {

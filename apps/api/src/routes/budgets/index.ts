@@ -23,9 +23,11 @@ export {
   createEntry,
   updateEntry,
   deleteEntry,
+  getVendors,
 } from './entries';
 
 export {
   getAnalytics,
   getSummary,
+  getShoppingSummary,
 } from './analytics';
