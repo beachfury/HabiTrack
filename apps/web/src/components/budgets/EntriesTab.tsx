@@ -95,7 +95,7 @@ export function EntriesTab({
   );
 
   // Calculate total for filtered entries
-  const filteredTotal = filteredEntries.reduce((sum, e) => sum + e.amount, 0);
+  const filteredTotal = filteredEntries.reduce((sum, e) => sum + Number(e.amount), 0);
 
   // Reset page when filters change
   const handleFilterChange = () => {
@@ -265,7 +265,7 @@ export function EntriesTab({
                     </td>
                     <td className="px-4 py-3 text-right">
                       <span className="text-sm font-medium text-[var(--color-foreground)]">
-                        {formatCurrency(entry.amount)}
+                        {formatCurrency(Number(entry.amount))}
                       </span>
                     </td>
                     <td className="px-4 py-3">

@@ -23,6 +23,8 @@ export interface ShoppingCategory {
   name: string;
   color: string;
   isDefault: boolean;
+  budgetId: number | null;
+  budgetName: string | null;
 }
 
 export interface ShoppingStore {

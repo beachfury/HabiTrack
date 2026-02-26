@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react';
 import { Receipt, DollarSign, Calendar, Store, FileText } from 'lucide-react';
 import type { Budget, BudgetEntry, CreateEntryData } from '../../../types/budget';
+import { budgetsApi } from '../../../api/budgets';
 import { ModalPortal, ModalBody } from '../../common/ModalPortal';
 import { ModalFooterButtons } from '../../common/ModalFooterButtons';
 
@@ -41,6 +42,12 @@ export function AddEntryModal({
 
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [submitting, setSubmitting] = useState(false);
+  const [knownVendors, setKnownVendors] = useState<string[]>([]);
+
+  // Load vendor suggestions on mount
+  useEffect(() => {
+    budgetsApi.getVendors().then((res) => setKnownVendors(res.vendors)).catch(() => {});
+  }, []);
 
   // Populate form if editing
   useEffect(() => {
@@ -56,6 +63,16 @@ export function AddEntryModal({
       });
     }
   }, [entry]);
+
+  // Auto-fill vendor from budget default when budget selection changes (only for new entries)
+  useEffect(() => {
+    if (!entry && formData.budgetId) {
+      const selected = budgets.find((b) => b.id === formData.budgetId);
+      if (selected?.defaultVendor && !formData.vendor) {
+        setFormData((prev) => ({ ...prev, vendor: selected.defaultVendor! }));
+      }
+    }
+  }, [formData.budgetId]);
 
   const validate = () => {
     const newErrors: Record<string, string> = {};
@@ -212,11 +229,17 @@ export function AddEntryModal({
               <Store className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-[var(--color-muted-foreground)]" />
               <input
                 type="text"
+                list="vendor-suggestions"
                 value={formData.vendor}
                 onChange={(e) => setFormData({ ...formData, vendor: e.target.value })}
                 placeholder="e.g., Duke Energy, Shell, Walmart"
                 className="w-full pl-9 pr-3 py-2 bg-[var(--color-card)] border border-[var(--color-border)] rounded-lg text-[var(--color-foreground)]"
               />
+              <datalist id="vendor-suggestions">
+                {knownVendors.map((v) => (
+                  <option key={v} value={v} />
+                ))}
+              </datalist>
             </div>
           </div>
 

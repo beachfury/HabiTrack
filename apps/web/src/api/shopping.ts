@@ -34,7 +34,7 @@ export const shoppingApi = {
 
   updateCategory(
     id: number,
-    data: { name?: string; color?: string },
+    data: { name?: string; color?: string; budgetId?: number | null },
   ): Promise<{ success: boolean }> {
     return apiClient['put'](`/shopping/categories/${id}`, data);
   },

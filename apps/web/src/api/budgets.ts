@@ -130,6 +130,28 @@ export const budgetsApi = {
   getSummary(): Promise<SummaryResponse> {
     return apiClient.get('/budgets/summary', { params: undefined });
   },
+
+  // ===================
+  // Vendors
+  // ===================
+  getVendors(): Promise<{ vendors: string[] }> {
+    return apiClient.get('/budgets/vendors', { params: undefined });
+  },
+
+  // ===================
+  // Shopping Summary
+  // ===================
+  getShoppingSummary(): Promise<{
+    shoppingSummary: {
+      totalSpent: number;
+      purchaseCount: number;
+      topStore: { storeName: string; total: number; itemCount: number } | null;
+      storeBreakdown: Array<{ storeName: string; total: number; itemCount: number }>;
+    };
+    period: { month: string; startDate: string; endDate: string };
+  }> {
+    return apiClient.get('/budgets/shopping-summary', { params: undefined });
+  },
 };
 
 export default budgetsApi;

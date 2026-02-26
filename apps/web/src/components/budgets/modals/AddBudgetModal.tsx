@@ -1,7 +1,7 @@
 // Add/Edit Budget Modal
 
 import { useState, useEffect } from 'react';
-import { Wallet, Calendar, DollarSign, FileText } from 'lucide-react';
+import { Wallet, Calendar, DollarSign, FileText, Store } from 'lucide-react';
 import type { Budget, BudgetCategory, CreateBudgetData, PeriodType, BudgetType } from '../../../types/budget';
 import { ModalPortal, ModalBody } from '../../common/ModalPortal';
 import { ModalFooterButtons } from '../../common/ModalFooterButtons';
@@ -28,6 +28,7 @@ export function AddBudgetModal({
     periodType: PeriodType;
     isRecurring: boolean;
     dueDay: string;
+    defaultVendor: string;
     reason: string;
   }>({
     categoryId: '',
@@ -38,6 +39,7 @@ export function AddBudgetModal({
     periodType: 'monthly',
     isRecurring: true,
     dueDay: '',
+    defaultVendor: '',
     reason: '',
   });
 
@@ -56,6 +58,7 @@ export function AddBudgetModal({
         periodType: budget.periodType,
         isRecurring: budget.isRecurring,
         dueDay: budget.dueDay?.toString() || '',
+        defaultVendor: budget.defaultVendor || '',
         reason: '',
       });
     }
@@ -103,6 +106,7 @@ export function AddBudgetModal({
         periodType: formData.periodType,
         isRecurring: formData.isRecurring,
         dueDay: formData.dueDay ? parseInt(formData.dueDay) : undefined,
+        defaultVendor: formData.defaultVendor.trim() || undefined,
       };
 
       if (budget && formData.reason.trim()) {
@@ -275,6 +279,26 @@ export function AddBudgetModal({
             {errors.dueDay && (
               <p className="text-[var(--color-destructive)] text-sm mt-1">{errors.dueDay}</p>
             )}
+          </div>
+
+          {/* Default Vendor */}
+          <div>
+            <label className="block text-sm font-medium text-[var(--color-foreground)] mb-1">
+              Default Vendor (optional)
+            </label>
+            <div className="relative">
+              <Store className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-[var(--color-muted-foreground)]" />
+              <input
+                type="text"
+                value={formData.defaultVendor}
+                onChange={(e) => setFormData({ ...formData, defaultVendor: e.target.value })}
+                placeholder="e.g., Duke Energy, AT&T, State Farm"
+                className="w-full pl-9 pr-3 py-2 bg-[var(--color-card)] border border-[var(--color-border)] rounded-lg text-[var(--color-foreground)]"
+              />
+            </div>
+            <p className="text-xs text-[var(--color-muted-foreground)] mt-1">
+              Auto-fills vendor when adding entries to this budget
+            </p>
           </div>
 
           {/* Description */}

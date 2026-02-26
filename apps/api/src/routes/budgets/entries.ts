@@ -338,6 +338,32 @@ export async function updateEntry(req: Request, res: Response) {
 }
 
 // ============================================
+// GET DISTINCT VENDORS (for autocomplete)
+// ============================================
+export async function getVendors(req: Request, res: Response) {
+  try {
+    const user = getUser(req);
+    if (!user) {
+      return authRequired(res);
+    }
+
+    const vendors = await q<Array<{ vendor: string }>>(`
+      SELECT DISTINCT vendor FROM (
+        SELECT vendor FROM budget_entries WHERE vendor IS NOT NULL AND vendor != ''
+        UNION
+        SELECT defaultVendor as vendor FROM budgets WHERE defaultVendor IS NOT NULL AND defaultVendor != ''
+      ) combined
+      ORDER BY vendor
+    `);
+
+    res.json({ vendors: vendors.map((v) => v.vendor) });
+  } catch (err) {
+    console.error('Failed to get vendors:', err);
+    serverError(res, 'Failed to get vendors');
+  }
+}
+
+// ============================================
 // DELETE ENTRY
 // ============================================
 export async function deleteEntry(req: Request, res: Response) {

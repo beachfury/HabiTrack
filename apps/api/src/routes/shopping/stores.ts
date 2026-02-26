@@ -28,8 +28,12 @@ const log = createLogger('shopping');
  */
 export async function getCategories(req: Request, res: Response) {
   try {
-    const categories = await q<Array<{ id: number; name: string; color: string | null }>>(
-      `SELECT id, name, color FROM shopping_categories WHERE active = 1 ORDER BY name`,
+    const categories = await q<Array<{ id: number; name: string; color: string | null; budgetId: number | null; budgetName: string | null }>>(
+      `SELECT sc.id, sc.name, sc.color, sc.budgetId, b.name as budgetName
+       FROM shopping_categories sc
+       LEFT JOIN budgets b ON sc.budgetId = b.id
+       WHERE sc.active = 1
+       ORDER BY sc.name`,
     );
     return success(res, { categories });
   } catch (err) {
@@ -111,6 +115,10 @@ export async function updateCategory(req: Request, res: Response) {
     if (color !== undefined) {
       updates.push('color = ?');
       values.push(color);
+    }
+    if (req.body.budgetId !== undefined) {
+      updates.push('budgetId = ?');
+      values.push(req.body.budgetId || null);
     }
 
     if (updates.length === 0) {

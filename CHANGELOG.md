@@ -6,6 +6,35 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ---
 
+## [1.5.5] - 2026-02-25
+
+### Added
+
+#### Shopping ↔ Budget Integration
+- **Default vendor per budget** — Budgets can now have a default vendor (e.g., "Electric Company"). The vendor field auto-fills when adding entries to that budget
+- **Vendor autocomplete** — The "Add Entry" modal now suggests previously-used vendors via a datalist dropdown, pulling from both budget entries and budget defaults
+- **Link shopping categories to budgets** — Each shopping category (Dairy, Produce, etc.) can be linked to a budget via Shopping → Manage → Categories → Edit. A badge shows the linked budget name
+- **Auto-create budget entries on purchase** — When a shopping item is marked as purchased and its category is linked to a budget, a budget entry is automatically created with the item name, brand, store as vendor, and correct price
+- **Shopping summary on budget overview** — A new "Shopping This Month" card on the Budget Overview tab shows total shopping spend, purchase count, top store, and per-store breakdown
+- **Net position includes shopping** — The Income vs Expenses summary now subtracts shopping spending from net position, with a dedicated "Shopping Spend" column when purchases exist
+
+### Fixed
+
+#### Budget $NaN Display Bug
+- **MariaDB DECIMAL string coercion** — MariaDB returns DECIMAL columns as strings, causing `$NaN` totals when JavaScript's `.reduce()` concatenated strings instead of summing numbers. Added `Number()` coercion across EntriesTab, OverviewTab, and BudgetsTab
+- **Budget sort comparisons** — Fixed sort-by-amount and sort-by-spent comparisons to use `Number()` coercion
+
+#### Shopping Purchase Price Tracking
+- **Price now sent on purchase** — The frontend purchase handler now passes the item's known price and storeId to the backend, instead of sending an empty request body
+- **Field name mismatch fixed** — Frontend sent `price` but backend read `unitPrice`; backend now accepts both
+- **NULL storeId price fallback** — When no store was assigned, the price lookup query `WHERE storeId = NULL` always failed. Now falls back to `MIN(price)` across all stores for the item
+- **$0 budget entries prevented** — Auto-created budget entries with zero amounts are now skipped with a warning log
+
+### Database
+- **Migration `021_budget_vendor.sql`** — Adds `defaultVendor` VARCHAR(200) to `budgets` table; adds `budgetId` FK to `shopping_categories` linking categories to budgets
+
+---
+
 ## [1.5.4] - 2026-02-25
 
 ### Added

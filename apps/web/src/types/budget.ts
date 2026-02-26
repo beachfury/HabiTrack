@@ -30,6 +30,7 @@ export interface Budget {
   endDate: string | null;
   isRecurring: boolean;
   dueDay: number | null;
+  defaultVendor: string | null;
   active: boolean;
   createdBy: number;
   creatorName: string;
@@ -143,6 +144,7 @@ export interface CreateBudgetData {
   endDate?: string;
   isRecurring?: boolean;
   dueDay?: number;
+  defaultVendor?: string;
 }
 
 export interface UpdateBudgetData extends Partial<CreateBudgetData> {
