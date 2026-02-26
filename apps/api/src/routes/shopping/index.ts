@@ -24,6 +24,8 @@ export {
   updateCatalogItem,
   deleteCatalogItem,
   setCatalogItemPrice,
+  setCatalogItemVisibility,
+  bulkSetCatalogItemVisibility,
 } from './catalog';
 
 // Shopping List

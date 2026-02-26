@@ -1,6 +1,6 @@
 // apps/web/src/components/shopping/modals/CatalogBrowserModal.tsx
 import { useState } from 'react';
-import { Plus, Search, Package } from 'lucide-react';
+import { Plus, Search, Package, Archive } from 'lucide-react';
 import { ItemImage } from '../ItemImage';
 import type { CatalogItem, ShoppingCategory, ShoppingStore } from '../../../types';
 import { ModalPortal, ModalBody } from '../../common/ModalPortal';
@@ -109,8 +109,14 @@ export function CatalogBrowserModal({
               <button
                 key={item.id}
                 onClick={() => onSelectItem(item)}
-                className="bg-[var(--color-muted)] rounded-xl p-3 text-left hover:ring-2 hover:ring-[var(--color-primary)] transition-all"
+                className={`bg-[var(--color-muted)] rounded-xl p-3 text-left hover:ring-2 hover:ring-[var(--color-primary)] transition-all relative ${item.visibility === 'archived' ? 'opacity-60' : ''}`}
               >
+                {item.visibility === 'archived' && (
+                  <span className="absolute top-2 right-2 flex items-center gap-1 text-[10px] px-1.5 py-0.5 rounded-full bg-[var(--color-warning)]/20 text-[var(--color-warning)] font-medium z-10">
+                    <Archive size={10} />
+                    Archived
+                  </span>
+                )}
                 <ItemImage url={item.imageUrl} fit="contain" />
                 <p className="font-medium text-[var(--color-foreground)] mt-2 truncate text-sm">
                   {item.name}

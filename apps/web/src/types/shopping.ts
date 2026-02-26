@@ -3,6 +3,7 @@
 
 export type ListType = 'need' | 'want';
 export type ConfidenceLevel = 'high' | 'medium' | 'low';
+export type CatalogVisibility = 'active' | 'archived' | 'hidden';
 export type SuggestionType = 'overdue' | 'due_soon' | 'popular' | 'frequently_bought' | 'low_stock' | 'meal_ingredient' | 'co_purchase' | 'trending';
 
 // Confidence level colors for badges
@@ -42,8 +43,10 @@ export interface CatalogItem {
   categoryName: string | null;
   imageUrl: string | null;
   lowestPrice: number | null;
+  lowestPriceStore: string | null;
   storePrice: number | null;
   active: boolean;
+  visibility: CatalogVisibility;
 }
 
 export interface CatalogItemPrice {

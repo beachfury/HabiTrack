@@ -15,13 +15,19 @@ import {
   Package,
   Loader2,
   AlertCircle,
+  Archive,
+  Eye,
+  EyeOff,
+  RotateCcw,
+  CheckSquare,
+  Square,
 } from 'lucide-react';
 import { shoppingApi } from '../../api';
 import { budgetsApi } from '../../api/budgets';
 import { ColorPicker } from '../common/ColorPicker';
 import { NewItemModal } from './modals/NewItemModal';
 import { ModalPortal, ModalBody } from '../common/ModalPortal';
-import type { ShoppingCategory, ShoppingStore, StoreRequest, CatalogItem } from '../../types';
+import type { ShoppingCategory, ShoppingStore, StoreRequest, CatalogItem, CatalogVisibility } from '../../types';
 import type { Budget } from '../../types/budget';
 
 type ManageSubTab = 'catalog' | 'categories' | 'stores';
@@ -63,6 +69,15 @@ export function ManageTab({
   const [editingItem, setEditingItem] = useState<CatalogItem | null>(null);
   const [editingCategory, setEditingCategory] = useState<ShoppingCategory | null>(null);
 
+  // Bulk selection
+  const [selectMode, setSelectMode] = useState(false);
+  const [selectedIds, setSelectedIds] = useState<Set<number>>(new Set());
+
+  // Hidden items
+  const [showHiddenItems, setShowHiddenItems] = useState(false);
+  const [hiddenItems, setHiddenItems] = useState<CatalogItem[]>([]);
+  const [loadingHidden, setLoadingHidden] = useState(false);
+
   // Delete confirmation
   const [deleteConfirm, setDeleteConfirm] = useState<{
     type: 'item' | 'category';
@@ -79,7 +94,8 @@ export function ManageTab({
   const fetchCatalogItems = async () => {
     setLoading(true);
     try {
-      const data = await shoppingApi.getCatalogItems();
+      // Fetch active + archived items for management view
+      const data = await shoppingApi.getCatalogItems(undefined, undefined, 'active,archived');
       setCatalogItems(data.items);
     } catch (err) {
       console.error('Failed to fetch catalog items:', err);
@@ -87,6 +103,25 @@ export function ManageTab({
       setLoading(false);
     }
   };
+
+  const fetchHiddenItems = async () => {
+    setLoadingHidden(true);
+    try {
+      const data = await shoppingApi.getCatalogItems(undefined, undefined, 'hidden');
+      setHiddenItems(data.items);
+    } catch (err) {
+      console.error('Failed to fetch hidden items:', err);
+    } finally {
+      setLoadingHidden(false);
+    }
+  };
+
+  // Load hidden items when section is expanded
+  useEffect(() => {
+    if (showHiddenItems) {
+      fetchHiddenItems();
+    }
+  }, [showHiddenItems]);
 
   // Group items by category
   const itemsByCategory = categories.reduce(
@@ -127,14 +162,76 @@ export function ManageTab({
     }
   };
 
-  const handleDeleteItem = async (itemId: number) => {
+  const handleHideItem = async (itemId: number) => {
     try {
-      await shoppingApi.deleteCatalogItem(itemId);
+      await shoppingApi.setCatalogItemVisibility(itemId, 'hidden');
       setCatalogItems((prev) => prev.filter((i) => i.id !== itemId));
       setDeleteConfirm(null);
     } catch (err) {
-      console.error('Failed to delete item:', err);
+      console.error('Failed to hide item:', err);
     }
+  };
+
+  const handleSetVisibility = async (itemId: number, visibility: CatalogVisibility) => {
+    try {
+      await shoppingApi.setCatalogItemVisibility(itemId, visibility);
+      if (visibility === 'hidden') {
+        setCatalogItems((prev) => prev.filter((i) => i.id !== itemId));
+      } else {
+        setCatalogItems((prev) =>
+          prev.map((i) => (i.id === itemId ? { ...i, visibility } : i)),
+        );
+      }
+      // Refresh hidden items if the section is open
+      if (showHiddenItems) fetchHiddenItems();
+    } catch (err) {
+      console.error('Failed to update visibility:', err);
+    }
+  };
+
+  const handleRestoreItem = async (itemId: number) => {
+    try {
+      await shoppingApi.setCatalogItemVisibility(itemId, 'active');
+      setHiddenItems((prev) => prev.filter((i) => i.id !== itemId));
+      fetchCatalogItems();
+    } catch (err) {
+      console.error('Failed to restore item:', err);
+    }
+  };
+
+  const handleBulkAction = async (visibility: CatalogVisibility) => {
+    if (selectedIds.size === 0) return;
+    try {
+      await shoppingApi.bulkSetCatalogItemVisibility(Array.from(selectedIds), visibility);
+      setSelectedIds(new Set());
+      setSelectMode(false);
+      fetchCatalogItems();
+      if (showHiddenItems) fetchHiddenItems();
+    } catch (err) {
+      console.error('Failed to bulk update:', err);
+    }
+  };
+
+  const toggleSelectItem = (id: number) => {
+    setSelectedIds((prev) => {
+      const next = new Set(prev);
+      if (next.has(id)) next.delete(id);
+      else next.add(id);
+      return next;
+    });
+  };
+
+  const selectAllInCategory = (items: CatalogItem[]) => {
+    setSelectedIds((prev) => {
+      const next = new Set(prev);
+      const allSelected = items.every((i) => next.has(i.id));
+      if (allSelected) {
+        items.forEach((i) => next.delete(i.id));
+      } else {
+        items.forEach((i) => next.add(i.id));
+      }
+      return next;
+    });
   };
 
   const handleDeleteCategory = async (categoryId: number) => {
@@ -281,6 +378,46 @@ export function ManageTab({
       {/* Catalog Items Tab */}
       {activeSubTab === 'catalog' && (
         <div className="space-y-3">
+          {/* Bulk Selection Toggle + Actions */}
+          <div className="flex items-center gap-2 flex-wrap">
+            <button
+              onClick={() => {
+                setSelectMode(!selectMode);
+                setSelectedIds(new Set());
+              }}
+              className={`flex items-center gap-2 px-3 py-1.5 rounded-lg text-sm font-medium transition-colors ${
+                selectMode
+                  ? 'bg-[var(--color-primary)] text-[var(--color-primary-foreground)]'
+                  : 'bg-[var(--color-muted)] text-[var(--color-muted-foreground)] hover:bg-[var(--color-muted)]/80'
+              }`}
+            >
+              <CheckSquare size={14} />
+              {selectMode ? 'Cancel Selection' : 'Select Items'}
+            </button>
+
+            {selectMode && selectedIds.size > 0 && (
+              <>
+                <span className="text-sm text-[var(--color-muted-foreground)]">
+                  {selectedIds.size} selected
+                </span>
+                <button
+                  onClick={() => handleBulkAction('archived')}
+                  className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-sm font-medium bg-[var(--color-warning)]/15 text-[var(--color-warning)] hover:bg-[var(--color-warning)]/25"
+                >
+                  <Archive size={14} />
+                  Archive ({selectedIds.size})
+                </button>
+                <button
+                  onClick={() => handleBulkAction('hidden')}
+                  className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-sm font-medium bg-[var(--color-destructive)]/15 text-[var(--color-destructive)] hover:bg-[var(--color-destructive)]/25"
+                >
+                  <EyeOff size={14} />
+                  Hide ({selectedIds.size})
+                </button>
+              </>
+            )}
+          </div>
+
           {loading ? (
             <div className="flex items-center justify-center py-8">
               <Loader2 className="animate-spin text-[var(--color-primary)]" size={32} />
@@ -302,6 +439,21 @@ export function ManageTab({
                       onClick={() => toggleCategory(category.id)}
                       className="w-full flex items-center gap-3 p-3 hover:bg-[var(--color-muted)]"
                     >
+                      {selectMode && (
+                        <span
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            selectAllInCategory(items);
+                          }}
+                          className="cursor-pointer text-[var(--color-primary)]"
+                        >
+                          {items.every((i) => selectedIds.has(i.id)) ? (
+                            <CheckSquare size={18} />
+                          ) : (
+                            <Square size={18} />
+                          )}
+                        </span>
+                      )}
                       {isExpanded ? (
                         <ChevronDown size={20} className="text-[var(--color-muted-foreground)]" />
                       ) : (
@@ -320,33 +472,16 @@ export function ManageTab({
                     {isExpanded && (
                       <div className="border-t border-[var(--color-border)] divide-y divide-[var(--color-border)]">
                         {items.map((item) => (
-                          <div
+                          <CatalogItemRow
                             key={item.id}
-                            className="flex items-center gap-3 p-3 hover:bg-[var(--color-muted)]"
-                          >
-                            <div className="flex-1 min-w-0">
-                              <p className="font-medium text-[var(--color-foreground)] truncate">
-                                {item.name}
-                              </p>
-                              {item.brand && (
-                                <p className="text-sm text-[var(--color-muted-foreground)] truncate">{item.brand}</p>
-                              )}
-                            </div>
-                            <div className="flex gap-1">
-                              <button
-                                onClick={() => setEditingItem(item)}
-                                className="p-2 text-[var(--color-info)] hover:bg-[var(--color-info)]/10 rounded-lg"
-                              >
-                                <Edit size={16} />
-                              </button>
-                              <button
-                                onClick={() => setDeleteConfirm({ type: 'item', id: item.id })}
-                                className="p-2 text-[var(--color-destructive)] hover:bg-[var(--color-destructive)]/10 rounded-lg"
-                              >
-                                <Trash2 size={16} />
-                              </button>
-                            </div>
-                          </div>
+                            item={item}
+                            selectMode={selectMode}
+                            isSelected={selectedIds.has(item.id)}
+                            onToggleSelect={() => toggleSelectItem(item.id)}
+                            onEdit={() => setEditingItem(item)}
+                            onSetVisibility={handleSetVisibility}
+                            onHide={() => setDeleteConfirm({ type: 'item', id: item.id })}
+                          />
                         ))}
                       </div>
                     )}
@@ -361,6 +496,21 @@ export function ManageTab({
                     onClick={() => toggleCategory(0)}
                     className="w-full flex items-center gap-3 p-3 hover:bg-[var(--color-muted)]"
                   >
+                    {selectMode && (
+                      <span
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          selectAllInCategory(uncategorizedItems);
+                        }}
+                        className="cursor-pointer text-[var(--color-primary)]"
+                      >
+                        {uncategorizedItems.every((i) => selectedIds.has(i.id)) ? (
+                          <CheckSquare size={18} />
+                        ) : (
+                          <Square size={18} />
+                        )}
+                      </span>
+                    )}
                     {expandedCategories.has(0) ? (
                       <ChevronDown size={20} className="text-[var(--color-muted-foreground)]" />
                     ) : (
@@ -374,33 +524,16 @@ export function ManageTab({
                   {expandedCategories.has(0) && (
                     <div className="border-t border-[var(--color-border)] divide-y divide-[var(--color-border)]">
                       {uncategorizedItems.map((item) => (
-                        <div
+                        <CatalogItemRow
                           key={item.id}
-                          className="flex items-center gap-3 p-3 hover:bg-[var(--color-muted)]"
-                        >
-                          <div className="flex-1 min-w-0">
-                            <p className="font-medium text-[var(--color-foreground)] truncate">
-                              {item.name}
-                            </p>
-                            {item.brand && (
-                              <p className="text-sm text-[var(--color-muted-foreground)] truncate">{item.brand}</p>
-                            )}
-                          </div>
-                          <div className="flex gap-1">
-                            <button
-                              onClick={() => setEditingItem(item)}
-                              className="p-2 text-[var(--color-info)] hover:bg-[var(--color-info)]/10 rounded-lg"
-                            >
-                              <Edit size={16} />
-                            </button>
-                            <button
-                              onClick={() => setDeleteConfirm({ type: 'item', id: item.id })}
-                              className="p-2 text-[var(--color-destructive)] hover:bg-[var(--color-destructive)]/10 rounded-lg"
-                            >
-                              <Trash2 size={16} />
-                            </button>
-                          </div>
-                        </div>
+                          item={item}
+                          selectMode={selectMode}
+                          isSelected={selectedIds.has(item.id)}
+                          onToggleSelect={() => toggleSelectItem(item.id)}
+                          onEdit={() => setEditingItem(item)}
+                          onSetVisibility={handleSetVisibility}
+                          onHide={() => setDeleteConfirm({ type: 'item', id: item.id })}
+                        />
                       ))}
                     </div>
                   )}
@@ -413,6 +546,65 @@ export function ManageTab({
                   <p>No catalog items yet</p>
                 </div>
               )}
+
+              {/* Hidden Items Section */}
+              <div className="themed-shopping-list overflow-hidden">
+                <button
+                  onClick={() => setShowHiddenItems(!showHiddenItems)}
+                  className="w-full flex items-center gap-3 p-3 hover:bg-[var(--color-muted)]"
+                >
+                  {showHiddenItems ? (
+                    <ChevronDown size={20} className="text-[var(--color-muted-foreground)]" />
+                  ) : (
+                    <ChevronRight size={20} className="text-[var(--color-muted-foreground)]" />
+                  )}
+                  <EyeOff size={18} className="text-[var(--color-muted-foreground)]" />
+                  <span className="font-medium text-[var(--color-muted-foreground)]">Hidden Items</span>
+                  {hiddenItems.length > 0 && (
+                    <span className="text-sm text-[var(--color-muted-foreground)]">({hiddenItems.length})</span>
+                  )}
+                </button>
+
+                {showHiddenItems && (
+                  <div className="border-t border-[var(--color-border)]">
+                    {loadingHidden ? (
+                      <div className="flex items-center justify-center py-4">
+                        <Loader2 className="animate-spin text-[var(--color-muted-foreground)]" size={20} />
+                      </div>
+                    ) : hiddenItems.length === 0 ? (
+                      <p className="p-4 text-center text-sm text-[var(--color-muted-foreground)]">
+                        No hidden items
+                      </p>
+                    ) : (
+                      <div className="divide-y divide-[var(--color-border)]">
+                        {hiddenItems.map((item) => (
+                          <div
+                            key={item.id}
+                            className="flex items-center gap-3 p-3 opacity-60 hover:opacity-100 hover:bg-[var(--color-muted)] transition-opacity"
+                          >
+                            <div className="flex-1 min-w-0">
+                              <p className="font-medium text-[var(--color-foreground)] truncate">
+                                {item.name}
+                              </p>
+                              {item.brand && (
+                                <p className="text-sm text-[var(--color-muted-foreground)] truncate">{item.brand}</p>
+                              )}
+                            </div>
+                            <button
+                              onClick={() => handleRestoreItem(item.id)}
+                              className="flex items-center gap-1.5 px-2.5 py-1.5 text-sm text-[var(--color-success)] hover:bg-[var(--color-success)]/10 rounded-lg"
+                              title="Restore to active"
+                            >
+                              <RotateCcw size={14} />
+                              Restore
+                            </button>
+                          </div>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                )}
+              </div>
             </>
           )}
         </div>
@@ -561,12 +753,12 @@ export function ManageTab({
         />
       )}
 
-      {/* Delete Confirmation Modal */}
+      {/* Delete/Hide Confirmation Modal */}
       {deleteConfirm && (
         <ModalPortal
           isOpen={true}
           onClose={() => setDeleteConfirm(null)}
-          title="Confirm Delete"
+          title={deleteConfirm.type === 'item' ? 'Hide Item' : 'Confirm Delete'}
           size="sm"
           footer={
             <div className="flex gap-2">
@@ -579,25 +771,107 @@ export function ManageTab({
               <button
                 onClick={() => {
                   if (deleteConfirm.type === 'item') {
-                    handleDeleteItem(deleteConfirm.id);
+                    handleHideItem(deleteConfirm.id);
                   } else {
                     handleDeleteCategory(deleteConfirm.id);
                   }
                 }}
                 className="flex-1 py-2 bg-[var(--color-destructive)] text-[var(--color-destructive-foreground)] rounded-xl"
               >
-                Delete
+                {deleteConfirm.type === 'item' ? 'Hide' : 'Delete'}
               </button>
             </div>
           }
         >
           <ModalBody>
             <p className="text-[var(--color-muted-foreground)]">
-              Are you sure you want to delete this {deleteConfirm.type}? This action cannot be
-              undone.
+              {deleteConfirm.type === 'item'
+                ? 'This item will be hidden from the catalog. You can restore it later from the Hidden Items section.'
+                : 'Are you sure you want to delete this category? This action cannot be undone.'}
             </p>
           </ModalBody>
         </ModalPortal>
+      )}
+    </div>
+  );
+}
+
+// =============================================================================
+// Catalog Item Row with visibility controls
+// =============================================================================
+interface CatalogItemRowProps {
+  item: CatalogItem;
+  selectMode: boolean;
+  isSelected: boolean;
+  onToggleSelect: () => void;
+  onEdit: () => void;
+  onSetVisibility: (id: number, visibility: CatalogVisibility) => void;
+  onHide: () => void;
+}
+
+function CatalogItemRow({
+  item,
+  selectMode,
+  isSelected,
+  onToggleSelect,
+  onEdit,
+  onSetVisibility,
+  onHide,
+}: CatalogItemRowProps) {
+  const isArchived = item.visibility === 'archived';
+
+  return (
+    <div
+      className={`flex items-center gap-3 p-3 hover:bg-[var(--color-muted)] ${isArchived ? 'opacity-60' : ''}`}
+    >
+      {selectMode && (
+        <button onClick={onToggleSelect} className="text-[var(--color-primary)] flex-shrink-0">
+          {isSelected ? <CheckSquare size={18} /> : <Square size={18} />}
+        </button>
+      )}
+      <div className="flex-1 min-w-0">
+        <div className="flex items-center gap-2">
+          <p className="font-medium text-[var(--color-foreground)] truncate">
+            {item.name}
+          </p>
+          {isArchived && (
+            <span className="text-[10px] px-1.5 py-0.5 rounded-full bg-[var(--color-warning)]/20 text-[var(--color-warning)] font-medium flex-shrink-0">
+              Archived
+            </span>
+          )}
+        </div>
+        {item.brand && (
+          <p className="text-sm text-[var(--color-muted-foreground)] truncate">{item.brand}</p>
+        )}
+      </div>
+      {!selectMode && (
+        <div className="flex gap-1 flex-shrink-0">
+          <button
+            onClick={() => onSetVisibility(item.id, isArchived ? 'active' : 'archived')}
+            className={`p-2 rounded-lg ${
+              isArchived
+                ? 'text-[var(--color-success)] hover:bg-[var(--color-success)]/10'
+                : 'text-[var(--color-warning)] hover:bg-[var(--color-warning)]/10'
+            }`}
+            title={isArchived ? 'Restore to active' : 'Archive'}
+          >
+            {isArchived ? <Eye size={16} /> : <Archive size={16} />}
+          </button>
+          <button
+            onClick={onEdit}
+            className="p-2 text-[var(--color-info)] hover:bg-[var(--color-info)]/10 rounded-lg"
+            title="Edit"
+          >
+            <Edit size={16} />
+          </button>
+          <button
+            onClick={onHide}
+            className="p-2 text-[var(--color-destructive)] hover:bg-[var(--color-destructive)]/10 rounded-lg"
+            title="Hide"
+          >
+            <EyeOff size={16} />
+          </button>
+        </div>
       )}
     </div>
   );

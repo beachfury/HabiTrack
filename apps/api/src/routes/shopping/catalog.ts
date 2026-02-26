@@ -17,6 +17,8 @@ import { createLogger } from '../../services/logger';
 
 const log = createLogger('shopping');
 
+type CatalogVisibility = 'active' | 'archived' | 'hidden';
+
 interface CatalogItem {
   id: number;
   name: string;
@@ -28,6 +30,7 @@ interface CatalogItem {
   lowestPrice: number | null;
   lowestPriceStore: string | null;
   storePrice: number | null;
+  visibility: CatalogVisibility;
 }
 
 interface ItemPrice {
@@ -45,14 +48,26 @@ interface ItemPrice {
  * Get catalog items with optional search
  */
 export async function getCatalogItems(req: Request, res: Response) {
-  const { search, categoryId, storeId, limit = '10000' } = req.query;
+  const { search, categoryId, storeId, limit = '10000', visibility: visParam } = req.query;
+
+  // Parse visibility filter
+  const validVisibilities: CatalogVisibility[] = ['active', 'archived', 'hidden'];
+  let visibilities: CatalogVisibility[];
+  if (visParam && typeof visParam === 'string') {
+    visibilities = visParam.split(',').filter((v): v is CatalogVisibility => validVisibilities.includes(v as CatalogVisibility));
+    if (visibilities.length === 0) visibilities = ['active'];
+  } else {
+    visibilities = ['active'];
+  }
+  const visPlaceholders = visibilities.map(() => '?').join(',');
 
   try {
     const params: any[] = [];
 
     if (storeId) {
       // Store-specific query: join item_prices, use COALESCE for per-store overrides
-      let whereClause = 'WHERE ci.active = 1';
+      let whereClause = `WHERE ci.visibility IN (${visPlaceholders})`;
+      params.push(...visibilities);
 
       if (search && typeof search === 'string' && search.trim()) {
         whereClause += ` AND (ci.name LIKE ? OR COALESCE(ip.brand, ci.brand) LIKE ?)`;
@@ -77,7 +92,8 @@ export async function getCatalogItems(req: Request, res: Response) {
           COALESCE(ip.imageUrl, ci.imageUrl) as imageUrl,
           NULL as lowestPrice,
           NULL as lowestPriceStore,
-          ip.price as storePrice
+          ip.price as storePrice,
+          ci.visibility
          FROM catalog_items ci
          LEFT JOIN shopping_categories sc ON ci.categoryId = sc.id
          INNER JOIN item_prices ip ON ip.catalogItemId = ci.id AND ip.storeId = ?
@@ -91,7 +107,8 @@ export async function getCatalogItems(req: Request, res: Response) {
     }
 
     // All Stores query: base item data with lowest price
-    let whereClause = 'WHERE ci.active = 1';
+    let whereClause = `WHERE ci.visibility IN (${visPlaceholders})`;
+    params.push(...visibilities);
 
     if (search && typeof search === 'string' && search.trim()) {
       whereClause += ` AND (ci.name LIKE ? OR ci.brand LIKE ?)`;
@@ -120,7 +137,8 @@ export async function getCatalogItems(req: Request, res: Response) {
          JOIN stores s ON ip.storeId = s.id
          WHERE ip.catalogItemId = ci.id
          ORDER BY ip.price ASC LIMIT 1) as lowestPriceStore,
-        NULL as storePrice
+        NULL as storePrice,
+        ci.visibility
        FROM catalog_items ci
        LEFT JOIN shopping_categories sc ON ci.categoryId = sc.id
        LEFT JOIN (
@@ -165,7 +183,8 @@ export async function getCatalogItem(req: Request, res: Response) {
         (SELECT s.name FROM item_prices ip
          JOIN stores s ON ip.storeId = s.id
          WHERE ip.catalogItemId = ci.id
-         ORDER BY ip.price ASC LIMIT 1) as lowestPriceStore
+         ORDER BY ip.price ASC LIMIT 1) as lowestPriceStore,
+        ci.visibility
        FROM catalog_items ci
        LEFT JOIN shopping_categories sc ON ci.categoryId = sc.id
        WHERE ci.id = ?`,
@@ -322,16 +341,86 @@ export async function deleteCatalogItem(req: Request, res: Response) {
   const itemId = parseInt(req.params.id);
 
   try {
-    await q(`UPDATE catalog_items SET active = 0 WHERE id = ?`, [itemId]);
+    await q(`UPDATE catalog_items SET visibility = 'hidden', active = 0 WHERE id = ?`, [itemId]);
 
     await logAudit({
-      action: 'shopping.catalog.delete',
+      action: 'shopping.catalog.hide',
       result: 'ok',
       actorId: user.id,
       details: { itemId },
     });
 
     return success(res, { success: true });
+  } catch (err) {
+    return serverError(res, err as Error);
+  }
+}
+
+/**
+ * PATCH /api/shopping/catalog/:id/visibility
+ * Set visibility for a single catalog item (admin only)
+ */
+export async function setCatalogItemVisibility(req: Request, res: Response) {
+  const user = getUser(req);
+  if (!user) return res.status(401).json({ error: { code: 'AUTH_REQUIRED' } });
+
+  const itemId = parseInt(req.params.id);
+  const { visibility } = req.body;
+
+  if (!['active', 'archived', 'hidden'].includes(visibility)) {
+    return validationError(res, 'visibility must be active, archived, or hidden');
+  }
+
+  try {
+    const active = visibility !== 'hidden' ? 1 : 0;
+    await q(`UPDATE catalog_items SET visibility = ?, active = ? WHERE id = ?`, [visibility, active, itemId]);
+
+    await logAudit({
+      action: 'shopping.catalog.visibility',
+      result: 'ok',
+      actorId: user.id,
+      details: { itemId, visibility },
+    });
+
+    return success(res, { success: true });
+  } catch (err) {
+    return serverError(res, err as Error);
+  }
+}
+
+/**
+ * PATCH /api/shopping/catalog/bulk-visibility
+ * Set visibility for multiple catalog items at once (admin only)
+ */
+export async function bulkSetCatalogItemVisibility(req: Request, res: Response) {
+  const user = getUser(req);
+  if (!user) return res.status(401).json({ error: { code: 'AUTH_REQUIRED' } });
+
+  const { ids, visibility } = req.body;
+
+  if (!Array.isArray(ids) || ids.length === 0) {
+    return validationError(res, 'ids must be a non-empty array');
+  }
+  if (!['active', 'archived', 'hidden'].includes(visibility)) {
+    return validationError(res, 'visibility must be active, archived, or hidden');
+  }
+
+  try {
+    const active = visibility !== 'hidden' ? 1 : 0;
+    const placeholders = ids.map(() => '?').join(',');
+    await q(
+      `UPDATE catalog_items SET visibility = ?, active = ? WHERE id IN (${placeholders})`,
+      [visibility, active, ...ids],
+    );
+
+    await logAudit({
+      action: 'shopping.catalog.bulk_visibility',
+      result: 'ok',
+      actorId: user.id,
+      details: { ids, visibility, count: ids.length },
+    });
+
+    return success(res, { success: true, count: ids.length });
   } catch (err) {
     return serverError(res, err as Error);
   }

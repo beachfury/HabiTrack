@@ -224,7 +224,7 @@ async function calculateSuggestions(): Promise<Suggestion[]> {
      FROM catalog_items ci
      JOIN shopping_purchase_events spe ON ci.id = spe.catalogItemId
      LEFT JOIN shopping_categories sc ON ci.categoryId = sc.id
-     WHERE ci.active = 1
+     WHERE ci.visibility = 'active'
      GROUP BY ci.id
      HAVING purchaseCount >= 2
      ORDER BY daysSinceLast DESC
@@ -355,7 +355,7 @@ async function calculateSuggestions(): Promise<Suggestion[]> {
      FROM catalog_items ci
      JOIN shopping_purchase_events spe ON ci.id = spe.catalogItemId
      LEFT JOIN shopping_categories sc ON ci.categoryId = sc.id
-     WHERE ci.active = 1
+     WHERE ci.visibility = 'active'
      GROUP BY ci.id
      HAVING COUNT(spe.id) = 1
        AND daysSinceLast BETWEEN 14 AND 45
@@ -422,7 +422,7 @@ async function calculateSuggestions(): Promise<Suggestion[]> {
        WHERE mp.date >= CURDATE()
          AND mp.date <= DATE_ADD(CURDATE(), INTERVAL 7 DAY)
          AND ri.catalogItemId IS NOT NULL
-         AND ci.active = 1
+         AND ci.visibility = 'active'
        ORDER BY mp.date ASC`,
     );
 
@@ -529,7 +529,7 @@ async function calculateSuggestions(): Promise<Suggestion[]> {
          JOIN shopping_purchase_events spe ON ci.id = spe.catalogItemId
            AND spe.purchasedAt >= DATE_SUB(NOW(), INTERVAL 30 DAY)
          LEFT JOIN shopping_categories sc ON ci.categoryId = sc.id
-         WHERE ci.active = 1
+         WHERE ci.visibility = 'active'
          GROUP BY ci.id
          ORDER BY purchaseCount30Days DESC, purchaseCountAllTime DESC
          LIMIT ?`,
@@ -626,7 +626,7 @@ async function calculateSuggestions(): Promise<Suggestion[]> {
          JOIN catalog_items ci ON spe2.catalogItemId = ci.id
          LEFT JOIN shopping_categories sc ON ci.categoryId = sc.id
          WHERE spe1.catalogItemId IN (${placeholders})
-           AND ci.active = 1
+           AND ci.visibility = 'active'
            AND spe1.purchasedAt >= DATE_SUB(NOW(), INTERVAL 90 DAY)
          GROUP BY ci.id, spe1.catalogItemId
          HAVING coPurchaseCount >= 2
@@ -706,7 +706,7 @@ async function calculateSuggestions(): Promise<Suggestion[]> {
        JOIN item_add_events iae ON ci.id = iae.catalogItemId
          AND iae.addedAt >= DATE_SUB(NOW(), INTERVAL 14 DAY)
        LEFT JOIN shopping_categories sc ON ci.categoryId = sc.id
-       WHERE ci.active = 1
+       WHERE ci.visibility = 'active'
          AND ci.id NOT IN (
            SELECT DISTINCT catalogItemId FROM shopping_purchase_events
          )

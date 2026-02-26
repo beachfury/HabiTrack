@@ -6,6 +6,30 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ---
 
+## [1.6.0] - 2026-02-25
+
+### Added
+
+#### Catalog Item Visibility System
+- **Three-tier visibility** — Catalog items now have three visibility states: **Active** (normal), **Archived** (hidden from browse but findable via search), and **Hidden** (completely removed from view, restorable from Manage)
+- **Archive toggle in Catalog tab** — Admins see a "Show Archived Items" checkbox that reveals archived items with reduced opacity and an "Archived" badge
+- **Per-item visibility controls in Manage tab** — Each catalog item row now has Archive (📦) and Hide (👁‍🗨) buttons instead of just a delete button. Archived items show an Eye icon to restore them to active
+- **Bulk selection mode** — "Select Items" toggle in Manage → Catalog enables checkboxes on every item. Select multiple items then bulk Archive or Hide them in one click
+- **Category-level select all** — When in bulk select mode, clicking the checkbox on a category header selects/deselects all items in that category
+- **Hidden Items section** — Collapsible "Hidden Items" panel at the bottom of Manage → Catalog lazy-loads all hidden items with a "Restore" button to bring them back to active
+- **Archived items in search** — When searching from the "Add Item to List" modal, archived items are included in results (with badge) so seasonal items remain findable
+- **Hide confirmation modal** — Hiding an item shows a confirmation dialog explaining it can be restored later, replacing the old "delete" language
+
+### Changed
+- **Delete is now Hide** — The old "delete catalog item" action now sets visibility to `hidden` instead of just setting `active = 0`. Items are never permanently deleted
+- **Manage tab fetches active + archived** — The Manage → Catalog sub-tab now shows both active and archived items so admins can see and manage archived items directly
+- **Suggestions exclude archived** — Auto-suggestions only consider active items (archived items won't appear as predictions)
+
+### Database
+- **Migration `022_catalog_visibility.sql`** — Adds `visibility` ENUM('active', 'archived', 'hidden') column to `catalog_items`, backfills from existing `active` boolean, adds index
+
+---
+
 ## [1.5.5] - 2026-02-25
 
 ### Added
