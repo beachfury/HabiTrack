@@ -6,6 +6,13 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ---
 
+## [1.6.2] - 2026-02-27
+
+### Fixed
+- **$NaN on Budget Categories tab** — Budget category totals displayed `$NaN` when a category contained more than one budget. Added `Number()` coercion to the `.reduce()` aggregation in `CategoriesTab.tsx` (same MariaDB DECIMAL-as-string issue fixed in v1.5.5, missed spot)
+
+---
+
 ## [1.6.1] - 2026-02-25
 
 ### Added
