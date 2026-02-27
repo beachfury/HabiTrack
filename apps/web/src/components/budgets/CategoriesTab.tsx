@@ -51,7 +51,7 @@ export function CategoriesTab({
   const getTotalBudget = (categoryId: number) => {
     return budgets
       .filter((b) => b.categoryId === categoryId)
-      .reduce((sum, b) => sum + b.budgetAmount, 0);
+      .reduce((sum, b) => sum + Number(b.budgetAmount), 0);
   };
 
   const formatCurrency = (amount: number) => {
