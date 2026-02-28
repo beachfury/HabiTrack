@@ -41,6 +41,8 @@
 ### 💰 Paid Chores
 - Extra tasks kids can claim for money
 - Admin approval workflow
+- Admin reassignment — move claimed chores between members
+- "All Claimed" admin tab for visibility into who claimed what
 - Configurable payout amounts
 - Track earnings per family member
 

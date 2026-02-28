@@ -169,6 +169,16 @@ export async function rejectPaidChore(
   });
 }
 
+export async function reassignPaidChore(
+  id: string,
+  userId: number
+): Promise<{ chore: PaidChore; message: string }> {
+  return fetchApi<{ chore: PaidChore; message: string }>(`/paid-chores/${encodeURIComponent(id)}/reassign`, {
+    method: 'POST',
+    body: JSON.stringify({ userId }),
+  });
+}
+
 export async function getEarnings(userId?: number): Promise<{
   user: { id: number; displayName: string; color: string };
   totalEarnings: number;

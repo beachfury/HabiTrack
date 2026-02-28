@@ -488,6 +488,7 @@ router.post('/paid-chores/:id/claim', requireAuth(), writeRateLimiter, paidChore
 router.post('/paid-chores/:id/complete', requireAuth(), writeRateLimiter, paidChores.completePaidChore);
 router.post('/paid-chores/:id/verify', requireAuth('admin'), writeRateLimiter, paidChores.verifyPaidChore);
 router.post('/paid-chores/:id/reject', requireAuth('admin'), writeRateLimiter, paidChores.rejectPaidChore);
+router.post('/paid-chores/:id/reassign', requireAuth('admin'), writeRateLimiter, paidChores.reassignPaidChore);
 // Generic :id routes last
 router.get('/paid-chores/:id', requireAuth(), paidChores.getPaidChore);
 router.put('/paid-chores/:id', requireAuth('admin'), writeRateLimiter, paidChores.updatePaidChore);
