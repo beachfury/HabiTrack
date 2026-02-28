@@ -336,3 +336,127 @@ export async function rejectPaidChore(req: Request, res: Response) {
     serverError(res, 'Failed to reject paid chore');
   }
 }
+
+// =============================================================================
+// REASSIGN PAID CHORE (Admin reassigns claimed chore to a different user)
+// =============================================================================
+
+export async function reassignPaidChore(req: Request, res: Response) {
+  try {
+    const user = getUser(req);
+    if (!user) {
+      return authRequired(res);
+    }
+
+    if (user.roleId !== 'admin') {
+      return forbidden(res, 'Only admins can reassign paid chores');
+    }
+
+    const { id } = req.params;
+    const { userId } = req.body;
+
+    if (!userId) {
+      return invalidInput(res, 'userId is required');
+    }
+
+    const chores = await q<any[]>('SELECT * FROM paid_chores WHERE id = ?', [id]);
+
+    if (chores.length === 0) {
+      return notFound(res, 'Paid chore');
+    }
+
+    const chore = chores[0];
+
+    if (chore.status !== 'claimed') {
+      return invalidInput(res, 'Can only reassign chores that are currently claimed');
+    }
+
+    // Validate target user exists and is active
+    const [targetUser] = await q<Array<{ id: number; displayName: string; active: number }>>(
+      'SELECT id, displayName, active FROM users WHERE id = ?',
+      [userId],
+    );
+
+    if (!targetUser || !targetUser.active) {
+      return invalidInput(res, 'Target user not found or inactive');
+    }
+
+    const previousClaimer = chore.claimedBy;
+
+    // Reassign the chore
+    await q(
+      `UPDATE paid_chores SET claimedBy = ?, claimedAt = NOW(3) WHERE id = ?`,
+      [userId, id],
+    );
+
+    const updated = await q<any[]>('SELECT * FROM paid_chores WHERE id = ?', [id]);
+
+    log.info('Paid chore reassigned', {
+      choreId: id,
+      choreTitle: chore.title,
+      previousClaimer,
+      newClaimer: userId,
+      reassignedBy: user.id,
+    });
+
+    // Notify old claimer
+    if (previousClaimer && previousClaimer !== userId) {
+      await createNotification({
+        userId: previousClaimer,
+        type: 'chore',
+        title: 'Paid chore reassigned',
+        body: `"${chore.title}" has been reassigned to someone else by an admin.`,
+        link: '/paid-chores',
+      });
+
+      const claimerEmail = await getUserEmail(previousClaimer);
+      if (claimerEmail) {
+        const [claimerInfo] = await q<Array<{ displayName: string }>>(
+          'SELECT displayName FROM users WHERE id = ?',
+          [previousClaimer],
+        );
+        await queueEmail({
+          userId: previousClaimer,
+          toEmail: claimerEmail,
+          template: 'PAID_CHORE_UPDATE',
+          variables: {
+            userName: claimerInfo?.displayName || 'there',
+            choreName: chore.title,
+            message: 'This chore has been reassigned to someone else by an admin.',
+          },
+        });
+      }
+    }
+
+    // Notify new claimer
+    await createNotification({
+      userId,
+      type: 'chore',
+      title: 'Paid chore assigned to you',
+      body: `"${chore.title}" has been assigned to you by an admin. Worth $${Number(chore.amount).toFixed(2)}!`,
+      link: '/paid-chores',
+    });
+
+    const newClaimerEmail = await getUserEmail(userId);
+    if (newClaimerEmail) {
+      await queueEmail({
+        userId,
+        toEmail: newClaimerEmail,
+        template: 'PAID_CHORE_UPDATE',
+        variables: {
+          userName: targetUser.displayName,
+          choreName: chore.title,
+          message: `This chore has been assigned to you by an admin. Complete it to earn $${Number(chore.amount).toFixed(2)}!`,
+        },
+      });
+    }
+
+    res.json({
+      chore: updated[0],
+      message: `Chore reassigned to ${targetUser.displayName}.`,
+    });
+  } catch (err) {
+    console.error('Failed to reassign paid chore:', err);
+    serverError(res, 'Failed to reassign paid chore');
+  }
+}

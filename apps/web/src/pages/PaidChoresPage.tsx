@@ -11,6 +11,8 @@ import {
   CheckCircle,
   XCircle,
   User,
+  Users,
+  UserPlus,
   AlertCircle,
   Timer,
   Star,
@@ -23,9 +25,11 @@ import { useAuth } from '../context/AuthContext';
 import { useTheme } from '../context/ThemeContext';
 import * as paidChoresApi from '../api/paid-chores';
 import type { PaidChore, CreatePaidChoreInput, LeaderboardEntry } from '../api/paid-chores';
+import { familyApi } from '../api/family';
+import type { FamilyMember } from '../types';
 import { getDifficultyStyle } from '../utils';
 
-type TabType = 'available' | 'my-claims' | 'pending-review' | 'leaderboard';
+type TabType = 'available' | 'my-claims' | 'all-claimed' | 'pending-review' | 'leaderboard';
 
 export function PaidChoresPage() {
   const { user } = useAuth();
@@ -41,8 +45,10 @@ export function PaidChoresPage() {
   // Modal states
   const [showCreateModal, setShowCreateModal] = useState(false);
   const [showCompleteModal, setShowCompleteModal] = useState(false);
+  const [showReassignModal, setShowReassignModal] = useState(false);
   const [selectedChore, setSelectedChore] = useState<PaidChore | null>(null);
   const [completionNotes, setCompletionNotes] = useState('');
+  const [householdMembers, setHouseholdMembers] = useState<FamilyMember[]>([]);
 
   const [myEarnings, setMyEarnings] = useState(0);
 
@@ -80,6 +86,8 @@ export function PaidChoresPage() {
         return chore.status === 'available';
       case 'my-claims':
         return chore.claimedBy === user?.id && ['claimed', 'completed', 'verified'].includes(chore.status);
+      case 'all-claimed':
+        return chore.status === 'claimed';
       case 'pending-review':
         return isAdmin && chore.status === 'completed';
       default:
@@ -154,10 +162,40 @@ export function PaidChoresPage() {
     }
   };
 
+  const handleReassignOpen = async (chore: PaidChore) => {
+    setSelectedChore(chore);
+    try {
+      const data = await familyApi.getMembers();
+      setHouseholdMembers(data.members.filter((m) => m.active));
+    } catch (err: any) {
+      setError(err.message || 'Failed to load household members');
+      return;
+    }
+    setShowReassignModal(true);
+  };
+
+  const handleReassign = async (userId: number) => {
+    if (!selectedChore) return;
+    try {
+      setError('');
+      const result = await paidChoresApi.reassignPaidChore(selectedChore.id, userId);
+      setSuccess(result.message);
+      setTimeout(() => setSuccess(''), 3000);
+      setShowReassignModal(false);
+      setSelectedChore(null);
+      fetchData();
+    } catch (err: any) {
+      setError(err.message || 'Failed to reassign chore');
+    }
+  };
+
   const tabs = [
     { id: 'available' as TabType, label: 'Available', icon: Zap },
     { id: 'my-claims' as TabType, label: 'My Claims', icon: User },
-    ...(isAdmin ? [{ id: 'pending-review' as TabType, label: 'Pending Review', icon: Clock }] : []),
+    ...(isAdmin ? [
+      { id: 'all-claimed' as TabType, label: 'All Claimed', icon: Users },
+      { id: 'pending-review' as TabType, label: 'Pending Review', icon: Clock },
+    ] : []),
     { id: 'leaderboard' as TabType, label: 'Leaderboard', icon: Trophy },
   ];
 
@@ -263,7 +301,9 @@ export function PaidChoresPage() {
               ? 'No chores available right now. Check back soon!'
               : activeTab === 'my-claims'
                 ? "You haven't claimed any chores yet."
-                : 'No chores pending review.'}
+                : activeTab === 'all-claimed'
+                  ? 'No chores are currently claimed.'
+                  : 'No chores pending review.'}
           </p>
         </div>
       ) : (
@@ -282,6 +322,7 @@ export function PaidChoresPage() {
               onVerify={() => handleVerify(chore)}
               onReject={(reopen) => handleReject(chore, reopen)}
               onDelete={() => handleDelete(chore)}
+              onReassign={() => handleReassignOpen(chore)}
             />
           ))}
         </div>
@@ -349,6 +390,19 @@ export function PaidChoresPage() {
           </ModalBody>
         </ModalPortal>
       )}
+
+      {/* Reassign Modal */}
+      {showReassignModal && selectedChore && (
+        <ReassignModal
+          chore={selectedChore}
+          members={householdMembers}
+          onClose={() => {
+            setShowReassignModal(false);
+            setSelectedChore(null);
+          }}
+          onReassign={handleReassign}
+        />
+      )}
       </div>
     </div>
   );
@@ -367,6 +421,7 @@ interface ChoreCardProps {
   onVerify: () => void;
   onReject: (reopen: boolean) => void;
   onDelete: () => void;
+  onReassign: () => void;
 }
 
 // Helper function for status badge styles
@@ -394,6 +449,7 @@ function ChoreCard({
   onVerify,
   onReject,
   onDelete,
+  onReassign,
 }: ChoreCardProps) {
   const isClaimedByMe = chore.claimedBy === currentUserId;
 
@@ -499,6 +555,20 @@ function ChoreCard({
           >
             <CheckCircle size={18} />
             Mark Complete
+          </button>
+        )}
+
+        {chore.status === 'claimed' && isAdmin && (
+          <button
+            onClick={onReassign}
+            className="py-2 px-3 rounded-xl transition-opacity hover:opacity-80"
+            style={{
+              backgroundColor: 'color-mix(in srgb, var(--color-warning) 15%, transparent)',
+              color: 'var(--color-warning)',
+            }}
+            title="Reassign to another member"
+          >
+            <UserPlus size={18} />
           </button>
         )}
 
@@ -647,6 +717,111 @@ function LeaderboardView({ leaderboard, currentUserId }: LeaderboardViewProps) {
         )}
       </div>
     </div>
+  );
+}
+
+// =============================================================================
+// REASSIGN MODAL
+// =============================================================================
+
+interface ReassignModalProps {
+  chore: PaidChore;
+  members: FamilyMember[];
+  onClose: () => void;
+  onReassign: (userId: number) => void;
+}
+
+function ReassignModal({ chore, members, onClose, onReassign }: ReassignModalProps) {
+  const [selectedUserId, setSelectedUserId] = useState<number | null>(null);
+  const [submitting, setSubmitting] = useState(false);
+
+  // Filter out the current claimer
+  const availableMembers = members.filter((m) => m.id !== chore.claimedBy);
+
+  const handleSubmit = async () => {
+    if (!selectedUserId) return;
+    setSubmitting(true);
+    try {
+      await onReassign(selectedUserId);
+    } finally {
+      setSubmitting(false);
+    }
+  };
+
+  return (
+    <ModalPortal
+      isOpen={true}
+      onClose={onClose}
+      title="Reassign Chore"
+      size="md"
+      footer={
+        <div className="flex gap-3">
+          <button
+            onClick={onClose}
+            className="flex-1 py-2 bg-[var(--color-muted)] text-[var(--color-muted-foreground)] rounded-xl hover:opacity-80 transition-opacity"
+          >
+            Cancel
+          </button>
+          <button
+            onClick={handleSubmit}
+            disabled={!selectedUserId || submitting}
+            className="flex-1 py-2 bg-[var(--color-primary)] hover:opacity-90 text-[var(--color-primary-foreground)] rounded-xl disabled:opacity-50 transition-opacity"
+          >
+            {submitting ? 'Reassigning...' : 'Reassign'}
+          </button>
+        </div>
+      }
+    >
+      <ModalBody>
+        <p className="text-[var(--color-muted-foreground)] mb-4">
+          Reassign "<strong>{chore.title}</strong>" from{' '}
+          <span style={{ color: chore.claimerColor || 'var(--color-primary)' }}>
+            {chore.claimerName}
+          </span>{' '}
+          to:
+        </p>
+        <div className="space-y-2">
+          {availableMembers.map((member) => (
+            <button
+              key={member.id}
+              onClick={() => setSelectedUserId(member.id)}
+              className="w-full flex items-center gap-3 p-3 rounded-xl border transition-colors"
+              style={
+                selectedUserId === member.id
+                  ? {
+                      borderColor: 'var(--color-primary)',
+                      backgroundColor: 'color-mix(in srgb, var(--color-primary) 10%, transparent)',
+                    }
+                  : {
+                      borderColor: 'var(--color-border)',
+                      backgroundColor: 'var(--color-card)',
+                    }
+              }
+            >
+              {member.avatarUrl ? (
+                <img src={member.avatarUrl} alt="" className="w-8 h-8 rounded-full object-cover" />
+              ) : (
+                <div
+                  className="w-8 h-8 rounded-full flex items-center justify-center text-white font-bold text-sm"
+                  style={{ backgroundColor: member.color || 'var(--color-primary)' }}
+                >
+                  {(member.nickname || member.displayName).charAt(0).toUpperCase()}
+                </div>
+              )}
+              <div className="text-left">
+                <p className="font-medium text-[var(--color-foreground)]">{member.displayName}</p>
+                <p className="text-xs text-[var(--color-muted-foreground)]">{member.role}</p>
+              </div>
+            </button>
+          ))}
+          {availableMembers.length === 0 && (
+            <p className="text-sm text-[var(--color-muted-foreground)] italic text-center py-4">
+              No other members available to reassign to.
+            </p>
+          )}
+        </div>
+      </ModalBody>
+    </ModalPortal>
   );
 }
 

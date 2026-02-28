@@ -6,6 +6,18 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ---
 
+## [1.7.0] - 2026-02-28
+
+### Added
+
+#### Admin: Reassign Paid Chores
+- **Reassign endpoint** — New `POST /api/paid-chores/:id/reassign` admin-only endpoint to move a claimed paid chore from one household member to another
+- **Reassign UI** — Admin sees a reassign button on any claimed chore card; opens a modal with household member picker to select the new assignee
+- **Notifications** — Both the old claimer (removed) and the new claimer (assigned) receive in-app notifications and email updates
+- **"All Claimed" admin tab** — New admin-only tab on the Paid Chores page showing all currently claimed chores across all household members, giving admins visibility into who has grabbed what
+
+---
+
 ## [1.6.2] - 2026-02-27
 
 ### Fixed

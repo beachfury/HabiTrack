@@ -5,6 +5,13 @@ Exceptions: critical bugs or security issues that need immediate attention.
 
 ---
 
+## Week of 2026-03-02
+
+### Enhancements
+- [x] **Admin: Reassign paid chores** — Admins currently have no way to reassign a paid chore once it's been claimed. Need an admin action to reassign paid chores to a different household member (e.g., if someone is being greedy with high-value chores). **Fixed:** Added `POST /paid-chores/:id/reassign` endpoint, reassign button + modal on claimed chore cards, and new "All Claimed" admin tab. v1.7.0.
+
+---
+
 ## Week of 2026-02-23
 
 ### Issues

@@ -16,6 +16,7 @@ export {
   completePaidChore,
   verifyPaidChore,
   rejectPaidChore,
+  reassignPaidChore,
 } from './workflow';
 
 // Earnings and leaderboard
