@@ -18,6 +18,9 @@ import {
   Star,
   Target,
   X,
+  Camera,
+  Image as ImageIcon,
+  Trash2,
 } from 'lucide-react';
 import { ModalPortal, ModalBody } from '../components/common/ModalPortal';
 import { PageHeader } from '../components/common/PageHeader';
@@ -48,6 +51,8 @@ export function PaidChoresPage() {
   const [showReassignModal, setShowReassignModal] = useState(false);
   const [selectedChore, setSelectedChore] = useState<PaidChore | null>(null);
   const [completionNotes, setCompletionNotes] = useState('');
+  const [completionPhotos, setCompletionPhotos] = useState<string[]>([]);
+  const [uploadingPhoto, setUploadingPhoto] = useState(false);
   const [householdMembers, setHouseholdMembers] = useState<FamilyMember[]>([]);
 
   const [myEarnings, setMyEarnings] = useState(0);
@@ -107,18 +112,57 @@ export function PaidChoresPage() {
     }
   };
 
+  const handlePhotoUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const files = e.target.files;
+    if (!files || files.length === 0) return;
+
+    setUploadingPhoto(true);
+    setError('');
+
+    try {
+      for (let i = 0; i < files.length; i++) {
+        const file = files[i];
+        if (file.size > 5 * 1024 * 1024) {
+          setError(`${file.name} is too large. Maximum 5MB per image.`);
+          continue;
+        }
+
+        const dataUrl = await new Promise<string>((resolve) => {
+          const reader = new FileReader();
+          reader.onload = () => resolve(reader.result as string);
+          reader.readAsDataURL(file);
+        });
+
+        const result = await paidChoresApi.uploadPaidChoreImage(dataUrl, file.type);
+        setCompletionPhotos((prev) => [...prev, result.imageKey]);
+      }
+    } catch (err: any) {
+      setError(err.message || 'Failed to upload photo');
+    } finally {
+      setUploadingPhoto(false);
+      // Reset the input so the same file can be selected again
+      e.target.value = '';
+    }
+  };
+
+  const handleRemovePhoto = (index: number) => {
+    setCompletionPhotos((prev) => prev.filter((_, i) => i !== index));
+  };
+
   const handleComplete = async () => {
     if (!selectedChore) return;
     try {
       setError('');
       const result = await paidChoresApi.completePaidChore(selectedChore.id, {
         notes: completionNotes,
+        photos: completionPhotos.length > 0 ? completionPhotos : undefined,
       });
       setSuccess(result.message);
       setTimeout(() => setSuccess(''), 3000);
       setShowCompleteModal(false);
       setSelectedChore(null);
       setCompletionNotes('');
+      setCompletionPhotos([]);
       fetchData();
     } catch (err: any) {
       setError(err.message || 'Failed to complete chore');
@@ -347,8 +391,9 @@ export function PaidChoresPage() {
             setShowCompleteModal(false);
             setSelectedChore(null);
             setCompletionNotes('');
+            setCompletionPhotos([]);
           }}
-          title="Complete Chore"
+          title={isAdmin && selectedChore.claimedBy !== user?.id ? 'Complete on Behalf' : 'Complete Chore'}
           size="md"
           footer={
             <div className="flex gap-3">
@@ -357,6 +402,7 @@ export function PaidChoresPage() {
                   setShowCompleteModal(false);
                   setSelectedChore(null);
                   setCompletionNotes('');
+                  setCompletionPhotos([]);
                 }}
                 className="flex-1 py-2 bg-[var(--color-muted)] text-[var(--color-muted-foreground)] rounded-xl hover:opacity-80 transition-opacity"
               >
@@ -364,7 +410,8 @@ export function PaidChoresPage() {
               </button>
               <button
                 onClick={handleComplete}
-                className="flex-1 py-2 bg-[var(--color-success)] hover:opacity-90 text-[var(--color-success-foreground)] rounded-xl transition-opacity"
+                disabled={uploadingPhoto}
+                className="flex-1 py-2 bg-[var(--color-success)] hover:opacity-90 text-[var(--color-success-foreground)] rounded-xl disabled:opacity-50 transition-opacity"
               >
                 Mark Complete
               </button>
@@ -373,8 +420,59 @@ export function PaidChoresPage() {
         >
           <ModalBody>
             <p className="text-[var(--color-muted-foreground)] mb-4">
-              Mark "{selectedChore.title}" as complete?
+              {isAdmin && selectedChore.claimedBy !== user?.id
+                ? <>Complete "<strong>{selectedChore.title}</strong>" on behalf of <span style={{ color: selectedChore.claimerColor || 'var(--color-primary)' }}>{selectedChore.claimerName}</span>? The reward will go to them.</>
+                : <>Mark "{selectedChore.title}" as complete?</>
+              }
             </p>
+
+            {/* Photo Upload */}
+            <div className="mb-4">
+              <label className="block text-sm font-medium text-[var(--color-foreground)] mb-1">
+                Photos {selectedChore.requirePhoto && !(isAdmin && selectedChore.claimedBy !== user?.id) ? '(required)' : '(optional)'}
+              </label>
+
+              {/* Photo Grid */}
+              {completionPhotos.length > 0 && (
+                <div className="flex flex-wrap gap-2 mb-2">
+                  {completionPhotos.map((photo, index) => (
+                    <div key={index} className="relative group">
+                      <img
+                        src={`/api${photo}`}
+                        alt={`Photo ${index + 1}`}
+                        className="w-20 h-20 object-cover rounded-lg border border-[var(--color-border)]"
+                      />
+                      <button
+                        onClick={() => handleRemovePhoto(index)}
+                        className="absolute -top-1 -right-1 w-5 h-5 bg-[var(--color-destructive)] text-white rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity"
+                      >
+                        <X size={12} />
+                      </button>
+                    </div>
+                  ))}
+                </div>
+              )}
+
+              <label className="flex items-center gap-2 px-3 py-2 border border-dashed border-[var(--color-border)] rounded-xl cursor-pointer hover:opacity-80 transition-opacity">
+                {uploadingPhoto ? (
+                  <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-[var(--color-primary)]"></div>
+                ) : (
+                  <Camera size={20} className="text-[var(--color-muted-foreground)]" />
+                )}
+                <span className="text-sm text-[var(--color-muted-foreground)]">
+                  {uploadingPhoto ? 'Uploading...' : 'Add photos'}
+                </span>
+                <input
+                  type="file"
+                  accept="image/*"
+                  multiple
+                  onChange={handlePhotoUpload}
+                  className="hidden"
+                  disabled={uploadingPhoto}
+                />
+              </label>
+            </div>
+
             <div>
               <label className="block text-sm font-medium text-[var(--color-foreground)] mb-1">
                 Notes (optional)
@@ -536,6 +634,43 @@ function ChoreCard({
         </div>
       )}
 
+      {/* Completion photos */}
+      {chore.completionPhotoUrl && chore.status === 'completed' && (() => {
+        try {
+          const photos = JSON.parse(chore.completionPhotoUrl);
+          if (Array.isArray(photos) && photos.length > 0) {
+            return (
+              <div className="mb-4 flex flex-wrap gap-2">
+                {photos.map((photo: string, idx: number) => (
+                  <img
+                    key={idx}
+                    src={`/api${photo}`}
+                    alt={`Completion photo ${idx + 1}`}
+                    className="w-16 h-16 object-cover rounded-lg border border-[var(--color-border)] cursor-pointer hover:opacity-80"
+                    onClick={() => window.open(`/api${photo}`, '_blank')}
+                  />
+                ))}
+              </div>
+            );
+          }
+        } catch {
+          // Legacy single URL format
+          if (chore.completionPhotoUrl.startsWith('/')) {
+            return (
+              <div className="mb-4">
+                <img
+                  src={`/api${chore.completionPhotoUrl}`}
+                  alt="Completion photo"
+                  className="w-16 h-16 object-cover rounded-lg border border-[var(--color-border)] cursor-pointer hover:opacity-80"
+                  onClick={() => window.open(`/api${chore.completionPhotoUrl}`, '_blank')}
+                />
+              </div>
+            );
+          }
+        }
+        return null;
+      })()}
+
       {/* Actions */}
       <div className="flex gap-2">
         {chore.status === 'available' && (
@@ -555,6 +690,16 @@ function ChoreCard({
           >
             <CheckCircle size={18} />
             Mark Complete
+          </button>
+        )}
+
+        {chore.status === 'claimed' && isAdmin && !isClaimedByMe && (
+          <button
+            onClick={onComplete}
+            className="flex-1 py-2 bg-[var(--color-primary)] hover:opacity-90 text-[var(--color-primary-foreground)] rounded-xl font-medium flex items-center justify-center gap-2 transition-opacity"
+          >
+            <CheckCircle size={18} />
+            Complete for User
           </button>
         )}
 

@@ -86,7 +86,7 @@ export async function claimPaidChore(req: Request, res: Response) {
 }
 
 // =============================================================================
-// COMPLETE PAID CHORE (Mark as done by claimer)
+// COMPLETE PAID CHORE (Mark as done by claimer OR admin on behalf of claimer)
 // =============================================================================
 
 export async function completePaidChore(req: Request, res: Response) {
@@ -97,7 +97,9 @@ export async function completePaidChore(req: Request, res: Response) {
     }
 
     const { id } = req.params;
-    const { notes, photoUrl } = req.body;
+    const { notes, photos } = req.body;
+    // Support legacy photoUrl field for backward compatibility
+    const photoUrl = req.body.photoUrl;
 
     const chores = await q<any[]>('SELECT * FROM paid_chores WHERE id = ?', [id]);
 
@@ -111,57 +113,73 @@ export async function completePaidChore(req: Request, res: Response) {
       return invalidInput(res, 'Chore must be claimed before completing');
     }
 
-    if (chore.claimedBy !== user.id) {
-      return forbidden(res, 'Only the person who claimed this chore can complete it');
+    const isAdmin = user.roleId === 'admin';
+    const isClaimer = chore.claimedBy === user.id;
+
+    // Allow claimer OR admin to complete
+    if (!isClaimer && !isAdmin) {
+      return forbidden(res, 'Only the person who claimed this chore or an admin can complete it');
     }
 
-    if (chore.requirePhoto && !photoUrl) {
+    // Photo requirement: enforced for regular users, skipped for admins completing on behalf
+    const hasPhotos = (photos && photos.length > 0) || photoUrl;
+    if (chore.requirePhoto && !hasPhotos && !isAdmin) {
       return invalidInput(res, 'A photo is required to complete this chore');
     }
+
+    // Store photos as JSON array, or legacy single URL
+    const photosJson = photos ? JSON.stringify(photos) : (photoUrl ? JSON.stringify([photoUrl]) : null);
 
     await q(`
       UPDATE paid_chores
       SET status = 'completed', completedAt = NOW(3), completionNotes = ?, completionPhotoUrl = ?
       WHERE id = ?
-    `, [notes, photoUrl, id]);
+    `, [notes, photosJson, id]);
 
     const updated = await q<any[]>('SELECT * FROM paid_chores WHERE id = ?', [id]);
 
-    log.info('Paid chore completed', { choreId: id, choreTitle: chore.title, completedBy: user.id });
+    const completedOnBehalf = isAdmin && !isClaimer;
+    log.info('Paid chore completed', { choreId: id, choreTitle: chore.title, completedBy: user.id, onBehalf: completedOnBehalf });
 
-    // Notify admins that chore was completed and needs verification
-    const admins = await q<Array<{ id: number; email: string | null; displayName: string }>>(
-      `SELECT id, email, displayName FROM users WHERE roleId = 'admin' AND active = 1`,
-    );
-    const [completerInfo] = await q<Array<{ displayName: string }>>(
-      'SELECT displayName FROM users WHERE id = ?',
-      [user.id],
-    );
+    // Notify admins that chore was completed and needs verification (only if claimer completed it)
+    if (!completedOnBehalf) {
+      const admins = await q<Array<{ id: number; email: string | null; displayName: string }>>(
+        `SELECT id, email, displayName FROM users WHERE roleId = 'admin' AND active = 1`,
+      );
+      const [completerInfo] = await q<Array<{ displayName: string }>>(
+        'SELECT displayName FROM users WHERE id = ?',
+        [user.id],
+      );
 
-    for (const admin of admins) {
-      await createNotification({
-        userId: admin.id,
-        type: 'chore',
-        title: 'Paid chore needs verification',
-        body: `${completerInfo?.displayName || 'Someone'} completed "${updated[0].title}" - ready for review`,
-        link: '/paid-chores',
-      });
-
-      if (admin.email) {
-        await queueEmail({
+      for (const admin of admins) {
+        await createNotification({
           userId: admin.id,
-          toEmail: admin.email,
-          template: 'PAID_CHORE_UPDATE',
-          variables: {
-            userName: admin.displayName,
-            choreName: updated[0].title,
-            message: `${completerInfo?.displayName || 'Someone'} has completed this chore and it's ready for your verification.`,
-          },
+          type: 'chore',
+          title: 'Paid chore needs verification',
+          body: `${completerInfo?.displayName || 'Someone'} completed "${updated[0].title}" - ready for review`,
+          link: '/paid-chores',
         });
+
+        if (admin.email) {
+          await queueEmail({
+            userId: admin.id,
+            toEmail: admin.email,
+            template: 'PAID_CHORE_UPDATE',
+            variables: {
+              userName: admin.displayName,
+              choreName: updated[0].title,
+              message: `${completerInfo?.displayName || 'Someone'} has completed this chore and it's ready for your verification.`,
+            },
+          });
+        }
       }
     }
 
-    res.json({ chore: updated[0], message: 'Chore marked as complete! Waiting for admin verification.' });
+    const message = completedOnBehalf
+      ? 'Chore marked as complete on behalf of the claimer. Ready for verification.'
+      : 'Chore marked as complete! Waiting for admin verification.';
+
+    res.json({ chore: updated[0], message });
   } catch (err) {
     console.error('Failed to complete paid chore:', err);
     serverError(res, 'Failed to complete paid chore');

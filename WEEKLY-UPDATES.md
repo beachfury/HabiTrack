@@ -10,6 +10,13 @@ Exceptions: critical bugs or security issues that need immediate attention.
 ### Enhancements
 - [x] **Admin: Reassign paid chores** — Admins currently have no way to reassign a paid chore once it's been claimed. Need an admin action to reassign paid chores to a different household member (e.g., if someone is being greedy with high-value chores). **Fixed:** Added `POST /paid-chores/:id/reassign` endpoint, reassign button + modal on claimed chore cards, and new "All Claimed" admin tab. v1.7.0.
 
+### Issues (for Friday)
+- [ ] **Avatar too small** — Increase avatar size on all pages, widgets, and cards that display avatars
+- [ ] **Animated background speed inconsistency** — Sidebar animation speeds up on certain pages: Store page, Settings > Notifications tab, Settings > Household tab, Budget Management > Budgets tab. Animation speed should be consistent across all pages
+- [ ] **Store page not in theme editor** — Store page is not configured for the theme editor
+- [ ] **Kid-safe themes not showing for kids** — Themes marked as kid-safe are not appearing for kid users to select
+- [ ] **Direct messages don't show without refresh** — DMs to a user don't appear in the conversation until the page is refreshed, although the notification does show up (likely a WebSocket/real-time update issue)
+
 ---
 
 ## Week of 2026-02-23

@@ -6,6 +6,21 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ---
 
+## [1.7.1] - 2026-02-28
+
+### Fixed
+- **Paid chore photo upload** — The complete chore modal had no photo upload UI despite the backend supporting it. Added multi-image upload with preview, remove, and progress indicator
+- **Admin edit claimed chores** — Admins can now edit paid chore details (title, description, amount, etc.) even after a chore has been claimed, not just when available
+- **Admin complete on behalf** — Admins can now mark a claimed chore as complete on behalf of the claimer. The reward goes to the claimer, not the admin
+- **Admin skip photo requirement** — When an admin completes a chore on behalf of a user, the photo requirement is waived
+- **Completion photo display** — Chore cards now display uploaded completion photos for admin review on the Pending Review tab
+
+### Added
+- **Paid chore image upload endpoint** — `POST /api/paid-chores/upload-image` with Sharp processing (auto-rotate, resize to 1200×1600, 72 DPI, JPEG)
+- **Migration 023** — `completionPhotoUrl` column expanded from VARCHAR(500) to TEXT to support multiple photos stored as JSON array
+
+---
+
 ## [1.7.0] - 2026-02-28
 
 ### Added
