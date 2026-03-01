@@ -483,6 +483,7 @@ router.get('/paid-chores', requireAuth(), paidChores.listPaidChores);
 router.get('/paid-chores/earnings', requireAuth(), paidChores.getEarnings);
 router.get('/paid-chores/leaderboard', requireAuth(), paidChores.getEarningsLeaderboard);
 router.post('/paid-chores', requireAuth('admin'), writeRateLimiter, paidChores.createPaidChore);
+router.post('/paid-chores/upload-image', requireAuth(), writeRateLimiter, upload.uploadPaidChoreImage);
 // Specific action routes before :id
 router.post('/paid-chores/:id/claim', requireAuth(), writeRateLimiter, paidChores.claimPaidChore);
 router.post('/paid-chores/:id/complete', requireAuth(), writeRateLimiter, paidChores.completePaidChore);

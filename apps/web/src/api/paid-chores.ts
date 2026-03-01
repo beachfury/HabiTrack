@@ -145,11 +145,21 @@ export async function claimPaidChore(id: string): Promise<{ chore: PaidChore; me
 
 export async function completePaidChore(
   id: string,
-  data: { notes?: string; photoUrl?: string }
+  data: { notes?: string; photos?: string[] }
 ): Promise<{ chore: PaidChore; message: string }> {
   return fetchApi<{ chore: PaidChore; message: string }>(`/paid-chores/${encodeURIComponent(id)}/complete`, {
     method: 'POST',
     body: JSON.stringify(data),
+  });
+}
+
+export async function uploadPaidChoreImage(
+  imageData: string,
+  contentType: string
+): Promise<{ imageKey: string }> {
+  return fetchApi<{ success: boolean; imageKey: string }>('/paid-chores/upload-image', {
+    method: 'POST',
+    body: JSON.stringify({ imageData, contentType }),
   });
 }
 

@@ -198,8 +198,8 @@ export async function updatePaidChore(req: Request, res: Response) {
       return notFound(res, 'Paid chore');
     }
 
-    if (existing[0].status !== 'available') {
-      return invalidInput(res, 'Can only update available chores');
+    if (existing[0].status !== 'available' && existing[0].status !== 'claimed') {
+      return invalidInput(res, 'Can only update available or claimed chores');
     }
 
     const updates: string[] = [];
