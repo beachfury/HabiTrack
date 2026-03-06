@@ -214,3 +214,19 @@ export async function deleteAllRead(req: Request, res: Response) {
     return serverError(res, err as Error);
   }
 }
+
+/**
+ * DELETE /api/messages/all
+ * Delete ALL notifications for the current user (read and unread)
+ */
+export async function deleteAllNotifications(req: Request, res: Response) {
+  const user = getUser(req);
+  if (!user) return res.status(401).json({ error: { code: 'AUTH_REQUIRED' } });
+
+  try {
+    const result: any = await q(`DELETE FROM notifications WHERE userId = ?`, [user.id]);
+    return success(res, { deleted: result.affectedRows || 0 });
+  } catch (err) {
+    return serverError(res, err as Error);
+  }
+}

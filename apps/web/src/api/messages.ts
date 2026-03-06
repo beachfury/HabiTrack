@@ -93,6 +93,14 @@ export const messagesApi = {
     return apiClient['delete']('/messages', undefined);
   },
 
+  deleteAllNotifications(): Promise<{ deleted: number }> {
+    return apiClient['delete']('/messages/all', undefined);
+  },
+
+  deleteAllAnnouncements(): Promise<{ deleted: number }> {
+    return apiClient['delete']('/messages/announcements/all', undefined);
+  },
+
   // =============================================================================
   // ANNOUNCEMENTS (Admin -> All)
   // =============================================================================

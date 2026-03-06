@@ -6,6 +6,27 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ---
 
+## [1.8.0] - 2026-03-06
+
+### Fixed
+- **Kid-safe themes not showing for kids** — Backend theme query excluded non-public kid-approved themes because it only checked `isPublic = 1 OR createdBy = ?`. Kids don't create themes, so they couldn't see kid-approved ones. Added dedicated kid-user query branch that filters by `isApprovedForKids = 1`
+- **Paid chore completion photos broken** — Photo URLs used `/api/uploads/...` which went through NGINX's `/api` location to Express, but Express serves static files at `/uploads/...` not `/api/uploads/...`. Fixed to use `/uploads/...` paths directly
+- **Kiosk accessible from external network** — Docker bridge network gave NGINX an internal IP (172.18.x.x) that passed the RFC 1918 local check. Rewrote kiosk middleware to trust X-Forwarded-For from any RFC 1918 source and added admin-configurable device IP whitelist
+- **Kiosk logout redirect** — Manual logout cleared user state before redirect, losing the kiosk flag. Now saves kiosk state to sessionStorage before clearing, and ProtectedRoute checks the flag to redirect to `/kiosk` instead of `/login`
+- **Animated background speed inconsistency** — Sidebar CSS animations restarted when navigating between pages because React remounted the sidebar DOM. Added stable `key="desktop-sidebar"` to prevent remounting
+- **Avatar too small** — Increased all avatar sizes globally: xs 24→32px, sm 32→40px, md 40→48px, lg 48→56px, xl 64→80px
+- **Direct messages don't show without refresh** — Added 5-second polling for active conversations and 15-second polling for conversation list to show new messages without page refresh
+
+### Added
+- **Kiosk on-screen keyboard** — Virtual QWERTY keyboard for touchscreen kiosk devices using `react-simple-keyboard`. Features: draggable, resizable (S/M/L), emoji picker with categorized emojis, dark theme, auto-shows on text input focus for kiosk sessions only
+- **Kiosk device IP management** — Admin settings section to configure allowed kiosk device IPs. When IPs are configured, only those devices can access the kiosk PIN login. Falls back to RFC 1918 check when no IPs are set
+- **Delete All for notifications & announcements** — "Delete All" buttons on Messages page Notifications tab (all users) and Announcements tab (admin only) with confirmation prompts
+- **Multi-image support for regular chores** — Regular chore completion now supports multiple photo uploads, matching the paid chores feature. Includes upload endpoint, photo preview grid, and JSON storage in `photoUrl` column
+- **Regular chore image upload endpoint** — `POST /api/chores/upload-image` with Sharp processing (auto-rotate, resize, JPEG)
+- **Migration 024** — `kioskAllowedIps` column on settings table, `chore_instances.photoUrl` expanded from VARCHAR(500) to TEXT for JSON arrays
+
+---
+
 ## [1.7.1] - 2026-02-28
 
 ### Fixed

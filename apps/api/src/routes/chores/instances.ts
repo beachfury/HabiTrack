@@ -97,7 +97,7 @@ export async function completeInstance(req: Request, res: Response) {
   if (!user) return res.status(401).json({ error: { code: 'AUTH_REQUIRED' } });
 
   const instanceId = parseInt(req.params.id);
-  const { notes, forUserId } = req.body; // <-- ADD forUserId here
+  const { notes, forUserId, photos } = req.body;
 
   try {
     // Get the instance
@@ -129,6 +129,9 @@ export async function completeInstance(req: Request, res: Response) {
 
     const totalPoints = instance.points + bonusPoints;
 
+    // Store completion photos as JSON array
+    const photosJson = photos && photos.length > 0 ? JSON.stringify(photos) : null;
+
     // Determine who gets the points:
     // 1. If forUserId is specified (admin completing for someone), use that
     // 2. Otherwise, use the assignedTo user
@@ -139,9 +142,9 @@ export async function completeInstance(req: Request, res: Response) {
       // Mark as completed, awaiting approval
       await q(
         `UPDATE chore_instances
-         SET status = 'completed', completedAt = ?, completedBy = ?, completionNotes = ?
+         SET status = 'completed', completedAt = ?, completedBy = ?, completionNotes = ?, photoUrl = ?
          WHERE id = ?`,
-        [now, user.id, notes || null, instanceId],
+        [now, user.id, notes || null, photosJson, instanceId],
       );
 
       // Notify admins...
@@ -162,9 +165,9 @@ export async function completeInstance(req: Request, res: Response) {
       await q(
         `UPDATE chore_instances
          SET status = 'approved', completedAt = ?, completedBy = ?,
-             approvedAt = ?, approvedBy = ?, pointsAwarded = ?, completionNotes = ?
+             approvedAt = ?, approvedBy = ?, pointsAwarded = ?, completionNotes = ?, photoUrl = ?
          WHERE id = ?`,
-        [now, user.id, now, user.id, totalPoints, notes || null, instanceId],
+        [now, user.id, now, user.id, totalPoints, notes || null, photosJson, instanceId],
       );
 
       // Award points to the correct user

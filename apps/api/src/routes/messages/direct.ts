@@ -9,6 +9,7 @@ export {
   getAnnouncements,
   markAnnouncementRead,
   deleteAnnouncement,
+  deleteAllAnnouncements,
   type CreateAnnouncementParams,
 } from './announcements';
 

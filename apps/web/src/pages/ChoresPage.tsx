@@ -140,9 +140,9 @@ export function ChoresPage() {
   };
 
   // Handlers
-  const handleComplete = async (instance: ChoreInstance, notes?: string) => {
+  const handleComplete = async (instance: ChoreInstance, notes?: string, photos?: string[]) => {
     try {
-      const result = await choresApi.completeChore(instance.id, { notes });
+      const result = await choresApi.completeChore(instance.id, { notes, photos });
       showSuccessMessage(
         result.pointsAwarded
           ? `Completed! +${result.pointsAwarded} points`

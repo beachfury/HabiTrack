@@ -10,6 +10,7 @@ export {
   markAllAsRead,
   deleteMessage,
   deleteAllRead,
+  deleteAllNotifications,
 } from './notifications';
 
 // Direct messages and announcements
@@ -19,6 +20,7 @@ export {
   getAnnouncements,
   markAnnouncementRead,
   deleteAnnouncement,
+  deleteAllAnnouncements,
   sendDirectMessage,
   getConversations,
   getConversation,

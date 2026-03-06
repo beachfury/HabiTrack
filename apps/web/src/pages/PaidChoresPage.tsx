@@ -438,7 +438,7 @@ export function PaidChoresPage() {
                   {completionPhotos.map((photo, index) => (
                     <div key={index} className="relative group">
                       <img
-                        src={`/api${photo}`}
+                        src={photo}
                         alt={`Photo ${index + 1}`}
                         className="w-20 h-20 object-cover rounded-lg border border-[var(--color-border)]"
                       />
@@ -644,10 +644,10 @@ function ChoreCard({
                 {photos.map((photo: string, idx: number) => (
                   <img
                     key={idx}
-                    src={`/api${photo}`}
+                    src={photo}
                     alt={`Completion photo ${idx + 1}`}
                     className="w-16 h-16 object-cover rounded-lg border border-[var(--color-border)] cursor-pointer hover:opacity-80"
-                    onClick={() => window.open(`/api${photo}`, '_blank')}
+                    onClick={() => window.open(photo, '_blank')}
                   />
                 ))}
               </div>
@@ -659,10 +659,10 @@ function ChoreCard({
             return (
               <div className="mb-4">
                 <img
-                  src={`/api${chore.completionPhotoUrl}`}
+                  src={chore.completionPhotoUrl}
                   alt="Completion photo"
                   className="w-16 h-16 object-cover rounded-lg border border-[var(--color-border)] cursor-pointer hover:opacity-80"
-                  onClick={() => window.open(`/api${chore.completionPhotoUrl}`, '_blank')}
+                  onClick={() => window.open(chore.completionPhotoUrl || '', '_blank')}
                 />
               </div>
             );

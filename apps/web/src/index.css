@@ -2273,3 +2273,42 @@
   position: relative;
   z-index: 2;
 }
+
+/* ============================================
+   VIRTUAL KEYBOARD (Kiosk)
+   Dark theme overrides for react-simple-keyboard
+   ============================================ */
+.virtual-keyboard-container .hg-theme-dark {
+  background: #1f2937;
+  border-radius: 0;
+  padding: 8px;
+}
+
+.virtual-keyboard-container .hg-theme-dark .hg-button {
+  background: #374151;
+  color: #f9fafb;
+  border: 1px solid #4b5563;
+  border-radius: 8px;
+  height: 48px;
+  font-size: 18px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+}
+
+.virtual-keyboard-container .hg-theme-dark .hg-button:active,
+.virtual-keyboard-container .hg-theme-dark .hg-button.hg-activeButton {
+  background: #6d28d9;
+  border-color: #7c3aed;
+  color: #fff;
+}
+
+.virtual-keyboard-container .hg-theme-dark .hg-button.hg-functionBtn {
+  background: #4b5563;
+}
+
+.virtual-keyboard-container .hg-theme-dark .hg-button[data-skbtn="{space}"] {
+  min-width: 60%;
+}
+
+.virtual-keyboard-container .hg-theme-dark .hg-row {
+  margin-bottom: 4px;
+}

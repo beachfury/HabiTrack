@@ -634,6 +634,7 @@ export function SidebarLayout({
             inline styles from overriding display:none and causing the sidebar to render on mobile */}
         {isDesktop && (
           <aside
+            key="desktop-sidebar"
             className={`flex flex-col relative overflow-hidden ${
               !sidebarElementStyle?.customCSS ? (side === 'right' ? 'border-l border-[var(--color-border)]' : 'border-r border-[var(--color-border)]') : ''
             } ${getAnimatedBackgroundClasses(sidebarElementStyle?.customCSS)}`}
