@@ -199,6 +199,9 @@ router.post(
   chores.reassignInstance,
 );
 
+// Chore Image Upload
+router.post('/chores/upload-image', requireAuth(), writeRateLimiter, upload.uploadChoreImage);
+
 // Chore Assignments
 router.get('/chores/assignments', requireAuth('admin'), chores.getAssignments);
 router.delete('/chores/assignments/:id', requireAuth('admin'), chores.deleteAssignment);
@@ -431,6 +434,7 @@ router.post(
   writeRateLimiter,
   messages.createAnnouncement,
 );
+router.delete('/messages/announcements/all', requireAuth('admin'), writeRateLimiter, messages.deleteAllAnnouncements);
 router.post('/messages/announcements/:id/read', requireAuth(), messages.markAnnouncementRead);
 router.delete('/messages/announcements/:id', requireAuth('admin'), messages.deleteAnnouncement);
 
@@ -440,6 +444,9 @@ router.get('/messages/conversations/:userId', requireAuth(), messages.getConvers
 router.post('/messages/send', requireAuth(), writeRateLimiter, messages.sendDirectMessage);
 router.delete('/messages/direct/:id', requireAuth(), deleteDirectMessage);
 router.delete('/messages/conversations/:userId', requireAuth(), deleteConversation);
+
+// Delete all notifications (read and unread) - must come before :id
+router.delete('/messages/all', requireAuth(), writeRateLimiter, messages.deleteAllNotifications);
 
 // Individual notification delete (must come after specific paths)
 router.delete('/messages/:id', requireAuth(), messages.deleteMessage);

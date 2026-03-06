@@ -9,6 +9,7 @@ import { api, type HouseholdSettings } from '../api';
 import type { UserOption as ApiUserOption } from '../types/user';
 import { SidebarLayout, TopHeaderLayout, MinimalLayout } from './layouts';
 import { ModalPortal, ModalBody } from './common/ModalPortal';
+import { VirtualKeyboard } from './common/VirtualKeyboard';
 
 type UserOption = ApiUserOption;
 
@@ -179,6 +180,9 @@ export function Layout({ children }: { children: ReactNode }) {
   return (
     <>
       {renderLayout()}
+
+      {/* Kiosk on-screen keyboard — only renders for kiosk sessions */}
+      {user?.isKiosk && <VirtualKeyboard />}
 
       {/* User Switcher Modal */}
       {showUserSwitcher && (

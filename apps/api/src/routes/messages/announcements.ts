@@ -297,3 +297,39 @@ export async function deleteAnnouncement(req: Request, res: Response) {
     return serverError(res, err as Error);
   }
 }
+
+/**
+ * DELETE /api/messages/announcements
+ * Delete ALL announcements (admin only)
+ */
+export async function deleteAllAnnouncements(req: Request, res: Response) {
+  const user = getUser(req);
+  if (!user) return res.status(401).json({ error: { code: 'AUTH_REQUIRED' } });
+
+  if (user.roleId !== 'admin') {
+    return forbidden(res, 'Only admins can delete all announcements');
+  }
+
+  try {
+    // Remove all notification records for announcements
+    await q(`DELETE FROM notifications WHERE relatedType = 'announcement'`);
+    // Remove all read-tracking rows
+    await q(`DELETE FROM announcement_reads`);
+    // Remove all announcements
+    const result: any = await q(`DELETE FROM messages WHERE isAnnouncement = 1`);
+
+    log.info('All announcements deleted', { deletedBy: user.id, count: result.affectedRows || 0 });
+
+    await logAudit({
+      action: 'message.announcement.delete_all',
+      result: 'ok',
+      actorId: user.id,
+      details: { deleted: result.affectedRows || 0 },
+    });
+
+    return success(res, { deleted: result.affectedRows || 0 });
+  } catch (err) {
+    log.error('Failed to delete all announcements', { error: String(err) });
+    return serverError(res, err as Error);
+  }
+}

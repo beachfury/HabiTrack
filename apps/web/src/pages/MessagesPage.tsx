@@ -235,6 +235,42 @@ export function MessagesPage() {
     }
   }, [selectedConversation]);
 
+  // Poll for new messages when a conversation is open
+  useEffect(() => {
+    if (!selectedConversation) return;
+
+    const pollInterval = setInterval(async () => {
+      try {
+        const data = await api.getConversation(selectedConversation);
+        setConversationMessages((prev) => {
+          // Only update if there are new messages (avoid unnecessary re-renders)
+          if (data.messages.length !== prev.length) {
+            return data.messages;
+          }
+          return prev;
+        });
+      } catch {
+        // Silently fail polling
+      }
+    }, 5000); // Poll every 5 seconds
+
+    return () => clearInterval(pollInterval);
+  }, [selectedConversation]);
+
+  // Poll conversations list for unread count updates
+  useEffect(() => {
+    const pollInterval = setInterval(async () => {
+      try {
+        const data = await api.getConversations();
+        setConversations(data.conversations || []);
+      } catch {
+        // Silently fail
+      }
+    }, 15000); // Poll every 15 seconds
+
+    return () => clearInterval(pollInterval);
+  }, []);
+
   // Handlers
   const handleMarkNotificationRead = async (id: number) => {
     try {
@@ -298,6 +334,30 @@ export function MessagesPage() {
       dispatchMessageReadEvent(); // Notify sidebar
     } catch (err) {
       console.error('Failed to delete announcement:', err);
+    }
+  };
+
+  const handleDeleteAllNotifications = async () => {
+    if (!confirm('Delete ALL notifications? This cannot be undone.')) return;
+    try {
+      await api.deleteAllNotifications();
+      setNotifications([]);
+      setUnreadNotifications(0);
+      dispatchMessageReadEvent();
+    } catch (err) {
+      console.error('Failed to delete all notifications:', err);
+    }
+  };
+
+  const handleDeleteAllAnnouncements = async () => {
+    if (!confirm('Delete ALL announcements? This cannot be undone.')) return;
+    try {
+      await api.deleteAllAnnouncements();
+      setAnnouncements([]);
+      setUnreadAnnouncements(0);
+      dispatchMessageReadEvent();
+    } catch (err) {
+      console.error('Failed to delete all announcements:', err);
     }
   };
 
@@ -473,15 +533,26 @@ export function MessagesPage() {
                 </button>
               ))}
             </div>
-            {unreadNotifications > 0 && (
-              <button
-                onClick={handleMarkAllNotificationsRead}
-                className="flex items-center gap-2 px-3 py-1.5 text-sm bg-[var(--color-primary)]/10 text-[var(--color-primary)] rounded-lg hover:bg-[var(--color-primary)]/20 transition-colors"
-              >
-                <CheckCheck size={16} />
-                Mark all read
-              </button>
-            )}
+            <div className="flex items-center gap-2">
+              {unreadNotifications > 0 && (
+                <button
+                  onClick={handleMarkAllNotificationsRead}
+                  className="flex items-center gap-2 px-3 py-1.5 text-sm bg-[var(--color-primary)]/10 text-[var(--color-primary)] rounded-lg hover:bg-[var(--color-primary)]/20 transition-colors"
+                >
+                  <CheckCheck size={16} />
+                  Mark all read
+                </button>
+              )}
+              {notifications.length > 0 && (
+                <button
+                  onClick={handleDeleteAllNotifications}
+                  className="flex items-center gap-2 px-3 py-1.5 text-sm bg-[var(--color-destructive)]/10 text-[var(--color-destructive)] rounded-lg hover:bg-[var(--color-destructive)]/20 transition-colors"
+                >
+                  <Trash2 size={16} />
+                  Delete All
+                </button>
+              )}
+            </div>
           </div>
 
           {/* Notification List */}
@@ -551,7 +622,7 @@ export function MessagesPage() {
       {activeTab === 'announcements' && (
         <div>
           {user?.role === 'admin' && (
-            <div className="mb-4">
+            <div className="mb-4 flex items-center gap-2">
               <button
                 onClick={() => setShowCreateAnnouncement(true)}
                 className="themed-btn-primary flex items-center gap-2"
@@ -559,6 +630,15 @@ export function MessagesPage() {
                 <Plus size={18} />
                 New Announcement
               </button>
+              {announcements.length > 0 && (
+                <button
+                  onClick={handleDeleteAllAnnouncements}
+                  className="flex items-center gap-2 px-3 py-1.5 text-sm bg-[var(--color-destructive)]/10 text-[var(--color-destructive)] rounded-lg hover:bg-[var(--color-destructive)]/20 transition-colors"
+                >
+                  <Trash2 size={16} />
+                  Delete All
+                </button>
+              )}
             </div>
           )}
 

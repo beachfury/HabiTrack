@@ -40,6 +40,9 @@ export async function listThemes(req: Request, res: Response) {
     } else if (filter === 'kid-approved') {
       // Kid-approved themes only
       sql += ' AND isApprovedForKids = 1';
+    } else if (user.roleId === 'kid') {
+      // Kids: only see kid-approved themes
+      sql += ' AND isApprovedForKids = 1';
     } else {
       // Default: public themes + user's own
       sql += ' AND (isPublic = 1 OR createdBy = ?)';

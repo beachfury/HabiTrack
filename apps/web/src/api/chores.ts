@@ -87,7 +87,7 @@ export const choresApi = {
   // =============================================================================
   completeChore(
     instanceId: number,
-    data: { notes?: string; forUserId?: number },
+    data: { notes?: string; forUserId?: number; photos?: string[] },
   ): Promise<{
     success: boolean;
     pointsAwarded?: number;

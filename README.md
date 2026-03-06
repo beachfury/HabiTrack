@@ -169,11 +169,19 @@ HabiTrack features a powerful theming system that allows deep customization:
 - Pre-update backup reminders to protect your data
 - Admin-only access with type-to-confirm safety for destructive operations
 
+### 📺 Kiosk Mode
+- PIN-based login for shared household devices (touchscreen tablets, Raspberry Pi)
+- Admin-configurable allowed device IPs for kiosk access
+- On-screen virtual keyboard with QWERTY layout, emoji picker, draggable/resizable
+- Auto-logout with idle timeout (15 min for kiosk, 30 min for regular sessions)
+- Kiosk logout redirects back to PIN screen (not regular login)
+
 ### 🔒 Security
 - Argon2id password hashing
 - HTTP-only session cookies
 - CSRF protection
 - Role-based access control
+- Kiosk access restricted to admin-configured device IPs
 - Self-hosted — your data stays on your network
 
 ---

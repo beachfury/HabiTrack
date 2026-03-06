@@ -71,6 +71,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   };
 
   const logout = async () => {
+    // Save kiosk flag before clearing user state so redirect knows where to go
+    if (user?.isKiosk) {
+      sessionStorage.setItem('habitrack_kiosk', 'true');
+    }
     await api.logout();
     setUser(null);
     setImpersonation({ active: false });

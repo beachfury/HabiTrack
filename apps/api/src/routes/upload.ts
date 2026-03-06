@@ -23,9 +23,10 @@ const BACKGROUND_DIR = path.join(UPLOAD_DIR, 'backgrounds');
 const RECIPE_DIR = path.join(UPLOAD_DIR, 'recipes');
 const SHOPPING_DIR = path.join(UPLOAD_DIR, 'shopping');
 const PAID_CHORES_DIR = path.join(UPLOAD_DIR, 'paid-chores');
+const CHORES_DIR = path.join(UPLOAD_DIR, 'chores');
 
 // Create directories if they don't exist
-[AVATAR_DIR, LOGO_DIR, BACKGROUND_DIR, RECIPE_DIR, SHOPPING_DIR, PAID_CHORES_DIR].forEach((dir) => {
+[AVATAR_DIR, LOGO_DIR, BACKGROUND_DIR, RECIPE_DIR, SHOPPING_DIR, PAID_CHORES_DIR, CHORES_DIR].forEach((dir) => {
   if (!fs.existsSync(dir)) {
     fs.mkdirSync(dir, { recursive: true });
   }
@@ -673,6 +674,59 @@ export async function uploadPaidChoreImage(req: Request, res: Response) {
     return res.json({ success: true, imageKey });
   } catch (err) {
     log.error('Paid chore image upload failed', { error: String(err) });
+    return serverError(res);
+  }
+}
+
+// =============================================================================
+// POST /api/chores/upload-image
+// Upload a completion photo for a regular chore
+// =============================================================================
+export async function uploadChoreImage(req: Request, res: Response) {
+  const user = getUser(req);
+  if (!user) {
+    return authRequired(res);
+  }
+
+  try {
+    if (!req.body || !req.body.imageData) {
+      return invalidInput(res, 'No image provided');
+    }
+
+    const { imageData, contentType } = req.body;
+
+    if (!contentType || !ALLOWED_TYPES.includes(contentType)) {
+      return invalidInput(res, 'Invalid image type. Allowed: JPEG, PNG, GIF, WebP');
+    }
+
+    // Decode base64 image
+    const base64Data = imageData.replace(/^data:image\/\w+;base64,/, '');
+    const buffer = Buffer.from(base64Data, 'base64');
+
+    if (buffer.length > MAX_SIZE) {
+      return invalidInput(res, 'Image too large. Maximum size is 5MB');
+    }
+
+    // Process image: auto-rotate, resize to reasonable dimensions, convert to JPEG
+    const processed = await sharp(buffer)
+      .rotate()
+      .resize(1200, 1600, { fit: 'inside', withoutEnlargement: true })
+      .withMetadata({ density: 72 })
+      .jpeg({ quality: 85 })
+      .toBuffer();
+
+    const filename = `chore-${crypto.randomBytes(8).toString('hex')}.jpg`;
+    const filepath = path.join(CHORES_DIR, filename);
+
+    fs.writeFileSync(filepath, processed);
+
+    const imageKey = `/uploads/chores/${filename}`;
+
+    log.info('Chore image uploaded', { userId: user.id, filename });
+
+    return res.json({ success: true, imageKey });
+  } catch (err) {
+    log.error('Chore image upload failed', { error: String(err) });
     return serverError(res);
   }
 }

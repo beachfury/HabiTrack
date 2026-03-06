@@ -1,6 +1,6 @@
 // apps/web/src/components/settings/HouseholdTab.tsx
 import { useState, useEffect } from 'react';
-import { Home, Palette, Globe, Check } from 'lucide-react';
+import { Home, Palette, Globe, Check, Monitor, Plus, X } from 'lucide-react';
 import { TIMEZONES } from './constants';
 import { Link } from 'react-router-dom';
 import { apiClient } from '../../api/client';
@@ -57,8 +57,17 @@ export function HouseholdTab({
   const [holidaySaving, setHolidaySaving] = useState(false);
   const [holidaySuccess, setHolidaySuccess] = useState('');
 
+  // Kiosk device IPs
+  const [kioskIps, setKioskIps] = useState<string[]>([]);
+  const [kioskIpInput, setKioskIpInput] = useState('');
+  const [kioskLoading, setKioskLoading] = useState(true);
+  const [kioskSaving, setKioskSaving] = useState(false);
+  const [kioskSuccess, setKioskSuccess] = useState('');
+  const [kioskError, setKioskError] = useState('');
+
   useEffect(() => {
     fetchHolidaySettings();
+    fetchKioskIps();
   }, []);
 
   const fetchHolidaySettings = async () => {
@@ -93,6 +102,52 @@ export function HouseholdTab({
       console.error('Failed to save holiday settings:', err);
     } finally {
       setHolidaySaving(false);
+    }
+  };
+
+  const fetchKioskIps = async () => {
+    try {
+      const data = await apiClient.get<{ household: any }>('/settings/household', { params: undefined });
+      setKioskIps(data.household?.kioskAllowedIps || []);
+    } catch {
+      setKioskIps([]);
+    } finally {
+      setKioskLoading(false);
+    }
+  };
+
+  const addKioskIp = () => {
+    const ip = kioskIpInput.trim();
+    if (!ip) return;
+    // Basic IP validation
+    const ipv4 = /^\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}$/;
+    if (!ipv4.test(ip)) {
+      setKioskError('Please enter a valid IPv4 address (e.g., 192.168.1.50)');
+      return;
+    }
+    if (kioskIps.includes(ip)) {
+      setKioskError('This IP is already in the list');
+      return;
+    }
+    setKioskIps((prev) => [...prev, ip]);
+    setKioskIpInput('');
+    setKioskError('');
+  };
+
+  const removeKioskIp = (ip: string) => {
+    setKioskIps((prev) => prev.filter((i) => i !== ip));
+  };
+
+  const saveKioskIps = async () => {
+    setKioskSaving(true);
+    try {
+      await apiClient.put('/settings/household', { kioskAllowedIps: kioskIps });
+      setKioskSuccess('Kiosk device settings saved!');
+      setTimeout(() => setKioskSuccess(''), 3000);
+    } catch (err) {
+      console.error('Failed to save kiosk IPs:', err);
+    } finally {
+      setKioskSaving(false);
     }
   };
 
@@ -252,6 +307,107 @@ export function HouseholdTab({
               className="w-full py-2 bg-[var(--color-primary)] text-[var(--color-primary-foreground)] rounded-xl font-medium hover:opacity-90 disabled:opacity-50"
             >
               {holidaySaving ? 'Saving...' : `Save Holiday Settings (${holidayCountries.length} selected)`}
+            </button>
+          </>
+        )}
+      </div>
+
+      {/* Kiosk Devices Section */}
+      <div className="space-y-4">
+        <div className="p-4 bg-[var(--color-muted)] rounded-xl">
+          <h3 className="font-medium text-[var(--color-foreground)] mb-1 flex items-center gap-2">
+            <Monitor size={18} />
+            Kiosk Devices
+          </h3>
+          <p className="text-sm text-[var(--color-muted-foreground)]">
+            Restrict kiosk PIN login to specific device IPs. When configured, only these IPs can access the kiosk login page. Leave empty to allow any local network device.
+          </p>
+        </div>
+
+        {kioskSuccess && (
+          <div
+            className="p-3 rounded-xl text-sm flex items-center gap-2"
+            style={{
+              backgroundColor: 'color-mix(in srgb, var(--color-success) 10%, transparent)',
+              color: 'var(--color-success)',
+              border: '1px solid color-mix(in srgb, var(--color-success) 30%, transparent)',
+            }}
+          >
+            <Check size={16} />
+            {kioskSuccess}
+          </div>
+        )}
+
+        {kioskLoading ? (
+          <div className="flex items-center justify-center py-8">
+            <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-[var(--color-primary)]" />
+          </div>
+        ) : (
+          <>
+            {/* Current IPs */}
+            {kioskIps.length > 0 && (
+              <div className="space-y-2">
+                {kioskIps.map((ip) => (
+                  <div
+                    key={ip}
+                    className="flex items-center justify-between px-4 py-2 rounded-xl border border-[var(--color-border)] bg-[var(--color-card)]"
+                  >
+                    <span className="font-mono text-sm text-[var(--color-foreground)]">{ip}</span>
+                    <button
+                      type="button"
+                      onClick={() => removeKioskIp(ip)}
+                      className="p-1 text-[var(--color-destructive)] hover:opacity-80"
+                    >
+                      <X size={16} />
+                    </button>
+                  </div>
+                ))}
+              </div>
+            )}
+
+            {kioskIps.length === 0 && (
+              <div className="p-3 rounded-xl text-sm"
+                style={{
+                  backgroundColor: 'color-mix(in srgb, var(--color-warning) 10%, transparent)',
+                  color: 'var(--color-warning)',
+                  border: '1px solid color-mix(in srgb, var(--color-warning) 30%, transparent)',
+                }}
+              >
+                No kiosk IPs configured. Any local network device can access kiosk mode.
+              </div>
+            )}
+
+            {/* Add IP */}
+            <div className="flex gap-2">
+              <input
+                type="text"
+                value={kioskIpInput}
+                onChange={(e) => { setKioskIpInput(e.target.value); setKioskError(''); }}
+                onKeyDown={(e) => e.key === 'Enter' && (e.preventDefault(), addKioskIp())}
+                placeholder="e.g., 192.168.1.50"
+                className="flex-1 px-3 py-2 border border-[var(--color-border)] rounded-xl bg-[var(--color-background)] text-[var(--color-foreground)] font-mono text-sm"
+              />
+              <button
+                type="button"
+                onClick={addKioskIp}
+                className="px-4 py-2 bg-[var(--color-primary)] text-[var(--color-primary-foreground)] rounded-xl font-medium hover:opacity-90 flex items-center gap-1"
+              >
+                <Plus size={16} />
+                Add
+              </button>
+            </div>
+
+            {kioskError && (
+              <p className="text-sm text-[var(--color-destructive)]">{kioskError}</p>
+            )}
+
+            <button
+              type="button"
+              onClick={saveKioskIps}
+              disabled={kioskSaving}
+              className="w-full py-2 bg-[var(--color-primary)] text-[var(--color-primary-foreground)] rounded-xl font-medium hover:opacity-90 disabled:opacity-50"
+            >
+              {kioskSaving ? 'Saving...' : 'Save Kiosk Device Settings'}
             </button>
           </>
         )}

@@ -63,6 +63,12 @@ function ProtectedRoute({ children }: { children: React.ReactNode }) {
   }
 
   if (!user) {
+    // Check if this was a kiosk session — redirect back to kiosk PIN screen
+    const wasKiosk = sessionStorage.getItem('habitrack_kiosk');
+    if (wasKiosk) {
+      sessionStorage.removeItem('habitrack_kiosk');
+      return <Navigate to="/kiosk" replace />;
+    }
     return <Navigate to="/login" replace />;
   }
 

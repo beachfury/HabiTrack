@@ -17,6 +17,7 @@
     "react-easy-crop": "^5.5.6",
     "react-grid-layout": "^2.2.2",
     "react-router-dom": "^7.11.0",
+    "react-simple-keyboard": "^3.8.170",
     "recharts": "^3.7.0"
   },
   "devDependencies": {

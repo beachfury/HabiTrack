@@ -159,6 +159,8 @@ export const api = {
   createAnnouncement: messagesApi.createAnnouncement,
   markAnnouncementRead: messagesApi.markAnnouncementRead,
   deleteAnnouncement: messagesApi.deleteAnnouncement,
+  deleteAllNotifications: messagesApi.deleteAllNotifications,
+  deleteAllAnnouncements: messagesApi.deleteAllAnnouncements,
   getConversations: messagesApi.getConversations,
   getConversation: messagesApi.getConversation,
   sendMessage: messagesApi.sendMessage,

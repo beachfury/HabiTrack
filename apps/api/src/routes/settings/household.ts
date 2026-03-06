@@ -7,6 +7,7 @@ import { q } from '../../db';
 import { logAudit } from '../../audit';
 import { getUser, success, forbidden, serverError } from '../../utils';
 import { createLogger } from '../../services/logger';
+import { clearKioskIpCache } from '../../middleware/kiosk-local-only';
 
 const log = createLogger('settings');
 
@@ -46,7 +47,8 @@ export async function getHouseholdSettings(req: Request, res: Response) {
         choreDeadlineReminder1Enabled, choreDeadlineReminder1Time,
         choreDeadlineReminder2Enabled, choreDeadlineReminder2Time,
         choreDeadlineReminder3Enabled, choreDeadlineReminder3Time,
-        choreDeadlineReminder4Enabled, choreDeadlineReminder4Time
+        choreDeadlineReminder4Enabled, choreDeadlineReminder4Time,
+        kioskAllowedIps
        FROM settings WHERE id = 1`,
     );
 
@@ -58,6 +60,7 @@ export async function getHouseholdSettings(req: Request, res: Response) {
           choreDeadlineReminder2Enabled: !!settings.choreDeadlineReminder2Enabled,
           choreDeadlineReminder3Enabled: !!settings.choreDeadlineReminder3Enabled,
           choreDeadlineReminder4Enabled: !!settings.choreDeadlineReminder4Enabled,
+          kioskAllowedIps: settings.kioskAllowedIps ? JSON.parse(settings.kioskAllowedIps as any) : [],
         }
       : {};
 
@@ -85,6 +88,7 @@ export async function updateHouseholdSettings(req: Request, res: Response) {
     choreDeadlineReminder2Enabled, choreDeadlineReminder2Time,
     choreDeadlineReminder3Enabled, choreDeadlineReminder3Time,
     choreDeadlineReminder4Enabled, choreDeadlineReminder4Time,
+    kioskAllowedIps,
   } = req.body;
 
   try {
@@ -135,11 +139,21 @@ export async function updateHouseholdSettings(req: Request, res: Response) {
       }
     }
 
+    if (kioskAllowedIps !== undefined) {
+      updates.push('kioskAllowedIps = ?');
+      params.push(Array.isArray(kioskAllowedIps) ? JSON.stringify(kioskAllowedIps) : null);
+    }
+
     if (updates.length > 0) {
       params.push(1); // WHERE id = 1
       await q(`UPDATE settings SET ${updates.join(', ')}, updatedAt = NOW(3) WHERE id = ?`, params);
 
       log.info('Household settings updated', { userId: user.id, fields: updates.map(u => u.split(' ')[0]) });
+
+      // Clear kiosk IP cache if IPs were updated
+      if (kioskAllowedIps !== undefined) {
+        clearKioskIpCache();
+      }
     }
 
     await logAudit({
