@@ -27,6 +27,7 @@ interface HouseholdSettings {
   choreDeadlineReminder3Time: string;
   choreDeadlineReminder4Enabled: boolean;
   choreDeadlineReminder4Time: string;
+  kioskAllowedIps: string | null;
 }
 
 /**
