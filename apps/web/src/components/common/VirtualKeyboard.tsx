@@ -44,12 +44,12 @@ const EMOJI_CATEGORIES: Record<string, string[]> = {
 
 type KeyboardSize = 'sm' | 'md' | 'lg' | 'xl' | 'xxl';
 
-const SIZE_SCALES: Record<KeyboardSize, { width: number; label: string }> = {
-  sm: { width: 650, label: 'S' },
-  md: { width: 850, label: 'M' },
-  lg: { width: 1050, label: 'L' },
-  xl: { width: 1250, label: 'XL' },
-  xxl: { width: 1450, label: '2X' },
+const SIZE_SCALES: Record<KeyboardSize, { width: number; label: string; keyHeight: number }> = {
+  sm: { width: 650, label: 'S', keyHeight: 42 },
+  md: { width: 850, label: 'M', keyHeight: 50 },
+  lg: { width: 1050, label: 'L', keyHeight: 58 },
+  xl: { width: 1250, label: 'XL', keyHeight: 66 },
+  xxl: { width: 1450, label: '2X', keyHeight: 74 },
 };
 
 export function VirtualKeyboard() {
@@ -262,6 +262,8 @@ export function VirtualKeyboard() {
   if (!visible) return null;
 
   const kbWidth = SIZE_SCALES[size].width;
+  const kbKeyHeight = SIZE_SCALES[size].keyHeight;
+  const kbFontSize = Math.max(14, Math.round(kbKeyHeight * 0.36));
 
   return (
     <div
@@ -328,6 +330,17 @@ export function VirtualKeyboard() {
           </button>
         </div>
       </div>
+
+      {/* Dynamic key height styles */}
+      <style>{`
+        .virtual-keyboard-container .hg-button {
+          height: ${kbKeyHeight}px !important;
+          font-size: ${kbFontSize}px !important;
+        }
+        .virtual-keyboard-container .hg-row {
+          margin-bottom: 4px;
+        }
+      `}</style>
 
       {/* Keyboard or Emoji body */}
       <div

@@ -6,6 +6,15 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ---
 
+## [1.9.3] - 2026-03-07
+
+### Fixed
+- **Kiosk meal strip always visible** — Meal strip now shows even when no meals are planned (displays "No meals planned this week" fallback) with a label icon for clarity
+- **Virtual keyboard key height too small** — Keys now scale height proportionally with size (S=42px, M=50px, L=58px, XL=66px, XXL=74px) with matching font sizes for comfortable touchscreen use
+- **PIN modal confirm button white-on-white** — Hardcoded button to purple (#7c3aed) instead of relying on CSS variable that could resolve to a light color
+
+---
+
 ## [1.9.2] - 2026-03-07
 
 ### Fixed
