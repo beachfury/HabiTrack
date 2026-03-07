@@ -45,9 +45,9 @@ const EMOJI_CATEGORIES: Record<string, string[]> = {
 type KeyboardSize = 'sm' | 'md' | 'lg';
 
 const SIZE_SCALES: Record<KeyboardSize, { width: number; label: string }> = {
-  sm: { width: 450, label: 'S' },
-  md: { width: 600, label: 'M' },
-  lg: { width: 750, label: 'L' },
+  sm: { width: 650, label: 'S' },
+  md: { width: 850, label: 'M' },
+  lg: { width: 1050, label: 'L' },
 };
 
 export function VirtualKeyboard() {

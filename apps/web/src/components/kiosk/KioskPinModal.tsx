@@ -1,20 +1,35 @@
 // apps/web/src/components/kiosk/KioskPinModal.tsx
-// Touch-friendly PIN verification modal for kiosk action board
+// Touch-friendly PIN modal for kiosk — supports login, chore completion, paid chore completion
 
 import { useState } from 'react';
 import { X } from 'lucide-react';
 import { api } from '../../api';
+import { useAuth } from '../../context/AuthContext';
 
 interface KioskPinModalProps {
+  mode: 'login' | 'complete-chore' | 'complete-paid-chore';
   userId: number;
   userName: string;
   userColor: string | null;
   userAvatar: string | null;
-  onSuccess: () => void;
+  choreInstanceId?: number;
+  paidChoreId?: string;
+  onSuccess: (result?: any) => void;
   onClose: () => void;
 }
 
-export function KioskPinModal({ userId, userName, userColor, userAvatar, onSuccess, onClose }: KioskPinModalProps) {
+export function KioskPinModal({
+  mode,
+  userId,
+  userName,
+  userColor,
+  userAvatar,
+  choreInstanceId,
+  paidChoreId,
+  onSuccess,
+  onClose,
+}: KioskPinModalProps) {
+  const { refresh } = useAuth();
   const [pin, setPin] = useState('');
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
@@ -44,12 +59,25 @@ export function KioskPinModal({ userId, userName, userColor, userAvatar, onSucce
     setLoading(true);
     setError('');
     try {
-      const result = await api.verifyKioskPin(userId, pin);
-      if (result.valid) {
-        onSuccess();
-      } else {
-        setError('Invalid PIN');
-        setPin('');
+      if (mode === 'login') {
+        const result = await api.loginWithPin(userId, pin);
+        if (result.success) {
+          await refresh();
+          onSuccess();
+        } else {
+          setError('Invalid PIN');
+          setPin('');
+        }
+      } else if (mode === 'complete-chore' && choreInstanceId) {
+        const result = await api.kioskCompleteChore(userId, pin, choreInstanceId);
+        if (result.success) {
+          onSuccess(result);
+        }
+      } else if (mode === 'complete-paid-chore' && paidChoreId) {
+        const result = await api.kioskCompletePaidChore(userId, pin, paidChoreId);
+        if (result.success) {
+          onSuccess(result);
+        }
       }
     } catch (err: any) {
       setError(err?.message || 'Verification failed');
@@ -58,6 +86,11 @@ export function KioskPinModal({ userId, userName, userColor, userAvatar, onSucce
       setLoading(false);
     }
   };
+
+  const headerText =
+    mode === 'login'
+      ? `Enter PIN to log in as ${userName}`
+      : `Enter PIN to complete task`;
 
   return (
     <div className="fixed inset-0 z-[99999] flex items-center justify-center bg-black/60" onClick={onClose}>
@@ -87,8 +120,8 @@ export function KioskPinModal({ userId, userName, userColor, userAvatar, onSucce
               {userName.charAt(0).toUpperCase()}
             </div>
           )}
-          <p className="text-lg font-semibold" style={{ color: 'var(--kiosk-text, #fff)' }}>
-            Enter PIN for {userName}
+          <p className="text-lg font-semibold text-center" style={{ color: 'var(--kiosk-text, #fff)' }}>
+            {headerText}
           </p>
         </div>
 
