@@ -6,6 +6,15 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ---
 
+## [1.9.0] - 2026-03-07
+
+### Added
+- **Kiosk daily action board** — After kiosk PIN login, users see a fullscreen grid of family member cards showing today's chores, paid chores, and events. Tap a pending item to quick-complete it (PIN verified once per session). Completed items gray out with strikethrough. Includes 30-second auto-refresh, midnight auto-reset, 5-minute idle timeout, "Full App" button to access the regular dashboard, and "Log Out" to return to the kiosk PIN screen
+- **Board API endpoint** — `GET /api/kiosk/board` returns all family members with today's chores, claimed paid chores, and calendar events grouped per member
+- **KioskProtectedRoute** — Lightweight route wrapper for kiosk pages (no sidebar/layout)
+
+---
+
 ## [1.8.0] - 2026-03-06
 
 ### Fixed

@@ -99,6 +99,10 @@ router.get('/auth/pin/users', kioskLocalOnly, auth.getPinUsers);
 router.post('/auth/pin/login', kioskLocalOnly, loginRateLimiter, auth.postPinLogin);
 router.post('/auth/pin/verify', kioskLocalOnly, auth.verifyPin);
 
+// Kiosk Board
+import * as kiosk from './routes/kiosk';
+router.get('/kiosk/board', requireAuth(), kiosk.getKioskBoard);
+
 // Onboarding
 router.post('/auth/onboard/complete', auth.postOnboardComplete);
 router.post('/auth/onboard/set-password', auth.postSetPassword);

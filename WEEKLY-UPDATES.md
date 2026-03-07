@@ -5,6 +5,19 @@ Exceptions: critical bugs or security issues that need immediate attention.
 
 ---
 
+## Week of 2026-03-09
+
+### Enhancements
+- [ ] **Kiosk daily action board** — Redesign kiosk page after PIN login to show a grid of family member cards with today's chores, events, and paid chores. Tap item → PIN (once per session) → quick complete → item grays out. Midnight auto-reset. "Full App" button → PIN verify → navigates directly to home dashboard (already authenticated, no login needed). 5-min idle timeout. Logout from full app returns to kiosk home.
+
+### Issues
+- [x] **Keyboard behind modals/cards** — z-index was same as modals (9999). **Fixed:** Bumped to 99999.
+- [x] **Keyboard drag not working** — Stale closure captured old position. **Fixed:** Using positionRef.
+- [x] **Keyboard resize not working** — CSS scale transform didn't change layout. **Fixed:** Switched to actual width changes (450/600/750px).
+- [x] **Dashboard "Today's Events" showing past events** — SQL query included old events with NULL endAt. **Fixed:** Only shows events starting today or multi-day events spanning today.
+
+---
+
 ## Week of 2026-03-02
 
 ### Enhancements

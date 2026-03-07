@@ -18,6 +18,7 @@ import { BudgetPage } from './pages/BudgetPage';
 import { RecipesPage } from './pages/RecipesPage';
 import { MealsPage } from './pages/MealsPage';
 import { StorePage } from './pages/StorePage';
+import { KioskBoardPage } from './pages/KioskBoardPage';
 import { useIdleTimeout, useDayRollover } from './hooks';
 import { IdleWarningModal } from './components/common/IdleWarningModal';
 import { ErrorBoundary } from './components/ErrorBoundary';
@@ -84,6 +85,20 @@ function ProtectedRoute({ children }: { children: React.ReactNode }) {
       />
     </Layout>
   );
+}
+
+function KioskProtectedRoute({ children }: { children: React.ReactNode }) {
+  const { user, loading } = useAuth();
+
+  if (loading) {
+    return <LoadingScreen />;
+  }
+
+  if (!user) {
+    return <Navigate to="/kiosk" replace />;
+  }
+
+  return <>{children}</>;
 }
 
 function LoadingScreen() {
@@ -205,6 +220,14 @@ function AppRoutes() {
           <ProtectedRoute>
             <StorePage />
           </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/kiosk/board"
+        element={
+          <KioskProtectedRoute>
+            <KioskBoardPage />
+          </KioskProtectedRoute>
         }
       />
       <Route path="/kiosk" element={<KioskLoginPage />} />

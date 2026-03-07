@@ -120,8 +120,8 @@ export function KioskLoginPage() {
       if (result.success) {
         // Refresh auth context to pick up the new session
         await refresh();
-        // Navigate to home
-        navigate('/');
+        // Navigate to kiosk action board
+        navigate('/kiosk/board');
       }
     } catch (err: any) {
       setError(err?.message || 'Invalid PIN');
