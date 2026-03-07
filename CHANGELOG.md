@@ -6,6 +6,28 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ---
 
+## [1.9.1] - 2026-03-07
+
+### Changed
+- **Kiosk redesigned as always-visible action board** — The `/kiosk` page now shows all family member cards without requiring login. Tap a task to complete it (PIN verified per action). Tap an avatar to log into the full app. No separate board page — cards are always visible
+- **7-day view** — Chores and events now show today + 6 days, grouped by day (Today, Tomorrow, Wednesday, etc.)
+- **Points leaderboard on cards** — Each member card displays their total points. The leader gets a crown icon on their avatar and a gold border on their card
+- **Live clock + 7-day weather forecast** — Header shows a live-updating clock and a 7-day forecast strip from Open-Meteo (free, no API key)
+- **Today's meal banner** — Shows tonight's dinner (recipe name + image, or "Fend For Yourself" message)
+- **Bigger avatars** — Member card avatars increased to 80×80px for touchscreen visibility
+- **Virtual keyboard sized for 15" touchscreen** — Keyboard sizes bumped from 450/600/750px to 650/850/1050px
+
+### Added
+- **Kiosk chore completion endpoint** — `POST /api/kiosk/complete-chore` combines PIN verification + chore completion (bonus points for early completion, approval workflow support)
+- **Kiosk paid chore completion endpoint** — `POST /api/kiosk/complete-paid-chore` combines PIN verification + paid chore completion (skips photo requirement, notifies admins)
+- **Completion feedback toasts** — Shows points awarded, bonus points, or approval status after completing a task
+
+### Removed
+- **KioskBoardPage** — Merged into the kiosk welcome page; separate board page deleted
+- **KioskProtectedRoute** — No longer needed since the kiosk page doesn't require authentication
+
+---
+
 ## [1.9.0] - 2026-03-07
 
 ### Added

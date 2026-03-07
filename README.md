@@ -144,10 +144,12 @@ HabiTrack features a powerful theming system that allows deep customization:
 - Log retention settings (1-30 days)
 
 ### 🖥️ Kiosk Mode
-- PIN-based quick login for shared household screens
-- Simplified display-focused interface
-- Perfect for wall-mounted tablets or kitchen displays
-- Automatic idle timeout (15 min) with countdown warning before returning to PIN screen
+- Always-visible family action board — no login required to view
+- Tap a task to complete it (PIN verified per action)
+- Tap an avatar to log into the full app
+- 7-day chore/event view with day grouping, points leaderboard with crown
+- Live clock, 7-day weather forecast, today's meal plan banner
+- Perfect for wall-mounted tablets or kitchen displays (optimized for 15" touchscreens)
 
 ### ⏰ Session & Idle Management
 - Automatic idle timeout with "Are you still there?" countdown warning
@@ -170,11 +172,14 @@ HabiTrack features a powerful theming system that allows deep customization:
 - Admin-only access with type-to-confirm safety for destructive operations
 
 ### 📺 Kiosk Mode
-- PIN-based login for shared household devices (touchscreen tablets, Raspberry Pi)
+- Always-visible action board at `/kiosk` — member cards with 7-day chores, events, paid chores
+- PIN-verified task completion directly from cards (no login session needed)
+- Avatar tap → PIN → full app login for deeper access
+- Points leaderboard on each card (leader gets crown icon + gold card border)
+- Live clock, 7-day weather forecast (Open-Meteo), today's meal plan banner
+- On-screen virtual keyboard with QWERTY layout, emoji picker, draggable/resizable (sized for 15" touchscreens)
 - Admin-configurable allowed device IPs for kiosk access
-- On-screen virtual keyboard with QWERTY layout, emoji picker, draggable/resizable
-- Auto-logout with idle timeout (15 min for kiosk, 30 min for regular sessions)
-- Kiosk logout redirects back to PIN screen (not regular login)
+- Designed for Raspberry Pi / wall-mounted tablets
 
 ### 🔒 Security
 - Argon2id password hashing

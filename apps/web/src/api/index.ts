@@ -252,6 +252,8 @@ export const api = {
   // Kiosk
   getKioskBoard: kioskApi.getBoard,
   verifyKioskPin: kioskApi.verifyPin,
+  kioskCompleteChore: kioskApi.completeChore,
+  kioskCompletePaidChore: kioskApi.completePaidChore,
 };
 
 // Export individual APIs

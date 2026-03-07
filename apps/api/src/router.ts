@@ -99,9 +99,11 @@ router.get('/auth/pin/users', kioskLocalOnly, auth.getPinUsers);
 router.post('/auth/pin/login', kioskLocalOnly, loginRateLimiter, auth.postPinLogin);
 router.post('/auth/pin/verify', kioskLocalOnly, auth.verifyPin);
 
-// Kiosk Board
+// Kiosk Board & Actions (LOCAL NETWORK ONLY - no auth, PIN verified per-action)
 import * as kiosk from './routes/kiosk';
-router.get('/kiosk/board', requireAuth(), kiosk.getKioskBoard);
+router.get('/kiosk/board', kioskLocalOnly, kiosk.getKioskBoard);
+router.post('/kiosk/complete-chore', kioskLocalOnly, writeRateLimiter, kiosk.kioskCompleteChore);
+router.post('/kiosk/complete-paid-chore', kioskLocalOnly, writeRateLimiter, kiosk.kioskCompletePaidChore);
 
 // Onboarding
 router.post('/auth/onboard/complete', auth.postOnboardComplete);
