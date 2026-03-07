@@ -211,7 +211,7 @@ export function KioskPinModal({
           disabled={loading || pin.length < 4}
           className="w-full py-3 rounded-full text-lg font-bold transition-all active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed"
           style={{
-            backgroundColor: 'var(--kiosk-accent, #7c3aed)',
+            backgroundColor: '#7c3aed',
             color: '#fff',
           }}
         >

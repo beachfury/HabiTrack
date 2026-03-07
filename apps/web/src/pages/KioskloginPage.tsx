@@ -386,9 +386,13 @@ export function KioskLoginPage() {
       </header>
 
       {/* ── 7-Day Meal Strip ── */}
-      {meals.length > 0 && (
-        <div className="mx-6 mb-4 flex gap-2 overflow-x-auto">
-          {meals.map((m) => (
+      <div className="mx-6 mb-4 flex gap-2 overflow-x-auto items-center">
+        <div className="flex items-center gap-1.5 shrink-0 mr-1">
+          <Utensils size={18} style={{ color: '#a78bfa' }} />
+          <span className="text-xs font-semibold uppercase" style={{ color: '#a78bfa' }}>Meals</span>
+        </div>
+        {meals.length > 0 ? (
+          meals.map((m) => (
             <div
               key={m.id}
               className="flex items-center gap-2 px-3 py-2 rounded-xl shrink-0"
@@ -397,7 +401,7 @@ export function KioskLoginPage() {
               {m.isFendForYourself ? (
                 <ChefHat size={18} className="shrink-0 text-orange-400" />
               ) : (
-                <Utensils size={18} className="shrink-0" style={{ color: 'var(--kiosk-accent, #7c3aed)' }} />
+                <Utensils size={18} className="shrink-0" style={{ color: '#7c3aed' }} />
               )}
               <div className="min-w-0">
                 <span className="text-[10px] font-semibold uppercase block" style={{ color: 'var(--kiosk-text-muted, #9ca3af)' }}>
@@ -411,9 +415,13 @@ export function KioskLoginPage() {
                 <img src={m.recipeImage} alt="" className="w-8 h-8 rounded-lg object-cover shrink-0" />
               )}
             </div>
-          ))}
-        </div>
-      )}
+          ))
+        ) : (
+          <span className="text-sm italic" style={{ color: 'var(--kiosk-text-muted, #9ca3af)' }}>
+            No meals planned this week
+          </span>
+        )}
+      </div>
 
       {/* ── Error banner ── */}
       {error && (
