@@ -6,6 +6,13 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ---
 
+## [1.9.4] - 2026-03-07
+
+### Fixed
+- **Keyboard closes on layout switch** — Tapping 123/ABC/Shift buttons no longer causes the keyboard and form to close; input stays focused during layout changes
+
+---
+
 ## [1.9.3] - 2026-03-07
 
 ### Fixed
