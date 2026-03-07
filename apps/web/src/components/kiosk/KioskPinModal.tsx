@@ -87,23 +87,20 @@ export function KioskPinModal({
     }
   };
 
-  const headerText =
-    mode === 'login'
-      ? `Enter PIN to log in as ${userName}`
-      : `Enter PIN to complete task`;
+  const headerLabel = mode === 'login' ? 'Enter PIN to log in as' : 'Enter PIN to complete task for';
 
   return (
     <div className="fixed inset-0 z-[99999] flex items-center justify-center bg-black/60" onClick={onClose}>
       <div
         className="relative rounded-3xl p-8 shadow-2xl max-w-sm w-full mx-4"
-        style={{ backgroundColor: 'var(--kiosk-bg-gradient-to, #1e1b4b)' }}
+        style={{ backgroundColor: '#1e1b4b', border: '1px solid rgba(255,255,255,0.15)' }}
         onClick={(e) => e.stopPropagation()}
       >
         {/* Close button */}
         <button
           onClick={onClose}
-          className="absolute top-4 right-4 p-2 rounded-full opacity-60 hover:opacity-100 transition-opacity"
-          style={{ color: 'var(--kiosk-text, #fff)' }}
+          className="absolute top-4 right-4 p-2 rounded-full hover:bg-white/10 transition-colors"
+          style={{ color: '#c4b5fd' }}
         >
           <X size={20} />
         </button>
@@ -120,8 +117,11 @@ export function KioskPinModal({
               {userName.charAt(0).toUpperCase()}
             </div>
           )}
-          <p className="text-lg font-semibold text-center" style={{ color: 'var(--kiosk-text, #fff)' }}>
-            {headerText}
+          <p className="text-base text-center" style={{ color: '#c4b5fd' }}>
+            {headerLabel}
+          </p>
+          <p className="text-xl font-bold text-center" style={{ color: '#fff' }}>
+            {userName}
           </p>
         </div>
 

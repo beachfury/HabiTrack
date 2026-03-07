@@ -70,8 +70,8 @@ export function MemberCard({
       className="rounded-2xl p-5 flex flex-col h-full"
       style={{
         backgroundColor: 'rgba(255,255,255,0.08)',
-        border: isLeader ? '2px solid #eab308' : 'none',
-        borderLeft: isLeader ? '4px solid #eab308' : `4px solid ${member.color || '#6d28d9'}`,
+        border: isLeader ? '4px solid #eab308' : 'none',
+        borderLeft: isLeader ? '6px solid #eab308' : `4px solid ${member.color || '#6d28d9'}`,
       }}
     >
       {/* Header */}

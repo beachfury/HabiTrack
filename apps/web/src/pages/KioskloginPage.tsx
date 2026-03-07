@@ -11,6 +11,13 @@ import { MemberCard } from '../components/kiosk/MemberCard';
 import { KioskPinModal } from '../components/kiosk/KioskPinModal';
 import type { KioskBoardMember, KioskMealItem } from '../api/kiosk';
 
+// Hide cursor on kiosk (touchscreen — no mouse needed)
+const kioskCursorStyle = `
+  .kiosk-no-cursor, .kiosk-no-cursor * {
+    cursor: none !important;
+  }
+`;
+
 // ---------------------------------------------------------------------------
 // Weather helpers (Open-Meteo WMO codes)
 // ---------------------------------------------------------------------------
@@ -74,7 +81,7 @@ export function KioskLoginPage() {
   // Board state
   const [members, setMembers] = useState<KioskBoardMember[]>([]);
   const [dateStr, setDateStr] = useState('');
-  const [meal, setMeal] = useState<KioskMealItem | null>(null);
+  const [meals, setMeals] = useState<KioskMealItem[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
 
@@ -114,7 +121,7 @@ export function KioskLoginPage() {
       const data = await api.getKioskBoard();
       setMembers(data.members);
       setDateStr(data.date);
-      setMeal(data.meal);
+      setMeals(data.meals);
       setError('');
     } catch (err) {
       console.error('Failed to fetch board:', err);
@@ -299,12 +306,20 @@ export function KioskLoginPage() {
           ? 'grid-cols-2 lg:grid-cols-3'
           : 'grid-cols-2 lg:grid-cols-3 xl:grid-cols-4';
 
-  // Meal display
-  const mealText = meal
-    ? meal.isFendForYourself
-      ? meal.ffyMessage || 'Fend For Yourself'
-      : meal.recipeName || meal.customMealName || 'Meal planned'
-    : null;
+  // Meal display helper
+  const getMealLabel = (m: KioskMealItem) =>
+    m.isFendForYourself
+      ? m.ffyMessage || 'Fend For Yourself'
+      : m.recipeName || m.customMealName || 'Meal planned';
+
+  const getMealDayLabel = (dateStr: string, startDate: string) => {
+    const d = new Date(dateStr + 'T00:00:00');
+    const s = new Date(startDate + 'T00:00:00');
+    const diff = Math.round((d.getTime() - s.getTime()) / 86400000);
+    if (diff === 0) return 'Today';
+    if (diff === 1) return 'Tomorrow';
+    return d.toLocaleDateString(undefined, { weekday: 'short' });
+  };
 
   // ---------------------------------------------------------------------------
   // Render
@@ -313,11 +328,12 @@ export function KioskLoginPage() {
   if (loading) {
     return (
       <div
-        className="min-h-screen flex items-center justify-center"
+        className="min-h-screen flex items-center justify-center kiosk-no-cursor"
         style={{
           background: 'linear-gradient(to bottom right, var(--kiosk-bg-gradient-from, #0f172a), var(--kiosk-bg-gradient-to, #1e1b4b))',
         }}
       >
+        <style>{kioskCursorStyle}</style>
         <Loader2 size={48} className="animate-spin" style={{ color: 'var(--kiosk-accent, #7c3aed)' }} />
       </div>
     );
@@ -325,11 +341,13 @@ export function KioskLoginPage() {
 
   return (
     <div
-      className="min-h-screen flex flex-col"
+      className="min-h-screen flex flex-col kiosk-no-cursor"
       style={{
         background: 'linear-gradient(to bottom right, var(--kiosk-bg-gradient-from, #0f172a), var(--kiosk-bg-gradient-to, #1e1b4b))',
       }}
     >
+      <style>{kioskCursorStyle}</style>
+
       {/* ── Header ── */}
       <header className="flex items-start justify-between px-6 py-4 shrink-0 gap-4">
         {/* Left: date + clock */}
@@ -344,21 +362,21 @@ export function KioskLoginPage() {
 
         {/* Right: 7-day weather forecast strip */}
         {forecast.length > 0 && (
-          <div className="flex gap-2 overflow-x-auto shrink-0">
+          <div className="flex gap-3 overflow-x-auto shrink-0">
             {forecast.map((day) => (
               <div
                 key={day.date}
-                className="flex flex-col items-center px-2 py-1.5 rounded-xl min-w-[56px]"
+                className="flex flex-col items-center px-3 py-2 rounded-xl min-w-[72px]"
                 style={{ backgroundColor: 'rgba(255,255,255,0.06)' }}
               >
-                <span className="text-[10px] font-semibold uppercase" style={{ color: 'var(--kiosk-text-muted, #9ca3af)' }}>
+                <span className="text-xs font-semibold uppercase" style={{ color: 'var(--kiosk-text-muted, #9ca3af)' }}>
                   {day.dayLabel}
                 </span>
-                <WeatherIcon condition={day.condition} size={18} />
-                <span className="text-xs font-bold" style={{ color: 'var(--kiosk-text, #fff)' }}>
+                <WeatherIcon condition={day.condition} size={28} />
+                <span className="text-sm font-bold" style={{ color: 'var(--kiosk-text, #fff)' }}>
                   {day.high}°
                 </span>
-                <span className="text-[10px]" style={{ color: 'var(--kiosk-text-muted, #9ca3af)' }}>
+                <span className="text-xs" style={{ color: 'var(--kiosk-text-muted, #9ca3af)' }}>
                   {day.low}°
                 </span>
               </div>
@@ -367,32 +385,33 @@ export function KioskLoginPage() {
         )}
       </header>
 
-      {/* ── Today's Meal Banner ── */}
-      {mealText && (
-        <div
-          className="mx-6 mb-4 px-4 py-2.5 rounded-xl flex items-center gap-3"
-          style={{ backgroundColor: 'rgba(255,255,255,0.06)' }}
-        >
-          {meal?.isFendForYourself ? (
-            <ChefHat size={20} className="shrink-0 text-orange-400" />
-          ) : (
-            <Utensils size={20} className="shrink-0" style={{ color: 'var(--kiosk-accent, #7c3aed)' }} />
-          )}
-          <div className="flex-1 min-w-0">
-            <span className="text-xs font-semibold uppercase tracking-wider" style={{ color: 'var(--kiosk-text-muted, #9ca3af)' }}>
-              Tonight's Dinner
-            </span>
-            <p className="text-sm font-medium truncate" style={{ color: 'var(--kiosk-text, #fff)' }}>
-              {mealText}
-            </p>
-          </div>
-          {meal?.recipeImage && !meal.isFendForYourself && (
-            <img
-              src={meal.recipeImage}
-              alt=""
-              className="w-10 h-10 rounded-lg object-cover shrink-0"
-            />
-          )}
+      {/* ── 7-Day Meal Strip ── */}
+      {meals.length > 0 && (
+        <div className="mx-6 mb-4 flex gap-2 overflow-x-auto">
+          {meals.map((m) => (
+            <div
+              key={m.id}
+              className="flex items-center gap-2 px-3 py-2 rounded-xl shrink-0"
+              style={{ backgroundColor: 'rgba(255,255,255,0.06)' }}
+            >
+              {m.isFendForYourself ? (
+                <ChefHat size={18} className="shrink-0 text-orange-400" />
+              ) : (
+                <Utensils size={18} className="shrink-0" style={{ color: 'var(--kiosk-accent, #7c3aed)' }} />
+              )}
+              <div className="min-w-0">
+                <span className="text-[10px] font-semibold uppercase block" style={{ color: 'var(--kiosk-text-muted, #9ca3af)' }}>
+                  {getMealDayLabel(m.date, dateStr)}
+                </span>
+                <p className="text-sm font-medium truncate max-w-[140px]" style={{ color: 'var(--kiosk-text, #fff)' }}>
+                  {getMealLabel(m)}
+                </p>
+              </div>
+              {m.recipeImage && !m.isFendForYourself && (
+                <img src={m.recipeImage} alt="" className="w-8 h-8 rounded-lg object-cover shrink-0" />
+              )}
+            </div>
+          ))}
         </div>
       )}
 

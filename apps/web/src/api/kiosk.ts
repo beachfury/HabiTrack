@@ -59,7 +59,7 @@ export interface KioskMealItem {
 }
 
 export const kioskApi = {
-  getBoard(): Promise<{ members: KioskBoardMember[]; date: string; meal: KioskMealItem | null }> {
+  getBoard(): Promise<{ members: KioskBoardMember[]; date: string; meals: KioskMealItem[] }> {
     return apiClient.get('/kiosk/board', { params: undefined });
   },
 

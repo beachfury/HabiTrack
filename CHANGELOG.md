@@ -6,6 +6,20 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ---
 
+## [1.9.2] - 2026-03-07
+
+### Fixed
+- **Leader card border too thin** — Thickened leader card border from 2px to 4px (6px on left edge) for better visibility
+- **PIN modal white-on-white text** — Header text "Enter PIN to log in as..." was hard to read; split into label (purple) + name (white) on explicit dark background
+- **Weather forecast too small** — Increased weather strip icons (18→28px), fonts, and card padding for better touchscreen readability
+
+### Changed
+- **7-day meal plan strip** — Now shows the full week of dinner plans instead of just today's meal
+- **Virtual keyboard XL/XXL sizes** — Added two larger sizes (1250px XL, 1450px XXL) for 15" kiosk touchscreens; cycle through S/M/L/XL/XXL
+- **Hidden mouse cursor on kiosk** — Cursor is invisible on the kiosk page since it's a touchscreen
+
+---
+
 ## [1.9.1] - 2026-03-07
 
 ### Changed

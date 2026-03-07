@@ -79,14 +79,15 @@ export async function getKioskBoard(_req: Request, res: Response) {
         ORDER BY startAt ASC
       `),
 
-      // Today's meal plan
+      // 7-day meal plans
       safeQuery<any>(`
         SELECT mp.id, DATE_FORMAT(mp.date, '%Y-%m-%d') as date, mp.mealType,
                mp.recipeId, r.name as recipeName, r.imageUrl as recipeImage,
                mp.customMealName, mp.isFendForYourself, mp.ffyMessage, mp.status
         FROM meal_plans mp
         LEFT JOIN recipes r ON mp.recipeId = r.id
-        WHERE mp.date = CURDATE()
+        WHERE mp.date BETWEEN CURDATE() AND DATE_ADD(CURDATE(), INTERVAL 6 DAY)
+        ORDER BY mp.date ASC
       `),
     ]);
 
@@ -136,18 +137,18 @@ export async function getKioskBoard(_req: Request, res: Response) {
     }));
 
     const today = new Date().toISOString().split('T')[0];
-    const meal = meals.length > 0 ? {
-      id: meals[0].id,
-      date: meals[0].date,
-      recipeName: meals[0].recipeName,
-      recipeImage: meals[0].recipeImage,
-      customMealName: meals[0].customMealName,
-      isFendForYourself: !!meals[0].isFendForYourself,
-      ffyMessage: meals[0].ffyMessage,
-      status: meals[0].status,
-    } : null;
+    const mealList = meals.map((m: any) => ({
+      id: m.id,
+      date: m.date,
+      recipeName: m.recipeName,
+      recipeImage: m.recipeImage,
+      customMealName: m.customMealName,
+      isFendForYourself: !!m.isFendForYourself,
+      ffyMessage: m.ffyMessage,
+      status: m.status,
+    }));
 
-    res.json({ members: memberMap, date: today, meal });
+    res.json({ members: memberMap, date: today, meals: mealList });
   } catch (err) {
     console.error('Kiosk board error:', err);
     res.status(500).json({ error: { code: 'SERVER_ERROR' } });
