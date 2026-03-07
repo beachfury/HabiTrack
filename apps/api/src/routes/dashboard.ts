@@ -438,8 +438,8 @@ export async function getDashboardData(req: Request, res: Response) {
       safeQuery<any>(`
         SELECT id, title, startAt as startTime, endAt as endTime, color, allDay
         FROM calendar_events
-        WHERE DATE(startAt) <= CURDATE()
-          AND (DATE(endAt) >= CURDATE() OR endAt IS NULL OR DATE(startAt) = CURDATE())
+        WHERE (DATE(startAt) = CURDATE())
+           OR (DATE(startAt) <= CURDATE() AND DATE(endAt) >= CURDATE())
         ORDER BY startAt ASC
         LIMIT 10
       `),
