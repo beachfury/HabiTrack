@@ -135,16 +135,25 @@ export function VirtualKeyboard() {
     const input = activeInputRef.current;
     if (!input) return;
 
+    // Clear hide timeout so keyboard stays open during layout switches
+    if (hideTimeoutRef.current) {
+      clearTimeout(hideTimeoutRef.current);
+      hideTimeoutRef.current = null;
+    }
+
     if (button === '{shift}' || button === '{lock}') {
       setLayoutName((prev) => (prev === 'default' ? 'shift' : 'default'));
+      input.focus();
       return;
     }
     if (button === '{numbers}') {
       setLayoutName('numbers');
+      input.focus();
       return;
     }
     if (button === '{abc}') {
       setLayoutName('default');
+      input.focus();
       return;
     }
 
