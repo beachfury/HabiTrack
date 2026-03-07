@@ -11,6 +11,8 @@ import { settingsApi } from './settings';
 import { shoppingApi } from './shopping';
 import { uploadApi } from './upload';
 import { incomeApi } from './income';
+import { kioskApi } from './kiosk';
+import { completePaidChore } from './paid-chores';
 
 // Re-export types from types/ for backward compatibility
 export type { CalendarEvent, CreateEventData } from '../types/calendar';
@@ -243,6 +245,13 @@ export const api = {
   updateIncomeEntry: incomeApi.updateEntry,
   deleteIncomeEntry: incomeApi.deleteEntry,
   getIncomeSummary: incomeApi.getSummary,
+
+  // Paid Chores
+  completePaidChore,
+
+  // Kiosk
+  getKioskBoard: kioskApi.getBoard,
+  verifyKioskPin: kioskApi.verifyPin,
 };
 
 // Export individual APIs
@@ -257,4 +266,5 @@ export {
   settingsApi,
   shoppingApi,
   uploadApi,
+  kioskApi,
 };
