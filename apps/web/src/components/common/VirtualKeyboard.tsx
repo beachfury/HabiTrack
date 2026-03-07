@@ -42,12 +42,14 @@ const EMOJI_CATEGORIES: Record<string, string[]> = {
   ],
 };
 
-type KeyboardSize = 'sm' | 'md' | 'lg';
+type KeyboardSize = 'sm' | 'md' | 'lg' | 'xl' | 'xxl';
 
 const SIZE_SCALES: Record<KeyboardSize, { width: number; label: string }> = {
   sm: { width: 650, label: 'S' },
   md: { width: 850, label: 'M' },
   lg: { width: 1050, label: 'L' },
+  xl: { width: 1250, label: 'XL' },
+  xxl: { width: 1450, label: '2X' },
 };
 
 export function VirtualKeyboard() {
@@ -251,9 +253,9 @@ export function VirtualKeyboard() {
 
   const cycleSize = useCallback(() => {
     setSize((prev) => {
-      if (prev === 'sm') return 'md';
-      if (prev === 'md') return 'lg';
-      return 'sm';
+      const order: KeyboardSize[] = ['sm', 'md', 'lg', 'xl', 'xxl'];
+      const idx = order.indexOf(prev);
+      return order[(idx + 1) % order.length];
     });
   }, []);
 
