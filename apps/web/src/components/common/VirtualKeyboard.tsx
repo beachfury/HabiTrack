@@ -44,10 +44,10 @@ const EMOJI_CATEGORIES: Record<string, string[]> = {
 
 type KeyboardSize = 'sm' | 'md' | 'lg';
 
-const SIZE_SCALES: Record<KeyboardSize, { scale: number; label: string }> = {
-  sm: { scale: 0.75, label: 'S' },
-  md: { scale: 1, label: 'M' },
-  lg: { scale: 1.25, label: 'L' },
+const SIZE_SCALES: Record<KeyboardSize, { width: number; label: string }> = {
+  sm: { width: 450, label: 'S' },
+  md: { width: 600, label: 'M' },
+  lg: { width: 750, label: 'L' },
 };
 
 export function VirtualKeyboard() {
@@ -63,16 +63,18 @@ export function VirtualKeyboard() {
   const activeInputRef = useRef<HTMLInputElement | HTMLTextAreaElement | null>(null);
   const dragRef = useRef<{ startX: number; startY: number; origX: number; origY: number } | null>(null);
   const hideTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const positionRef = useRef(position);
+  positionRef.current = position;
 
   // Center keyboard on first show
   const initPosition = useCallback(() => {
     if (position.y === -1) {
       const width = window.innerWidth;
       const height = window.innerHeight;
-      const kbWidth = 600 * SIZE_SCALES[size].scale;
+      const kbWidth = SIZE_SCALES[size].width;
       setPosition({
         x: Math.max(0, (width - kbWidth) / 2),
-        y: height - 380 * SIZE_SCALES[size].scale - 20,
+        y: height - 360,
       });
     }
   }, [position.y, size]);
@@ -204,14 +206,17 @@ export function VirtualKeyboard() {
     input.setSelectionRange(start + emoji.length, start + emoji.length);
   }, []);
 
-  // Drag handlers
+  // Drag handlers — use positionRef to avoid stale closure
   const handleDragStart = useCallback((e: React.MouseEvent | React.TouchEvent) => {
     e.preventDefault();
+    e.stopPropagation();
     const clientX = 'touches' in e ? e.touches[0].clientX : e.clientX;
     const clientY = 'touches' in e ? e.touches[0].clientY : e.clientY;
-    dragRef.current = { startX: clientX, startY: clientY, origX: position.x, origY: position.y };
+    const pos = positionRef.current;
+    dragRef.current = { startX: clientX, startY: clientY, origX: pos.x, origY: pos.y };
 
     const handleMove = (ev: MouseEvent | TouchEvent) => {
+      ev.preventDefault();
       if (!dragRef.current) return;
       const cx = 'touches' in ev ? ev.touches[0].clientX : (ev as MouseEvent).clientX;
       const cy = 'touches' in ev ? ev.touches[0].clientY : (ev as MouseEvent).clientY;
@@ -235,7 +240,7 @@ export function VirtualKeyboard() {
     document.addEventListener('mouseup', handleEnd);
     document.addEventListener('touchmove', handleMove, { passive: false });
     document.addEventListener('touchend', handleEnd);
-  }, [position]);
+  }, []);
 
   // Keep keyboard on screen
   const handleClose = useCallback(() => {
@@ -254,13 +259,12 @@ export function VirtualKeyboard() {
 
   if (!visible) return null;
 
-  const scale = SIZE_SCALES[size].scale;
-  const kbWidth = 600 * scale;
+  const kbWidth = SIZE_SCALES[size].width;
 
   return (
     <div
       ref={containerRef}
-      className="fixed z-[9999]"
+      className="fixed z-[99999]"
       style={{
         left: position.x,
         top: position.y,
@@ -326,7 +330,6 @@ export function VirtualKeyboard() {
       {/* Keyboard or Emoji body */}
       <div
         className="bg-gray-800 rounded-b-xl shadow-2xl border border-gray-700 border-t-0 overflow-hidden"
-        style={{ transform: `scale(${scale})`, transformOrigin: 'top left', width: 600 }}
       >
         {showEmoji ? (
           <div className="p-2" style={{ height: 280 }}>
